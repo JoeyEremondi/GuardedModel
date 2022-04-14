@@ -1,0 +1,59 @@
+#+title: A Guarded Syntactic Model of Gradual Dependent Types
+#+AUTHOR: Joey Eremondi
+#+date: April 18, 2022
+
+
+#+LATEX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [dvipsnames]
+#+OPTIONS: toc:nil H:2 num:f
+#+LATEX_COMPILER: xelatex
+
+#+startup: beamer
+#+COLUMNS: %45ITEM %10BEAMER_ENV(Env) %10BEAMER_ACT(Act) %4BEAMER_COL(Col)
+# #+beamer: \beamerdefaultoverlayspecification{<+->}
+
+#+LaTeX_HEADER: \usefonttheme[onlymath]{serif}
+
+
+#+LaTeX_HEADER: \usepackage{xcolor}
+#+LaTeX_HEADER: \usetheme{metropolis}
+#+LaTeX_HEADER: \definecolor{ubcBlue}{RGB}{12,35,68}
+#+LaTeX_HEADER: \definecolor{ubcBlue1}{RGB}{0,85,183}
+#+LaTeX_HEADER: \definecolor{ubcBlue2}{RGB}{0,167,225}
+#+LaTeX_HEADER: \definecolor{ubcBlue3}{RGB}{64,180,229}
+#+LaTeX_HEADER: \definecolor{ubcBlue4}{RGB}{110,196,232}
+#+LaTeX_HEADER: \definecolor{ubcBlue5}{RGB}{151,212,223}
+
+#+LaTeX_HEADER: \setbeamercolor{alerted text}{bg=ubcBlue1, fg = ubcBlue}
+#+LaTeX_HEADER: \setbeamercolor{example text}{fg=ubcBlue1, bg=ubcBlue1}
+#+LaTeX_HEADER: \setbeamercolor{title separator}{fg = ubcBlue, bg=ubcBlue}
+#+LaTeX_HEADER: \setbeamercolor{progress bar}{bg=ubcBlue4, fg=ubcBlue1}
+#+LaTeX_HEADER: \setbeamercolor{progress bar in head/foot}{bg=ubcBlue4, fg=ubcBlue1}
+#+LaTeX_HEADER: \setbeamercolor{progress bar in section page}{bg=ubcBlue4, fg=ubcBlue1}
+#+LaTeX_HEADER: \setbeamercolor{frametitle}{bg=ubcBlue}
+
+#+LaTeX_HEADER: \input{sharedmacros}
+
+* Overview
+
+** Two Problems - One Solution
+
+*** Two Problems
+- Implementing Gradual Dependent Types
+
+- Denotational Semantics + Metatheory
+
+**** One Soution
+
+- Approximate Normalization + Translation to Static Dependent Types
+
+
+* Implementing Gradual Dependent Types
+
+** The Challenge
+
+*** Machinery
+- Many parts to dependent type-checking
+-
+
+*** Efficiency
