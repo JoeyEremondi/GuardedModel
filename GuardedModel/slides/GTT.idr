@@ -1,53 +1,49 @@
 module GTT
 
-data Guarded : Type -> Type where
-  Next : Lazy a -> Guarded a
+%default partial
 
+Guarded : Type -> Type
+Guarded a = Lazy a
+
+next : a -> Guarded a
+next x = Delay x
 
 Functor Guarded where
-  map f (Next x) = Next (f x)
+  map f (Delay x) = Delay (f x)
 
 Applicative Guarded where
-  (Next f) <*> (Next x) = Next (f x)
-  pure x = Next x
+  (Delay f) <*> (Delay x) = (f x)
+  pure x = Delay x
+
+TyGuarded : Guarded Type -> Type
+TyGuarded (Delay t) = t
+
+partial fix : (Guarded a -> a) -> a
+fix f = f (Delay (fix f))
+
+lob : (f : Guarded a -> a) -> fix f === f (next (fix f))
+lob _ = Refl
+
+data UnGuard : (Type -> Type) -> Guarded Type -> Type where
+  ToFix : Lazy (f tg) -> UnGuard f tg
+
+partial tyFix : (Type -> Type) -> Type
+tyFix f = fix (UnGuard f)
+
+tyLob : (f : Type -> Type) -> tyFix f === UnGuard f (tyFix f)
+tyLob f = lob (UnGuard f)
+
+partial fromFix : {0 f : Type -> Type} -> UnGuard f (tyFix f) -> f (UnGuard f (tyFix f))
+fromFix (ToFix x) = x
+
+-- partial fromTyFix : {0 f : Type -> Type} -> f (tyFix f) -> tyFix f
+-- fromTyFix = \x => UnG x
 
 
+stream : Type -> Type
+stream a = tyFix (\streamA => (a, streamA))
 
--- data TyGuarded : Guarded Type -> Type where
---   WrapTy : Lazy a -> TyGuarded (Next a)
-
--- toGuarded : TyGuarded (Next a) -> Lazy a
--- toGuarded (WrapTy x) = x
-
-
--- fromGuarded : Lazy a -> TyGuarded (Next a)
--- fromGuarded x = WrapTy x
-
--- partial fix : (Guarded a -> a) -> a
--- fix f = f (Next (fix f))
-
--- lob : (f : Guarded a -> a) -> fix f === f (Next (fix f))
--- lob _ = Refl
-
--- data UnGuard : (Type -> Type) -> Guarded Type -> Type where
---   UnG : Lazy (f (TyGuarded tg)) -> UnGuard f tg
-
--- partial tyFix : (Type -> Type) -> Type
--- tyFix f = fix (UnGuard f)
-
--- tyLob : (f : Type -> Type) -> tyFix f === UnGuard f (Next (tyFix f))
--- tyLob f = lob (UnGuard f)
-
--- -- partial toTyFix : {0 f : Type -> Type} -> tyFix f -> f (tyFix f)
--- -- toTyFix x = ?ttf
-
--- partial fromTyFix : (f : Type -> Type) -> f (tyFix f) -> tyFix f
--- fromTyFix = \ f , x => UnG x
-
-
--- -- -- -- Example
--- -- stream : Type -> Type
--- -- stream a = tyFix (\ streamA => (a, streamA) )
-
--- -- smap : stream a -> stream a
--- -- smap  = fix (\smap => \pr => ?r)
+smapF : (a -> b) -> (stream a -> stream b) -> stream a -> stream b
+smapF f self s = ?rhs
+  where
+    pr = fromFix s
