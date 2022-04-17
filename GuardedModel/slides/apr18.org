@@ -52,6 +52,18 @@
 
 * Implementing Gradual Dependent Types
 
+** Gradual Dependent Types for Programming
+*** Fire Triangle: Can't have all of:
+- Conservatively extend CIC
+- Strong normalization
+- EP-pairs
+*** But can get what we really /want/:
+- Conservatively extend CIC
+- Decidable type-checking
+- Weak canonicity
+- Gradual Guarantees + other properties
+*** Need Approx. Normalization for decidable type-checking
+
 ** Don't Reinvent the Wheel
 
 *** Long-term goal: gradual types in a full-scale dependent language
@@ -71,7 +83,7 @@
 
 
 
-** Proposed Approach
+** Proposed Implementation Strategy
 
 *** Compile gradual dependent types to static dependent types /without changing the static core language/
 - Can use existing normalization, unification, etc.
@@ -111,7 +123,7 @@
 *** How can we prevent non-termination during compile time normalization?
 + Separate semantics for compile-time and run-time normalization
 + Only difference: casts $\cast{(\gqm\to\gqm)}{\gqm} \g{f}$
-  + Approx: reduces to $\g{\lambda x \ldotp f \gqm}$
+  + Approx: reduces to $\g{\lambda x \ldotp f\ \gqm}$
 
 *** Translation:
 
@@ -135,9 +147,6 @@
 - GCIC approach simulation-based, complex
   + Even more complex when add approximation
 ** Prove richer metatheory
-*** Often need some sort of logical relation
-*** If syntactic model is in consistent calculus, then can prove these things in the target theory itself (unlike $GCIC^{\mathcal{G}}$)
-
 *** Theorems that show that gradual dependent types behave as expected
 - EP-Pairs, or a version of them
   + Not needlessly producing ?
@@ -147,11 +156,14 @@
   + i.e. equal static values are equal in the model
   + Weaker version of full-abstraction
 
+*** Often need some sort of logical relation
+*** If syntactic model is in consistent calculus, then can prove these things in the target theory itself (unlike $GCIC^{\mathcal{G}}$)
+
 ** The Model
 
 *** Model Approximate Normalization in Type Theory (MLTT?)
 - Proves that all terms halt
-- Decidabel type-checking
+- Decidable type-checking
 
 *** Model exact execution in Guarded Type Theory
 - Consistent logic for describing (potentially) non-terminating terms
@@ -191,19 +203,21 @@ B. Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (
 ** Model of the unknown type
 
 *** GTT allows for exact definition:
-- $Unk = fix\ (\lambda (x : \guarded Type) \ldotp (Unk \times Unk) + (\tguarded X \to Unk)  + \guarded X +  \ldots)$
+- $Unk = {fix\ (\lambda (x : \guarded Type) \ldotp} {(Unk \times Unk) + (\tguarded X \to Unk)}  + \tguarded X +  \ldots)$
 - Have $\theta : \guarded Unk \to Unk$
 
 *** Interpretation of casts must be guarded
 - i.e. $cast : (c_1 \ c_2 : \mathbb{C}_\ell)\to El_{exact}\ c_1 \to L\ (El_{exact}\ c_2)$
 - Then $f : Unk \to Unk$ is cast to $pure\ \lambda (x : \guarded Unk) \to f\ (\theta\ x)$
+- Cast from e.g. $\guarded Unk$ to $Unk \to Unk$ produces result under $\guarded$, so overall result in $L$
+
 
 ** Mapping GTT to Idris
 
-*** Straightforward mapping of GTT to partial Idirs
+*** Straightforward mapping of GTT to partial Idris
 - $fix$ becomes general recursion
 - Guarded non-positive types just turn into partial non-positive types
 
-***  $fix\ f = f\ (next\  (fix\ f)$ is /not definitional/ in GTT:
+***  $fix\ f = f\ (next\  (fix\ f))$ is /not definitional/ in GTT:
 - Know that type derivation never relies on normalizing non-terminating functions
 - So neither does Idris typing
