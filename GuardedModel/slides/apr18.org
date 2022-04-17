@@ -191,10 +191,12 @@ B. Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (
 ** Model of the unknown type
 
 *** GTT allows for exact definition:
-- $Unk = fix\ (\lambda (x : \guarded Type) \ldotp (Unk \times Unk) + (\tguarded X \to Unk)  + \ldots)$
+- $Unk = fix\ (\lambda (x : \guarded Type) \ldotp (Unk \times Unk) + (\tguarded X \to Unk)  + \guarded X +  \ldots)$
+- Have $\theta : \guarded Unk \to Unk$
 
 *** Interpretation of casts must be guarded
 - i.e. $cast : (c_1 \ c_2 : \mathbb{C}_\ell)\to El_{exact}\ c_1 \to L\ (El_{exact}\ c_2)$
+- Then $f : Unk \to Unk$ is cast to $pure\ \lambda (x : \guarded Unk) \to f\ (\theta\ x)$
 
 ** Mapping GTT to Idris
 
