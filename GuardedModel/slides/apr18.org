@@ -1,6 +1,7 @@
 #+title: A Guarded Syntactic Model of Gradual Dependent Types
 #+AUTHOR: Joey Eremondi
 #+date: April 18, 2022
+#+STARTUP: nolatexpreview
 
 
 #+LATEX_CLASS: beamer
@@ -33,6 +34,7 @@
 #+LaTeX_HEADER: \setbeamercolor{frametitle}{bg=ubcBlue}
 
 #+LaTeX_HEADER: \input{sharedmacros}
+#+LaTeX_HEADER: \input{macros}
 
 * Overview
 
@@ -76,29 +78,130 @@
 
 *** Challenge: Effects in gradual language
 - Gradual languages: two effects
-  + Failure (can just be modelled as special value in gradual language)
+  + Failure - just model as special value in gradual language
   + Non-termination
 - Dependent languages restricted in how non-termination is used
   + Ensures consistency and decidablity of type checking
 
 ** The Idris model of Non-termination
 
-*** Functions marked as "partial"
+*** Definitions marked as "partial"
 - Are not checked for termination/productivity
-- Allows for general recursion
+- Allows
+  + General recursion
+  + Non-positive datatypes
 
 
 *** At compile-time
-- Partial functions never normalized
+- Can hide implementations so partial functions never normalized
 - Conservative: some equivalent partial-terms may rejected as non-equal
-   + need to normalize to /see/ that are equal
+  + need to normalize to /see/ that are equal
 - Ensures type-checking terminates
 
 ** Problem with the Idris model
 *** Ad-hoc, hard to reason about
-- e.g. it's hard to prove that every gradual program translates to a well-typed
+- e.g. it's hard to prove that every gradual program's translation is well-typed
+  + Need to reason about internal details of normalizer
 - Want formalism of Idris-style non-termination, so can prove translation proves
 *** We will use Guarded Type Theory as a theoretical model of Idris
+- Lets us formalize the notion of "this value not normalized at compile time"
 - More on this later
 
-** Approximate Normalization
+** Translating with Approximate Normalization
+*** How can we prevent non-termination during compile time normalization?
++ Separate semantics for compile-time and run-time normalization
++ Only difference: casts $\cast{(\gqm\to\gqm)}{\gqm} \g{f}$
+  + Approx: reduces to $\g{\lambda x \ldotp f \gqm}$
+
+*** Translation:
+
+- Model approx. $\gqm$ as strictly-positive $Unk = (1 \to Unk) + (Unk \times Unk) \ldots$
+- Full translation produces pairs of approximate and exact
+- Type computations  only use approximate part
+
+* The Other Side: Denotational Semantics
+
+** Broad Motivation
+*** Do gradual dependent types *mean* anything? Do they make sense?
+*** What kind of reasoning principles hold for gradual dependent types?
+*** What kind of guarantees can we give the programmer?
+** Why a syntactic model?
+
+*** Want to prove that approximate normalization is terminating
+
+- GDTL approach doesn't scale to inductives
+*** Want to prove the GGs for Approx. Normalization
+- GDTL Approach to errors was wrong
+- GCIC approach simulation-based, complex
+  + Even more complex when add approximation
+** Prove richer metatheory
+*** Often need some sort of logical relation
+*** If syntactic model is in consistent calculus, then can prove these things in the target theory itself (unlike $GCIC^{\mathcal{G}}$)
+
+*** Theorems that show that gradual dependent types behave as expected
+- EP-Pairs, or a version of them
+  + Not needlessly producing ?
+- Weak canonicity
+  + Nothing gets stuck from gradual types
+- Preservation of static propositional equalities
+  + i.e. equal static values are equal in the model
+  + Weaker version of full-abstraction
+
+** The Model
+
+*** Model Approximate Normalization in Type Theory (MLTT?)
+- Proves that all terms halt
+- Decidabel type-checking
+
+*** Model exact execution in Guarded Type Theory
+- Consistent logic for describing (potentially) non-terminating terms
+- Gives non-positive datatypes, can model $\gqm$ exactly
+
+*** Then can prove things about the language using the model
+
+** Guarded Type Theory
+
+*** Introduces:
+- A "later" modality $\guarded : Type \to Type$
+- Operators $next : A -> \guarded A$
+ and $app : \guarded (A \to B) \to \guarded A \to \guarded B$
+  - Arbitrary /guarded/ fixed-points:
+    + $fix : (\guarded A \to A) \to A$
+    + $lob : fix\ f = f\ (next\ (fix\ f))$ (but not definitionally)
+  - Type lifter $\tguarded : \guarded Type \to Type$
+  - Can be used to make a "lifting monad" $L\ A = A + \guarded (L\ A)$
+
+*** Gives us:
+- Non-positive inductive datatypes
+- General recursion, but only behind modality
+
+*** Consistent: model in Topos of Trees
+- Whatever that means
+
+** A Model in Guarded Type Theory
+*** Universe \ala Tarski
+- Data-type of "codes" $\mathbb{C}_\ell : Type$
+- "Elements-of" interpretations
+  + $El_{approx} : \mathbb{C}_\ell -> Type$
+  + $El_{exact }: \mathbb{C}_\ell -> Type$
+*** Syntactic Model
+A. Type semantics $\T{T} : \mathbb{C}_\ell$
+B. Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (L\ (El_{exact}\ \T{T}))$
+
+** Model of the unknown type
+
+*** GTT allows for exact definition:
+- $Unk = fix\ (\lambda (x : \guarded Type) \ldotp (Unk \times Unk) + (\tguarded X \to Unk)  + \ldots)$
+
+*** Interpretation of casts must be guarded
+- i.e. $cast : (c_1 \ c_2 : \mathbb{C}_\ell)\to El_{exact}\ c_1 \to L\ (El_{exact}\ c_2)$
+
+** Mapping GTT to Idris
+
+*** Straightforward mapping of GTT to partial Idirs
+- $fix$ becomes general recursion
+- Guarded non-positive types just turn into partial non-positive types
+
+***  $fix\ f = f\ (next\  (fix\ f)$ is /not definitional/ in GTT:
+- Know that type derivation never relies on normalizing non-terminating functions
+- So neither does Idris typing
