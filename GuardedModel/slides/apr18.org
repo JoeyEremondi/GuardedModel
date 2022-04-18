@@ -178,18 +178,17 @@
 - A "later" modality $\guarded : Type \to Type$
 - Operators $next : A -> \guarded A$
  and $app : \guarded (A \to B) \to \guarded A \to \guarded B$
-  - Arbitrary /guarded/ fixed-points:
+- Arbitrary /guarded/ fixed-points:
     + $fix : (\guarded A \to A) \to A$
     + $lob : fix\ f = f\ (next\ (fix\ f))$ (but not definitionally)
-  - Type lifter $\tguarded : \guarded Type \to Type$
-  - Can be used to make a "lifting monad" $L\ A = A + \guarded (L\ A)$
+- Type lifter $\tguarded : \guarded Type \to Type$ (to make recursive types)
+- Can be used to make a "lifting monad" $L\ A = A + \guarded (L\ A)$
 
 *** Gives us:
 - Non-positive inductive datatypes
 - General recursion, but only behind modality
 
 *** Consistent: model in Topos of Trees
-- Whatever that means
 
 ** A Model in Guarded Type Theory
 *** Universe \ala Tarski
@@ -198,19 +197,20 @@
   + $El_{approx} : \mathbb{C}_\ell -> Type$
   + $El_{exact }: \mathbb{C}_\ell -> Type$
 *** Syntactic Model
-A. Type semantics $\T{T} : \mathbb{C}_\ell$
-B. Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (L\ (El_{exact}\ \T{T}))$
+- Type semantics $\T{T} : \mathbb{C}_\ell$
+- Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (L\ (El_{exact}\ \T{T}))$
+- Functions : ${El_{exact}\ \T{(x : T_1)\to T_2}} = {El_{exact}\ \T{T_1} \to L\ (El_{exact}\ \T{T_2})}$
+  + Allows for non-termination
+
 
 ** Model of the unknown type
 
 *** GTT allows for exact definition:
-- $Unk = {fix\ (\lambda (x : \guarded Type) \ldotp} {(Unk \times Unk) + (\tguarded X \to Unk)}  + \tguarded X +  \ldots)$
-- Have $\theta : \guarded Unk \to Unk$
+- $Unk = {fix\ (\lambda (x : \guarded Type) \ldotp} {(Unk \times Unk) + (\tguarded X \to L\  Unk)}  + \ldots)$
+- Have $\theta : \guarded A \to L\ A$
 
-*** Interpretation of casts must be guarded
-- i.e. $cast : (c_1 \ c_2 : \mathbb{C}_\ell)\to El_{exact}\ c_1 \to L\ (El_{exact}\ c_2)$
-- Then $f : Unk \to Unk$ is cast to $pure\ \lambda (x : \guarded Unk) \to f\ (\theta\ x)$
-- Cast from e.g. $\guarded Unk$ to $Unk \to Unk$ produces result under $\guarded$, so overall result in $L$
+- Then write $cast : (c_1 \ c_2 : \mathbb{C}_\ell)\to El_{exact}\ c_1 \to (El_{exact}\ c_2)$
+- Have $f : Unk \to L\ Unk$ is cast to $\lambda (x : \guarded Unk) \to f >>= (\theta\ x)$
 
 
 ** Mapping GTT to Idris
@@ -222,3 +222,17 @@ B. Expression semantics: if $t : T$ then  $\E{t} : (El_{approx}\ \T{T}) \times (
 ***  $fix\ f = f\ (next\  (fix\ f))$ is /not definitional/ in GTT:
 - Know that type derivation never relies on normalizing non-terminating functions
 - So neither does Idris typing
+
+** Metatheory Strategy
+
+*** Start with syntactic model
+
+*** Show that each reduction produces an equal value in the model
+
+*** Logical Relation for semantic precision in the model
+- Related types have a Galois Connection
+- Related equality witnesses are as precise as the endpoints
+- Related functions produce related results
+
+*** Soundness: Syntactic Precision implies Semantic Precision
+- GGs as corollary
