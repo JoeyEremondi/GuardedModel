@@ -150,9 +150,14 @@
 ** Prove richer metatheory
 *** Theorems that show that gradual dependent types behave as expected
 - EP-Pairs, or a version of them
+  + Can either have terminating evidence computation OR EP-pairs
   + Not needlessly producing ?
+  + Only relevant because ? is a value
+  + TODO example of each semantics
+
 - Weak canonicity
   + Nothing gets stuck from gradual types
+
 - Preservation of static propositional equalities
   + i.e. equal static values are equal in the model
   + Weaker version of full-abstraction
@@ -236,3 +241,10 @@
 
 *** Soundness: Syntactic Precision implies Semantic Precision
 - GGs as corollary
+-
+
+* TODO
+
+** TODO GTT thread on zulip
+
+** TODO examples of different semantics for non-term evidence
