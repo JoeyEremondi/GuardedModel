@@ -11,7 +11,7 @@
 
 #+startup: beamer
 #+COLUMNS: %45ITEM %10BEAMER_ENV(Env) %10BEAMER_ACT(Act) %4BEAMER_COL(Col)
-# #+beamer: \beamerdefaultoverlayspecification{<+->}
+#+beamer: \beamerdefaultoverlayspecification{<+->}
 
 #+LaTeX_HEADER: \usefonttheme[onlymath]{serif}
 
@@ -51,18 +51,6 @@
 
 
 * Implementing Gradual Dependent Types
-
-** Gradual Dependent Types for Programming
-*** Fire Triangle: Can't have all of:
-- Conservatively extend CIC
-- Strong normalization
-- EP-pairs
-*** But can get what we really /want/:
-- Conservatively extend CIC
-- Decidable type-checking
-- Weak canonicity
-- Gradual Guarantees + other properties
-*** Need Approx. Normalization for decidable type-checking
 
 ** Don't Reinvent the Wheel
 
@@ -137,6 +125,19 @@
 *** Do gradual dependent types *mean* anything? Do they make sense?
 *** What kind of reasoning principles hold for gradual dependent types?
 *** What kind of guarantees can we give the programmer?
+
+** Goals for Metatheory
+*** Fire Triangle: Can't have all of:
+- Conservatively extend CIC
+- Strong normalization
+- EP-pairs
+*** But can get what we really /want/:
+- Conservatively extend CIC
+- Decidable type-checking
+- Weak canonicity
+- Gradual Guarantees + other properties
+*** Need Approx. Normalization for decidable type-checking
+
 ** Why a syntactic model?
 
 *** Want to prove that approximate normalization is terminating
