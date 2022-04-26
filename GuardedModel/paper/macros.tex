@@ -1,0 +1,432 @@
+%!TeX root = main.tex
+%!TeX spellcheck = en-US
+
+%Renew this in appendix to have some things that only show up when duplicated in the appendix
+\newcommand{\ifapx}[1]{}
+\newcommand{\ifnotapx}[1]{#1}
+%Maybe show rule names
+\newcommand{\mname}[1]{\ifapx{#1}}
+
+\usepackage{tikz-cd}
+% \usetikzlibrary{external}
+% \tikzexternalize
+
+%William Bowman's Smallify.tex
+%https://gist.github.com/wilbowma/545b0a315667f41ae2bcd0f3e8a32b95
+\usepackage{letltxmacro}
+
+\LetLtxMacro{\oldfigure}{\figure}
+\LetLtxMacro{\oldendfigure}{\endfigure}
+
+\LetLtxMacro{\oldcaption}{\caption}
+
+\renewenvironment{figure}
+{\oldfigure}
+{\vspace{-2ex}\oldendfigure}
+
+\renewcommand{\caption}[1]{\vspace{-0.25ex}\vspace{-\baselineskip}\oldcaption{#1}}
+
+\renewcommand{\MathparLineskip}{\lineskiplimit=.4\baselineskip\lineskip=.4\baselineskip plus .2\baselineskip}
+
+\newcommand{\ifapxCaption}[1]{\caption{#1}}
+
+%% Proofs at the end
+\usepackage[createShortEnv]{proof-at-the-end}
+% \newtheorem{thm}{Theorem}[section]
+% \newtheorem*{thm*}{Theorem}
+% \providecommand*\thmautorefname{Theorem}
+% % Lemmata
+% \newtheorem{lemma}[thm]{Lemma}
+% \newtheorem*{lemma*}{Lemma}
+% \providecommand*\lemmaautorefname{Lemma}
+
+\include{proofSetting}
+
+\usepackage{iftex}
+\ifPDFTeX
+\usepackage[utf8]{inputenc}
+\usepackage[inline]{enumitem}
+\DeclareUnicodeCharacter{2029}{}
+\fi
+
+% \usepackage[inline]{enumitem}
+
+
+\usepackage{underscore}
+
+
+
+\usepackage[nomain,
+            order=word,
+            hyperfirst=false,
+            acronym,
+            shortcuts,
+            nonumberlist]{glossaries}
+
+
+% \usepackage{idrislang}
+% \usepackage{colour-blind}
+
+
+
+
+
+
+\newcommand{\ttimes}{\staticstyle{\widetilde{\times}}}
+
+
+
+\newcommand{\natInst}{\stt{NatInst}}
+\newcommand{\vecInst}{\stt{VecInst}}
+\newcommand{\eqInst}{\stt{VecInst}}
+\newcommand{\typeInst}[1]{{\stt{IType}_{\staticstyle{#1}}}}
+
+% \newcommand{\ix}[1]{\color{black}{\mathit{#1}}}
+
+% \NewDocumentCommand{\qm}{m}{{\gradualstyle{\textbf{?}_{#1}}}}
+\newcommand{\TT}{$\mathsf{TT}$}
+% \NewDocumentCommand{\Ty}{m}{{\llparenthesis #1 \rrparenthesis}  }
+% \NewDocumentCommand{\Tm}{mm}{{{\llbracket #2 \rrbracket}_{#1}} }
+% \NewDocumentCommand{\codeMu}{m}{ {\mu  \IfSubStr{#1}{ }{(#1)}{#1}} }
+%\IfSubStr{#1}{ }{(#1)}{#1}
+% \NewDocumentCommand{\codeMuu}{m}{ {\tilde{\mu} \llbracket #1 \rrbracket } }
+% \NewDocumentCommand{\sType}{m}{{\staticstyle{\mathbf{Type}_{#1}}}}
+% \NewDocumentCommand{\sGType}{m}{{\staticstyle{\mathbf{GType}_{#1}}}}
+% \NewDocumentCommand{\asType}{m}{{\staticstyle{#1_{\sim}}}}
+
+% \NewDocumentCommand{\gType}{m}{{\gradualstyle{\mathbf{Type}_{#1}}}}
+% \NewDocumentCommand{\Dyn}{m}{{\staticstyle{\mathbb{U}^?_{#1}}}}
+% \NewDocumentCommand{\toDyn}{mm}{{\stt{toDyn}_{#1}\ #2}}
+% \NewDocumentCommand{\fromDyn}{mm}{{\stt{fromDyn}_{#1}^{#2}}}
+%
+% \defineStaticFun{Opt}
+% \defineStaticFun{Some}
+% \defineStaticFun{sSucc}{S}
+% \defineStaticFun{sCons}{Cons}
+
+% \newcommand{\default}[1]{{\staticstyle{\emptyset}_{#1}}}
+% \newcommand{\None}{\staticstyle{\mathtt{None}}}
+% \NewDocumentCommand{\Code}{m}{{\mathtt{Code}_{#1}}}
+% \newcommand{\unit}{{\mathbf{1}}}
+% \NewDocumentCommand{\unitVal}{}{()}
+% \NewDocumentCommand{\seq}{m}{{\overrightarrow{#1}}}
+% \NewDocumentCommand{\codeType}{m}{{\llbracket{#1}\rrbracket}}
+% \NewDocumentCommand{\inMu}{m}{{\langle #1 \rangle}}
+% \newcommand{\Jt}{\tilde{J}}
+
+\newcommand{\app}{\staticstyle{(\$)}}
+
+% \NewDocumentCommand{\Nat}{}{\stt{Nat}}
+\NewDocumentCommand{\Zero}{}{\stt{Z}}
+\NewDocumentCommand{\gSucc}{g}{\gradualstyle{\gtt{S}\IfValueT{#1}{\ #1}}}
+% \NewDocumentCommand{\sSucc}{g}{\staticstyle{\stt{S}\IfValueT{#1}{\ #1}}}
+
+\NewDocumentCommand{\gNil}{g}{\gradualstyle{{Nil}\IfValueT{#1}{\ #1}}}
+\NewDocumentCommand{\sNil}{g}{\staticstyle{{Nil}\IfValueT{#1}{\ #1}}}
+
+\NewDocumentCommand{\gCons}{gggg}{\gradualstyle{\gtt{Cons}\IfValueT{#1}{\ #1}\ \IfValueT{#2}{\ #2}\ \IfValueT{#3}{\ #3}\ \IfValueT{#4}{\ #4}}}
+% \NewDocumentCommand{\sCons}{gggg}{\staticstyle{\stt{Cons}\IfValueT{#1}{\ #1}\ \IfValueT{#2}{\ #2}\ \IfValueT{#3}{\ #3}\ \IfValueT{#4}{\ #4}}}
+
+\NewDocumentCommand{\gVec}{gg}{\gradualstyle{{Vec}\IfValueT{#1}{\ #1}\ \IfValueT{#2}{\ #2}}}
+\NewDocumentCommand{\sVec}{gg}{\staticstyle{{Vec}\IfValueT{#1}{\ #1}\ \IfValueT{#2}{\ #2}}}
+
+% \NewDocumentCommand{\VVec}{}{\stt{Vec}}
+% \NewDocumentCommand{\Nil}{}{\stt{Nil}}
+% \NewDocumentCommand{\Cons}{}{\stt{Cons}}
+% \NewDocumentCommand{\Refl}{}{\stt{Refl}}
+% \NewDocumentCommand{\gRefl}{gg}{\gradualstyle{\gtt{Refl}\IfValueT{#1}{\ #1}\IfValueT{#2}{\ #2}}}
+% \NewDocumentCommand{\sRefl}{gg}{\staticlstyle{\stt{Refl}\IfValueT{#1}{\ #1}\IfValueT{#2}{\ #2}}}
+
+\NewDocumentCommand{\conv}{gg}{\staticstyle{\stt{conv}\IfValueT{#1}{\ #1}\IfValueT{#2}{\ #2}}}
+
+\NewDocumentCommand{\gfst}{m}{\gradualstyle{\pi_1}{#1}}
+\NewDocumentCommand{\gsnd}{m}{\gradualstyle{\pi_2}{#1}
+\NewDocumentCommand{\gthd}{m}{\gradualstyle{\pi_3}{#1}}}
+\NewDocumentCommand{\sfst}{m}{\staticstyle{\pi_1}{#1}}
+\NewDocumentCommand{\ssnd}{m}{\staticstyle{\pi_2}{#1}
+\NewDocumentCommand{\sthd}{m}{\staticstyle{\pi_3}{#1}}}
+\NewDocumentCommand{\opt}{}{\staticstyle{\stt{option}}}
+\NewDocumentCommand{\trans}{}{\staticstyle{\stt{trans}}}
+
+\NewDocumentCommand{\optapp}{mm}{\staticstyle{\stt{optapp}\ #1\ #2}}
+
+\NewDocumentCommand{\cod}{m}{\stt{cod}#1}
+\NewDocumentCommand{\dom}{m}{\stt{dom}#1}
+
+% \NewDocumentCommand{\PC}{gmgm}{\staticstyle{#2 \mathrel{{}_{#1}{\cong}_{#3}} #4}}
+
+
+
+% \mathlig{~->}{\widetilde\to}
+
+\usepackage{lstautogobble}
+\usepackage{listings}
+
+\lstdefinelanguage{Agda}%
+  {morekeywords={let,in,as,data,record,import,infix,infixl,infixr,module,open,renaming,using,where,\_},%
+   morekeywords=[2]{Set,Set1,Set2,Type},%
+  literate=*%
+     {?}{$\mathrm{\gqm}$}1
+     {->}{$\mathrm{\to}$}2,
+   otherkeywords={=,:,(,),\{,\},:=,;},
+   sensitive=true,%
+   morecomment=[n]{\{-}{-\}},%
+   morecomment=[l]{--},%
+   morestring=[b]{"}%
+  }[keywords,comments,strings]%
+
+
+\lstnewenvironment{gradualCode}{\lstset{language=Agda,
+    basicstyle=\rmfamily\color{RoyalBlue},
+    columns=flexible, mathescape=true}}{}
+
+\lstnewenvironment{agdaCode}{\lstset{language=Agda,
+    basicstyle=\rmfamily\color{Black},
+    columns=flexible, mathescape=true}}{}
+
+\lstnewenvironment{staticCode}{\lstset{language=Agda,
+    basicstyle=\sffamily\color{BrickRed},
+        literate=*%
+     {?}{$\mathrm{\gqm}$}1
+     {Type}{$\mathcal{U}$ }1
+     {->}{$\mathrm{\to}$}2,
+     columns=flexible, mathescape=true}}{}
+
+\renewcommand{\tr}{\staticstyle{tr}}
+
+\newcommand{\gline}[1]{
+ \lstinline[language=Agda, columns=flexible, basicstyle=\color{RoyalBlue}, mathescape]{#1}
+ }
+\newcommand{\agdaline}[1]{
+ \lstinline[language=Agda, columns=flexible, basicstyle=\color{Black}, mathescape]{#1}
+ }
+
+ \newcommand{\sline}[1]{
+ \lstinline[language=Agda,
+     literate=*%
+i     {?}{$\mathrm{\gqm}$}1
+     {Type}{$\mathcal{U}$ }1
+     {->}{$\mathrm{\to}$}2,
+     columns=flexible, basicstyle=\sffamily\color{BrickRed}, mathescape]{#1}
+ }
+ % \lstMakeShortInline[language=Agda,basicstyle=\small\ttfamily]|
+
+\newcommand{\Code}{\staticstyle{\mathbf{Code}}}
+\newcommand{\El}{\staticstyle{\mathbf{El}}}
+\newcommand{\runCode}{\staticstyle{\mathbf{Code}^{run}}}
+\newcommand{\runEl}{\staticstyle{\mathbf{El}^{run}}}
+
+% \renewcommand{\sType}[1]{\s{\mathbf{Type}}
+
+
+% \newcommand{\E}[2]{{\color{black}\mathcal{E} \llbracket} \g{ #1 } {\color{black}\rrbracket_{\g{ #2 }}} }
+% \newcommand{\Erun}[2]{{\color{black}\mathcal{E}^{run} \llbracket} \g{ #1 } {\color{black}\rrbracket_{\g{ #2 }}} }
+\newcommand{\T}[1]{ {\color{black}\mathcal{T}\llbracket} \g{ #1 } {\color{black}\rrbracket}}
+% \newcommand{\Trun}[1]{ {\color{black}\mathcal{T}^{run}\llbracket} \g{ #1 } {\color{black}\rrbracket}}
+% \renewcommand{\C}[1]{{\color{black}\mathcal{C}\llbracket} \g{ #1 } {\color{black}\rrbracket}}
+% \newcommand{\V}[2]{{\color{black}\mathcal{V}\llbracket} \s{ #1 } {\color{black}\rrbracket_{\g{ #2 }}} }
+\newcommand{\V}[1]{{\color{black}\mathcal{V}\llbracket} \s{ #1 } {\color{black}\rrbracket} }
+% \newcommand{\N}[2]{{\color{black}\mathcal{N}\llbracket} \s{ #1 } {\color{black}\rrbracket_{\g{ #2 }}} }
+
+
+\newcommand{\R}[2]{{\color{black}\mathcal{R}}^{\s{ #1 }}\s{#2}}
+
+\usepackage{sansmath}
+
+
+\newcommand{\lang}{\ensuremath{\sf{GrInd}}\xspace}
+\newcommand{\clang}{\ensuremath{\sf{CastInd}}\xspace}
+% \newcommand{\genlang}{\ensuremath{\sf{GEq}}\xspace}
+% \newcommand{\synlang}{\ensuremath{\genlang_{Syn}}\xspace}
+% \newcommand{\semlang}{\ensuremath{\genlang_{Sem}}\xspace}
+% \newcommand{\alglang}{\ensuremath{\genlang_{Alg}}\xspace}
+
+% \newcommand{\syn}{{\sf{GEqSyn}}\xspace}
+% \newcommand{\sem}{{\sf{GEqSem}}\xspace}
+% \newcommand{\alg}{{\sf{GEqAlg}}\xspace}
+
+% \newcommand{\slang}{{\sf{StIf}}\xspace}
+% \newcommand{\slangDesc}{\underline{St}atic language with \underline{If}-else branching\xspace}
+% \newcommand{\silang}{{\sf{StInd}}\xspace}
+% \newcommand{\selang}{{\sf{StEq}}\xspace}
+
+% \newcommand{\clang}{{\sf{CastIf}}\xspace}
+% \newcommand{\clangDesc}{\underline{Cast} calculus with \underline{If}-else branching\xspace}
+% \newcommand{\cilang}{{\sf{CastInd}}\xspace}
+% \newcommand{\celang}{{\sf{CastEq}}\xspace}
+
+% \newcommand{\tlang}{{\sf{StIR}}\xspace}
+% \newcommand{\tlangDesc}{\underline{Static} language with \underline{I}nduction-\underline{Recursion}\xspace}
+% % \newcommand{\gtt}{\textsc{SDIndGTT}\xspace}
+% % \newcommand{\rlang}{\textsc{CastRun}\xspace}
+
+\newcommand{\cast}[2]{\g{\langle #2 <= #1 \rangle}}
+\newcommand{\castnog}[2]{\g{\langle} #2 \g{<=} #1 \g{\rangle}}
+\newcommand{\castenv}[2]{{\langle} #2 {<=} #1 {\rangle}}
+% \newcommand{\rmeet}[3]{\g{#1 \sqcap_{#3} #2 }}
+% \newcommand{\rmeetnog}[3]{{#1 \g{\sqcap}_{#3} #2}}
+\newcommand{\grefl}[3]{\g{refl_{#1 |- #2 \cong  #3}}}
+\newcommand{\greflnog}[3]{\g{refl}_{#1 \g{|-} #2 \g{\cong} #3}}
+
+% % \newcommand{\upCast}[2]{\g{\langle #2 \nwarrow #1 \rangle}}
+% \newcommand{\downCast}[2]{\g{\langle #2 \swarrow  #1 \rangle}}
+% \newcommand{\genCast}[2]{\g{\langle #2 \mathrlap{\,\nwarrow}\swarrow  #1 \rangle}}
+%plainly styled cast
+\newcommand{\pcast}[2]{\g\langle #2 \g{<=} #1 \g\rangle}
+% \newcommand{\ev}[1]{\g{\langle #1 \rangle}}
+
+% \newcommand{\sTop}{\s{\textsf{\bf ?} }}
+% \newcommand{\sBot}{\s{\sansmath \mho} }
+\newcommand{\iswf}{\s{{iswf}}}
+\newcommand{\WF}{\s{{WF}}}
+\newcommand{\field}{\s{\textit{field}}}
+\newcommand{\sSigma}{{\color{BrickRed}\mathrm\Sigma}}
+\newcommand{\sPi}{{\color{BrickRed}\mathrm\Pi}}
+\newcommand{\uttrans}[1]{{\llbracket \g{#1} \rrbracket}}
+\newcommand{\interpCode}[1]{\s{\llparenthesis #1\rrparenthesis_\Code}}
+\newcommand{\interp}[1]{\s{\llparenthesis #1 \rrparenthesis}}
+
+\newcommand{\sind}[2]{\s{\mathsf{ind}_{#1}(}#2\s{)}}
+\newcommand{\gind}[2]{\g{\mathsf{ind}_{#1}(}#2\g{)}}
+\newcommand{\selim}{\s{\mathsf{elim}}}
+\newcommand{\gelim}{\g{\mathsf{elim}}}
+
+
+\newcommand{\varAE}{{\!\! \textit{\AE} }}
+
+\newcommand{\elabsto}{\rightarrowtriangle}
+\newcommand{\echeck}[3]{#1 \elabsto #3 <= #2}
+\newcommand{\esynth}[3]{#1 \elabsto #3 => #2}
+\newcommand{\epsynth}[4]{#2 \elabsto #4 =>_{#1} #3}
+\newcommand{\etype}[3]{#1 \elabsto #3 : \gType{}_{=>\g{#2}} }
+\newcommand{\redsto}{\leadsto}
+
+\newcommand{\DCat}[1]{{\g{D^C\langle #1\rangle}}}
+\newcommand{\DCatnog}[1]{{\g{D^C\langle} #1\g{\rangle}}}
+% \newcommand{\seqSqube}[1]{\sqube_{{#1}}}
+\newcommand{\sqube}{\sqsubseteq}
+\newcommand{\squbr}{\sqsubseteq_{\mathsf{Surf}}}
+% \newcommand{\squbo}{\sqsubseteq_{obs}}
+\newcommand{\squbo}{\sqsubseteq^{\Vdash}}
+\newcommand{\squbB}{\sqsubseteq_{\bB}}
+\newcommand{\squbG}{\sqsubseteq^{Ctx}}
+\newcommand{\squbstar}{\sqsubseteq^{C*}}
+\newcommand{\sqeqstar}{\sqsupseteq\sqsubseteq^{C*}}
+\newcommand{\squbs}{\sqsubseteq_{\alpha}}
+% \newcommand{\squbstep}{\sqube_{\leadsto}}
+\newcommand{\equiprecstep}{\sqsupseteq\sqube_{\leadsto}}
+\newcommand{\qmt}[1]{\gqm_{\g{#1}}}
+\newcommand{\qml}{\gqm_{\gType{\ell}}}
+\newcommand{\qmat}[1]{\g{\gqm_{#1}}}
+\newcommand{\attagl}[2]{\g{\langle#1\rangle_{\g\ell}#2}}
+
+% \newcommand{\sqm}
+
+
+% Cleverref config
+\crefformat{section}{\S#2#1#3}
+\crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+\crefrangeformat{section}{\S\S#3#1#4 to~#5#2#6}
+\crefmultiformat{section}{\S\S#2#1#3}{ and~#2#1#3}{, #2#1#3}{ and~#2#1#3}
+\Crefformat{section}{Section #2#1#3}
+\Crefformat{subsection}{Section #2#1#3}
+\Crefformat{subsubsection}{Section #2#1#3}
+\Crefrangeformat{section}{Sections #3#1#4 to~#5#2#6}
+\Crefmultiformat{section}{Sections #2#1#3}{ and~#2#1#3}{, #2#1#3}{ and~#2#1#3}
+
+\newcommand{\tagOf}{\mathit{tagOf}}
+\newcommand{\typeTagOf}{\mathit{typeTagOf}}
+\newcommand{\levelOne}{{\mathcal{L}^1}}
+
+% \newcommand\psynth{{=>}^{*}}
+
+
+
+
+\renewcommand{\slambda}[3]{\s{\lambda(#1 : #2)\ldotp #3}}
+\renewcommand{\rlambda}[3]{\r{\lambda(#1 : #2)\ldotp #3}}
+\renewcommand{\glambda}[3]{\g{\lambda(#1 : #2)\ldotp #3}}
+
+
+
+\newcommand{\jform}[1]{\fbox{#1}\hspace{\fill}\\}
+\newcommand{\jformlow}[1]{\fbox{#1}\hspace{\fill}\vspace{-1em}\\}
+% \newcommand{\synth}{\Rightarrow}
+\newcommand{\psynth}[1]{{\,\mathbin{\Rightarrow_{#1}}}\,}
+\newcommand{\prepsynth}[1]{{\,\mathbin{\Rightarrow*_{#1}}}\,}
+\newcommand{\psynthstar}[1]{{\,\mathbin{\Rightarrow^{*}_{#1}}}\,}
+% \newcommand{\check}{\Leftarrow}
+\newcommand{\ssorts}{\sType{ }}
+% \newcommand{\ulev}[1]{^{@#1}}
+\newcommand{\ind}{\mathtt{ind}}
+\newcommand{\smatch}[4]{\s{\operatorname{\ind}_{#1}(#2,#3,#4)}}
+\newcommand{\smatchnoarg}[1]{\s{\operatorname{\ind}_{#1}}}
+\newcommand{\rmatch}[4]{\r{\operatorname{\ind}_{#1}(#2,#3,#4)}}
+\newcommand{\gmatch}[4]{\g{\operatorname{\ind}_{#1}(#2,#3,#4)}}
+\newcommand{\gmatchNoarg}[1]{\g{\operatorname{\ind}_{#1}}}
+
+\newcommand{\fix}[3]{\operatorname{\mathtt{fix}}#1 : #2 := #3}
+\newcommand{\pars}{\operatorname{\mathbf{\color{black} Params}}}
+\newcommand{\indices}{\operatorname{\mathbf{\color{black} Indices}}}
+\newcommand{\ivals}[3]{\operatorname{\mathbf{\color{black} IValsFor}}(#1,#2,#3)}
+\newcommand{\iargs}[4]{\operatorname{\mathbf{\color{black} IArgsFor_{#1}}}(#2,#3,#4)}
+\newcommand{\args}{\operatorname{\mathbf{\color{black} Args}}}
+\newcommand{\parsub}[1]{[#1]}
+\newcommand{\hlev}[1]{_{#1}}
+\newcommand{\ulev}[1]{\scalebox{0.7}{@\{#1\}}}
+
+
+\newcommand{\J}{\mathbf{J}}
+\newcommand{\Kax}{\mathbf{K}}
+
+\newcommand{\defprec}{{\sqube_{\stepsto}}}
+\newcommand{\defsuprec}{{\sqube^{\longleftarrow}_{\stepsto}}}
+\newcommand{\defcst}{{{\cong}_{\stepsto}}}
+\newcommand{\acst}{{{\cong}_{\alpha}}}
+
+\newcommand{\genprec}{\Gbox{\defprec}}
+\newcommand{\gensuprec}{\Gbox{\defsuprec}}
+\newcommand{\gencst}{\Gbox{\defcst}}
+
+% \newcommand{\gcomp}[1]{\g{ \sqcap_{#1}} }
+\usepackage{scalerel}
+\DeclareMathOperator*{\bigamp}{\mathlarger{\&}}
+\newcommand{\gcomp}[1]{\mathbin{\g{\&_{#1}}}}
+\newcommand{\gcompop}{\g{\&}}
+% \newcommand{\gennbot}{\Gbox{\not\sqsubseteq\!\!\mho}}
+\usepackage{ifsym}
+
+% \newcommand{\proofappendix}{\cref{apx:proofs}}
+\newcommand{\proofappendix}{the appendix of the anonymized supplementary material}
+% \newcommand{\Proofappendix}{\Cref{apx:proofs}}
+
+
+% \newcommand{\ruleappendix}{\cref{apx:rules}}
+\newcommand{\ruleappendix}{the appendix of the anonymized supplementary material}
+% \newcommand{\Ruleappendix}{\Cref{apx:rules}}
+
+\newcommand{\itercomp}{\seq{\bigamp}}
+
+\newcommand{\germ}{\mathsf{\color{black} germ}}
+\newcommand{\head}{\mathsf{\color{black} head}}
+
+
+%%%%%%%%%%%% Just so we can have long lemma lists
+% \let\proof\relax
+% \let\endproof\relax
+% \usepackage{amsthm} %http://ctan.org/pkg/amsthm
+% \newtheorem{theorem}{Theorem}
+% \newtheoremstyle{exampstyle}
+%   {\topsep} % Space above
+%   {\topsep} % Space below
+%   {} % Body font
+%   {} % Indent amount
+%   {\bfseries} % Theorem head font
+%   {.} % Punctuation after theorem head
+%   {.5em} % Space after theorem head
+%   {} % Theorem head spec (can be left empty, meaning `normal')
+% \theoremstyle{exampstyle} \newtheorem{example}{Example}
+% \theoremstyle{exampstyle} \newtheorem{remark}{Remark}
+% \theoremstyle{exampstyle} \newtheorem{definition}{Definition}
+% \theoremstyle{exampstyle} \newtheorem{lemma}{Lemma}
