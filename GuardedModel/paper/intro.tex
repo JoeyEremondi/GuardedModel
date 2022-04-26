@@ -4,6 +4,64 @@
 
 \section{Introduction}
 
+Gradual dependent give principled static and dynamic semantics to programs where part of a type or term is missing.
+
+Gradual dependent types have not yet been meaningfully implemented.
+Constructing a compiler for a dependently typed language is a massive engineering effort,
+and involves writing a type checker, a convertability check for terms, and unification engine for inference,
+in addition to the code generation and optimization.
+Writing a compiler for a gradual dependently typed languuage is
+
+On the theoretical side, the story of gradual dependent types thus far has been one of compromise.
+% Several systems have been developed that support limited forms of dependency, such as
+% refinement types~\citep{Lehmann:2017:GRT:3009837.3009856,zalewskilambdadb}
+% or label-dependent types~\citep{10.1145/3485485}
+% \Citet{Eremondi:2019:ANG:3352468.3341692} presented GDTL,
+% a foundational calculus with full dependent types.
+% GDTL features
+% decidable type checking,
+% and allowed the imprecise term $\gqm$ to replace any part of a term or type.
+% However, the termination argument for GDTL does not support inductive types.
+The most comprehensive development of gradual dependent types is GCIC~\citep{bertrand:gcic},
+which extends the Calculus of Inductive Constructions (CIC) with gradual types.
+GCIC comes in three, each of which satisfies two of the following properties:
+(1) decidable type checking, (2) the gradual guarantees, and (3) conservatively extending CIC.
+\je{TODO: mention equality if either paper gets accepted}
+The authors show that, to a degree, the compromise of GCIC is necessary:
+they establish a ``fire-triangle'' theorem that shows no dependently typed language can satisfy
+strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
+a strengthening of the gradual guarantees.
+
+
+In this paper, we take the view that the fire triangle properties are means to an end,
+rather than ends unto themselves. Conservatively extending CIC is a useful trait on its own,
+since it ensures that no ill-typed static programs are allowed in a gradual language.
+Strong normalization, conversely, is mainly useful to
+prove that type-checking is decidable, as well as to establish logical consistency.
+Likewise, EP-pairs are mainly useful for showing the gradual guarantees, and showing that
+gradual programs to not unnecessarily produce $\gqm$ as their result.
+
+We present a gradual language \lang, that has both an impelmentation strategy and a rich metatheory.
+\lang circumvents the fire-triangle, sacrificing
+strong normalization, but keeping the properties that we actually want. Specifically, \lang features decidable type checking,
+(weak) consistency and canonicity, the gradual guarantees, and conservative extension of (predicative) CIC.
+Moreover, we show that \lang does not violate static reasoning principles: propositionally-equal
+CIC terms embedding in \lang are observationally-equivalent, and while we lack full EP-pairs,
+we show that casts only change the behaviour of terms relative to dynamic type errors:
+applying casts may produce a term that raises an error in more or less situations, but when a concrete
+result is produced, it is the same result.
+\je{TODO explain EP pairs}
+
+The key to proving \lang's desirable properties is the same as the key making it straightforward to implement:
+we provide a translation from \lang into static dependent types.
+For implementation, this translation means that existing dependently-typed normalization techniques, unification algorithms,
+and code generators can be used ``off-the-shelf'' to compile \lang programs.
+For metatheory, the translation serves as a syntactic model in the style of \citet{10.1145/3018610.3018620},
+piggybacking off of the denotational semantics of a static type theory to give denotational semantics to \lang.
+Moreover, by translating to a consistent type theory, we can prove theorems about \lang in the
+type theory itself. Our translation and the theorems about it have been mechanized in Guarded Cubical Agda~\citep{TODO}.
+
+
 \section{Two Problems, One Solution}
 
 
