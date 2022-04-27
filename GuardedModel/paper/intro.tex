@@ -25,7 +25,8 @@ that satisfy the gradual guarantees, but one
 has undecidable type checking and the other rejects some well-typed static CIC programs.
 % The third GCIC variant has decidable type checking and conservatively extends CIC, but does not support
 % the gradual guarantees.
-They show that, to a degree, these sacrifices are unavoidable, to a degree:
+
+\Citet{bertrand:gcic} show that, to a degree, these sacrifices are unavoidable, to a degree:
 no dependently typed language can satisfy all of
 strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
 a strengthening of the gradual guarantees.
@@ -99,6 +100,24 @@ Our main contribution is a translation from \lang to a static type theory:
 \end{itemize}
 
 \section{Two Problems, One Solution}
+
+Our work attacks two main problems that have a common solution.
+First, we want to allow \lang to be implemented
+by translating them to static dependent types without needing to add features to the static target langauge,
+so that existing technology can be
+used when compiling them.
+The challenge of this is accommodating the non-termination of gradual typing,
+since dependently typed core languages typically forbid or restrict non-terminating function definitions.
+Second, we want to prove properties about \lang, namely that approximate normalization
+terminates (for decidable type checking) and that the gradual guarantees are satisfied.
+Unlike the approach of \citet{Eremondi:2019:ANG:3352468.3341692}, the syntactic model
+approach scales to handle inductive types, as well as logical-relation
+style proofs~\citep{10.1017/S0956796812000056}.
+
+In this section, we explain these two problems, the challenges in solving
+them, and a birds-eye view of our approach to solving them.
+
+
 
 
 \subsection{Translation to Support Implementation}
