@@ -73,7 +73,7 @@ handling to ensure safety in the presence of type imprecision.
 We address both these shortcomings in \lang, a \underline{Gr}adual language with \underline{Ind}uctive types.
 \lang sacrifices
 strong normalization and graduality, but keeps the properties that we actually want: decidable type checking,
-(weak) consistency and canonicity, the gradual guarantees, and conservatively extending CIC.
+(weak) canonicity, the gradual guarantees, and conservatively extending CIC.
 Because type checking is decidable, \lang can be translated into the core calculi of existing dependently typed compilers.
 Moreover, we show that \lang does not violate static reasoning principles: propositionally-equal
 CIC terms embedded in \lang are observationally-equivalent,
@@ -252,7 +252,72 @@ strictly-positive datatypes are used, and hence termination is guaranteed.
 
 \subsubsection{Extinguishing the Fire Triangle}
 
+\begin{table}
+  \label{tab:language-comp}
+  \scriptsize
+  \begin{tabular}{ |m{4em}|m{4em}|m{5em}|m{5em}|m{5em}|m{5em}|m{4em}||m{4em}|m{4em}|m{4em}| }
+    \hline
+  \textbf{Language} & Decidable type checking & Gradual Guarantees & Conservative Over CIC & Weak\ \ \ \  Graduality & Weak Canonicity & Inductives & Graduality & Strong Normalization\\
+  \hline
+    GDTL & \cmark & \xmark* & \xmark & ? & \cmark & \xmark & \xmark & \xmark \\
+  \hline
+    $GCIC^{\mathcal{G}}$ & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \xmark \\
+  \hline
+    $GCIC^{\mathcal{N}}$ & \cmark & \xmark & \cmark & \xmark & \cmark & \cmark & \xmark & \cmark \\
+  \hline
+    $GCIC^{\uparrow}$ & \cmark & \cmark & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark \\
+  \hline
+    \lang & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \xmark & \xmark \\
+  \hline
+  \end{tabular}
+  \caption{Gradual Dependent Languages: Feature Comparison}
+\end{table}
+
+When developing GCIC, \citet{bertrand:gcic} establish a ``fire-triangle'' theorem
+stating that no language
+could conservatively extend CIC while having strong normalization and graduality.
+Here, graduality is the property defined by \citet{10.1145/3236768}, where
+casting to a more precise type and back produces a term that is as precise as the original,
+and casting to a less precise type and back produces an observationally-equivalent term.
+The name is chosen by analogy with parametricity: just as parametricity is a
+logical relation strengthening type safety, graduality is a logical relation
+strengthening the gradual guarantees.
+GCIC is then presented with three variants: one without decidable type checking,
+one without the gradual guarantees, and one that rejects some well-typed CIC programs.
+
+In this paper, we take the view that for programming languages specifically,
+strong normalization and graduality are means to an end, rather than ends unto themselves.
+Specifically, we want strong normalization to prove decidable type checking and weak canonicity
+i.e. that all normal-forms of a term are either canonical, $\gqm$, or an error $\err$.
+Strong normalization is also required for weak logical consistency: \lang does not have this,
+but we discuss how to recover a form of it in \cref{subsec:static-reason}.
+We want graduality to prove the gradual guarantees, as well as to establish that $\gqm$
+is never needlessly produced as a result. (Such a property is desirable because a language that produces $\gqm$ as a result
+of all casts is useless, but still technically satisfies the gradual guarantees.)
+
+So while \lang cannot simulatneously have all three fire-triangle properties,
+it can have all of the properties we actually want:
+decidable type checking, the gradual guarantees, and conservatively extending CIC.
+\Cref{tab:language-comp} compares the features of GDTL, the three variants of GCIC, and \lang:
+while \lang sacrifices strong normalization and graduality, we are able to recover
+all the other desired properties despite this.
+
+However, proving these properties is not trivial.
+GDTL proved decidability of type checking using hereditary substiuttion, which does not
+scale well to inductive types.
+The gradual guarantees were proved using a simulation argument, but the proof
+was complex and delicate.
+While a syntactic model was used, the $GCIC^{\mathcal{G}}$ that embeds CIC and has the gradual guarantees
+required non-positive datatypes, so the model was by a translation to an inconsistent logic,
+and the target type theory could not be used to prove theorems about $GCIC^{\mathcal{G}}$.
+For the other variants, strong normalization was shown in a syntactic model by sacrificing either embedding CIC
+or the gradual guarantees.
+
+
 \subsubsection{Static Reasoning in Gradual Code}
+\label{subsec:static-reason}
+
+\je{TODO: talk about consistency}
 
 \subsection{Modelling Gradual Dependent Types}
 
