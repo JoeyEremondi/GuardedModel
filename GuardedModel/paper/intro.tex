@@ -239,12 +239,12 @@ that produced $\gqm$ whenever there was not enough type information to ensure te
 
 
 We combine these two strategies to obtain a translation with decidable type checking.
-Like GDTL, we have separate semantics for compile-time normalization and run-time execution.
+Like GDTL, \lang has separate semantics for compile-time normalization and run-time execution.
 However, GDTL had totally separate approximate and exact semantics, where
 approximation was based on hereditary substitution, no formal notion related the two semantics.
 Our approximate and exact semantics are identical except for one part: casts between $\gqm$
 and $\g{\gqm \to \gqm}$. Instead of relying on hereditary substitution, we use the GCIC approach
-and translate it to \MLTT: the approximations mean that only
+and translate it to CIC: the approximations mean that only
 strictly-positive datatypes are used, and hence termination is guaranteed.
 
 
@@ -295,29 +295,88 @@ We want graduality to prove the gradual guarantees, as well as to establish that
 is never needlessly produced as a result. (Such a property is desirable because a language that produces $\gqm$ as a result
 of all casts is useless, but still technically satisfies the gradual guarantees.)
 
-So while \lang cannot simulatneously have all three fire-triangle properties,
-it can have all of the properties we actually want:
+So while \lang cannot simultaneously have all three fire-triangle properties,
+it can have all the properties we actually want:
 decidable type checking, the gradual guarantees, and conservatively extending CIC.
 \Cref{tab:language-comp} compares the features of GDTL, the three variants of GCIC, and \lang:
 while \lang sacrifices strong normalization and graduality, we are able to recover
 all the other desired properties despite this.
 
 However, proving these properties is not trivial.
-GDTL proved decidability of type checking using hereditary substiuttion, which does not
+GDTL proved decidability of type checking using hereditary substitution, which does not
 scale well to inductive types.
 The gradual guarantees were proved using a simulation argument, but the proof
 was complex and delicate.
-While a syntactic model was used, the $GCIC^{\mathcal{G}}$ that embeds CIC and has the gradual guarantees
+While a syntactic model was used, the $GCIC^{\mathcal{G}}$ variant that embeds CIC and has the gradual guarantees
 required non-positive datatypes, so the model was by a translation to an inconsistent logic,
 and the target type theory could not be used to prove theorems about $GCIC^{\mathcal{G}}$.
 For the other variants, strong normalization was shown in a syntactic model by sacrificing either embedding CIC
 or the gradual guarantees.
 
+Our implementation strategy works equally well for proving that type checking is decidable:
+if we can translate approximate normalization into the total fragment of a type theory,
+then it must be terminating. Then, by translating our exact semantics into
+guarded type theory, we are able to prove the gradual guarantee in the type theory itself.
+Unlike CIC with non-positive types, guarded type theory is logically consistent, so
+the theorems proved about the translations of gradual programs can be believed.
+
 
 \subsubsection{Static Reasoning in Gradual Code}
 \label{subsec:static-reason}
 
-\je{TODO: talk about consistency}
+In addition to the gradual guarantees, there are two properties about \lang that our translation
+allows us to prove:
+\begin{itemize}
+  \item Preservation of Propositional Equality: this is the property that, for any two static CIC terms
+        $\s{s}, \s{t} : \s{T}$, if we have a proof that $\s{s ==_{T} t}$, then
+        when we embed $\s{s}$ and $\s{t}$ into \lang, the resulting $\g{s}$ and $\g{t}$
+        are observationally equivalent. This guarantees that static reasoning principles
+        still hold for fully static code that is used in gradual programs.
+        For example, any optimizations
+        that are valid for static code are still valid if that code is imported by a gradual library.
+
+        The preservation of equality is a weaker version of the gradual full-abstraction property described by
+        \citet{10.1145/3434288}, which says that all observationally-equivalent static programs
+        are observationally-equivalent when embedded in the gradual language.
+        Full abstraction is difficult to prove for \lang, since the conventional strategy
+        requires the ability to translate any \lang context into an equivalent CIC one, which is
+        impossible since CIC lacks non-termination as an effect.
+        Proving that propositionally-equal static terms are gradually-equivalent provides a good first
+        step, however, to ensuring that static is preserved gradually.
+        \je{TODO: check if this prevents the bad example from DeVrise paper}
+        \je{TODO: can we prove FA with funExt, by turning (x : T) into $\lambda (C : T -> B)\ldotp C x$ and using fun-ext? }
+        \je{TODO: can we prove FA from CIC->GuardedTT FA?}
+
+  \item Weak graduality: while we do not prove the strong graduality property of \citet{10.1145/3236768},
+        we can prove a weaker version that establishes the same desirable property.
+
+        In principle, it should be possible to prove strong graduality for a variant of \lang
+        that ensured that approximate normal forms were never used at run-time, since the approximation
+        when converting functions to and from $\gqm$ is what breaks the property.
+        However, such a language would introduce the possibility that computations internal
+        to run-time type information could non-terminate. These would be exceedingly difficult
+        for the programmer to debug, since such computations are automatically inserted by the compiler
+        and are meant to be opaque to the programmer. So
+
+
+\end{itemize}
+
+Approximate normalization also let us recover a form of weak logical consistency:
+any closed term of type $\g{False}$ must have an approximate normal form that is either
+the unknown term $\gqm$ or a run-time type error $\err$.
+This is useful for proofs that are not used in computation, but serve as
+validation that some desired property holds.
+Because some \lang programs are non-terminating, it is possible to write
+closed terms of statically-empty types that do not evaluate to $\gqm$ or $\err$.
+However, inspecting the approximate-normal forms of such proofs can inform the programmer
+about places where type-imprecision caused approximation, directing them
+to where type imprecision forced approximation.
+If a term of a fully-static type has a fully-static approximate normal form, then
+the programmer can be confident in the truth of its Curry-Howard interpretation,
+even if the proof itself uses imprecise types or terms.
+
+
+
 
 \subsection{Modelling Gradual Dependent Types}
 
