@@ -5,14 +5,42 @@
 \section{Introduction}
 
 Gradual dependent give principled static and dynamic semantics to programs where part of a type or term is missing.
+By allowing imprecision, gradual dependent types allow for smooth migration of code
+from non-dependently typed languages, or even untyped languages, to full dependent types,
+allowing the programmer run and test their code even when the full type details haven't been figured out.
+% Likewise, the common practice of ``programming by holes''~\citep{idrisBook} is enhanced:
+% code containing holes can still be safely run or tested.
+This migration is easiest in languages fulfilling the \textit{gradual guarantees} of
+\citet{refinedCriteria}, which state replacing part of a program with $\gqm$ creates no new
+static or dynamic type errors. The gradual guarantees ensure that, when an error is encountered,
+the problem is never too few types, but that two types in the program are fundamentally incompatible.
 
-Gradual dependent types have not yet been meaningfully implemented.
+However, the benefits of gradual dependent types have not been realized,
+since existing developments have enabled the gradual guarantees
+at the expense of other desirable properties.
+\Citet{Eremondi:2019:ANG:3352468.3341692} presented a dependent calculus supporting the gradual guarantees,
+but relied on a termination argument that does not scale to inductive types.
+\Citet{bertrand:gcic} presented two extensions of the Calculus of Inductive Constructions (CIC)
+that satisfy the gradual guarantees, but one
+has undecidable type checking and the other rejects some well-typed static CIC programs.
+% The third GCIC variant has decidable type checking and conservatively extends CIC, but does not support
+% the gradual guarantees.
+They show that, to a degree, these sacrifices are unavoidable, to a degree:
+no dependently typed language can satisfy all of
+strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
+a strengthening of the gradual guarantees.
+
+
+Another obstacle to the adoption of gradual dependent types
+is that gradual dependent types have not yet been meaningfully implemented.
 Constructing a compiler for a dependently typed language is a massive engineering effort,
 and involves writing a type checker, a convertability check for terms, and unification engine for inference,
 in addition to the code generation and optimization.
-Writing a compiler for a gradual dependently typed language is
+Writing a compiler for a gradual dependently typed language involves all of this work, plus extra
+handling to ensure safety in the presence of type imprecision.
 
-On the theoretical side, the story of gradual dependent types thus far has been one of compromise.
+
+% On the theoretical side, the story of gradual dependent types thus far has been one of compromise.
 % Several systems have been developed that support limited forms of dependency, such as
 % refinement types~\citep{Lehmann:2017:GRT:3009837.3009856,zalewskilambdadb}
 % or label-dependent types~\citep{10.1145/3485485}
@@ -22,45 +50,53 @@ On the theoretical side, the story of gradual dependent types thus far has been 
 % decidable type checking,
 % and allowed the imprecise term $\gqm$ to replace any part of a term or type.
 % However, the termination argument for GDTL does not support inductive types.
-The most comprehensive development of gradual dependent types is GCIC~\citep{bertrand:gcic},
-which extends the Calculus of Inductive Constructions (CIC) with gradual types.
-GCIC comes in three, each of which satisfies two of the following properties:
-(1) decidable type checking, (2) the gradual guarantees, and (3) conservatively extending CIC.
-\je{TODO: mention equality if either paper gets accepted}
-The authors show that, to a degree, the compromise of GCIC is necessary:
-they establish a ``fire-triangle'' theorem that shows no dependently typed language can satisfy
-strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
-a strengthening of the gradual guarantees.
+% The most comprehensive development of gradual dependent types is GCIC~\citep{bertrand:gcic},
+% which extends the Calculus of Inductive Constructions (CIC) with gradual types.
+% GCIC comes in three, each of which satisfies two of the following properties:
+% (1) decidable type checking, (2) the gradual guarantees, and (3) conservatively extending CIC.
+% \je{TODO: mention equality if either paper gets accepted}
+% The authors show that, to a degree, the compromise of GCIC is necessary:
+% they establish a ``fire-triangle'' theorem that shows no dependently typed language can satisfy
+% strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
+% a strengthening of the gradual guarantees.
 
 
-In this paper, we take the view that the fire triangle properties are means to an end,
-rather than ends unto themselves. Conservatively extending CIC is a useful trait on its own,
-since it ensures that no ill-typed static programs are allowed in a gradual language.
-Strong normalization, conversely, is mainly useful to
-prove that type-checking is decidable, as well as to establish logical consistency.
-Likewise, EP-pairs are mainly useful for showing the gradual guarantees, and showing that
-gradual programs to not unnecessarily produce $\gqm$ as their result.
+% In this paper, we take the view that the fire triangle properties are means to an end,
+% rather than ends unto themselves. Conservatively extending CIC is a useful trait on its own,
+% since it ensures that no ill-typed static programs are allowed in a gradual language.
+% Strong normalization, conversely, is mainly useful to
+% prove that type-checking is decidable, as well as to establish logical consistency.
+% Likewise, EP-pairs are mainly useful for showing the gradual guarantees, and showing that
+% gradual programs to not unnecessarily produce $\gqm$ as their result.
 
-We present a gradual language \lang, that has both an impelmentation strategy and a rich metatheory.
-\lang circumvents the fire-triangle, sacrificing
-strong normalization, but keeping the properties that we actually want. Specifically, \lang features decidable type checking,
-(weak) consistency and canonicity, the gradual guarantees, and conservative extension of (predicative) CIC.
+We address both these shortcomings in \lang, a \underline{Gr}adual language with \underline{Ind}uctive types.
+\lang sacrifices
+strong normalization and EP-pairs, but keeps the properties that we actually want: decidable type checking,
+(weak) consistency and canonicity, the gradual guarantees, and conservatively extending CIC.
+Because type checking is decidable, \lang can be translated into the core calculi of existing dependently typed compilers.
 Moreover, we show that \lang does not violate static reasoning principles: propositionally-equal
-CIC terms embedding in \lang are observationally-equivalent, and while we lack full EP-pairs,
-we show that casts only change the behaviour of terms relative to dynamic type errors:
-applying casts may produce a term that raises an error in more or less situations, but when a concrete
-result is produced, it is the same result.
-\je{TODO explain EP pairs}
+CIC terms embedded in \lang are observationally-equivalent,
+and casts only change the error-behavior of terms, not the concrete results produced.
+% and while we lack full EP-pairs,
+% we show that casts only change the behaviour of terms relative to dynamic type errors:
+% applying casts may produce a term that raises an error in more or less situations, but when a concrete
+% result is produced, it is the same result.
+% \je{TODO explain EP pairs}
 
-The key to proving \lang's desirable properties is the same as the key making it straightforward to implement:
-we provide a translation from \lang into static dependent types.
-For implementation, this translation means that existing dependently-typed normalization techniques, unification algorithms,
-and code generators can be used ``off-the-shelf'' to compile \lang programs.
-For metatheory, the translation serves as a syntactic model in the style of \citet{10.1145/3018610.3018620},
-piggybacking off of the denotational semantics of a static type theory to give denotational semantics to \lang.
-Moreover, by translating to a consistent type theory, we can prove theorems about \lang in the
-type theory itself. Our translation and the theorems about it have been mechanized in Guarded Cubical Agda~\citep{TODO}.
-
+Our main contribution is a translation from \lang to a static type theory:
+\begin{itemize}
+          \item For implementation, the translation means that existing normalizers
+                and code generators can be used ``off-the-shelf'' to compile \lang programs;
+  \item For metatheory, the translation serves as a syntactic model in the style of \citet{10.1145/3018610.3018620}, which we use to prove the gradual guarantees
+        and other metatheoretic properties;
+  \item To enable decidable type checking, we adapt approximate normalization
+        from \citet{Eremondi:2019:ANG:3352468.3341692} to a cast calculus, using the syntactic
+        model to prove termination;
+  \item To model run-time semantics, we translate to \textit{guarded type theory}~\citep{TODO},
+        whose non-positive recursive types allow the non-termination of gradual types to be
+        exactly represented in a consistent target language;
+  \item  Our translation and the theorems about it have been mechanized in Guarded Cubical Agda~\citep{TODO}
+\end{itemize}
 
 \section{Two Problems, One Solution}
 
