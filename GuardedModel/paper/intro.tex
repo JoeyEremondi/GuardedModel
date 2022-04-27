@@ -18,9 +18,9 @@ the problem is never too few types, but that two types in the program are fundam
 However, the benefits of gradual dependent types have not been realized,
 since existing developments have enabled the gradual guarantees
 at the expense of other desirable properties.
-\Citet{Eremondi:2019:ANG:3352468.3341692} presented a dependent calculus supporting the gradual guarantees,
+\Citet{Eremondi:2019:ANG:3352468.3341692} presented GDTL, a dependent calculus supporting the gradual guarantees,
 but relied on a termination argument that does not scale to inductive types.
-\Citet{bertrand:gcic} presented two extensions of the Calculus of Inductive Constructions (CIC)
+\Citet{bertrand:gcic} presented GCIC, with two extensions of the Calculus of Inductive Constructions (CIC)
 that satisfy the gradual guarantees, but one
 has undecidable type checking and the other rejects some well-typed static CIC programs.
 % The third GCIC variant has decidable type checking and conservatively extends CIC, but does not support
@@ -28,7 +28,7 @@ has undecidable type checking and the other rejects some well-typed static CIC p
 
 \Citet{bertrand:gcic} show that, to a degree, these sacrifices are unavoidable, to a degree:
 no dependently typed language can satisfy all of
-strong normalization, conservative extension of CIC, and the Embedding-Projection Pairs (EP-pairs) property,
+strong normalization, conservative extension of CIC, and \textit{graduality},
 a strengthening of the gradual guarantees.
 
 
@@ -72,12 +72,13 @@ handling to ensure safety in the presence of type imprecision.
 
 We address both these shortcomings in \lang, a \underline{Gr}adual language with \underline{Ind}uctive types.
 \lang sacrifices
-strong normalization and EP-pairs, but keeps the properties that we actually want: decidable type checking,
+strong normalization and graduality, but keeps the properties that we actually want: decidable type checking,
 (weak) consistency and canonicity, the gradual guarantees, and conservatively extending CIC.
 Because type checking is decidable, \lang can be translated into the core calculi of existing dependently typed compilers.
 Moreover, we show that \lang does not violate static reasoning principles: propositionally-equal
 CIC terms embedded in \lang are observationally-equivalent,
-and casts only change the error-behavior of terms, not the concrete results produced.
+and casts only change the error-behavior of terms, not the concrete results produced, a
+notion which we call \textit{weak graduality}.
 % and while we lack full EP-pairs,
 % we show that casts only change the behaviour of terms relative to dynamic type errors:
 % applying casts may produce a term that raises an error in more or less situations, but when a concrete
@@ -106,7 +107,7 @@ First, we want to allow \lang to be implemented
 by translating them to static dependent types without needing to add features to the static target langauge,
 so that existing technology can be
 used when compiling them.
-The challenge of this is accommodating the non-termination of gradual typing,
+The challenge here is accommodating the non-termination of gradual typing,
 since dependently typed core languages typically forbid or restrict non-terminating function definitions.
 Second, we want to prove properties about \lang, namely that approximate normalization
 terminates (for decidable type checking) and that the gradual guarantees are satisfied.
@@ -117,18 +118,134 @@ style proofs~\citep{10.1017/S0956796812000056}.
 In this section, we explain these two problems, the challenges in solving
 them, and a birds-eye view of our approach to solving them.
 
+Throughout, we refer to terms from several languages. For clarity,
+we write terms from CIC, the static starting language, in \staticdesc,
+terms from \lang,  the gradual cast calculus, in \gradualdesc,
+and terms from the guarded type theory, the target of translation,
+in \targetdesc.
 
 
 
 \subsection{Translation to Support Implementation}
 
-\subsubsection{Don't Reinvent The Wheel}
+\subsubsection{Don't Reinvent the Wheel}
+Even without gradual types, implementing a dependently typed language is a formidable task.
+Because types may depend on terms, checking that two types are equal involves
+determining if those two types \textit{convertible}, i.e., if they are equal
+after some number of reductions. Such a check must be implemented carefully,
+usually using Normalization by Evaluation (NbE)~\citep{TODO}, to ensure that
+only well-typed terms are normalized so the check terminates.
+Support for type inference and implicit arguments to functions
+involves a writing higher-order unification algorithm. Most dependently typed languages
+have some form of proof-search, tactics, or reflection, to automate the generation of
+trivial but tedious proofs.
+
+Even with the above features implemented, implementing them
+efficiently is even more difficult.
+Conversion checking is a costly operation,
+and while it can be implemented by fully normalizing the compared terms,
+this likely performs more computation than is necessary to see whether the terms
+are definitely convertible or not. Recent experiments in Idris have shown that
+on-the-fly compilation of terms can provide efficient normalization~\citep{TODO}.
+For code generation, since the return type of a function can depend on the value of its argument,
+the generation of machine code more closely resembles a dynamic language, but from an optimization
+standpoint, programs contain a wealth of type information that can be used to optimize said dynamic code.
+Moreover, dependently typed programs may contain indices or function arguments
+that are needed only because of type dependency, but are unused during run time~\citep{TODO}.
+Additional optimizations are needed to identify and remove unused terms from the generated code.
+Gradual dependent types should support the latest and greatest
+techniques for efficiency in both the compiler and compiled code.
+
 
 \subsubsection{An Implementation Strategy}
 
-\subsubsection{The Idris Model of Non-Termination}
+To avoid re-implementing the above tools for gradual dependent types, our implementation
+strategy is to first translate gradual dependent programs to a static dependently typed language.
+Then, existing implementations of conversion checking, unification, optimization and code-generation
+can be freely used on the result of translation.
+A gradual dependently typed language can simply be a new front-end to an existing dependently typed language,
+such as Agda or Idris.
+
+The challenge with this approach is that, to reuse existing infrastructure,
+we must be able to translate gradual dependent types to static dependent types
+\textit{without changing the static core language}.
+Gradual dependently typed programs do not always terminate,
+and may raise run-time type errors.
+However, the termination
+of static tools relies on the termination of static programs.
+Escape hatches exist, like Agda's \texttt{\{-\# TERMINATING \#-\}} pragma,
+but using such features is morally wrong, as these features are intended for cases
+where programs do terminate, but their termination is difficult or impossible to
+prove within the type theory itself.
+Instead, we must work within more conservative features for taming non-terminaton.
+
+\subsubsection{Idris and Agda's Models of Non-Termination}
+
+In Idris, all definitions are marked as either \texttt{partial} or \texttt{total}.
+Those that are marked \texttt{total} can only refer to others
+that are marked \texttt{total}. Recursive \texttt{total} functions are checked
+to ensure that recursive calls are only made to smaller arguments, and \texttt{total}
+inductive datatypes must be strictly positive (i.e. self-reference may only occur)
+to the right of function arrows in fields).
+By contrast, \texttt{partial} functions allow for general recursion and non-positive datatypes,
+and
+
+The key to keeping type-checking decidable is to never normalize \texttt{partial} terms.
+In Idris, when a type depends on a \texttt{partial} function, the definition of that function
+is kept abstract.%
+\footnote{
+  In Idris 1, this behaviour was implemented in the compiler. Idris 2 has yet to implement
+  this behavior, and happily runs the type checker forever when comparing non-terminating terms.
+  However, safety can be recovered by defining partial functions in their own module,
+  and exposing them with \texttt{export} rather than \texttt{public export}, which reveals
+  their types while keeping their definitions abstract.
+}%
+%
+This convention allows for trivial equalities to be satisfied, like a term being equal to itself.
+Two terminating terms that are marked \texttt{partial} are not considered definitionally equal
+even if they have the same evaluation, because normalization is required to see
+that they are equal.
+Agda has a similar model: definitions may be marked as \texttt{\{-\# NON\_TERMINATING \#-\}},
+which allows for general recursion but prevents such definitions from reducing during type checking.
+
+The issue with these models is that they are difficult to reason about in the abstract.
+Running the type-checker immediately reveals whether a particular definition type checks with \texttt{partial} annotations. However, we wish to prove that our gradual to static translation
+produces well typed code for \textit{all} outputs, but doing so requires reasoning about
+the internal details of Idris or Agda's normalization algorithm.
+
+To simplify the proof of our translation's type preservation, we instead turn to
+\textit{guarded type theory}. We explain more details of guarded type theory in \cref{subsec:guardedIntro},
+but for now it suffices to say that guarded type theory allows for a restricted form of general
+recursion and non-positive datatypes, by placing such self-reference behind a separate modality,
+and establishing fixed-point equalities as propositional equalities, rather than definitional equalities.
+Guarded type theory provides a convenient formalism for reasoning about when definitions are normalized,
+and allows us to mechanize our translation in Guarded Cubical Agda~\citet{TODO}.
+Then, the primitives of guarded type theory can be easily implemented using the less restrictive
+\texttt{partial} annotations of Agda and Idris,
+allowing us to prove that the resulting code is always well typed.
 
 \subsubsection{Translating Approximate Normalization}
+
+While guarded type theory allows us to represent non-terminating terms at the type level,
+it provides no clues as to actually devise a gradual type system for which checking is
+decidable. However, previous work on gradual dependent types does provide clues.
+\Citet{bertrand:gcic} were able to provide a syntactic model of GCIC
+without decidable type-checking
+by extending CIC with a non-positive datatypes, then translating the unknown type $\gqm$
+to a non-positive inductive type $\r{Unk} := \r{(Unk -> Unk) + (Unk \times Unk) + (List\ Unk)\ldots}$.
+\Citet{Eremondi:2019:ANG:3352468.3341692} were able to obtain terminating type level computations
+in GDTL with \textit{approximate normalization}: terms occurring within types were given a separate semantics
+that produced $\gqm$ whenever there was not enough type information to ensure termination.
+
+
+We combine these two strategies to obtain a translation with decidable type checking.
+Like GDTL, we have separate semantics for compile-time normalization and run-time execution.
+However, GDTL had totally separate approximate and exact semantics, where
+approximation was based on hereditary substitution, no formal notion related the two semantics.
+Our approximate and exact semantics are identical except for one part: casts between $\gqm$
+and $\g{\gqm \to \gqm}$. Instead of relying on hereditary substitution, we use the GCIC approach
+and translate it to \MLTT: the approximations mean that only
+strictly-positive datatypes are used, and hence termination is guaranteed.
 
 
 \subsection{Metatheory}
@@ -143,5 +260,6 @@ them, and a birds-eye view of our approach to solving them.
 \subsubsection{Modelling Approximate Normalization}
 
 \subsubsection{Guarded Type Theory}
+\label{subsec:guardedIntro}
 
 \subsubsection{Relating Approximate and Exact Normalization}
