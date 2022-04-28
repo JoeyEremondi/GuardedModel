@@ -114,7 +114,9 @@
 % \NewDocumentCommand{\inMu}{m}{{\langle #1 \rangle}}
 % \newcommand{\Jt}{\tilde{J}}
 
-\newcommand{\app}{\staticstyle{(\$)}}
+\newcommand{\app}{\targetstyle{\circledast}}
+\newcommand{\lob}{\textit{l\"{o}b}\xspace}
+\newcommand{\Lob}{L\"{o}b\xspace}
 
 % \NewDocumentCommand{\Nat}{}{\stt{Nat}}
 \NewDocumentCommand{\Zero}{}{\stt{Z}}
@@ -211,10 +213,10 @@ i     {?}{$\mathrm{\gqm}$}1
  }
  % \lstMakeShortInline[language=Agda,basicstyle=\small\ttfamily]|
 
-\newcommand{\Code}{\staticstyle{\mathbf{Code}}}
-\newcommand{\El}{\staticstyle{\mathbf{El}}}
-\newcommand{\runCode}{\staticstyle{\mathbf{Code}^{run}}}
-\newcommand{\runEl}{\staticstyle{\mathbf{El}^{run}}}
+\newcommand{\aCode}{\targetstyle{\bC^{A}}}
+\newcommand{\aEl}{\targetstyle{\mathbf{El}^A}}
+\newcommand{\eCode}{\targetstyle{\mathbf{Code}^{E}}}
+\newcommand{\eEl}{\targetstyle{\mathbf{El}^{E}}}
 
 % \renewcommand{\sType}[1]{\s{\mathbf{Type}}
 

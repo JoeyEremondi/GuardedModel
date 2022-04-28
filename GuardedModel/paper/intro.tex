@@ -123,7 +123,15 @@ we write terms from CIC, the static starting language, in \staticdesc,
 terms from \lang,  the gradual cast calculus, in \gradualdesc,
 and terms from the guarded type theory, the target of translation,
 in \targetdesc.
-
+To avoid confusion, and
+to emphasize \lang terms as syntax but
+terms from guarded type theory as mathematical entities,
+we write the type of types, dependent function types, and dependend pair types as $\gType{\ell}$,
+$\g{(x : T_{1}) -> T_{2}}$ and $\g{(x : T_{1})\times T_{2}}$
+for \lang,
+but use $\rType{\ell}$,
+$\r{\Pi(x : T_{1})\ldotp T_{2}}$
+and $\r{\Sigma(x : T_{1})\ldotp T_{2}}$.
 
 
 \subsection{Translation to Support Implementation}
@@ -290,7 +298,7 @@ strong normalization and graduality are means to an end, rather than ends unto t
 Specifically, we want strong normalization to prove decidable type checking and weak canonicity
 i.e. that all normal-forms of a term are either canonical, $\gqm$, or an error $\err$.
 Strong normalization is also required for weak logical consistency: \lang does not have this,
-but we discuss how to recover a form of it in \cref{subsec:static-reason}.
+but we discuss how to recover a form of it in \cref{subsec:weak-cst}.
 We want graduality to prove the gradual guarantees, as well as to establish that $\gqm$
 is never needlessly produced as a result. (Such a property is desirable because a language that produces $\gqm$ as a result
 of all casts is useless, but still technically satisfies the gradual guarantees.)
@@ -321,13 +329,9 @@ Unlike CIC with non-positive types, guarded type theory is logically consistent,
 the theorems proved about the translations of gradual programs can be believed.
 
 
-\subsubsection{Static Reasoning in Gradual Code}
-\label{subsec:static-reason}
+\subsubsection{Preservation of Propositional Equality}
 
-In addition to the gradual guarantees, there are two properties about \lang that our translation
-allows us to prove:
-\begin{itemize}
-  \item Preservation of Propositional Equality: this is the property that, for any two static CIC terms
+We show that, for any two static CIC terms
         $\s{s}, \s{t} : \s{T}$, if we have a proof that $\s{s ==_{T} t}$, then
         when we embed $\s{s}$ and $\s{t}$ into \lang, the resulting $\g{s}$ and $\g{t}$
         are observationally equivalent. This guarantees that static reasoning principles
@@ -347,30 +351,83 @@ allows us to prove:
         \je{TODO: can we prove FA with funExt, by turning (x : T) into $\lambda (C : T -> B)\ldotp C x$ and using fun-ext? }
         \je{TODO: can we prove FA from CIC->GuardedTT FA?}
 
-  \item Weak graduality: while we do not prove the strong graduality property of \citet{10.1145/3236768},
+\subsubsection{Weak Graduality}
+        Weak graduality: while we do not prove the strong graduality property of \citet{10.1145/3236768},
         we can prove a weaker version that establishes the same desirable property.
 
-        In principle, it should be possible to prove strong graduality for a variant of \lang
+        \je{TODO: should we cut all this and just to EP-pairs? We'll see how complicated everything else is}
+        Why does \lang not satisfy strong graduality?
+        In principle, it is possible to prove strong graduality for a variant of \lang
         that ensured that approximate normal forms were never used at run-time, since the approximation
         when converting functions to and from $\gqm$ is what breaks the property.
         However, such a language would introduce the possibility that computations internal
         to run-time type information could non-terminate. These would be exceedingly difficult
         for the programmer to debug, since such computations are automatically inserted by the compiler
-        and are meant to be opaque to the programmer. So
+        and are meant to be opaque to the programmer.
+        This is not an issue for non-dependent gradual types, where types do not contain terms
+        and there is no possibility for non-termination, but in the dependent setting, it is a key usability issue.
+
+        We formalize this property with a novel criterion that we call the \textit{gradual termination guarantee:}
+        \begin{definition}[The Gradual Termination Guarantee]
+          For a gradual surface term ${t}$, if $\Gamma |- t : T_{1}$ and $\Gamma |- t : T_{2}$, then
+          the elaboration of ${t}$ at $T_{1}$ terminates iff  the elaboration of $t$ at $T_{2}$ terminates.
+
+          Equivalently, for a cast calculus term $\g{t}$, if $\Gamma |- \g{t}  : \gT$,
+          then for all $\g{T'}$, $\cast{T}{T'}\gt$ terminates iff $\gt$ terminates.
+        \end{definition}
+
+        In essence, the termination guarantee says that the termination behavior of a term
+        depends only on the term itself, not on its type.
+        The termination guarantee is incompatible with strong graduality: casting to a less precise
+        type then back must produce an equivalent term under strong graduality,
+        so no approximations can be used, even in type ascriptions, leaving the possibility
+        for non-termination in type information.
+
+        What we need, then, is a way to establish that \lang does not needlessly produce
+        $\gqm$ as the result of run-time casts while still preserving the termination guarantee.
+        To do this, we  define \textit{weak graduality} to be as follows:
+        \begin{definition}[Weak Graduality]
+        If $\g{T_{1}} \sqube \g{T_{2}}$ (i.e. $\g{T_{1}}$ is more precise than $\g{T_{2}}$),
+        then:
+        \begin{itemize}
+          \item For any $\g{t_{2}} : \g{T_{2}}$ and  context $\mathcal{C} : \g{T_{2} -> \bB}$,
+                if $\mathcal{C}[\cast{T_{1}}{T_{2}}\cast{T_{2}}{T_{1}}\g{t_{2}}] \stepstostar \g{v_{1}}$
+                and $\mathcal{C}[\g{t_{2}}] \stepstostar \g{v_{2}}$, then
+                $\g{v_{1}} \squbs \g{v_{2}}$.
+          \item For any $\g{t_{1}} : \g{T_{1}}$ and  context $\mathcal{C} : \g{T_{1} -> \bB}$,
+                if $\mathcal{C}[\g{t_{1}}] \stepstostar \g{v_{1}}$
+                and $\mathcal{C}[\cast{T_{2}}{T_{1}}\cast{T_{1}}{T_{2}}\g{t_{1}}] \stepstostar \g{v_{2}}$, then
+                either $\g{v_{1}} = \err$ or $\g{v_{1}} = \g{v_{2}}$.
+        \end{itemize}
+      \end{definition}
+
+        Unlike strong graduality, the second criterion does \textit{not} state that the terms are observationally equivalent:
+        the result of casting may cause an error in fewer contexts than the original term.
+        However, it does say that, when neither term errors, the results are identical.
+        No context exists such that a round-trip cast will produce $\gqm$ but the original term produces
+        $\g{true}$ or $\g{false}$.
+        The difference is only meaningful because we allow $\gqm$ as a term in gradual dependent types;
+        for non-dependent types the definition collapses to error-approximation~\citep{10.1145/3236768}.
+
+        The proof of weak graduality is obtained using a logical-relations style proof,
+        and the syntactic-model directly enables this, allowing us to devise a logical
+        relation in the style of \citet{10.1017/S0956796812000056}.
+        Moreover, the gradual guarantees follow from weak graduality, avoiding the need for
+        GCIC-style simulation arguments.
 
 
-\end{itemize}
-
-Approximate normalization also let us recover a form of weak logical consistency:
+        \subsubsection{Weak Approximate Consistency}
+\label{subsec:weak-cst}
+With approximate normalization we recover a form of weak logical consistency:
 any closed term of type $\g{False}$ must have an approximate normal form that is either
 the unknown term $\gqm$ or a run-time type error $\err$.
-This is useful for proofs that are not used in computation, but serve as
+This property is useful for extrinsic proofs that are not used in computation, but serve as
 validation that some desired property holds.
 Because some \lang programs are non-terminating, it is possible to write
 closed terms of statically-empty types that do not evaluate to $\gqm$ or $\err$.
 However, inspecting the approximate-normal forms of such proofs can inform the programmer
-about places where type-imprecision caused approximation, directing them
-to where type imprecision forced approximation.
+        about places where type-imprecision caused approximation, directing them to add
+        type information to refine the result.
 If a term of a fully-static type has a fully-static approximate normal form, then
 the programmer can be confident in the truth of its Curry-Howard interpretation,
 even if the proof itself uses imprecise types or terms.
@@ -378,12 +435,96 @@ even if the proof itself uses imprecise types or terms.
 
 
 
-\subsection{Modelling Gradual Dependent Types}
 
+
+\subsection{Modelling Gradual Dependent Types}
+With a handle on the two problems we are trying to solve by translating gradual dependent types
+to static, we next give an overview of how the translation works.
 
 \subsubsection{Modelling Approximate Normalization}
+For approximate normalization, the main goal is showing that it always terminates.
+So to do this, we translate each \lang term to a term in CIC.
+The difference between CIC and MLTT is not overly significant for us: we use only the predicative
+fragment of CIC and avoid cumulativity, \je{TODO do we?}, so the main difference is
+the use of an untyped reduction relation instead of a typed conversion judgment.
+This reduction relation is convenient for establishing a simulation between
+\lang's reduction rules and CIC's reductions, so we opt for CIC.
+Functions are tagged with a superscript $\ ^{A}$ to denote that they are for the
+\underline{A}pproximate model.
+\je{TODO: do we need this, if we have the back-translation?}
 
-\subsubsection{Guarded Type Theory}
+The translation itself works like the discrete model of GCIC~\citep{bertrand:gcic},
+differing only in the representation of $\gqm$ and casts to $\gqm$.
+\begin{itemize}
+  \item Each datatype $\g{D}$ is translated to a datatype $\r{D}$ with two additional constructors,
+        denoting $\gqm : \g{D}$ and $\err : \g{D}$ respectively;
+  \item To keep run-time type information, we define a Universe \ala Tarski $\r{\aCode_{\ell}} : \rType{}$,
+        with an ``elements-of'' interpretation function $\r{\aEl_{\ell}} :\r{ \aCode_{\ell} -> \rType{}}$;
+  \item \item $\gqm : \gT$ and $\err : \gT$ are translated via functions
+        $\r{\top}$ and $\r{\bot}$, each with type $\r{\Pi(c : \aCode_{\ell})\ldotp(\aEl_{\ell}\ c)}$
+  \item $\gqm : \gType{\ell}$ is translated into an inductive type
+        $\r{Unk^{A} := \bOne + \bOne + \aCode + (Unit -> Unk^{A}) + (Unk^{A} \times Unk^{A}) + (List Unk^{A})\ldots}$.
+        The first two entries are tags denoting $\gqm : \gqm$ and $\err : \gqm$.
+        To keep the type strictly positive, functions have an entry as $\g{Unit -> Unk}$
+        rather than $Unk -> Unk$;
+  \item Casts are translated via a function $\r{cast : \Pi(c_{1} : \aCode{\ell})(c_{2} : \aCode{\ell})\ldotp \aEl\ c_{1} -> \aEl\ c_{2}}$;
+  \item A cast $\cast{\gqm -> \gqm}{\gqm}$ is translated to a function that
+        transforms $\r{f} : \r{Unk -> Unk}$ into $\r{\lambda \_ \ldotp (f\ (\top\ C?))}$,
+        where $\r{\aEl_{\ell}\ C?} = \r{Unk}$,
+        so that the result can be injected into $\r{Unk}$. We prove that all \lang functions
+        have precision-monotone translations, $\r{f\ (\top\ C?)}$ is the least precise value produced
+        by $\r{f}$.
+\end{itemize}
+
+Our method of approximating a function by applying it to $\r{\top\ C?}$ is actually more precise
+than the approximation performed in GDTL~\citep{Eremondi:2019:ANG:3352468.3341692},
+which simply replaced the function with $\gqm$. This is especially convenient since
+constant functions are not approximated at all. Constant functions arise frequently in
+dependently typed programming, when functions with dependent types are used
+in non-dependent cases. \je{TODO explain more?}
+
+
+
+\subsubsection{Guarded Type Theory and Non-Positive Types}
 \label{subsec:guardedIntro}
+
+To understand how we make a syntactic model of exact execution, we first introduce guarded
+type theory and its primitives.
+Guarded type theory comes in many
+varieties~\citep{5970227,10.1145/3209108.3209153,8005097,6571553,gratzer2021stratified}, which vary primarily on which
+equalities are provable in them. We avoid picking a particular theory, since we only
+need a few sets of primitives. Our model is mechanized in Guarded Cubical Agda~\citep{10.1145/3372885.3373814}, which is
+based on Ticked Cubical Type Theory~\citep{10.1145/3290317}. However, we only use cubical features to prove metatheory:
+the model itself requires only the basic primitives of CIC and the features we discuss below.
+
+At the heart of guarded type theory is the \textit{later modality} $\r{\guarded : \rType{\ell} -> \rType{\ell}}$.
+Intuitively, $\r{\guarded{T}}$ denotes an element of $\r{T}$ that is not available now, but
+will be available one time-step in the future.
+The modality $\guarded$ is an applicative functor: there are operators $\r{next : T -> \guarded T}$
+and $\_\app\_ : \r{\guarded(A -> B) -> \guarded A -> \guarded B}$ that allow curried functions to be
+mapped over guarded arguments.
+
+The later modality gives a sound way to take arbitrary fixed-points: guarded type theory
+features a constant $\r{fix : (\guarded A -> A) -> A}$, along with a propositional equality
+$\r{\lob : fix\ f ==_{A} f\ (next\ (fix f))}$, named after \Lob induction~\citep{TODO}.
+This allows for general recursion, provided that
+
+How are guarded fixed-points useful, given that the guarded modality is ``inescapable''
+and there is no general way to go from $\guarded \r{A}$ to $\r{A}$?
+The key is \textit{guarded recursive types}. Guarded type theory has a guarded type operator
+$\tguarded : \r{\guarded \rType{\ell} -> \rType{\ell}}$, which transforms a guarded reference to a type
+into a type. Using this, one can construct a non-positive type fixed-point
+$\r{tyfix : (\rType{\ell} -> \rType{\ell})-> \rType{\ell}}$, such that
+$\r{tyfix\ F ==_{\rType{\ell}} F\ (\guarded (tyfix\ F))}$.
+Essentially, $\r{tyfix}$ allows for non-positive inductive types, but requires all negative
+self-reference to be guarded. Then $\r{fix}$ and $\r{\lob}$ can be used to perform induction
+over types formed with $\r{tyfix}$, provided the results from recursive calls on guarded children
+are of a guarded result type.
+
+With this, we have (nearly) enough to model $\gqm$ exactly as a guarded recursive type:\\
+$\r{Unk = tyfix (\lambda X \ldotp Unit + Unit + \eCode_{\ell} + (X -> Unk) + (Unk \times Unk) + List\ Unk \ldots)} $. However, we still need a way to include possibly non-terminating functions in $\r{Unk}$,
+which we explain below.
+
+\subsubsection{The Lifting Monad and Modelling Non-Termination}
 
 \subsubsection{Relating Approximate and Exact Normalization}
