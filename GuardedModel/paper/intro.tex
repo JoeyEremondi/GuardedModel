@@ -468,7 +468,7 @@ differing only in the representation of $\gqm$ and casts to $\gqm$.
         To keep the type strictly positive, functions have an entry as $\g{Unit -> Unk}$
         rather than $Unk -> Unk$;
   \item Casts are translated via a function $\r{cast : \Pi(c_{1} : \aCode{\ell})(c_{2} : \aCode{\ell})\ldotp \aEl\ c_{1} -> \aEl\ c_{2}}$;
-  \item A cast $\cast{\gqm -> \gqm}{\gqm}$ is translated to a function that
+  \item A cast $\cast^{A}{\gqm -> \gqm}{\gqm}$ is translated to a function that
         transforms $\r{f} : \r{Unk -> Unk}$ into $\r{\lambda \_ \ldotp (f\ (\top\ C?))}$,
         where $\r{\aEl_{\ell}\ C?} = \r{Unk}$,
         so that the result can be injected into $\r{Unk}$. We prove that all \lang functions
@@ -522,9 +522,82 @@ over types formed with $\r{tyfix}$, provided the results from recursive calls on
 are of a guarded result type.
 
 With this, we have (nearly) enough to model $\gqm$ exactly as a guarded recursive type:\\
-$\r{Unk = tyfix (\lambda X \ldotp Unit + Unit + \eCode_{\ell} + (X -> Unk) + (Unk \times Unk) + List\ Unk \ldots)} $. However, we still need a way to include possibly non-terminating functions in $\r{Unk}$,
+$\r{Unk = tyfix (\lambda X \ldotp Unit + Unit + \eCode_{\ell} + (X -> Unk) + (Unk \times Unk) + List\ Unk \ldots)} $.
+However, we still need a way to include possibly non-terminating functions in $\r{Unk}$,
 which we explain below.
 
 \subsubsection{The Lifting Monad and Modelling Non-Termination}
 
+
+The later modality denotes a value available one step in the future, but to fully model non-terminating
+computation, we need a way to represent values available an arbitrary number of steps into the future.
+\Citet{10.1016/j.entcs.2015.12.020} describe how to do this with a guarded ``lifting monad''
+$\r{L\ A = A + \guarded (L\ A)}$. An $\r{L\ A}$ value is either available now,
+or is another $L\ A$ value available one step into the future.
+The usual monadic $\r{pure}$ and $\r{bind}$ operations are available on $\r{L}$.
+Critically, one can write an operation $\r{\theta} : \r{\guarded (L\ A) -> L\ A}$ that lets a guarded value
+be injected into the monad, meaning we can use $\r{fix}$
+to write $\r{fixL : (L\ A -> L\ A) -> L\ A}$: general recursion is allowed so long
+as the result is in the lifting monad.
+
+This gives us the correct representation of $\gqm$ in our syntactic model:
+\begin{displaymath}
+  \r{Unk^{E} = tyfix (\lambda X \ldotp Unit + Unit + \eCode_{\ell} + (X -> L\ Unk^{E}) + (Unk^{E} \times Unk^{E}) + List\ Unk^{E} \ldots)}
+  \end{displaymath}
+Casting  $\r{f : Unk^{E} -> Unk^{E}}$ to $\r{Unk^{E}}$
+can be done by injecting $\r{(\lambda (x : \guarded Unk^{E}) \ldotp \theta ((next\ f)\app x) ) }$ into $\r{Unk^{E}}$.
+
+
+To properly model casts out of $\r{Unk^{E}}$, we need one final primitive,
+a transformer\\ $\r{liftFun' : (A -> L\ B) -> \guarded (L\ (A -> B))}$.
+This can be implemented directly in ticked cubical type theory, and we imagine that it is expressible in other
+guarded theories.
+\je{TODO: other guarded theories? Check}
+With this primitive, we can combine it with $\r{\theta}$
+to obtain $\r{liftFun : (A -> L\ B) -> (L\ (A -> B))}$.
+With this primitive, casts can be implemented as a function producing a possibly non-terminating
+result (via the lifting monad:)
+
+\begin{displaymath}
+  \r{cast^{E}} : \r{\Pi(c_{1} : \eCode_{\ell})\Pi(c_{2} : \eCode_{\ell})\ldotp \eEl\ c_{1} -> L\ (\eEl\ c_{2})}
+\end{displaymath}
+
+That is, casting takes two codes describing types and an element of the first type,
+and produces a computation that, if it terminates, contains an element of the second code's type.
+For example, to cast from $\r{Unk^{E}}$ to $\r{Unk^{E} -> Unk^{E}}$,
+a function $\r{f} : \r{\guarded Unk^{E} -> L (Unk^{E})}$ can be transformed
+into $\r{liftFun\ (\lambda (x : Unk^{E})\ldotp f (next\ x))}$, which has type $L\ (Unk^{E} -> Unk^{E})$.
+
+Using $\r{liftFun}$ lets us separate values from computations: for each code $\r{c} :\r{\eCode_{\ell}}$,
+its interpretation $\r{\eEl\ c}$ is \textit{not} under the lifting monad.
+Elimination forms are
+translated into applications of functions that return results under $\r{L}$, capturing
+how computation may diverge.
+
+
 \subsubsection{Relating Approximate and Exact Normalization}
+
+So far, we have given an overview of how to translate types and computation both approximately
+and exactly.
+However, the two must be related to produce an accurate account of \lang's type system.
+The reason is the conversion check in the bidirectional typing of \lang's surface language:
+
+\begin{displaymath}
+ \inferrule
+ {\Gamma |- t => \g{T_{2}}\\
+   \g{T_{1}} \stepstostar^{Approx} \g{T'_{1}}\\
+   \g{T_{2}} \stepstostar^{Approx} \g{T'_{2}}\\
+   \g{T'_{1}} =-= \g{T'_{2}}
+ }
+ {\Gamma |- t <= \g{T_{1}}}
+
+\end{displaymath}
+
+A surface term $t$ checks against a type $\g{T_{1}}$ if $t$ synthesizes
+a type $\g{T_{2}}$ that is consistent with $\g{T_{1}}$ after some number of reductions
+\textit{according to the approximate semantics}.
+
+The problem is that naively translating terms to the exact model described above
+will result in some well-typed \lang programs that are ill-typed in guarded type theory.
+
+\je{TODO: finish this section}
