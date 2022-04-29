@@ -113,6 +113,19 @@ data _<oo_ : (Ord × Ord) → (Ord × Ord) → Set where
   <ooL : ∀ {o1 o2 o1' o2'} → o1 <o o2 → (o1 , o1') <oo (o2 , o2')
   <ooR : ∀ {o1 o2 o1' o2'} → o1 ≡p o2 → o1' <o o2' → (o1 , o1') <oo (o2 , o2')
 
+≤oo-reflL : ∀ {o o1' o2'} → (o , o1') <oo (O↑ o , o2')
+≤oo-reflL = <ooL (≤o-refl _)
+
+
+≤oo-reflR : ∀ {o o'} → (o , o') <oo (o , O↑ o')
+≤oo-reflR = <ooR reflp (≤o-refl _)
+
+≤oo-sucL : ∀ {o1 o2 o1' o2'} → o1 ≤o o2 → (o1 , o1') <oo (O↑ o2 , o2')
+≤oo-sucL lt = <ooL (≤o-sucMono lt)
+
+≤oo-sucR : ∀ {o o1' o2'} → o1' ≤o o2' → (o , o1') <oo (o , O↑ o2')
+≤oo-sucR lt = <ooR reflp (≤o-sucMono lt)
+
 -- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
 ordOrdWf : WellFounded _<oo_
 ordOrdWf (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
@@ -292,6 +305,9 @@ oorec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
   → ∀ {o1 o2} → P o1 o2
 oorec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
   where open WFI (ordOrdWf)
+
+
+
 
 ℧size : ∀ {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
 ℧size CodeModule.C⁇ = ≤o-refl _
