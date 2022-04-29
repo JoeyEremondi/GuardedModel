@@ -5,6 +5,7 @@
 open import Level
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
 open import Cubical.Data.Unit
+open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 open import Cubical.Relation.Nullary
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
@@ -215,6 +216,43 @@ wRec φ base W⁇ = snd (base _)
 -- ... | true = yes (μis℧True x eq)
 -- ... | false = no (μis℧False x eq)
 
+
+-- Are we providing a recursive argument of a constructor
+-- Or the arguments that come after the recursive argument
+data Rec⇒_Rest⇒_ (A B : Set) : Set where
+  Rec : A → Rec⇒ A Rest⇒ B
+  Rest : B → Rec⇒ A Rest⇒ B
+
+--Same as above but for the special code for "under guarded argument"
+--We have one case for the description that's under guarded arugment, and one for the rest
+data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
+  GuardedArg : A → GuardedArg⇒ A Rest⇒ B
+  GRest : B → GuardedArg⇒ A Rest⇒ B
+
+data GermDesc : Set1 where
+  GEnd : GermDesc
+  GArg : (A : Set) → (A → GermDesc) → GermDesc
+  GHRec : (A : Set) → (A → GermDesc) → GermDesc
+  GUnk : (A : Set) → GermDesc → GermDesc
+
+GermCommand : GermDesc → Set
+GermCommand GEnd = Unit
+GermCommand (GArg A D) = Σ[ x ∈ A ] GermCommand (D x)
+GermCommand (GHRec A D) = (a : A) → GermCommand (D a)
+GermCommand (GUnk A D) = GermCommand D
+
+GermResponse : (D : GermDesc) → GermCommand D → Set
+GermResponse GEnd _ = 𝟘
+GermResponse (GArg A D) (a , com) = GermResponse (D a) com
+GermResponse (GHRec A D) com = Rec⇒ A  Rest⇒ (Σ[ a ∈ A ] GermResponse (D a) (com a))
+GermResponse (GUnk A D) x = 𝟘
+GermResponseUnk : (D : GermDesc) → GermCommand D → Set
+GermResponseUnk (GUnk A D) x = Rec⇒ A  Rest⇒ (A × GermResponseUnk D x)
+GermResponseUnk _ _ = 𝟘
+
+interpGerm : GermDesc → Container 𝟙
+interpGerm D = (λ _ → GermCommand D) ◃ (GermResponse D) ◃ (GermResponseUnk D) / (λ _ _ → tt)
+
 open import GuardedAlgebra
 
 record Datatypes : Set1 where
@@ -230,6 +268,8 @@ record Datatypes : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    dataGerm : (c : CName) → (▹ Set → DName c → Container 𝟙 )
+    dataGerm : ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
+  germContainer : ℕ → (c : CName) → ▹ Set →  Container 𝟙
+  germContainer ℓ c Self  = Arg λ d → interpGerm (dataGerm ℓ c Self d)
 
 open Datatypes {{...}} public

@@ -8,6 +8,7 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
+
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq hiding (_∎)
 open import Cubical.Data.Nat
@@ -92,6 +93,18 @@ WArg D = W (Arg λ a → interpDesc (D a)) Unit
 ℂμW : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI} {i : El cI}  →
   ℂμ tyCtor D i ≡ WArg D i
 
+-- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
+data DataGermIsCode (ℓ : ℕ) : GermDesc → Set2  where
+ GEndCode : DataGermIsCode ℓ GEnd
+ GArgCode : ∀ {A} {D : A → GermDesc} {c : ℂ ℓ} → A ≡ El c
+   → ((a : A) → DataGermIsCode ℓ (D a))
+   → DataGermIsCode ℓ (GArg A D)
+ GHRecCode : ∀ {A} {D : A → GermDesc} {c : ℂ ℓ} → A ≡ El c
+   → ((a : A) → DataGermIsCode ℓ (D a))
+   → DataGermIsCode ℓ (GHRec A D)
+ GUnkCode : ∀ {A} {D : GermDesc} {c : ℂ ℓ} → A ≡ El c
+   → DataGermIsCode ℓ D → DataGermIsCode ℓ (GUnk A D)
+
 -- Interface that extends our original inductive definitions
 -- requiring that the data-germs all be expressible as codes.
 -- We have to do this after the fact because we need dataGerm when /defining/
@@ -100,11 +113,13 @@ WArg D = W (Arg λ a → interpDesc (D a)) Unit
 -- data-germ is described by some code.
 -- Once we have a definition of ⁇ for values, we can require that dataGerm is actually the germ.
 
-record DataGermCodes : Set1 where
+record DataGermCodes : Set2 where
   field
-    dataGermCode : ∀ ℓ → (c : CName) → DName c → ℂDesc (C𝟙 {ℓ = ℓ})
-    dataGermCodeEq : ∀ ℓ → (tyCtor : CName) → ℂμ tyCtor (dataGermCode ℓ tyCtor) true ≡ W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt
-    dataGermFEq : ∀ ℓ {X : Set} → (tyCtor : CName) → (d : DName tyCtor) → ℂDescEl (dataGermCode ℓ tyCtor d) (λ _ → X) true ≡ FContainer (dataGerm tyCtor (dfix (F⁇ {ℓ})) d) (λ _ → X) (⁇Ty ℓ) tt
+    -- dataGermCode : ∀ ℓ → (c : CName) → DName c → ℂDesc (C𝟙 {ℓ = ℓ})
+    dataGermIsCode : ∀ ℓ (tyCtor : CName) → (d : DName tyCtor)
+      → DataGermIsCode ℓ (dataGerm ℓ tyCtor (dfix (F⁇ {ℓ})) d)
+    -- dataGermCodeEq : ∀ ℓ → (tyCtor : CName) → ℂμ tyCtor (dataGermCode ℓ tyCtor) true ≡ W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt
+    -- dataGermFEq : ∀ ℓ {X : Set} → (tyCtor : CName) → (d : DName tyCtor) → ℂDescEl (dataGermCode ℓ tyCtor d) (λ _ → X) true ≡ FContainer (dataGerm tyCtor (dfix (F⁇ {ℓ})) d) (λ _ → X) (⁇Ty ℓ) tt
 
 open DataGermCodes {{...}} public
 

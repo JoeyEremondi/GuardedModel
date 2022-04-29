@@ -211,6 +211,17 @@ CμSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDes
 CElSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI) (E : DName tyCtor → ℂDesc cI) {i} → ℂDescEl D (ℂμ tyCtor E) i → Ord
 
 
+GermSizeW : ∀ {ℓ} (tyCtor : CName)  → W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt → Ord
+TreeSizeW : ∀ {ℓ} (tyCtor : CName)
+  → (cont : Container Unit)
+  → FContainer (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})) )) (W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ)) (⁇Ty ℓ) tt
+  → Ord
+TreeSizeW _ x = {!!}
+
+GermSizeW {ℓ} tyCtor (Wsup x) = O↑ (TreeSizeW tyCtor (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) x)
+GermSizeW tyCtor W℧ = O1
+GermSizeW tyCtor W⁇ = O1
+
 codeSize CodeModule.C⁇ = O1
 codeSize CodeModule.C℧ = O1
 codeSize CodeModule.C𝟘 = O1

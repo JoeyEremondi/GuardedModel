@@ -35,17 +35,17 @@ data 0<  : ℕ → Set where
 
 --Readable datatypes for translating codes into W types
 
--- Are we providing a recursive argument of a constructor
--- Or the arguments that come after the recursive argument
-data Rec⇒_Rest⇒_ (A B : Set) : Set where
-  Rec : A → Rec⇒ A Rest⇒ B
-  Rest : B → Rec⇒ A Rest⇒ B
+-- -- Are we providing a recursive argument of a constructor
+-- -- Or the arguments that come after the recursive argument
+-- data Rec⇒_Rest⇒_ (A B : Set) : Set where
+--   Rec : A → Rec⇒ A Rest⇒ B
+--   Rest : B → Rec⇒ A Rest⇒ B
 
---Same as above but for the special code for "under guarded argument"
---We have one case for the description that's under guarded arugment, and one for the rest
-data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
-  GuardedArg : A → GuardedArg⇒ A Rest⇒ B
-  GRest : B → GuardedArg⇒ A Rest⇒ B
+-- --Same as above but for the special code for "under guarded argument"
+-- --We have one case for the description that's under guarded arugment, and one for the rest
+-- data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
+--   GuardedArg : A → GuardedArg⇒ A Rest⇒ B
+--   GRest : B → GuardedArg⇒ A Rest⇒ B
 
 -- All of the things we access recursively when defining
 -- the universe as a guarded fixed-point
@@ -173,7 +173,7 @@ record CodeModule
     --- Gradual inductive types
     data _ where
       Cμ :  (tyCtor : CName) → (I : ℂ) → (D : DName tyCtor → ℂDesc I) → El I → ℂ
-      ⁇μ : (tyCtor : CName) → (x : W (Arg (dataGerm tyCtor Self)) (F⁇ Self ) tt) →  F⁇ Self
+      ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
     El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
 
 
