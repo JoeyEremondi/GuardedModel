@@ -620,6 +620,11 @@ a type $\g{T_{2}}$ that is consistent with $\g{T_{1}}$ after some number of redu
 But then, there are programs that will be well-typed in \lang but ill-typed in the model
 because $\r{S}$ does not terminate and hence $\r{unLiftType\ S}$ is a guarded type.
 
+For example, consider
+$\g{\Omega_{\bN} := \cast{\gqm}{\bN}((\lambda (x : \gqm)\ldotp (\cast{\gqm}{\gqm->\gqm}x)\ x)(\lambda (x : \gqm)\ldotp (\cast{\gqm}{\gqm->\gqm}x)\ x)) }$.
+This term has approximate normal form $\gqm$, and is non-terminating for exact execution.
+What should $\g{repeatFalse\ \Omega_{\bN}}$ translate to in the syntactic model?
+
 \je{TODO: concrete example}
 
 Instead, our solution is to ensure that, in the model, dependent types only ever
