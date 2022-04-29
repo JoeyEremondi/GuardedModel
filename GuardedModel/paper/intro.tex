@@ -580,24 +580,64 @@ how computation may diverge.
 So far, we have given an overview of how to translate types and computation both approximately
 and exactly.
 However, the two must be related to produce an accurate account of \lang's type system.
-The reason is the conversion check in the bidirectional typing of \lang's surface language:
+What we have so far can only apply dependently typed functions to values,
+not to the results of computation.
+
+To see the issue, consider the function $\g{repeatFalse : (n : \bN) -> Vec\ \bB\ n}$, which
+takes an element and creates a vector that has $\g{false}$ repeated $\g{n}$ times.
+This would be translated into
+$\r{repeatFalse : L\ ((n : \eEl\ CNat) -> \eEl\ (CVec\ CBool\ n)) }$, where $\r{CNat}$,
+$\r{CBool}$ and $\r{CVec}$ are the code constructors for natural numbers, booleans,
+and vectors respectively.
+The question is then, how should $\g{repeatFalse\ (\cast{\gqm}{\bN} t)}$ be translated
+for some $\g{t} : \gqm$?
+In our model, $\r{cast}$ produces a value in the lifting monad $\r{L}$, but we need an un-lifted
+member of $\r{El^{E}\ CNat}$ to compute the return type.
+Using the monadic bind allows this, but produces a lifted type,
+i.e., $\r{bind (cast \ldots) (\lambda n -> \eEl^{E}\ (CVec\ CBool\ n)) : L\ \rType{}}$.
+
+
+A potential option is to implement an operation $\r{unLiftType : L\ \rType{\ell} -> \rType{\ell}}$
+        using $\tguarded$. The problem then is that, in general, we can only convert
+        between $\r{unLiftType\ S}$ to $\r{\eEl\ c}$ when $\r{S}$ terminates and we can statically
+        see that they denote the equal (or at least isomorphic) types.
+        Such a translation works fine for modelling $GCIC^{\mathcal{G}}$, where type checking is undecidable and programs
+        are considered ill-typed if the conversion check never terminates. However,
+        in \lang, the conversion check for sufrace typing looks like this:
 
 \begin{displaymath}
  \inferrule
  {\Gamma |- t => \g{T_{2}}\\
-   \g{T_{1}} \stepstostar^{Approx} \g{T'_{1}}\\
-   \g{T_{2}} \stepstostar^{Approx} \g{T'_{2}}\\
+   \g{T_{1}} \stepstostar_{Approx} \g{T'_{1}}\\
+   \g{T_{2}} \stepstostar_{Approx} \g{T'_{2}}\\
    \g{T'_{1}} \cong \g{T'_{2}}
  }
  {\Gamma |- t <= \g{T_{1}}}
-
 \end{displaymath}
-
 A surface term $t$ checks against a type $\g{T_{1}}$ if $t$ synthesizes
 a type $\g{T_{2}}$ that is consistent with $\g{T_{1}}$ after some number of reductions
-\textit{according to the approximate semantics}.
+\textit{according to the approximate semantics}. This is necessary to keep type checking decidable.
+But then, there are programs that will be well-typed in \lang but ill-typed in the model
+because $\r{S}$ does not terminate and hence $\r{unLiftType\ S}$ is a guarded type.
 
-The problem is that naively translating terms to the exact model described above
-will result in some well-typed \lang programs that are ill-typed in guarded type theory.
+\je{TODO: concrete example}
 
-\je{TODO: finish this section}
+Instead, our solution is to ensure that, in the model, dependent types only ever
+depend on the \textit{approximate normal forms} of terms.
+We define $\eCode = \aCode$, and translate each \lang term $\gt : \gT$
+into a pair with type $\r{(\aEl\ c) \times L\ (\eEl\ c) }$ i.e. an approximation
+paired with an exact but possibly non-terminating computation.
+Then, the inability to convert from $\r{L\ \rType{\ell}}$ to $\rType{\ell}$
+is a feature, rather than a bug: it ensures that types only depend on the
+approximate form of computations, ensuring that the model
+faithfully represents \lang's typing.
+For dependent functions, there is a constructor
+$\r{CPi : (dom : \aCode) -> (\aEl\ dom -> \aCode) -> aCode}$,
+with $\r{\eEl\ (CPi\ dom\ cod) } = \r{\Pi(x : (\aEl\ dom) \times L\ (\eEl\ dom))\ldotp \eEl\ (cod\ (fst\ x))}$.
+So the return type of a function only ever depends on the approximate normal form of the argument.
+\je{TODO: check this, this is the idea but might not be exactly how El is defined}
+
+% The problem is that naively translating terms to the exact model described above
+% will result in some well-typed \lang programs that are ill-typed in guarded type theory.
+
+% \je{TODO: finish this section}
