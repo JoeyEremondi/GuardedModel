@@ -2,7 +2,7 @@
 
 module ApproxExact where
 
-open import GuardedAlgebra using (GuardedAlgebra ; Approxable ; default)
+open import GuardedAlgebra using (GuardedAlgebra)
 import GuardedModality as G
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
@@ -90,29 +90,27 @@ instance
   GuardedAlgebra.hollowEq (approxExact ⦃ Exact ⦄) = G.hollowEq
   GuardedAlgebra.Dep▸ (approxExact ⦃ Exact ⦄) = λ f x tic → f (x tic)
   GuardedAlgebra.L (approxExact ⦃ æ ⦄) A = LÆ {{æ}} A
-  GuardedAlgebra.θL (approxExact ⦃ Approx ⦄) x = Now default
-  GuardedAlgebra.θL (approxExact ⦃ Exact ⦄) x = Later x
+  GuardedAlgebra.θL (approxExact ⦃ Approx ⦄) a x = Now a
+  GuardedAlgebra.θL (approxExact ⦃ Exact ⦄) a x = Later x
 
 open import GuardedAlgebra
 
 
-LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
-  → (LÆ A → LÆ  A) → LÆ  A
-LFix {{Approx}} f = f (Now default)
-LFix {{Exact}} f = G.fix (λ x → f (Later x))
+-- LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
+--   → (LÆ A → LÆ  A) → LÆ  A
+-- LFix {{Approx}} f = f (Now default)
+-- LFix {{Exact}} f = G.fix (λ x → f (Later x))
 
 
-LFix' : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
-  → (A → LÆ  A) → LÆ  A
-LFix' f = LFix (_>>= f)
+-- LFix' : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
+--   → (A → LÆ  A) → LÆ  A
+-- LFix' f = LFix (_>>= f)
 
 
 
-LFixFun : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : A → Set ℓ₂} {{appr : ∀ {a} → Approxable (B a)}} →
-  (f : ((a : A) → LÆ (B a)) → (a : A) → LÆ  (B a)) → (a : A) → LÆ  (B a)
-LFixFun {A = A} {{appr}} f =
-  unliftFunDep
-    (LFix {{_}} {{record { default = λ a → Approxable.default appr  }}}
-    λ self → liftFunDep (λ a → f (unliftFunDep self) a))
-
-
+-- LFixFun : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : A → Set ℓ₂} {{appr : ∀ {a} → Approxable (B a)}} →
+--   (f : ((a : A) → LÆ (B a)) → (a : A) → LÆ  (B a)) → (a : A) → LÆ  (B a)
+-- LFixFun {A = A} {{appr}} f =
+--   unliftFunDep
+--     (LFix {{_}} {{record { default = λ a → Approxable.default appr  }}}
+--     λ self → liftFunDep (λ a → f (unliftFunDep self) a))

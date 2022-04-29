@@ -73,7 +73,7 @@ record CastMeet (size : Ord) : Set where
     oMeet : ∀ {ℓ}
       → (c : ℂ ℓ)
       → (x y : El c)
-      → {@(tactic default (reflp {A = Ord} {size})) pf : (codeSize c) ≡p size }
+      → {@(tactic default (reflp {A = Ord} {size})) pf : omax (codeSize c) (omax (elSize c x) (elSize c y)) ≡p size }
       → LÆ (El c)
     oToGerm : ∀ {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {size})) pf : (codeSize c) ≡p size }
@@ -118,15 +118,20 @@ castMeetRec size self = record
           .o⁇ (cod ⁇x)
         pure (⁇x , ⁇y)
     ⁇ (CodeModule.C≡ c x y) {reflp} = do
-      wit ← self (≤o-sucMono omax-≤L)
+      wit ← self (≤o-sucMono (≤o-refl _))
         .oMeet c x y
       pure (wit ⊢ x ≅ y)
     ⁇ (CodeModule.Cμ tyCtor c D x) {reflp} = pure W⁇
 
+    codeMeet   : ∀ {ℓ}
+      → (x y : ℂ ℓ)
+      → {@(tactic default (reflp {A = Ord} {size})) pf : omax (codeSize x) (codeSize y) ≡p size }
+      → LÆ (ℂ ℓ)
+
     meet   : ∀ {ℓ}
       → (c : ℂ ℓ)
       → (x y : El c)
-      → {@(tactic default (reflp {A = Ord} {size})) pf : (codeSize c) ≡p size }
+      → {@(tactic default (reflp {A = Ord} {size})) pf : omax (codeSize c) (omax (elSize c x) (elSize c y)) ≡p size }
       → LÆ (El c)
     meet c x y with codeHead c in eqc
     ... | ch with valueHead c eqc x in eq1 | valueHead c eqc y in eq2 | valHeadMatchView (valueHead c eqc x) (valueHead c eqc y)
@@ -141,25 +146,30 @@ castMeetRec size self = record
     ... |  h1 |  h2 |  VHIn⁇L x₁ x₂ = pure y
     ... |  .(HVIn⁇ _ _) |  h2 |  VHIn⁇R x₁ = pure x
     -- Otherwise the head matches, so we do case-analysis on the type to see how to proceed
-    meet CodeModule.C𝟙 x y {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
-    meet CodeModule.CType x y {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
-    meet (CodeModule.CΠ dom cod) x y {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
+    meet CodeModule.C𝟙 true true {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
+      = pure true
+    meet {ℕ.suc ℓ} CodeModule.CType x y | HStatic HType  | HVal h  | .(HVal _)  | VHEq reflp = {!!}
+    -- The meet of two functions is the function that takes the meet of the two arguments
+    meet (CodeModule.CΠ dom cod) f1 f2 {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
+      = liftFunDep λ x → do
+        self {!≤o-sucMono!} -- (≤o-sucMono (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
+          .oMeet (cod x) (f1 x) (f2 x)
     -- To take the meet of dependent pairs, we take the meet of the first elements
     -- then cast the seconds to the codomain applied to the meet of the firsts
     -- and take their meet
     meet (CodeModule.CΣ dom cod) (x1 , x2) (y1 , y2) {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp =  do
-      xy1 ← self (≤o-sucMono omax-≤L)
+      xy1 ← {!!} --self (≤o-sucMono omax-≤L)
         .oMeet dom x1 y1
-      x2cast ← self (≤o-sucMono (≤o-trans (omax-LUB (≤o-cocone _ x1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
+      x2cast ← self {!!} --(≤o-sucMono (≤o-trans (omax-LUB (≤o-cocone _ x1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
         .oCast (cod x1) (cod xy1) x2
-      y2cast ← self (≤o-sucMono (≤o-trans (omax-LUB (≤o-cocone _ y1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
+      y2cast ← self {!!} --(≤o-sucMono (≤o-trans (omax-LUB (≤o-cocone _ y1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
         .oCast (cod y1) (cod xy1) y2
-      xy2 ← self (≤o-sucMono (≤o-trans (≤o-cocone _ xy1 (≤o-refl _)) omax-≤R))
+      xy2 ← {!!} --self (≤o-sucMono (≤o-trans (≤o-cocone _ xy1 (≤o-refl _)) omax-≤R))
         .oMeet (cod xy1) x2cast y2cast
       pure (xy1 , xy2)
     --Meet of two equality proofs is just the meet of their witnesses
     meet (CodeModule.C≡ c x₁ y₁) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = do
-      w12 ← self (≤o-sucMono omax-≤L)
+      w12 ← {!!} --self (≤o-sucMono omax-≤L)
         .oMeet c w1 w2
       pure (w12 ⊢ x₁ ≅ y₁)
     meet (CodeModule.Cμ tyCtor c D x₁) x y | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}

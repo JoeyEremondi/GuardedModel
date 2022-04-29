@@ -10,7 +10,6 @@ open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Equality
-open import Cubical.Data.Prod
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Inductives
@@ -110,6 +109,17 @@ ordWF (OLim c f) = acc helper
     helper : (y : Ord) → (y <o OLim c f) → Acc _<o_ y
     helper y (≤o-cocone .f k y<fk) = smaller-accessible (f k) (ordWF (f k)) y (<-in-≤ y<fk)
 
+data _<oo_ : (Ord × Ord) → (Ord × Ord) → Set where
+  <ooL : ∀ {o1 o2 o1' o2'} → o1 <o o2 → (o1 , o1') <oo (o2 , o2')
+  <ooR : ∀ {o1 o2 o1' o2'} → o1 ≡p o2 → o1' <o o2' → (o1 , o1') <oo (o2 , o2')
+
+-- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
+ordOrdWf : WellFounded _<oo_
+ordOrdWf (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
+  where
+    helper : ∀ {x1 x2} → Acc _<o_ x1 → Acc _<o_ x2 → WFRec _<oo_ (Acc _<oo_) (x1 , x2)
+    helper (acc rec₁) acc₂ (y1 , y2) (<ooL lt) = acc (helper (rec₁ y1 lt) (ordWF y2))
+    helper acc₁ (acc rec₂) (y1 , y2) (<ooR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 abstract
   omax : Ord → Ord → Ord
@@ -177,6 +187,7 @@ TreeSize (CHRec c j D) (ElHRec f x) = O↑ (OLim c λ a → omax (GermSize _ (f 
 -- We can't use guarded arguments in size calcs, that's why they're guarded
 -- So we use the size at the error value
 TreeSize (CHGuard c D1 D2) (ElHGuard x x₁) = O↑ (omax (TreeSize D1 (x (next (℧ c)))) (TreeSize D2 x₁))
+
 
 codeSize : ∀ {ℓ} → ℂ ℓ → Ord
 descSize : ∀ {ℓ} →  {c : ℂ ℓ} → ℂDesc c → Ord
@@ -267,14 +278,20 @@ CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f 
 CElSize (CHGuard c D1 D2) E (ElHGuard x x₁) = O↑ (omax (CElSize D1 E (x (next (℧ c)))) (CElSize D2 E x₁))
 
 open import Cubical.Induction.WellFounded
-open WFI (ordWF)
 
 
-orec : ∀ {ℓ} (P : Ord → Set ℓ) → ((x : Ord) → (rec : (y : Ord) → {{_ : y <o x}} → P y ) → P x) → ∀ {o} → P o
-orec P f = induction (λ x rec → f x (λ y {{lt}} → rec y lt)) _
+orec : ∀ {ℓ} (P : Ord → Set ℓ)
+  → ((x : Ord) → (rec : (y : Ord) → (_ : y <o x) → P y ) → P x)
+  → ∀ {o} → P o
+orec P f = induction (λ x rec → f x rec) _
+  where open WFI (ordWF)
 
 
-
+oorec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
+  → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oo (x1 , x2)) → P y1 y2 ) → P x1 x2)
+  → ∀ {o1 o2} → P o1 o2
+oorec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+  where open WFI (ordOrdWf)
 
 ℧size : ∀ {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
 ℧size CodeModule.C⁇ = ≤o-refl _

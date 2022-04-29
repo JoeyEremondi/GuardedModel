@@ -181,6 +181,8 @@ module Decidable⇒UIP
   ≡-irrelevant : UIP A
   ≡-irrelevant = Constant⇒UIP.≡-irrelevant ≡-normalise ≡-normalise-constant
 
+open Decidable⇒UIP renaming (≡-irrelevant to decUIP) public
+
 
 uipNat : ∀ {x y : ℕ} → (p1 p2 : x ≡p y) → p1 ≡p p2
 uipNat p1 p2 = Decidable⇒UIP.≡-irrelevant decNat p1 p2

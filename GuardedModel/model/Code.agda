@@ -68,7 +68,7 @@ record CodeModule
     El-1 :  ℂ-1 -> Set
     ⁇-1 :  Set
     ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
-    ℂSelf : ▹ Set
+    -- ℂSelf : ▹ Set
 
   interleaved mutual
     ------------------ Declarations ------------------------------
@@ -248,14 +248,16 @@ CodeModuleAt zero = fix λ ModSelf →
     ; El-1 = λ ()
     ; ⁇-1 = 𝟘
     ; ℧-1 = λ { {{()}} }
-    ; ℂSelf = map▹ CodeModule.ℂ ModSelf }
+    -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
+    }
 CodeModuleAt (suc ℓ) = fix λ ModSelf →
   record
     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
     ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
     ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
     ; ℧-1 = CodeModule.ℂ.C℧
-    ; ℂSelf = map▹ CodeModule.ℂ ModSelf }
+    -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
+    }
 
 -- Expose each value in the Code module with implicit level ℓ
 -- Except for ℂ and ⁇, which each need an explicit level
