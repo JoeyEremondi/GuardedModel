@@ -104,6 +104,16 @@ data DataGermIsCode (ℓ : ℕ) : GermDesc → Set2  where
    → DataGermIsCode ℓ (GHRec A D)
  GUnkCode : ∀ {A} {D : GermDesc} {c : ℂ ℓ} → A ≡ El c
    → DataGermIsCode ℓ D → DataGermIsCode ℓ (GUnk A D)
+   -- TODO does the below cause problems with approx. norm?
+ GGuardedArgCode : ∀ {A} {B : A → Set} {D : ((x : A) → B x) → GermDesc} {ca : ℂ ℓ} → A ≡ ▹ (El ca)
+   → (∀ a → Σ[ cb ∈ ℂ ℓ ]( B a ≡ El cb ))
+   → ((f : (x : A) → B x) → DataGermIsCode ℓ (D f))
+   → DataGermIsCode ℓ (GArg ((x : A) → B x) D)
+ GGuardedRecCode : ∀ {A} {D : A → GermDesc} {c : ℂ ℓ} → A ≡ ▹ (El c)
+   → ((a : A) → DataGermIsCode ℓ (D a))
+   → DataGermIsCode ℓ (GHRec A D)
+ GGuardedUnkCode : ∀ {A} {D : GermDesc} {c : ℂ ℓ} → A ≡ ▹ (El c)
+   → DataGermIsCode ℓ D → DataGermIsCode ℓ (GUnk A D)
 
 -- Interface that extends our original inductive definitions
 -- requiring that the data-germs all be expressible as codes.

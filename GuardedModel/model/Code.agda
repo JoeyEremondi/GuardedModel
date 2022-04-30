@@ -150,7 +150,7 @@ record CodeModule
       CΠ : (dom : ℂ) → (cod : (x : El dom) → ℂ) → ℂ
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇Π : (▸ Self → LÆ (F⁇ Self )) → F⁇ Self
+      ⁇Π : (▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
     El (CΠ dom cod) = (x : El dom) → (El (cod x))
