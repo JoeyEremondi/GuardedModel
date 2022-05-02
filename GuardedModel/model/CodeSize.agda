@@ -187,19 +187,19 @@ fromCFin {ℕ.suc n} (true , rest) = Fin.suc (fromCFin rest)
 O1 = O↑ OZ
 
 
-GermSize : ∀ {ℓ} (tyCtor : CName) {i} → ℂμ tyCtor (dataGermCode ℓ tyCtor) i → Ord
-TreeSize : ∀ {ℓ} {tyCtor : CName} (D : ℂDesc {ℓ} C𝟙) {i} → ℂDescEl D (ℂμ tyCtor (dataGermCode ℓ tyCtor)) i → Ord
-GermSize {ℓ} tyCtor (Cinit d x) = O↑ (TreeSize (dataGermCode ℓ tyCtor d) x)
-GermSize tyCtor Cμ⁇ = O1
-GermSize tyCtor Cμ℧ = O1
+-- GermSize : ∀ {ℓ} (tyCtor : CName) {i} → ℂμ tyCtor (dataGermCode ℓ tyCtor) i → Ord
+-- TreeSize : ∀ {ℓ} {tyCtor : CName} (D : ℂDesc {ℓ} C𝟙) {i} → ℂDescEl D (ℂμ tyCtor (dataGermCode ℓ tyCtor)) i → Ord
+-- GermSize {ℓ} tyCtor (Cinit d x) = O↑ (TreeSize (dataGermCode ℓ tyCtor d) x)
+-- GermSize tyCtor Cμ⁇ = O1
+-- GermSize tyCtor Cμ℧ = O1
 
-TreeSize .(CEnd j) {i} (ElEnd j (w ⊢ _ ≅ _)) = O1
-TreeSize (CArg c D) (ElArg a x) = O↑ ( (TreeSize (D a) x))
-TreeSize (CRec j D) (ElRec x x₁) = O↑ (omax (GermSize _ x) (TreeSize D x₁))
-TreeSize (CHRec c j D) (ElHRec f x) = O↑ (OLim c λ a → omax (GermSize _ (f a)) (TreeSize (D a) (x a)))
--- We can't use guarded arguments in size calcs, that's why they're guarded
--- So we use the size at the error value
-TreeSize (CHGuard c D1 D2) (ElHGuard x x₁) = O↑ (omax (TreeSize D1 (x (next (℧ c)))) (TreeSize D2 x₁))
+-- TreeSize .(CEnd j) {i} (ElEnd j (w ⊢ _ ≅ _)) = O1
+-- TreeSize (CArg c D) (ElArg a x) = O↑ ( (TreeSize (D a) x))
+-- TreeSize (CRec j D) (ElRec x x₁) = O↑ (omax (GermSize _ x) (TreeSize D x₁))
+-- TreeSize (CHRec c j D) (ElHRec f x) = O↑ (OLim c λ a → omax (GermSize _ (f a)) (TreeSize (D a) (x a)))
+-- -- We can't use guarded arguments in size calcs, that's why they're guarded
+-- -- So we use the size at the error value
+-- TreeSize (CHGuard c D1 D2) (ElHGuard x x₁) = O↑ (omax (TreeSize D1 (x (next (℧ c)))) (TreeSize D2 x₁))
 
 
 codeSize : ∀ {ℓ} → ℂ ℓ → Ord
@@ -211,14 +211,22 @@ CμSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDes
 CElSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI) (E : DName tyCtor → ℂDesc cI) {i} → ℂDescEl D (ℂμ tyCtor E) i → Ord
 
 
-GermSizeW : ∀ {ℓ} (tyCtor : CName)  → W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt → Ord
+GermSizeW : ∀ {ℓ} (tyCtor : CName)  → W (germContainer ℓ tyCtor (dfix F⁇)) (⁇Ty ℓ) tt → Ord
 TreeSizeW : ∀ {ℓ} (tyCtor : CName)
-  → (cont : Container Unit)
-  → FContainer (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})) )) (W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ)) (⁇Ty ℓ) tt
+  → (D : GermDesc)
+  → FContainer (interpGerm D) (W (germContainer ℓ tyCtor (dfix F⁇)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
+  → DataGermIsCode ℓ D
   → Ord
-TreeSizeW _ x = {!!}
+TreeSizeW tyCtor GEnd (FC com k unk) GEndCode = {!!}
+TreeSizeW tyCtor (GArg A x) (FC (a , com) k unk) (GArgCode c x₁ x₂) = O↑ (omax (codeSize c) {!!})
+TreeSizeW tyCtor (GArg .(∀ x₄ → _ x₄) x) (FC com k unk) (GGuardedArgCode ca x₁ x₂ x₃) = {!!}
+TreeSizeW tyCtor (GHRec A x) (FC com k unk) (GHRecCode c x₁ x₂) = {!!}
+TreeSizeW tyCtor (GHRec A x) (FC com k unk) (GGuardedRecCode c x₁ x₂) = {!!}
+TreeSizeW tyCtor (GUnk A D) (FC com k unk) (GUnkCode c x pf) = {!!}
+TreeSizeW tyCtor (GUnk A D) (FC com k unk) (GGuardedUnkCode c x pf) = {!!}
 
-GermSizeW {ℓ} tyCtor (Wsup x) = O↑ (TreeSizeW tyCtor (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) x)
+GermSizeW {ℓ} tyCtor (Wsup (FC (d , c) k unk))
+  = O↑ (TreeSizeW tyCtor (dataGerm ℓ tyCtor (dfix F⁇) d) (FC c k unk) (dataGermIsCode ℓ tyCtor d))
 GermSizeW tyCtor W℧ = O1
 GermSizeW tyCtor W⁇ = O1
 
@@ -264,10 +272,10 @@ noCodeZero (CodeModule.Cμ tyCtor c D x) () | ℕ.suc n
 ⁇Size CodeModule.⁇℧ = O1
 ⁇Size CodeModule.⁇𝟙 = O1
 ⁇Size {ℓ = ℕ.suc ℓ} (CodeModule.⁇Type x) = O↑  (codeSize x)
-⁇Size (CodeModule.⁇Π f) = O↑ (OLim C⁇ (λ x → LUnk æ (f (transport (sym hollowEq) (next x)))))
+⁇Size (CodeModule.⁇Π f) = O↑ (OLim C⁇ (λ x → ⁇Size (f (transport (sym hollowEq) (next x))))) -- O↑ (OLim C⁇ (λ x → LUnk æ ))
 ⁇Size (CodeModule.⁇Σ (x , y)) = O↑ (omax (⁇Size x) (⁇Size y))
 ⁇Size (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = O↑ (⁇Size x)
-⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = O↑ (GermSize tyCtor (transport⁻ (dataGermCodeEq ℓ tyCtor) x))
+⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = GermSizeW tyCtor x
 -- O1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where
