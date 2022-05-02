@@ -28,11 +28,6 @@ open import GuardedModality using (later-ext)
 
 open import ApproxExact
 
--- Brouwer Tree ordinals
--- Based on the presentation by Kraus, Forsburg and Xu
--- https://arxiv.org/abs/2104.02549
-
--- The main difference is that we allow the limit over the elements of any code
 
 --TODO: don't make ℓ module param
 module InductiveCodes {{æ : Æ}} {{_ : Datatypes}} where
@@ -40,6 +35,8 @@ module InductiveCodes {{æ : Æ}} {{_ : Datatypes}} where
 open import Code
 -- open import Head
 open import Util
+
+open import Ord ℂ El ℧ C𝟙 refl
 
 -- More direct interpretation of inductive descriptions
 -- Works because we ensure the paramter types are always codes, not types
@@ -128,6 +125,7 @@ record DataGermCodes : Set2 where
     -- dataGermCode : ∀ ℓ → (c : CName) → DName c → ℂDesc (C𝟙 {ℓ = ℓ})
     dataGermIsCode : ∀ ℓ (tyCtor : CName) → (d : DName tyCtor)
       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (dfix (F⁇ {ℓ})) d)
+    dataGermSize : ∀ {ℓ} (tyCtor : CName) → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
     -- dataGermCodeEq : ∀ ℓ → (tyCtor : CName) → ℂμ tyCtor (dataGermCode ℓ tyCtor) true ≡ W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt
     -- dataGermFEq : ∀ ℓ {X : Set} → (tyCtor : CName) → (d : DName tyCtor) → ℂDescEl (dataGermCode ℓ tyCtor d) (λ _ → X) true ≡ FContainer (dataGerm tyCtor (dfix (F⁇ {ℓ})) d) (λ _ → X) (⁇Ty ℓ) tt
 

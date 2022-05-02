@@ -324,6 +324,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 {-# DISPLAY CodeModule.El _  = El  #-}
 
 
+▹⁇ : ℕ → ▹ Set
+▹⁇ ℓ = dfix (F⁇ {ℓ})
 
 -- -- Lift a code to a higher universe
 -- liftℂ : ∀ {j k} → j ≤ k → ℂ j → ℂ k

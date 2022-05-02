@@ -38,6 +38,7 @@ data Ord : Set where
   OLim : ∀ {ℓ} (c : ℂ ℓ) → (f : El c → Ord) → Ord
   -- OBisim : ∀ {ℓ} {c : ℂ ℓ} → (f g : El c → Ord) → {!!} → OLim c f ≡ OLim c g
 
+O1 = O↑ OZ
 
 -- from Kraus et al https://arxiv.org/pdf/2104.02549.pdf
 data _≤o_ : Ord → Ord → Set where
