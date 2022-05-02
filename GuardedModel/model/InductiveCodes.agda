@@ -13,6 +13,7 @@ open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq hiding (_∎)
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
+open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 -- open import Cubical.Data.Prod
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
@@ -36,7 +37,6 @@ open import Code
 -- open import Head
 open import Util
 
-open import Ord ℂ El ℧ C𝟙 refl
 
 -- More direct interpretation of inductive descriptions
 -- Works because we ensure the paramter types are always codes, not types
@@ -90,49 +90,7 @@ WArg D = W (Arg λ a → interpDesc (D a)) Unit
 ℂμW : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI} {i : El cI}  →
   ℂμ tyCtor D i ≡ WArg D i
 
--- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
-data DataGermIsCode (ℓ : ℕ) : GermDesc → Set2  where
- GEndCode : DataGermIsCode ℓ GEnd
- GArgCode : ∀ {A} {D : A → GermDesc} (c : ℂ ℓ) → A ≡ El c
-   → ((a : A) → DataGermIsCode ℓ (D a))
-   → DataGermIsCode ℓ (GArg A D)
- GHRecCode : ∀ {A} {D : A → GermDesc} (c : ℂ ℓ) → A ≡ El c
-   → ((a : A) → DataGermIsCode ℓ (D a))
-   → DataGermIsCode ℓ (GHRec A D)
- GUnkCode : ∀ {A} {D : GermDesc} (c : ℂ ℓ) → A ≡ El c
-   → DataGermIsCode ℓ D → DataGermIsCode ℓ (GUnk A D)
-   -- TODO does the below cause problems with approx. norm?
- GGuardedArgCode : ∀ {A} {B : A → Set} {D : ((x : A) → B x) → GermDesc} (ca : ℂ ℓ) → A ≡ ▹ (El ca)
-   → ( (a : A) → Σ[ cb ∈ ℂ ℓ ]( B a ≡ El cb ))
-   → ((f : (x : A) → B x) → DataGermIsCode ℓ (D f))
-   → DataGermIsCode ℓ (GArg ((x : A) → B x) D)
- GGuardedRecCode : ∀ {A} {D : A → GermDesc} (c : ℂ ℓ) → A ≡ ▹ (El c)
-   → ((a : A) → DataGermIsCode ℓ (D a))
-   → DataGermIsCode ℓ (GHRec A D)
- GGuardedUnkCode : ∀ {A} {D : GermDesc} (c : ℂ ℓ) → A ≡ ▹ (El c)
-   → DataGermIsCode ℓ D → DataGermIsCode ℓ (GUnk A D)
 
--- Interface that extends our original inductive definitions
--- requiring that the data-germs all be expressible as codes.
--- We have to do this after the fact because we need dataGerm when /defining/
--- ⁇Ty as a type, so we can't refer to codes there
--- So we basically use fording to instead constrain after-the-fact that each
--- data-germ is described by some code.
--- Once we have a definition of ⁇ for values, we can require that dataGerm is actually the germ.
-
-record DataGermCodes : Set2 where
-  field
-    -- dataGermCode : ∀ ℓ → (c : CName) → DName c → ℂDesc (C𝟙 {ℓ = ℓ})
-    dataGermIsCode : ∀ ℓ (tyCtor : CName) → (d : DName tyCtor)
-      → DataGermIsCode ℓ (dataGerm ℓ tyCtor (dfix (F⁇ {ℓ})) d)
-    dataGermSize : ∀ {ℓ} (tyCtor : CName) → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
-    -- dataGermCodeEq : ∀ ℓ → (tyCtor : CName) → ℂμ tyCtor (dataGermCode ℓ tyCtor) true ≡ W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt
-    -- dataGermFEq : ∀ ℓ {X : Set} → (tyCtor : CName) → (d : DName tyCtor) → ℂDescEl (dataGermCode ℓ tyCtor d) (λ _ → X) true ≡ FContainer (dataGerm tyCtor (dfix (F⁇ {ℓ})) d) (λ _ → X) (⁇Ty ℓ) tt
-
-open DataGermCodes {{...}} public
-
-
---The result gives something equivalent to the non-coded Arg function in Inductives.agda
 
 
 ------------------------------------------
