@@ -87,7 +87,7 @@ record FContainer {I} (C : Container I) (X : I → Set) (Unk : Set) (i : I) : Se
 
 
 -- TODO : can't implement the full traversals until we have meet for indices
-□ : ∀ {I Unk} {X : I → Set} (C : Container I) →  ((Σ I X) → Set) → (Σ I (FContainer C X Unk)) → Set
+□ : ∀ {ℓ I Unk} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (FContainer C X Unk)) → Set ℓ
 □ C P (i , (FC c k u)) = ∀ r → P (inext C c r , k r)
 
 --   -- Any.
@@ -119,7 +119,7 @@ W1 C Unk = FContainer C (W C Unk) Unk
 
 -- --   -- Induction, (primitive) recursion and iteration.
 
-wInd : ∀ {I Unk} {C : Container I} (P : Σ I (W C Unk) → Set) →
+wInd : ∀ {ℓ} {I Unk} {C : Container I} (P : Σ I (W C Unk) → Set ℓ) →
         (∀ {i} (cs : FContainer C (W C Unk) Unk i) → □ C P (i , cs) → P (i , Wsup cs)) →
         (∀ {i} → P (i , W℧ {i = i})) →
         (∀ {i} → P (i , W⁇ {i = i})) →
@@ -133,88 +133,14 @@ wRec φ base (Wsup (FC c k u))= φ (FC c (λ r → (k r , wRec φ base (k r))) u
 wRec φ base W℧ = fst (base _)
 wRec φ base W⁇ = snd (base _)
 
--- wIter : ∀ {I} {C : Container I} {X : I → Set} → (∀ {i} → ⟦ C ⟧ X i →  X i) → ∀ {i} → W C i → X i
--- wIter φ (sup (c , k))= φ (c , λ r → wIter φ (k r))
 
+data LargeOrd : Set1 where
+  LOZ : LargeOrd
+  LO↑ : LargeOrd → LargeOrd
+  LOLim : (A : Set) → (A → LargeOrd) → LargeOrd
 
+LO1 = LO↑ LOZ
 
--- -- Adapted From Larry Diehls' thesis
--- -- https://pdxscholar.library.pdx.edu/cgi/viewcontent.cgi?article=4656&context=open_access_etds
--- -- THese are descriptions of 2-argument functors, so we can separately describe
--- -- strictly positive uses of ⁇ and Self
--- data Desc2 (I : Set) : (hasRec : IsRec) → Set1 where
---     End : (i : I) → Desc2 I NoRec
---     Arg : {r : IsRec} (A : Set) (D : A → Desc2 I r) → Desc2 I r
---     Rec : (i :  I) (D : Desc2 I r) → Desc2 I YesRec
---     HRec : {r : IsRec} (A : Set) (i : A → I) (D : A → Desc2 I r) → Desc2 I YesRec
---     Par : (D : Desc2 I r) → Desc2 I r
---     HPar : (A : Set)  (D : A → Desc2 I r) → Desc2 I r
---     HGuard : ∀ {r1 r2 r3 : IsRec} → (A : Set) → (D : Desc2 I r1 ) → (E : Desc2 I r2) → r3 ≡p r1 &R& r2 → Desc2 I r3
-
-
-
-
--- FDesc2 : ∀ {I} {r} → (D : Desc2 I r) → Set → ISet I → ISet I
--- FDesc2 {I} (End j) Unk X i  = Wit I i j
--- FDesc2 (Arg A D) Unk X i =  (Σ[ a ∈ A ] (FDesc2 (D a) Unk X i  ))
--- FDesc2 (Rec j D) Unk X i =  (X j × FDesc2 D Unk X i)
--- FDesc2 (HRec A j D) Unk X i =  (a : A) → (LÆ (X (j a)) × FDesc2 (D a) Unk X i)
--- FDesc2 (Par D) Unk X i =  Unk × FDesc2 (D) Unk X i
--- FDesc2 (HPar A D) Unk X i =  ((a : A) → LÆ Unk × FDesc2 (D a) Unk X i)
--- FDesc2 (HGuard A D E pf) Unk X i =  ((a : ▹ A) → LÆ (FDesc2 D Unk X i)) × FDesc2 E Unk X i
-
--- FDesc : ∀ {I r} → (D : Desc2 I r) → ISet I  → ISet I
--- FDesc D X i = FDesc2 D 𝟙 X i
-
--- --Gradual Fixed-point of a description's functor
--- --Essentially adds two constructors for ? and ℧
--- data μ2 {I r} (D : Desc2 I r) (Unk : Set) (i : I)  : Set where
---   init : FDesc2 D Unk (μ2 D Unk) i → μ2 D Unk i
---   μ⁇ μ℧ :  μ2 D Unk i
-
-
--- μ : ∀ {I} (D : Desc2 I r)  (i : I)  → Set
--- μ D i = μ2 D 𝟙 i
-
--- --The fixed point is actually a fixed point
--- --Thanks to univalence
--- μfix : ∀ {I} {i : I} (D : Desc2 I r) → μ D i ≡ 𝟚 ⊎ FDesc D (μ D) i
--- μfix {i = i} D = ua (isoToEquiv (iso inj emb sec ret))
---  where
---    inj :  μ D i → 𝟚 ⊎ FDesc D (μ D) i
---    inj (init x) = inr x
---    inj μ⁇ = inl true
---    inj μ℧ = inl false
---    emb : 𝟚 ⊎ FDesc D (μ D) i → μ D i
---    emb (inl false) = μ℧
---    emb (inl true) = μ⁇
---    emb (inr x) = init x
---    sec : (b : 𝟚 ⊎ FDesc D (μ D) i)  → _
---    sec (inl false) = refl
---    sec (inl true) = refl
---    sec (inr x) = refl
---    ret : (a : μ D i)  → _
---    ret (init x) = refl
---    ret μ⁇ = refl
---    ret μ℧ = refl
-
-
--- -- It's decidable if a μ2 is equal to μ⁇
--- μis℧Bool : ∀ {I r} {i : I} {Unk} {D} → (x : μ2 {r = r} D Unk i) → 𝟚
--- μis℧Bool (init x) = false
--- μis℧Bool μ⁇ = false
--- μis℧Bool μ℧ = true
-
--- μis℧True : ∀ {I r} {i : I} {Unk} {D} → (x : μ2 {r = r} D Unk i) → μis℧Bool x ≡p true → x ≡ μ℧
--- μis℧True μ℧ eq = refl
-
--- μis℧False : ∀ {I r} {i : I} {Unk} {D} → (x : μ2 {r = r} D Unk i) → μis℧Bool x ≡p false → ¬ (x ≡ μ℧)
--- μis℧False x bpf eqpf with () ←  true≢false ((cong μis℧Bool (sym eqpf) ∙ (propToPathDec bpf)))
-
--- μis℧ : ∀ {I} {i : I} {D} {Unk} → (x : μ2 {r = r} D Unk i) → Dec (x ≡ μ℧)
--- μis℧ x with μis℧Bool x in eq
--- ... | true = yes (μis℧True x eq)
--- ... | false = no (μis℧False x eq)
 
 
 -- Are we providing a recursive argument of a constructor
@@ -270,6 +196,8 @@ record Datatypes : Set1 where
     -- We ensure positivity by writing the datatype using a description
     dataGerm : ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
   germContainer : ℕ → (c : CName) → ▹ Set →  Container 𝟙
-  germContainer ℓ c Self  = Arg λ d → interpGerm (dataGerm ℓ c Self d)
+  germContainer ℓ c Self  = interpGerm (GArg (DName c) (dataGerm ℓ c Self))
+
+
 
 open Datatypes {{...}} public

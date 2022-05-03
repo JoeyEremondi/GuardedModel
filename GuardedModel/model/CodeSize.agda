@@ -23,6 +23,8 @@ open import ApproxExact
 open import InductiveCodes
 open import Cubical.Foundations.Transport
 
+open import DataGerm
+
 -- Brouwer Tree ordinals
 -- Based on the presentation by Kraus, Forsburg and Xu
 -- https://arxiv.org/abs/2104.02549
@@ -32,11 +34,26 @@ open import Cubical.Foundations.Transport
 --TODO: don't make ℓ module param
 module CodeSize {{æ : Æ}} {{_ : Datatypes}} {{_ : DataGermCodes}} where
 
+
+
+
+
+
+
 open import Code
 -- open import Head
 open import Util
 
 open import Ord ℂ El ℧ C𝟙 refl
+-- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
+germSize : ∀ {ℓ} (tyCtor : CName) → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → LargeOrd
+germDescFSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc)
+  → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → □ _ (λ _ → LargeOrd) (tt , cs)
+  → LargeOrd
+germDescFSize tyCtor D (FC com k unk) φ = {!D!}
+
+germSize {ℓ} tyCtor = wInd (λ _ → LargeOrd) (germDescFSize tyCtor (GArg (DName tyCtor) (dataGerm ℓ tyCtor (▹⁇ ℓ)))) LO1 LO1
 
 CFin : ∀ (n : ℕ) → ℂ 0
 CFin ℕ.zero = C℧
@@ -140,7 +157,7 @@ noCodeZero (CodeModule.Cμ tyCtor c D x) () | ℕ.suc n
 ⁇Size (CodeModule.⁇Π f) = O↑ (OLim C⁇ (λ x → ⁇Size (f (transport (sym hollowEq) (next x))))) -- O↑ (OLim C⁇ (λ x → LUnk æ ))
 ⁇Size (CodeModule.⁇Σ (x , y)) = O↑ (omax (⁇Size x) (⁇Size y))
 ⁇Size (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = O↑ (⁇Size x)
-⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = dataGermSize tyCtor x
+⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = {!!} -- dataGermSize tyCtor x
 -- O1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where
