@@ -173,9 +173,11 @@ record CodeModule
     --- Gradual inductive types
     data _ where
       Cμ :  (tyCtor : CName) → (I : ℂ) → (D : DName tyCtor → ℂDesc I) → El I → ℂ
+      -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
+      -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
+      -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
       ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
     El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
-
 
 
     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
@@ -386,3 +388,4 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- fromToLift pf (CodeModule.C≡ c x₁ y) x = {!!}
 -- fromToLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
 -- fromToLift pf CodeModule.C⁇ x = {!!}
+
