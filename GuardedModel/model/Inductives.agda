@@ -134,6 +134,8 @@ wRec φ base W℧ = fst (base _)
 wRec φ base W⁇ = snd (base _)
 
 
+
+
 data LargeOrd : Set1 where
   LOZ : LargeOrd
   LO↑ : LargeOrd → LargeOrd
@@ -171,10 +173,12 @@ GermResponse : (D : GermDesc) → GermCommand D → Set
 GermResponse GEnd _ = 𝟘
 GermResponse (GArg A D) (a , com) = GermResponse (D a) com
 GermResponse (GHRec A D) com = Rec⇒ A  Rest⇒ (Σ[ a ∈ A ] GermResponse (D a) (com a))
-GermResponse (GUnk A D) x = 𝟘
+GermResponse (GUnk A D) x = GermResponse D x
 GermResponseUnk : (D : GermDesc) → GermCommand D → Set
 GermResponseUnk (GUnk A D) x = Rec⇒ A  Rest⇒ (A × GermResponseUnk D x)
-GermResponseUnk _ _ = 𝟘
+GermResponseUnk GEnd x = 𝟘
+GermResponseUnk (GArg A D) (a , com) = GermResponseUnk (D a) com
+GermResponseUnk (GHRec A D) com = Σ[ a ∈ A ] GermResponseUnk (D a) (com a)
 
 interpGerm : GermDesc → Container 𝟙
 interpGerm D = (λ _ → GermCommand D) ◃ (GermResponse D) ◃ (GermResponseUnk D) / (λ _ _ → tt)
@@ -201,3 +205,15 @@ record Datatypes : Set1 where
 
 
 open Datatypes {{...}} public
+
+
+
+wRecArg : ∀ {{ _ : Datatypes }} {ℓ} (tyCtor : CName) {I Unk} {C : DName tyCtor → Container I} (P : Set ℓ) →
+        (∀ {i} d (cs : FContainer (C d) (W (Arg C) Unk) Unk i) → □ (C d) (λ _ → P) (i , cs) → P ) →
+        P →
+        P →
+        ∀ {i} (w : W (Arg C) Unk i) → P
+
+wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k u)) = φ d (FC c k u) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
+wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
+wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇

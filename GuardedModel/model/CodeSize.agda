@@ -8,6 +8,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.Equality
 open import Cubical.Data.FinData
@@ -45,26 +46,20 @@ open import Code
 open import Util
 
 open import Ord ℂ El ℧ C𝟙 refl
--- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
-germSize : ∀ {ℓ} (tyCtor : CName) → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → LargeOrd
-germDescFSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc)
-  → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-  → □ _ (λ _ → LargeOrd) (tt , cs)
-  → LargeOrd
-germDescFSize tyCtor D (FC com k unk) φ = {!D!}
 
-germSize {ℓ} tyCtor = wInd (λ _ → LargeOrd) (germDescFSize tyCtor (GArg (DName tyCtor) (dataGerm ℓ tyCtor (▹⁇ ℓ)))) LO1 LO1
+
+
+-- germSize {ℓ} tyCtor = wInd (λ _ → LargeOrd) (germDescFSize tyCtor (GArg (DName tyCtor) (dataGerm ℓ tyCtor (▹⁇ ℓ)))) LO1 LO1
 
 CFin : ∀ (n : ℕ) → ℂ 0
 CFin ℕ.zero = C℧
-CFin (ℕ.suc n) = CΣ C𝟙 (λ { false → C℧ ; true → CFin n})
+CFin (ℕ.suc n) = CΣ C𝟙 (λ { (inl false) → C℧ ; (inl true) → CFin n ; _ → C℧})
 
 
 fromCFin : ∀ {n} → El (CFin n) → Fin (ℕ.suc n)
 fromCFin {ℕ.zero} x = Fin.zero
 fromCFin {ℕ.suc n} (false , rest) = Fin.zero
 fromCFin {ℕ.suc n} (true , rest) = Fin.suc (fromCFin rest)
-
 
 
 
@@ -84,51 +79,66 @@ fromCFin {ℕ.suc n} (true , rest) = Fin.suc (fromCFin rest)
 -- TreeSize (CHGuard c D1 D2) (ElHGuard x x₁) = O↑ (omax (TreeSize D1 (x (next (℧ c)))) (TreeSize D2 x₁))
 
 
+
+germDescFSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc)
+  → (DataGermIsCode ℓ D)
+  → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → □ _ (λ _ → Ord) (tt , cs)
+  → Ord
+
+-- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
+germSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
+
+
+germDescFSize tyCtor GEnd GEndCode (FC com k unk) φ = O1
+germDescFSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk) φ = omax O1 (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
+-- germDescFSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk)  = omax (elSize c (transport x₁ a)) (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) )
+germDescFSize tyCtor (GArg A D) (GGuardedArgCode c x₁ x₂) (FC (a , com) k unk) φ =  (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
+germDescFSize tyCtor (GHRec A D) (GHRecCode c x₁ x₂) (FC com k unk) φ  = O↑ (OLim c helper)
+  where
+   helper : El c → Ord
+   helper a = omax (φ (Rec b)) (germDescFSize tyCtor (D b) (x₂ b) (FC (com b) (λ r → k (Rest (b , r))) (λ r → unk (b , r))) λ r → φ (Rest (b , r)) )
+     where
+       b = transport⁻ x₁ a
+germDescFSize tyCtor (GHRec A D) (GGuardedHRecCode c x₁ x₂) (FC com k unk) φ = O1
+germDescFSize tyCtor (GUnk A D) (GUnkCode c x pf) (FC com k unk) φ = O↑ (OLim c helper)
+  where
+   helper : El c → Ord
+   helper a = omax O1 (germDescFSize tyCtor D pf (FC com k λ r →  unk (Rest (b , r))) φ)
+     where
+       b = transport⁻ x a
+germDescFSize tyCtor (GUnk A D) (GGuardedUnkCode c x pf) (FC com k unk) φ = O1
+
+
+germSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germDescFSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)) O1 O1
+
 codeSize : ∀ {ℓ} → ℂ ℓ → Ord
 descSize : ∀ {ℓ} →  {c : ℂ ℓ} → ℂDesc c → Ord
 elSize : ∀ {ℓ} (c : ℂ ℓ) → El c → Ord
+-- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
 ⁇Size : ∀ {ℓ} → ⁇Ty ℓ → Ord
 LUnk : ∀ {ℓ} (æ : Æ) → LÆ {{æ}} (⁇Ty ℓ) → Ord
 CμSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI) {i} → ℂμ tyCtor D i → Ord
 CElSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI) (E : DName tyCtor → ℂDesc cI) {i} → ℂDescEl D (ℂμ tyCtor E) i → Ord
 
 
--- GermSizeW : ∀ {ℓ} (tyCtor : CName)  → W (germContainer ℓ tyCtor (dfix F⁇)) (⁇Ty ℓ) tt → Ord
--- TreeSizeW : ∀ {ℓ} (tyCtor : CName)
---   → (D : GermDesc)
---   → FContainer (interpGerm D) (W (germContainer ℓ tyCtor (dfix F⁇)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
---   → DataGermIsCode ℓ D
---   → Ord
--- TreeSizeW tyCtor GEnd (FC com k unk) GEndCode = {!!}
--- TreeSizeW tyCtor (GArg A x) (FC (a , com) k unk) (GArgCode c x₁ x₂) = O↑ (omax (codeSize c) {!!})
--- TreeSizeW tyCtor (GArg .(∀ x₄ → _ x₄) x) (FC com k unk) (GGuardedArgCode ca x₁ x₂ x₃) = {!!}
--- TreeSizeW tyCtor (GHRec A x) (FC com k unk) (GHRecCode c x₁ x₂) = {!!}
--- TreeSizeW tyCtor (GHRec A x) (FC com k unk) (GGuardedRecCode c x₁ x₂) = {!!}
--- TreeSizeW tyCtor (GUnk A D) (FC com k unk) (GUnkCode c x pf) = {!!}
--- TreeSizeW tyCtor (GUnk A D) (FC com k unk) (GGuardedUnkCode c x pf) = {!!}
-
--- GermSizeW {ℓ} tyCtor (Wsup (FC (d , c) k unk))
---   = O↑ (TreeSizeW tyCtor (dataGerm ℓ tyCtor (dfix F⁇) d) (FC c k unk) (dataGermIsCode ℓ tyCtor d))
--- GermSizeW tyCtor W℧ = O1
--- GermSizeW tyCtor W⁇ = O1
-
 codeSize CodeModule.C⁇ = O1
 codeSize CodeModule.C℧ = O1
 codeSize CodeModule.C𝟘 = O1
 codeSize CodeModule.C𝟙 = O1
 codeSize CodeModule.CType = O1
-codeSize (CodeModule.CΠ dom cod) = O↑ (omax (codeSize dom) (OLim dom λ x → codeSize (cod x)))
-codeSize (CodeModule.CΣ dom cod) = O↑ (omax (codeSize dom) ( OLim dom λ x → codeSize (cod x)))
+codeSize (CodeModule.CΠ dom cod) = O↑ (omax (codeSize dom) (OLim dom λ x → codeSize (cod (inl x))))
+codeSize (CodeModule.CΣ dom cod) = O↑ (omax (codeSize dom) ( OLim dom λ x → codeSize (cod (inl x))))
 codeSize (CodeModule.C≡ c x y) = O↑ (omax (codeSize c) (omax (elSize c x) (elSize c y)) )
 codeSize (CodeModule.Cμ tyCtor c D x) with numCtors tyCtor
 ... | ℕ.zero = O↑ OZ
 ... | ℕ.suc n = O↑ (OLim (CFin n) λ x → descSize (D (fromCFin x)))
 
 descSize {c = c} (CodeModule.CEnd i) = O↑ (elSize c i )
-descSize (CodeModule.CArg c D) = O↑ (OLim c (λ a → descSize (D a)))
+descSize (CodeModule.CArg c D) = O↑ (OLim c (λ a → descSize (D (inl a))))
 descSize {c = c} (CodeModule.CRec j D) = O↑ (omax (descSize D) (elSize c j))
-descSize {c = cI} (CodeModule.CHRec c j D) = O↑ (OLim c λ a → omax (descSize (D a)) (elSize cI (j a)))
-descSize (CodeModule.CHGuard c D D₁) = O↑ (omax (descSize D) (descSize D₁))
+descSize {c = cI} (CodeModule.CHRec c j D) = O↑ (OLim c λ a → omax (descSize (D (inl a))) (elSize cI (j a)))
+-- descSize (CodeModule.CHGuard c D D₁) = O↑ (omax (descSize D) (descSize D₁))
 
 
 -- There are no codes of size zero
@@ -157,7 +167,7 @@ noCodeZero (CodeModule.Cμ tyCtor c D x) () | ℕ.suc n
 ⁇Size (CodeModule.⁇Π f) = O↑ (OLim C⁇ (λ x → ⁇Size (f (transport (sym hollowEq) (next x))))) -- O↑ (OLim C⁇ (λ x → LUnk æ ))
 ⁇Size (CodeModule.⁇Σ (x , y)) = O↑ (omax (⁇Size x) (⁇Size y))
 ⁇Size (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = O↑ (⁇Size x)
-⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = {!!} -- dataGermSize tyCtor x
+⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = germSize tyCtor x
 -- O1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where
@@ -172,8 +182,8 @@ elSize CodeModule.C℧ x = O1
 elSize CodeModule.C𝟘 x = O1
 elSize CodeModule.C𝟙 x = O1
 elSize {suc ℓ} CodeModule.CType x = (codeSize x)
-elSize (CodeModule.CΠ dom cod) f = (OLim dom λ x → elSize (cod x) (f x))
-elSize (CodeModule.CΣ dom cod) (x , y) = (omax (elSize dom x) (elSize (cod x) y))
+elSize (CodeModule.CΠ dom cod) f = (OLim dom λ x → elSize (cod (inl x)) (f x))
+elSize (CodeModule.CΣ dom cod) (x , y) = (omax (elSize dom x) (elSize (cod (inl x)) y))
 elSize (CodeModule.C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) =  (elSize c x)
 elSize (CodeModule.Cμ tyCtor cI D i) x = CμSize D (transport⁻ ℂμW x)
 
@@ -184,12 +194,12 @@ CμSize D Cμ⁇ = O1
 CμSize D Cμ℧ = O1
 
 CElSize {cI = cI} .(CEnd j) E {i} (ElEnd j (w ⊢ _ ≅ _)) = elSize cI w
-CElSize (CArg c D) E (ElArg a x) = O↑ (omax (elSize c a) (CElSize (D a) E x))
+CElSize (CArg c D) E (ElArg a x) = O↑ (omax (elSize c a) (CElSize (D (inl a)) E x))
 CElSize (CRec j D) E (ElRec x x₁) = O↑ (omax (CμSize E x) (CElSize D E x₁))
-CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f a)) (CElSize (D a) E (x a)))
+CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f a)) (CElSize (D (inl a)) E (x a)))
 -- We can't use guarded arguments in size calcs, that's why they're guarded
 -- So we use the size at the error value
-CElSize (CHGuard c D1 D2) E (ElHGuard x x₁) = O↑ (omax (CElSize D1 E (x (next (℧ c)))) (CElSize D2 E x₁))
+-- CElSize (CHGuard c D1 D2) E (ElHGuard x x₁) = O↑ (omax (CElSize D1 E (x (next (℧ c)))) (CElSize D2 E x₁))
 
 
 -- ℧size : ∀ {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1

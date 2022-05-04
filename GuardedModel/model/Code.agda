@@ -92,17 +92,15 @@ record CodeModule
     -- The unknown type, i.e. the fixed-point of F⁇
     ⁇ : Set
     -- Code-based Descriptions of inductive data types
-    data ℂDesc' (I : ℂ) : Polarity → Set
-    ℂDesc : (I : ℂ) →  Set
-    ℂDesc I = ℂDesc' I Pos
+    data ℂDesc (I : ℂ) : Set
     -- Interpretation of description codes into descriptions
-    interpDesc : ∀ {I p} → (ℂDesc' I p) → Container (El I)
-    CommandD : ∀ {I p} →  ℂDesc' I p → El I → Set
-    ResponseD : ∀ {I p} →  (D : ℂDesc' I p) → ∀ {i : El I} → CommandD D i → Set
-    inextD : ∀ {I p} →  (D : ℂDesc' I p) → ∀ {i} → (c : CommandD D i) → ResponseD D c → El I
-    ▹interpDesc : ∀ {I p} → (ℂDesc' I Neg) → Container (El I)
-    ▹CommandD : ∀ {I p} →  ℂDesc' I Neg → El I → Set
-    ▹ResponseD : ∀ {I p} →  (D : ℂDesc' I Neg) → ∀ {i : El I} → CommandD D i → Set
+    interpDesc : ∀ {I} → (ℂDesc I) → Container (El I)
+    CommandD : ∀ {I} →  ℂDesc I → El I → Set
+    ResponseD : ∀ {I} →  (D : ℂDesc I) → ∀ {i : El I} → CommandD D i → Set
+    inextD : ∀ {I} →  (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → El I
+    ▹interpDesc : ∀ {I} → (ℂDesc I ) → Container 𝟙
+    ▹CommandD : ∀ {I} →  ℂDesc I  → Set
+    ▹ResponseD : ∀ {I} →  (D : ℂDesc I ) → ▹CommandD D → Set
 
     ------------------------------- Definitions --------------------
 
@@ -196,15 +194,15 @@ record CodeModule
     ----------------------------------------------------------------
     --- Gradual inductive types
     data _ where
-      Cμ :  (tyCtor : CName) → (I : ℂ)
-        → (D : DName tyCtor → ℂDesc I)
-        → El I → ℂ
+      Cμ :  (tyCtor : CName) → (cI : ℂ)
+        → (D : DName tyCtor → ℂDesc cI)
+        → El cI → ℂ
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
       ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
-    El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
-    ▹El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+    El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+    ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc (D d))) 𝟙 tt
 
 
     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
@@ -223,57 +221,54 @@ record CodeModule
     -- ⁇ Is the guarded fixed point of F⁇
     ⁇ = fix F⁇
 
-    private variable
-      p : Polarity
 
     ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
-    data ℂDesc'  where
-      CEnd : (i : El I) → ℂDesc' I p
-      CArg : (c : ℂ) → (D : El c → ℂDesc' I p) → ℂDesc'  I p
-      CRec : (j :  El I) → (D :  ℂDesc'  I p) → ℂDesc' I p
-      -- CPar :  (D :  ℂDesc  I ) → ℂDesc I
-      CHRec : (c : ℂ) → (j : El c → El I) → (D : El c → ℂDesc'  I p) → ℂDesc' I p
-      -- Guarded versions of codes, used to construct germs of datatypes
-      -- Germs are never indexed, so we don't worry about indexes
-      CGRec : {{_ : IsNeg p}} → (c : ℂ)  → (D : ▹El c → ℂDesc'  I p) → ℂDesc' I p
-      CGArg : {{_ : IsNeg p}} → (c : ℂ) → (D : ▹El c → ℂDesc' I p) → ℂDesc'  I p
-      -- CHPar : (c : ℂ) → (D : El c → ℂDesc  I ) → ℂDesc I
-      -- CHGuard : ∀ (c : ℂ) → (D E : ℂDesc I ) →  ℂDesc I
+    data ℂDesc  where
+      CEnd : (i : El I) → ℂDesc I
+      CArg : (c : ℂ) → (D : (El c ⊎ ▹El c) → ℂDesc I) → ℂDesc  I
+      CRec : (j :  El I) → (D :  ℂDesc I) → ℂDesc I
+      CHRec : (c : ℂ) → (j : El c → El I) → (D : (El c ⊎ ▹El c) → ℂDesc I) → ℂDesc I
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
     interpDesc {I = I} D = CommandD D ◃ ResponseD D  ◃  (λ _ → 𝟘) / inextD D
 
     CommandD (CEnd j) i = i ≅ j
-    CommandD (CArg c D) i = Σ[ a ∈ El c ] CommandD (D a) i
+    CommandD (CArg c D) i = Σ[ a ∈ El c ] CommandD (D (inl a)) i
     CommandD (CRec j D) i = CommandD D i
-    CommandD (CHRec c j D) i = (a : El c) → CommandD (D a) i
-    CommandD (CGArg c D) i = Σ[ a ∈ ▹El c ] CommandD (D a) i
-    CommandD (CGRec c D) i = (a : ▹El c) → CommandD (D a) i
+    CommandD (CHRec c j D) i = (a : El c) → CommandD (D (inl a)) i
     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) com = 𝟘
-    ResponseD (CArg c D) (a , com) = ResponseD (D a) com
+    ResponseD (CArg c D) (a , com) = ResponseD (D (inl a)) com
     ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (ResponseD D com)
-    ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ El c ] ResponseD (D a) (com a))
-    ResponseD (CGArg c D) (a , com) = ResponseD (D a) com
-    ResponseD (CGRec c D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ResponseD (D a) (com a))
+    ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ El c ] ResponseD (D (inl a)) (com a))
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
 
 
-    inextD (CArg c D) {i} (a , com) res = inextD (D a) com res
+    inextD (CArg c D) {i} (a , com) res = inextD (D (inl a)) com res
     inextD (CRec j D) {i} com (Rec x) = j
     inextD (CRec j D) {i} com (Rest x) = inextD D com x
     inextD (CHRec c j D) {i} com (Rec res) = j res
-    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D a) (com a) res
-    inextD (CGArg c D) {i} (a , com) res = inextD (D a) com res
-    inextD (CGRec c D) {i} com _ = i
+    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (inl a)) (com a) res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
 
+    ▹interpDesc {I = I} D = (λ _ → ▹CommandD D) ◃ ▹ResponseD D  ◃  (λ _ → 𝟘) / λ _ _ → tt
+
+    ▹CommandD (CEnd j) = 𝟙
+    ▹CommandD (CArg c D) = Σ[ a ∈ ▹El c ] ▹CommandD (D (inr a))
+    ▹CommandD (CRec j D) = ▹CommandD D
+    ▹CommandD (CHRec c j D) = (a : ▹El c) → ▹CommandD (D (inr a))
+    -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
+
+    ▹ResponseD (CEnd i) com = 𝟘
+    ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
+    ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
+    ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
 -----------------------------------------------------------------------
 
 
