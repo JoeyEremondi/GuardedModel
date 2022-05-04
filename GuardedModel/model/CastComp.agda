@@ -29,40 +29,45 @@ module CastComp {{_ : Æ}} {{_ : Datatypes}} {{_ : DataGermCodes}} where
 open import Code
 open import Head
 open import Util
-open import Ord ℂ El ℧ C𝟙 refl
+open import Ord
+-- open Ord ℂ El ℧ C𝟙 refl
 
 
-germ :  TyHead → (ℓ : ℕ) → ℂ ℓ
-germ HΠ _ = CΠ C⁇ (λ _ → C⁇)
-germ HΣ _ = CΣ C⁇ (λ _ → C⁇)
-germ H≅ _ = C≡ C⁇ ⁇⁇ ⁇⁇
-germ H𝟙 _ = C𝟙
-germ H𝟘 _ = C𝟘
-germ HType zero = C℧
-germ HType (suc ℓ) = CType
-germ (HCtor tyCtor) _  = Cμ tyCtor C𝟙 {!!} true
 
-germTo⁇ : ∀ {h ℓ} → El (germ h ℓ) → ⁇Ty ℓ
-germFrom⁇ : ∀ {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → LÆ (El (germ h ℓ))
+germ :  TyHead → (ℓ : ℕ) → Set -- ℂ ℓ
+germ HΠ ℓ = (x : ⁇Ty ℓ) → ⁇Ty ℓ
+germ HΣ ℓ = ⁇Ty ℓ × ⁇Ty ℓ
+germ H≅ ℓ = dyn ≅ dyn
+  where
+    dyn : ⁇Ty ℓ
+    dyn = ⁇⁇
+germ H𝟙 _ = Bool
+germ H𝟘 _ = Unit
+germ HType zero = Unit
+germ HType (suc ℓ) = ℂ ℓ
+germ (HCtor tyCtor) ℓ  = W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
+
+germTo⁇ : ∀ {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
+germFrom⁇ : ∀ {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → (germ h ℓ)
 
 
--- germTo⁇ {h = HΠ} f = ⁇Π λ gx → ⦇ f (θL ⁇⁇ (map▹ Now (transport hollowEq gx))) ⦈
--- germTo⁇ {h = HΣ} (x , y) = ⁇Σ (x , y)
--- germTo⁇ {h = H≅} x = ⁇≡ x
--- germTo⁇ {h = H𝟙} false = ⁇℧
--- germTo⁇ {h = H𝟙} true = ⁇𝟙
--- germTo⁇ {h = H𝟘} tt = ⁇℧
--- germTo⁇ {h = HType} {zero} x = ⁇℧
--- germTo⁇ {h = HType} {suc ℓ} x = ⁇Type x
--- germTo⁇ {h = HCtor tyCtor} {ℓ} x = ⁇μ tyCtor (transport⁻ (sym ? ∙ ℂμW) x)
+germTo⁇ {h = HΠ} f = ⦇ ⁇Π (liftFun (λ ▹x → θL ⁇⁇ (map▹ Now (transport hollowEq ▹x)))) ⦈
+germTo⁇ {h = HΣ} (x , y) = pure (⁇Σ (x , y))
+germTo⁇ {h = H≅} x = pure (⁇≡ x)
+germTo⁇ {h = H𝟙} false = pure ⁇℧
+germTo⁇ {h = H𝟙} true = pure ⁇𝟙
+germTo⁇ {h = H𝟘} tt = pure ⁇℧
+germTo⁇ {h = HType} {zero} x = pure ⁇℧
+germTo⁇ {h = HType} {suc ℓ} x = pure (⁇Type x)
+germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
 
--- germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = ⦇ true ⦈
--- germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp = ⦇ x ⦈
--- germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq = liftFun (λ x → f (transport⁻ hollowEq (next x)))
--- germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq = ⦇ (x , y) ⦈
--- germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq = ⦇ x ⦈
--- germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = ⦇ (transport ((sym ) ∙  ℂμW) (Wsup x)) ⦈
--- germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp = ⦇ W⁇ ⦈
+germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq x = f (transport⁻ hollowEq (next x))
+germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = true
+germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp =  x
+germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
+germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
+germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = (Wsup x)
+germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp =  W⁇
 
 
 
@@ -81,15 +86,15 @@ record CastMeet (cSize vSize : Ord) : Set where
       → LÆ (El c)
     oToGerm : ∀ {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
-      → codeHead c ≡ HStatic h
+      → codeHead c ≡p HStatic h
       → (x : El c)
-      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : (elSize c x) ≡p vSize }
-      → LÆ (El (germ h ℓ))
+      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize c x ≡p vSize }
+      → LÆ (germ h ℓ)
     oFromGerm : ∀ {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
-      → codeHead c ≡ HStatic h
-      → (x : El (germ h ℓ))
-      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : (elSize (germ h ℓ) x) ≡p vSize }
+      → codeHead c ≡p HStatic h
+      → (x : germ h ℓ)
+      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
     oCast : ∀ {ℓ}
       → (c₁ c₂ : ℂ ℓ)
@@ -183,18 +188,33 @@ castMeetRec cSize vSize self = record
       pure (w12 ⊢ x₁ ≅ y₁)
     meet (CodeModule.Cμ tyCtor c D x₁) x y | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
     ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHEq⁇ x₁ = {!!}
+
     toGerm : ∀ {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
-      → codeHead c ≡ HStatic h
+      → codeHead c ≡p HStatic h
       → (x : El c)
-      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : (elSize c x) ≡p vSize }
-      → LÆ (El (germ h ℓ))
+      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize c x ≡p vSize }
+      → LÆ (germ h ℓ)
+    toGerm CodeModule.C⁇ {reflp} () x
+    toGerm CodeModule.C℧ {reflp} () x
+    toGerm CodeModule.C𝟘 {reflp} reflp x = pure tt
+    toGerm CodeModule.C𝟙 {reflp} reflp x = pure x
+    toGerm {suc ℓ} CodeModule.CType {reflp} reflp x = pure x
+    toGerm (CodeModule.CΠ dom cod) {reflp} reflp f = liftFun λ x → do
+      x⁇ ←
+        self (≤oo-sucL (≤o-trans (codeMaxL dom) omax-≤L))
+          .oCast C⁇ dom x
+      self (≤oo-sucL (≤o-trans (codeMaxR (cod (inl x⁇))) (≤o-trans (≤o-cocone _ x⁇ (≤o-refl _)) omax-≤R)))
+        .oCast (cod (inl x⁇)) C⁇ (f x⁇)
+    toGerm (CodeModule.CΣ c cod) {reflp} reflp x = {!!}
+    toGerm (CodeModule.C≡ c x₁ y) {reflp} reflp x = {!!}
+    toGerm (CodeModule.Cμ tyCtor c D x₁) {reflp} reflp x = {!!}
 
     fromGerm : ∀ {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
-      → codeHead c ≡ HStatic h
-      → (x : El (germ h ℓ))
-      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : (elSize (germ h ℓ) x) ≡p vSize }
+      → codeHead c ≡p HStatic h
+      → (x : germ h ℓ)
+      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
 
     cast : ∀ {ℓ}
@@ -304,10 +324,10 @@ castMeetRec cSize vSize self = record
 -- -- -- -- --         → (i₁ : El c1) → (i₂ : El c2)
 -- -- -- -- --         → μ (Arg (DName tyCtor1) λ d → interpDesc (D1 d)) i₁
 -- -- -- -- --         → (μ (Arg (DName tyCtor2) λ d → interpDesc (D2 d)) i₂)
--- -- -- -- toGerm : ∀ {ℓ} (c : ℂ ℓ) (h : Head) → codeHead c ≡p HStatic h → El c → El (germ h ℓ)
--- -- -- -- fromGerm : ∀ {ℓ} (c : ℂ ℓ) (h : Head) → codeHead c ≡p HStatic h → El (germ h ℓ) → El c
--- -- -- -- packGerm :   ∀ {ℓ} (h : Head) → El (germ h ℓ) → ⁇Ty ℓ
--- -- -- -- unpackGerm :  ∀ {ℓ} (h : Head) → ⁇Ty ℓ → El (germ h ℓ)
+-- -- -- -- toGerm : ∀ {ℓ} (c : ℂ ℓ) (h : Head) → codeHead c ≡p HStatic h → El c → germ h ℓ
+-- -- -- -- fromGerm : ∀ {ℓ} (c : ℂ ℓ) (h : Head) → codeHead c ≡p HStatic h → germ h ℓ → El c
+-- -- -- -- packGerm :   ∀ {ℓ} (h : Head) → germ h ℓ → ⁇Ty ℓ
+-- -- -- -- unpackGerm :  ∀ {ℓ} (h : Head) → ⁇Ty ℓ → germ h ℓ
 -- -- -- -- _⊓[_]_  : ∀ {ℓ} {c : ℂ ℓ} → El c → (c' : ℂ ℓ) → El c → {@(tactic default (reflp {A = ℂ ℓ} {c})) pf : c ≡p c'} → El c
 -- -- -- -- codeMeet : ∀ {ℓ} (c1 c2 : ℂ ℓ) → ℂ ℓ
 

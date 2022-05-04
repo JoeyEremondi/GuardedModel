@@ -45,7 +45,7 @@ open import Code
 -- open import Head
 open import Util
 
-open import Ord ℂ El ℧ C𝟙 refl
+open import Ord -- ℂ El ℧ C𝟙 refl
 
 
 
@@ -232,16 +232,40 @@ CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f 
 -- CElSize (CHGuard c D1 D2) E (ElHGuard x x₁) = O↑ (omax (CElSize D1 E (x (next (℧ c)))) (CElSize D2 E x₁))
 
 
--- ℧size : ∀ {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
--- ℧size CodeModule.C⁇ = ≤o-refl _
--- ℧size CodeModule.C℧ = ≤o-refl _
--- ℧size CodeModule.C𝟘 = ≤o-refl _
--- ℧size CodeModule.C𝟙 = ≤o-refl _
--- ℧size {suc ℓ} CodeModule.CType = ≤o-refl _
--- ℧size (CodeModule.CΠ c cod) = ≤o-limiting (λ x → elSize (cod x) (℧ (CΠ c cod) x)) (λ k → ℧size (cod k))
--- ℧size (CodeModule.CΣ c cod) = omax-LUB (℧size c) (℧size (cod _))
--- ℧size (CodeModule.C≡ c x y) = ℧size c
--- ℧size (CodeModule.Cμ tyCtor c D x) = ≤o-refl _
+
+
+
+
+
+℧size : ∀ {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
+℧size CodeModule.C⁇ = ≤o-refl _
+℧size CodeModule.C℧ = ≤o-refl _
+℧size CodeModule.C𝟘 = ≤o-refl _
+℧size CodeModule.C𝟙 = ≤o-refl _
+℧size {suc ℓ} CodeModule.CType = ≤o-refl _
+℧size (CodeModule.CΠ c cod) = ≤o-limiting (λ x → elSize (cod (inl x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (inl k))
+℧size (CodeModule.CΣ c cod) = omax-LUB (℧size c) (℧size (cod _))
+℧size (CodeModule.C≡ c x y) = ℧size c
+℧size (CodeModule.Cμ tyCtor c D x) = ≤o-refl _
+
+codeSuc : ∀ {ℓ} (c : ℂ ℓ) → OZ <o codeSize c
+codeSuc CodeModule.C⁇ = ≤o-refl _
+codeSuc CodeModule.C℧ = ≤o-refl _
+codeSuc CodeModule.C𝟘 = ≤o-refl _
+codeSuc CodeModule.C𝟙 = ≤o-refl _
+codeSuc CodeModule.CType = ≤o-refl _
+codeSuc (CodeModule.CΠ c cod) = ≤o-sucMono ≤o-Z
+codeSuc (CodeModule.CΣ c cod) = ≤o-sucMono ≤o-Z
+codeSuc (CodeModule.C≡ c x y) = ≤o-sucMono ≤o-Z
+codeSuc (CodeModule.Cμ tyCtor c D x) with numCtors tyCtor
+... | ℕ.zero = ≤o-refl _
+... | ℕ.suc n = ≤o-sucMono ≤o-Z
+
+codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → omax O1 (codeSize c) ≤o codeSize c
+codeMaxL c = omax-LUB (codeSuc c) (≤o-refl _)
+
+codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → omax (codeSize c) O1 ≤o codeSize c
+codeMaxR c = omax-LUB (≤o-refl _) (codeSuc c)
 
 -- codeSuc : ∀ {ℓ} (c : ℂ ℓ) → Σ[ o ∈ Ord ](codeSize c ≡p O↑ o)
 -- codeSuc CodeModule.C⁇ = _ , reflp

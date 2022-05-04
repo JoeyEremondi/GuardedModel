@@ -28,9 +28,14 @@ open import Cubical.Foundations.Transport
 -- The main difference is that we allow the limit over the elements of any code type, not just natural numbers
 
 --TODO: don't make ℓ module param
-module Ord (ℂ : ℕ → Set) (El : ∀ {ℓ} → ℂ ℓ → Set) (℧ : ∀ {ℓ} → (c : ℂ ℓ ) → El c)
-  (C𝔹 : ∀ {ℓ} → ℂ ℓ) (C𝔹Eq : El C𝔹 ≡ Bool) where
-
+-- module Ord (ℂ : ℕ → Set) (El : ∀ {ℓ} → ℂ ℓ → Set) (℧ : ∀ {ℓ} → (c : ℂ ℓ ) → El c)
+--   (C𝔹 : ∀ {ℓ} → ℂ ℓ) (C𝔹Eq : El C𝔹 ≡ Bool) where
+module Ord {{ _ : Æ }} {{_ : Datatypes}} where
+open import Code
+C𝔹 : ℂ 0
+C𝔹 = C𝟙
+C𝔹Eq : El (C𝔹 ) ≡ Bool
+C𝔹Eq = refl
 
 data Ord : Set where
   OZ : Ord
@@ -153,6 +158,9 @@ abstract
   omax-≤R {o1} {o2} =
     ≤o-cocone _ (transport⁻ C𝔹Eq false)
       (subst (λ x → o2 ≤o (if x then o1 else o2)) (sym (transportTransport⁻ C𝔹Eq false)) (≤o-refl _))
+
+  omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (omax o1 o2) ≤o (omax o1' o2')
+  omax-mono lt1 lt2 = omax-LUB (≤o-trans lt1 omax-≤L) (≤o-trans lt2 omax-≤R)
 
 _+o_ : Ord → Ord → Ord
 OZ +o o2 = o2
