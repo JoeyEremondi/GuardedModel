@@ -33,6 +33,7 @@ module Code
 data 0<  : ℕ → Set where
   instance suc< : ∀ {ℓ} → 0< (suc ℓ)
 
+
 --Readable datatypes for translating codes into W types
 
 -- -- Are we providing a recursive argument of a constructor
@@ -76,6 +77,9 @@ record CodeModule
     data ℂ : Set
     -- Interpretation of codes into types
     El : ℂ → Set
+    -- Interpretation of codes when they're on the left of an arrow,
+    -- used to make the germs of datatypes
+    ▹El : ℂ → Set
     -- The Functor describing the unknown type ⁇
     -- We write it as a HIT to make sure all of the error values are equal
     data F⁇ (Self : ▹ Type) :  Set
@@ -98,6 +102,7 @@ record CodeModule
       ⁇⁇ : F⁇ Self
     -- The unknown code denotes the unknown type
     El C⁇ = ⁇
+    ▹El C⁇ = ▹ ⁇
 
 
     ----------------------------------------------------------------
@@ -109,18 +114,21 @@ record CodeModule
     -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
     -- But the failure type is not
     El C℧ = 𝟙
+    ▹El C℧ = 𝟙
     ----------------------------------------------------------------
     --- Gradual empty type
     data _ where
       C𝟘 : ℂ
       -- There is no way to embed a value of the empty type into ⁇, except as error
     El C𝟘 = 𝟙
+    ▹El C𝟘 = 𝟙
     ----------------------------------------------------------------
     --- Gradual unit type
     data _ where
       C𝟙 : ℂ
       ⁇𝟙 : F⁇ Self
     El C𝟙 = 𝟚
+    ▹El C𝟙 = 𝟚
     ----------------------------------------------------------------
     -- Universes
     -- These are just codes from the level below
@@ -128,6 +136,7 @@ record CodeModule
       CType : {{ inst : 0< ℓ }} → ℂ
       ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
     El CType = ℂ-1
+    ▹El CType = ℂ-1
     -----------------------------------------------------------------
     -- Codes can "eat themselves" and have a code denoting the set of all codes
     -- So long as we hide it behind the guarded modality
@@ -147,21 +156,24 @@ record CodeModule
     --- This is where we capture the possibility for non-termination (in the guarded version)
     --- For approx-norm, L A = A
     data _ where
-      CΠ : (dom : ℂ) → (cod : (x : El dom) → ℂ) → ℂ
+      CΠ : (dom : ℂ) → (cod : (x : El dom ⊎  (▹El dom)) → ℂ) → ℂ
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
       ⁇Π : (▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
-    El (CΠ dom cod) = (x : El dom) → (El (cod x))
+    El (CΠ dom cod) = (x : El dom) → (El (cod (inl x)))
+    ▹El (CΠ dom cod) = (x : ▹El dom) → (▹El (cod (inr x)))
+
     ----------------------------------------------------------------
     --- Gradual pairs
     data _ where
-      CΣ : (dom : ℂ) → (cod : (x : El dom) → ℂ) → ℂ
+      CΣ : (dom : ℂ) → (cod : (x : El dom ⊎ (▹El dom)) → ℂ) → ℂ
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
       --TODO: is it only error if BOTH are error?
-    El (CΣ dom cod) = Σ[ x ∈ El dom ]( El (cod x) )
+    El (CΣ dom cod) = Σ[ x ∈ El dom ]( El (cod (inl x)) )
+    ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
     ----------------------------------------------------------------
     --- Gradual propositional equality i.e. witnesses of consistency
     data _ where
@@ -169,6 +181,7 @@ record CodeModule
       -- The germ of an equality type is a witness of equality between two ⁇s
       ⁇≡ : _≅_ {A = F⁇ Self} ⁇⁇ ⁇⁇ → F⁇ Self
     El (C≡ c x y) = x ≅ y
+    ▹El (C≡ c x y) = ▹El c
     ----------------------------------------------------------------
     --- Gradual inductive types
     data _ where
@@ -178,6 +191,7 @@ record CodeModule
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
       ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
     El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+    ▹El (Cμ tyCtor c D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
 
 
     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
@@ -316,8 +330,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ CodeModule.C𝟘 = tt
 ℧ CodeModule.C𝟙 = false
 ℧ {suc ℓ} CodeModule.CType = C℧
-℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod x))
-℧ (CodeModule.CΣ dom cod) = ℧ dom , ℧ (cod (℧ dom))
+℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (inl x)))
+℧ (CodeModule.CΣ dom cod) = ℧ dom , ℧ (cod (inl (℧ dom)))
 ℧ (CodeModule.C≡ c x y) = ℧ c ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
