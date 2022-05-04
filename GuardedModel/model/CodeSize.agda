@@ -80,37 +80,38 @@ fromCFin {ℕ.suc n} (true , rest) = Fin.suc (fromCFin rest)
 
 
 
-germDescFSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc)
+germFIndSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc)
   → (DataGermIsCode ℓ D)
   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
   → □ _ (λ _ → Ord) (tt , cs)
   → Ord
-
--- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
-germSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
+germIndSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
 
 
-germDescFSize tyCtor GEnd GEndCode (FC com k unk) φ = O1
-germDescFSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk) φ = omax O1 (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
--- germDescFSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk)  = omax (elSize c (transport x₁ a)) (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) )
-germDescFSize tyCtor (GArg A D) (GGuardedArgCode c x₁ x₂) (FC (a , com) k unk) φ =  (germDescFSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
-germDescFSize tyCtor (GHRec A D) (GHRecCode c x₁ x₂) (FC com k unk) φ  = O↑ (OLim c helper)
+germFIndSize tyCtor GEnd GEndCode (FC com k unk) φ = O1
+germFIndSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk) φ = omax O1 (germFIndSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
+-- germFIndSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk)  = omax (elSize c (transport x₁ a)) (germFIndSize tyCtor (D a) (x₂ a) (FC com k unk) )
+germFIndSize tyCtor (GArg A D) (GGuardedArgCode c x₁ x₂) (FC (a , com) k unk) φ =  (germFIndSize tyCtor (D a) (x₂ a) (FC com k unk) φ )
+germFIndSize tyCtor (GHRec A D) (GHRecCode c x₁ x₂) (FC com k unk) φ  = O↑ (OLim c helper)
   where
    helper : El c → Ord
-   helper a = omax (φ (Rec b)) (germDescFSize tyCtor (D b) (x₂ b) (FC (com b) (λ r → k (Rest (b , r))) (λ r → unk (b , r))) λ r → φ (Rest (b , r)) )
+   helper a = omax (φ (Rec b)) (germFIndSize tyCtor (D b) (x₂ b) (FC (com b) (λ r → k (Rest (b , r))) (λ r → unk (b , r))) λ r → φ (Rest (b , r)) )
      where
        b = transport⁻ x₁ a
-germDescFSize tyCtor (GHRec A D) (GGuardedHRecCode c x₁ x₂) (FC com k unk) φ = O1
-germDescFSize tyCtor (GUnk A D) (GUnkCode c x pf) (FC com k unk) φ = O↑ (OLim c helper)
+germFIndSize tyCtor (GHRec A D) (GGuardedHRecCode c x₁ x₂) (FC com k unk) φ = O1
+germFIndSize tyCtor (GUnk A D) (GUnkCode c x pf) (FC com k unk) φ = O↑ (OLim c helper)
   where
    helper : El c → Ord
-   helper a = omax O1 (germDescFSize tyCtor D pf (FC com k λ r →  unk (Rest (b , r))) φ)
+   helper a = omax O1 (germFIndSize tyCtor D pf (FC com k λ r →  unk (Rest (b , r))) φ)
      where
        b = transport⁻ x a
-germDescFSize tyCtor (GUnk A D) (GGuardedUnkCode c x pf) (FC com k unk) φ = O1
+germFIndSize tyCtor (GUnk A D) (GGuardedUnkCode c x pf) (FC com k unk) φ = O1
 
 
-germSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germDescFSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)) O1 O1
+--Take a tree
+
+
+germIndSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)) O1 O1
 
 codeSize : ∀ {ℓ} → ℂ ℓ → Ord
 descSize : ∀ {ℓ} →  {c : ℂ ℓ} → ℂDesc c → Ord
@@ -120,7 +121,36 @@ elSize : ∀ {ℓ} (c : ℂ ℓ) → El c → Ord
 LUnk : ∀ {ℓ} (æ : Æ) → LÆ {{æ}} (⁇Ty ℓ) → Ord
 CμSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI) {i} → ℂμ tyCtor D i → Ord
 CElSize : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI) (E : DName tyCtor → ℂDesc cI) {i} → ℂDescEl D (ℂμ tyCtor E) i → Ord
+-- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
+--   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+--   → □ _ (λ _ → Ord) (tt , cs)
+--   → Ord
 
+-- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
+-- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
+germDescSize : ∀ {ℓ} → (D : GermDesc)
+  → (DataGermIsCode ℓ D)
+  → Ord
+
+
+germDescSize  GEnd GEndCode = O1
+germDescSize  (GArg A D) (GArgCode c x₁ x₂) = O↑ (omax (codeSize c) (OLim c (λ a → germDescSize  (D (transport⁻ x₁ a)) (x₂ (transport⁻ x₁ a)))))
+germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) = O1
+germDescSize  (GHRec A D) (GHRecCode c x₁ x₂) = O↑ (OLim c (λ a → omax (codeSize c)( germDescSize  (D (transport⁻ x₁ a)) (x₂ (transport⁻ x₁ a)))))
+germDescSize  (GHRec A D) (GGuardedHRecCode c x₁ x₂) = O1
+germDescSize  (GUnk A D) (GUnkCode c x pf) =  O↑ (OLim c λ a → omax (codeSize c) (germDescSize D pf))
+germDescSize  (GUnk A D) (GGuardedUnkCode c x pf) = O1
+
+
+-- germFArgSize tyCtor GEnd GEndCode (FC com k unk) φ = O1
+-- germFArgSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk) φ = (codeSize c)
+-- germFArgSize tyCtor (GArg A D) (GGuardedArgCode c x₂ x₃) x φ = O1
+-- germFArgSize tyCtor (GHRec A D) (GHRecCode c x₂ x₃) x φ = O1 -- OLim c (λ a → germFArgSize tyCtor {!!} {!!} {!!} {!!})
+-- germFArgSize tyCtor (GHRec A D) (GGuardedHRecCode c x₂ x₃) x φ = O1
+-- germFArgSize tyCtor (GUnk A D) (GUnkCode c x₁ pf) x φ = {!!}
+-- germFArgSize tyCtor (GUnk A D) (GGuardedUnkCode c x₁ pf) x φ = O1
+
+-- germArgSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFArgSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)) O1 O1
 
 codeSize CodeModule.C⁇ = O1
 codeSize CodeModule.C℧ = O1
@@ -167,7 +197,7 @@ noCodeZero (CodeModule.Cμ tyCtor c D x) () | ℕ.suc n
 ⁇Size (CodeModule.⁇Π f) = O↑ (OLim C⁇ (λ x → ⁇Size (f (transport (sym hollowEq) (next x))))) -- O↑ (OLim C⁇ (λ x → LUnk æ ))
 ⁇Size (CodeModule.⁇Σ (x , y)) = O↑ (omax (⁇Size x) (⁇Size y))
 ⁇Size (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = O↑ (⁇Size x)
-⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = germSize tyCtor x
+⁇Size {ℓ = ℓ} (CodeModule.⁇μ tyCtor x) = ((germIndSize tyCtor x))
 -- O1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where

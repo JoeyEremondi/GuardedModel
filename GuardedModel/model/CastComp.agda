@@ -9,6 +9,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
@@ -21,13 +22,14 @@ open import Cubical.Foundations.Prelude
 open import ApproxExact
 open import InductiveCodes
 open import CodeSize
-
+open import DataGerm
 
 module CastComp {{_ : Æ}} {{_ : Datatypes}} {{_ : DataGermCodes}} where
 
 open import Code
 open import Head
 open import Util
+open import Ord ℂ El ℧ C𝟙 refl
 
 
 germ :  TyHead → (ℓ : ℕ) → ℂ ℓ
@@ -38,29 +40,29 @@ germ H𝟙 _ = C𝟙
 germ H𝟘 _ = C𝟘
 germ HType zero = C℧
 germ HType (suc ℓ) = CType
-germ (HCtor tyCtor) _  = Cμ tyCtor C𝟙 (dataGermCode _ tyCtor) true
+germ (HCtor tyCtor) _  = Cμ tyCtor C𝟙 {!!} true
 
 germTo⁇ : ∀ {h ℓ} → El (germ h ℓ) → ⁇Ty ℓ
 germFrom⁇ : ∀ {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → LÆ (El (germ h ℓ))
 
 
-germTo⁇ {h = HΠ} f = ⁇Π λ gx → ⦇ f (θL ⁇⁇ (map▹ Now (transport hollowEq gx))) ⦈
-germTo⁇ {h = HΣ} (x , y) = ⁇Σ (x , y)
-germTo⁇ {h = H≅} x = ⁇≡ x
-germTo⁇ {h = H𝟙} false = ⁇℧
-germTo⁇ {h = H𝟙} true = ⁇𝟙
-germTo⁇ {h = H𝟘} tt = ⁇℧
-germTo⁇ {h = HType} {zero} x = ⁇℧
-germTo⁇ {h = HType} {suc ℓ} x = ⁇Type x
-germTo⁇ {h = HCtor tyCtor} {ℓ} x = ⁇μ tyCtor (transport⁻ (sym (dataGermCodeEq ℓ tyCtor) ∙ ℂμW) x)
+-- germTo⁇ {h = HΠ} f = ⁇Π λ gx → ⦇ f (θL ⁇⁇ (map▹ Now (transport hollowEq gx))) ⦈
+-- germTo⁇ {h = HΣ} (x , y) = ⁇Σ (x , y)
+-- germTo⁇ {h = H≅} x = ⁇≡ x
+-- germTo⁇ {h = H𝟙} false = ⁇℧
+-- germTo⁇ {h = H𝟙} true = ⁇𝟙
+-- germTo⁇ {h = H𝟘} tt = ⁇℧
+-- germTo⁇ {h = HType} {zero} x = ⁇℧
+-- germTo⁇ {h = HType} {suc ℓ} x = ⁇Type x
+-- germTo⁇ {h = HCtor tyCtor} {ℓ} x = ⁇μ tyCtor (transport⁻ (sym ? ∙ ℂμW) x)
 
-germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = ⦇ true ⦈
-germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp = ⦇ x ⦈
-germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq = liftFun (λ x → f (transport⁻ hollowEq (next x)))
-germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq = ⦇ (x , y) ⦈
-germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq = ⦇ x ⦈
-germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = ⦇ (transport ((sym (dataGermCodeEq ℓ tyCtor)) ∙  ℂμW) (Wsup x)) ⦈
-germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp = ⦇ W⁇ ⦈
+-- germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = ⦇ true ⦈
+-- germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp = ⦇ x ⦈
+-- germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq = liftFun (λ x → f (transport⁻ hollowEq (next x)))
+-- germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq = ⦇ (x , y) ⦈
+-- germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq = ⦇ x ⦈
+-- germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = ⦇ (transport ((sym ) ∙  ℂμW) (Wsup x)) ⦈
+-- germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp = ⦇ W⁇ ⦈
 
 
 
@@ -116,12 +118,12 @@ castMeetRec cSize vSize self = record
     ⁇ (CodeModule.CΠ dom cod) {reflp} = liftFunDep
       λ x →
        self (≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
-         .o⁇ (cod x)
+         .o⁇ (cod (inl x))
     ⁇ (CodeModule.CΣ dom cod) {reflp} = do
         ⁇x ← self (≤oo-sucL (≤o-trans (≤o-refl _) omax-≤L))
           .o⁇ dom
         ⁇y ← self (≤oo-sucL (≤o-trans (≤o-cocone _ ⁇x (≤o-refl _)) omax-≤R))
-          .o⁇ (cod ⁇x)
+          .o⁇ (cod (inl ⁇x))
         pure (⁇x , ⁇y)
     ⁇ (CodeModule.C≡ c x y) {reflp} = do
       wit ← self (<ooL (≤o-sucMono omax-≤L))
@@ -160,7 +162,7 @@ castMeetRec cSize vSize self = record
     meet (CodeModule.CΠ dom cod) f1 f2 {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
       = liftFunDep λ x →
         self (≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
-          .oMeet (cod x) (f1 x) (f2 x)
+          .oMeet (cod (inl x)) (f1 x) (f2 x)
     -- To take the meet of dependent pairs, we take the meet of the first elements
     -- then cast the seconds to the codomain applied to the meet of the firsts
     -- and take their meet
@@ -168,11 +170,11 @@ castMeetRec cSize vSize self = record
       xy1 ← self (≤oo-sucL omax-≤L)
         .oMeet dom x1 y1
       x2cast ← self  (≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone _ x1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
-        .oCast (cod x1) (cod xy1) x2
+        .oCast (cod (inl x1)) (cod (inl xy1)) x2
       y2cast ← self (≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone _ y1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
-        .oCast (cod y1) (cod xy1) y2
+        .oCast (cod (inl y1)) (cod (inl xy1)) y2
       xy2 ← self (≤oo-sucL (≤o-trans (≤o-cocone _ xy1 (≤o-refl _)) omax-≤R))
-        .oMeet (cod xy1) x2cast y2cast
+        .oMeet (cod (inl xy1)) x2cast y2cast
       pure (xy1 , xy2)
     --Meet of two equality proofs is just the meet of their witnesses
     meet (CodeModule.C≡ c x₁ y₁) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = do
