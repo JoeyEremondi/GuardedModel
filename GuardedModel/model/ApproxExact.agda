@@ -97,6 +97,15 @@ instance
 
 open import GuardedAlgebra
 
+-- If we're in approximate mode, this is just an approximate version of a T
+-- In exact mode, it's a pair with an approximate and exact version of a T
+Approxed : ∀ (T : {{_ : Æ }} → Set) → {{æ : Æ}} → Set
+Approxed T ⦃ Approx ⦄ = T {{Approx}}
+Approxed T ⦃ Exact ⦄ = T {{Approx}} × T {{Exact}}
+--Get the approximate version stored in an Approxed value
+approx : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed T {{æ}} → T {{Approx}}
+approx ⦃ æ = Approx ⦄ x = x
+approx ⦃ æ = Exact ⦄ x = fst x
 
 -- LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
 --   → (LÆ A → LÆ  A) → LÆ  A

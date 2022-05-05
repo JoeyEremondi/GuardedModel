@@ -20,7 +20,7 @@ open import Util
 open import Cubical.Data.Maybe
 open import Cubical.Data.Sum
 
-open import ApproxExact using (Approx ; Exact ; Æ)
+open import ApproxExact using (Approx ; Exact ; Æ ; Approxed ; approx)
 
 import GuardedAlgebra as A
 import GuardedModality as G
@@ -83,7 +83,10 @@ record CodeModule
     -- Codes describing types
     data ℂ : Set
     -- Interpretation of codes into types
-    El : {{_ : Æ}} → ℂ → Set
+    El : ℂ → {{_ : Æ}} → Set
+    --Approximate type for a code
+    ApproxEl : ℂ → Set
+    ApproxEl c = El c {{Approx}}
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
     -- ▹El : ℂ → Set
@@ -95,10 +98,10 @@ record CodeModule
     -- Code-based Descriptions of inductive data types
     data ℂDesc (I : ℂ) : Set
     -- Interpretation of description codes into descriptions
-    interpDesc : ∀ {I} →  (ℂDesc I) → Container (El {{Approx}} I)
-    CommandD : ∀ {I} → ℂDesc I → El {{Approx}} I → Set
-    ResponseD : ∀  {I} → (D : ℂDesc I) → ∀ {i : El {{Approx}} I} → CommandD D i → Set
-    inextD : ∀ {I} → (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → El {{Approx}} I
+    interpDesc : ∀ {{_ : Æ}} {I} →  (ℂDesc I) → Container (ApproxEl I)
+    CommandD : ∀ {{_ : Æ}}  {I} → ℂDesc I → ApproxEl I → Set
+    ResponseD : ∀ {{_ :  Æ}} {I} → (D : ℂDesc I) → ∀ {i : ApproxEl I} → CommandD D i → Set
+    inextD : ∀ {{_ : Æ}} {I} → (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → ApproxEl  I
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
@@ -166,28 +169,27 @@ record CodeModule
     --- This is where we capture the possibility for non-termination (in the guarded version)
     --- For approx-norm, L A = A
     data _ where
-      CΠ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ) → ℂ) → ℂ
+      CΠ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
       ⁇Π : (A.▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
-    El {{codæ}} (CΠ dom cod) = (x : {{domæ : Æ}} → El {{domæ}} dom) → (El (cod  (x {{Approx}})))
-    -- ▹El (CΠ dom cod) = (x : ▹El dom) → (▹El (cod (inr x)))
+    El (CΠ dom cod) = (x : Approxed (El dom)) → (El (cod  (approx x)))
 
     ----------------------------------------------------------------
     --- Gradual pairs
     data _ where
-      CΣ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ) → ℂ) → ℂ
+      CΣ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
       --TODO: is it only error if BOTH are error?
-    El (CΣ dom cod) = Σ[ x ∈ ({{domæ : Æ}} → El {{domæ}} dom) ]( El (cod (x {{Approx}})) )
+    El (CΣ dom cod) = Σ[ x ∈ Approxed (El dom) ]( El (cod (approx x)) )
     -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
 
     --- Gradual propositional equality i.e. witnesses of consistency
     data _ where
-      C≡ : (c :  ℂ) → (x y : El {{Approx}} c) → ℂ
+      C≡ : (c :  ℂ) → (x y : ApproxEl c) → ℂ
       -- The germ of an equality type is a witness of equality between two ⁇s
       ⁇≡ : _≅_ {A = F⁇ Self} ⁇⁇ ⁇⁇ → F⁇ Self
     El (C≡ c x y) = x ≅ y
@@ -197,12 +199,12 @@ record CodeModule
     data _ where
       Cμ :  (tyCtor : CName) → (cI : ℂ)
         → (D : DName tyCtor → ℂDesc cI)
-        → El {{Approx}} cI → ℂ
+        → ApproxEl cI → ℂ
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
       ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
-    El {{æ}} (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+    El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
 
@@ -226,22 +228,22 @@ record CodeModule
     ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
     data ℂDesc  where
-      CEnd : (i : El {{Approx}} I) → ℂDesc I
-      CArg : (c : ℂ) → (D : (El {{Approx}} c ) → ℂDesc I) → ℂDesc  I
-      CRec : (j :  El {{Approx}} I) → (D :  ℂDesc I) → ℂDesc I
-      CHRec : (c : ℂ) → (j : El {{Approx}} c → El {{Approx}} I) → (D : (El {{Approx}} c ) → ℂDesc I) → ℂDesc I
+      CEnd : (i : ApproxEl  I) → ℂDesc I
+      CArg : (c : ℂ) → (D : (ApproxEl c ) → ℂDesc I) → ℂDesc  I
+      CRec : (j :  ApproxEl I) → (D :  ℂDesc I) → ℂDesc I
+      CHRec : (c : ℂ) → (j : ApproxEl c → ApproxEl I) → (D : (ApproxEl c ) → ℂDesc I) → ℂDesc I
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc D  = CommandD D  ◃ ResponseD  D   ◃  (λ _ → 𝟘) / inextD D
+    interpDesc D   = CommandD D  ◃ ResponseD  D   ◃  (λ _ → 𝟘) / inextD D
 
     CommandD (CEnd j) i = i ≅ j
-    CommandD (CArg c D) i = Σ[ a ∈ ({{xæ : Æ}} → El {{xæ}} c) ] CommandD (D (a {{Approx}})) i
+    CommandD (CArg c D) i = Σ[ a ∈ Approxed (El c) ] CommandD (D (approx a)) i
     CommandD (CRec j D) i = CommandD D i
     CommandD (CHRec c j D) i = (a : {{_ : Æ}} → El c) → CommandD (D (a {{Approx}})) i
     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) com = 𝟘
-    ResponseD (CArg c D) (a , com) = ResponseD (D (a {{Approx}})) com
+    ResponseD (CArg c D) (a , com) = ResponseD (D (approx a)) com
     ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (ResponseD D com)
     ResponseD (CHRec c j D) com = Rec⇒ ({{_ : Æ}} → El c)    Rest⇒ (Σ[ a ∈ ({{_ : Æ}} → El c) ] ResponseD (D (a {{Approx}})) (com a))
     -- ResponseD (CHGuard c D E) (comD , comE) =
@@ -249,7 +251,7 @@ record CodeModule
     --     Rest⇒ ResponseD E comE
 
 
-    inextD (CArg c D) {i} (a , com) res = inextD (D (a {{Approx}})) com res
+    inextD (CArg c D) {i} (a , com) res = inextD (D (approx a)) com res
     inextD (CRec j D) {i} com (Rec x) = j
     inextD (CRec j D) {i} com (Rest x) = inextD D com x
     inextD (CHRec c j D) {i} com (Rec res) = j (res {{Approx}})
@@ -309,7 +311,7 @@ open CIMod public
 ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
 
 ⁇Ty : ∀ {{_ : Æ}} ℓ → Set
-⁇Ty ℓ = (CodeModule.⁇ (CodeModuleAt ℓ))
+⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
 
 
 ⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ F⁇ {ℓ} (A.next (⁇Ty ℓ))
@@ -323,6 +325,7 @@ unfold⁇ {ℓ} x = subst (λ x → x) ⁇lob x
 
 fold⁇ : ∀ {{_ : Æ}} {ℓ} →  F⁇ (A.next (⁇Ty ℓ))  → ⁇Ty ℓ
 fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
+
 
 -- The least precise argument to a guarded function from ⁇ to ⁇
 -- Used for checking if functions are errors
@@ -350,8 +353,9 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ CodeModule.C𝟘 = tt
 ℧ CodeModule.C𝟙 = false
 ℧ {suc ℓ} CodeModule.CType = C℧
-℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (x {{_}})))
-℧ (CodeModule.CΣ dom cod) {{æ}} = (λ {{domæ}} → ℧ dom) , ℧ (cod (℧ dom {{Approx}}))
+℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
+℧ (CodeModule.CΣ dom cod) ⦃ Approx ⦄ = ℧ dom {{Approx}} , ℧ (cod (℧ dom {{Approx}})) {{Approx}}
+℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
 ℧ (CodeModule.C≡ c x y) = ℧ c {{Approx}} ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
