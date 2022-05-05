@@ -22,7 +22,7 @@ open import DecPEq
 open import GuardedAlgebra
 
 open import ApproxExact
-module Inductives {{_ : Æ}} where
+module Inductives where
 
 
 ISet : Set → Set1
@@ -185,7 +185,7 @@ interpGerm D = (λ _ → GermCommand D) ◃ (GermResponse D) ◃ (GermResponseUn
 
 open import GuardedAlgebra
 
-record Datatypes : Set1 where
+record DataTypes : Set1 where
   field
     numTypes : ℕ
   CName : Set
@@ -194,6 +194,10 @@ record Datatypes : Set1 where
     numCtors : CName → ℕ
   DName : CName → Set
   DName tyCtor = Fin (numCtors tyCtor)
+
+open DataTypes {{...}} public
+
+record DataGerms {{_ : Æ}} {{_ : DataTypes}} : Set1 where
   field
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
@@ -204,11 +208,11 @@ record Datatypes : Set1 where
 
 
 
-open Datatypes {{...}} public
+open DataGerms {{...}} public
 
 
 
-wRecArg : ∀ {{ _ : Datatypes }} {ℓ} (tyCtor : CName) {I Unk} {C : DName tyCtor → Container I} (P : Set ℓ) →
+wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I Unk} {C : DName tyCtor → Container I} (P : Set ℓ) →
         (∀ {i} d (cs : FContainer (C d) (W (Arg C) Unk) Unk i) → □ (C d) (λ _ → P) (i , cs) → P ) →
         P →
         P →
