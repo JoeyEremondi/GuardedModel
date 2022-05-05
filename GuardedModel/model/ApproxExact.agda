@@ -7,6 +7,7 @@ import GuardedModality as G
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Foundations.Prelude
+open import Cubical.Data.Equality
 
 data Æ : Set where
   Approx Exact : Æ
@@ -106,6 +107,15 @@ Approxed T ⦃ Exact ⦄ = T {{Approx}} × T {{Exact}}
 approx : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed T {{æ}} → T {{Approx}}
 approx ⦃ æ = Approx ⦄ x = x
 approx ⦃ æ = Exact ⦄ x = fst x
+
+pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
+pairWithApprox ⦃ æ = Approx ⦄ a e = a
+pairWithApprox ⦃ æ = Exact ⦄ a e = a , e
+
+approxPairEq : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → (a : T {{Approx}}) → (e : T {{æ}}) →
+  approx (pairWithApprox {T} a e) ≡p a
+approxPairEq ⦃ æ = Approx ⦄ _ _ = reflp
+approxPairEq ⦃ æ = Exact ⦄ _ _ = reflp
 
 -- LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
 --   → (LÆ A → LÆ  A) → LÆ  A

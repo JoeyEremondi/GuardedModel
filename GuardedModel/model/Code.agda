@@ -26,7 +26,7 @@ import GuardedAlgebra as A
 import GuardedModality as G
 module Code
   {{ _ : DataTypes }}
-  {{ _ : ∀ {{_ : Æ}} → DataGerms }}
+  {{ _ : DataGerms }}
   where
 
 
@@ -83,10 +83,10 @@ record CodeModule
     -- Codes describing types
     data ℂ : Set
     -- Interpretation of codes into types
-    El : ℂ → {{_ : Æ}} → Set
+    El : {{æ : Æ}} → ℂ → Set
     --Approximate type for a code
     ApproxEl : ℂ → Set
-    ApproxEl c = El c {{Approx}}
+    ApproxEl c = El {{Approx}} c
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
     -- ▹El : ℂ → Set
@@ -239,13 +239,13 @@ record CodeModule
     CommandD (CEnd j) i = i ≅ j
     CommandD (CArg c D) i = Σ[ a ∈ Approxed (El c) ] CommandD (D (approx a)) i
     CommandD (CRec j D) i = CommandD D i
-    CommandD (CHRec c j D) i = (a : {{_ : Æ}} → El c) → CommandD (D (a {{Approx}})) i
+    CommandD (CHRec c j D) i = (a : Approxed (El c)) → CommandD (D (approx a)) i
     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) com = 𝟘
     ResponseD (CArg c D) (a , com) = ResponseD (D (approx a)) com
     ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (ResponseD D com)
-    ResponseD (CHRec c j D) com = Rec⇒ ({{_ : Æ}} → El c)    Rest⇒ (Σ[ a ∈ ({{_ : Æ}} → El c) ] ResponseD (D (a {{Approx}})) (com a))
+    ResponseD (CHRec c j D) com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} c))    Rest⇒ (Σ[ a ∈ Approxed (El c) ] ResponseD (D (approx a)) (com a))
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
@@ -254,8 +254,8 @@ record CodeModule
     inextD (CArg c D) {i} (a , com) res = inextD (D (approx a)) com res
     inextD (CRec j D) {i} com (Rec x) = j
     inextD (CRec j D) {i} com (Rest x) = inextD D com x
-    inextD (CHRec c j D) {i} com (Rec res) = j (res {{Approx}})
-    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (a {{Approx}})) (com a) res
+    inextD (CHRec c j D) {i} com (Rec res) = j (approx res)
+    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (approx a)) (com a) res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
@@ -347,7 +347,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
 -- Every type has an error element
-℧ : ∀ {ℓ} → (c : ℂ ℓ) → {{_ : Æ}} → El c
+℧ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
 ℧ CodeModule.C⁇ = ⁇℧
 ℧ CodeModule.C℧ = tt
 ℧ CodeModule.C𝟘 = tt
@@ -364,8 +364,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- {-# DISPLAY CodeModule.El _  = El  #-}
 
 
--- ▹⁇ : ℕ → ▹ Set
--- ▹⁇ ℓ = dfix (F⁇ {ℓ})
+▹⁇ : {{_ : Æ}} →  ℕ → A.▹ Set
+▹⁇ ℓ = A.dfix (F⁇ {ℓ})
 
 -- -- -- Lift a code to a higher universe
 -- -- liftℂ : ∀ {j k} → j ≤ k → ℂ j → ℂ k

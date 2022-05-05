@@ -197,13 +197,13 @@ record DataTypes : Set1 where
 
 open DataTypes {{...}} public
 
-record DataGerms {{_ : Æ}} {{_ : DataTypes}} : Set1 where
+record DataGerms {{_ : DataTypes}} : Set1 where
   field
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    dataGerm : ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
-  germContainer : ℕ → (c : CName) → ▹ Set →  Container 𝟙
+    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
+  germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
   germContainer ℓ c Self  = interpGerm (GArg (DName c) (dataGerm ℓ c Self))
 
 
