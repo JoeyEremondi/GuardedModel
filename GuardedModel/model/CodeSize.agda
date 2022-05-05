@@ -135,7 +135,7 @@ germDescSize : ∀ {ℓ} → (D : GermDesc)
 
 germDescSize  GEnd GEndCode = O1
 germDescSize  (GArg A D) (GArgCode c x₁ x₂) = O↑ (omax (codeSize c) (OLim c (λ a → germDescSize  (D (transport⁻ x₁ a)) (x₂ (transport⁻ x₁ a)))))
-germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) = O1
+germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) = O↑ (omax (codeSize c) (OLim c (λ a → germDescSize  (D (transport {!!} a)) (x₂ {!!}))))
 germDescSize  (GHRec A D) (GHRecCode c x₁ x₂) = O↑ (OLim c (λ a → omax (codeSize c)( germDescSize  (D (transport⁻ x₁ a)) (x₂ (transport⁻ x₁ a)))))
 germDescSize  (GHRec A D) (GGuardedHRecCode c x₁ x₂) = O1
 germDescSize  (GUnk A D) (GUnkCode c x pf) =  O↑ (OLim c λ a → omax (codeSize c) (germDescSize D pf))
@@ -266,6 +266,42 @@ codeMaxL c = omax-LUB (codeSuc c) (≤o-refl _)
 
 codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → omax (codeSize c) O1 ≤o codeSize c
 codeMaxR c = omax-LUB (≤o-refl _) (codeSuc c)
+
+open import Cubical.Data.Maybe
+
+
+dataGermDescSize : ℕ → CName → Ord
+dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
+... | ℕ.zero = O1
+... | ℕ.suc n = OLim (CFin n) λ x →
+  let
+    d : DName tyCtor
+    d = pSubst Fin (pSym deq) (fromCFin x)
+  in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)
+
+
+checkCtorSmaller :
+     (ℓ : ℕ)
+     → (tyCtor : CName)
+     → (cI : ℂ ℓ)
+     → (D : ℂDesc cI )
+     → (GD : GermDesc)
+     → (pf : DataGermIsCode ℓ GD)
+     → (d : DName tyCtor)
+     → Maybe (germDescSize GD pf ≤o descSize D)
+checkCtorSmaller ℓ tyCtor cI D d = {!!}
+
+checkDataGermSmaller :
+     (ℓ : ℕ)
+     → (tyCtor : CName)
+     → (cI : ℂ ℓ)
+     → (D : DName tyCtor → ℂDesc cI )
+     → (i : El cI)
+     → Maybe (dataGermDescSize ℓ tyCtor ≤o codeSize (Cμ tyCtor cI D i))
+checkDataGermSmaller ℓ tyCtor cI D i = {!!}
+
+
+
 
 -- codeSuc : ∀ {ℓ} (c : ℂ ℓ) → Σ[ o ∈ Ord ](codeSize c ≡p O↑ o)
 -- codeSuc CodeModule.C⁇ = _ , reflp

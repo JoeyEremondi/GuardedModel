@@ -24,7 +24,7 @@ open import InductiveCodes
 open import CodeSize
 open import DataGerm
 
-module CastComp {{_ : Æ}} {{_ : Datatypes}} {{_ : DataGermCodes}} where
+module CastComp {{_ : Æ}} {{_ : Datatypes}} {{_ : DataGermCodes}} {{_ : SizedDataGerm}} where
 
 open import Code
 open import Head
@@ -96,6 +96,15 @@ record CastMeet (cSize vSize : Ord) : Set where
       → (x : germ h ℓ)
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
+
+    oToDataGerm : ∀ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI )
+      → {i : El cI}
+      → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize (Cμ tyCtor cI D i)) (germDescSize ? ?)  ≡p cSize }
+      → (x : ℂμ tyCtor D i)
+      → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize }
+      → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
+
+
     oCast : ∀ {ℓ}
       → (c₁ c₂ : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize c₁) (codeSize c₂) ≡p cSize}
