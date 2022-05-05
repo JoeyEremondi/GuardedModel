@@ -20,9 +20,9 @@ open import Util
 open import Cubical.Data.Maybe
 open import Cubical.Data.Sum
 
-open import ApproxExact
+open import ApproxExact using (Approx ; Exact ; Æ)
 
-open import GuardedAlgebra
+import GuardedAlgebra as A
 import GuardedModality as G
 module Code
   {{ _ : DataTypes }}
@@ -73,8 +73,8 @@ record CodeModule
   : Set (lsuc lzero) where
   field
     ℂ-1 : Set
-    El-1 :  ℂ-1 -> Set
-    ⁇-1 :  Set
+    El-1 : {{_ : Æ}} → ℂ-1 -> Set
+    ⁇-1 : {{_ : Æ}} → Set
     ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
 
@@ -86,22 +86,22 @@ record CodeModule
     El : {{_ : Æ}} → ℂ → Set
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
-    ▹El : ℂ → Set
+    -- ▹El : ℂ → Set
     -- The Functor describing the unknown type ⁇
     -- We write it as a HIT to make sure all of the error values are equal
-    data F⁇ {{ _ : Æ }} (Self : ▹ Type) :  Set
+    data F⁇ {{ _ : Æ }} (Self : A.▹ Type) :  Set
     -- The unknown type, i.e. the fixed-point of F⁇
     ⁇ : {{_ : Æ}} → Set
     -- Code-based Descriptions of inductive data types
     data ℂDesc (I : ℂ) : Set
     -- Interpretation of description codes into descriptions
-    interpDesc : ∀ {{ _ : Æ }} {I} → (ℂDesc I) → Container (El {{Approx}} I)
-    CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I → El I → Set
-    ResponseD : ∀ {{ _ : Æ }} {I} →  (D : ℂDesc I) → ∀ {i : El I} → CommandD D i → Set
-    inextD : ∀ {{ _ : Æ }} {I} →  (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → El I
-    ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
-    ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
-    ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
+    interpDesc : ∀ {I} →  (ℂDesc I) → Container (El {{Approx}} I)
+    CommandD : ∀ {I} → ℂDesc I → El {{Approx}} I → Set
+    ResponseD : ∀  {I} → (D : ℂDesc I) → ∀ {i : El {{Approx}} I} → CommandD D i → Set
+    inextD : ∀ {I} → (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → El {{Approx}} I
+    -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
+    -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
+    -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
 
     ------------------------------- Definitions --------------------
 
@@ -112,7 +112,7 @@ record CodeModule
       ⁇⁇ : F⁇ Self
     -- The unknown code denotes the unknown type
     El C⁇ = ⁇
-    ▹El C⁇ = G.▹ (⁇ {{Exact}})
+    -- ▹El C⁇ = G.▹ (⁇ {{Exact}})
 
 
     ----------------------------------------------------------------
@@ -124,21 +124,21 @@ record CodeModule
     -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
     -- But the failure type is not
     El C℧ = 𝟙
-    ▹El C℧ = 𝟙
+    -- ▹El C℧ = 𝟙
     ----------------------------------------------------------------
     --- Gradual empty type
     data _ where
       C𝟘 : ℂ
       -- There is no way to embed a value of the empty type into ⁇, except as error
     El C𝟘 = 𝟙
-    ▹El C𝟘 = 𝟙
+    -- ▹El C𝟘 = 𝟙
     ----------------------------------------------------------------
     --- Gradual unit type
     data _ where
       C𝟙 : ℂ
       ⁇𝟙 : F⁇ Self
     El C𝟙 = 𝟚
-    ▹El C𝟙 = 𝟚
+    -- ▹El C𝟙 = 𝟚
     ----------------------------------------------------------------
     -- Universes
     -- These are just codes from the level below
@@ -146,7 +146,7 @@ record CodeModule
       CType : {{ inst : 0< ℓ }} → ℂ
       ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
     El CType = ℂ-1
-    ▹El CType = ℂ-1
+    -- ▹El CType = ℂ-1
     -----------------------------------------------------------------
     -- Codes can "eat themselves" and have a code denoting the set of all codes
     -- So long as we hide it behind the guarded modality
@@ -166,24 +166,24 @@ record CodeModule
     --- This is where we capture the possibility for non-termination (in the guarded version)
     --- For approx-norm, L A = A
     data _ where
-      CΠ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ⊎  (▹El dom)) → ℂ) → ℂ
+      CΠ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ) → ℂ) → ℂ
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇Π : (▸ Self →  (F⁇ Self )) → F⁇ Self
+      ⁇Π : (A.▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
-    El {{codæ}} (CΠ dom cod) = (x : {{domæ : Æ}} → El {{domæ}} dom) → (El (cod (inl (x {{Approx}}))))
-    ▹El (CΠ dom cod) = (x : ▹El dom) → (▹El (cod (inr x)))
+    El {{codæ}} (CΠ dom cod) = (x : {{domæ : Æ}} → El {{domæ}} dom) → (El (cod  (x {{Approx}})))
+    -- ▹El (CΠ dom cod) = (x : ▹El dom) → (▹El (cod (inr x)))
 
     ----------------------------------------------------------------
     --- Gradual pairs
     data _ where
-      CΣ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ⊎  (▹El dom)) → ℂ) → ℂ
+      CΣ : (dom :  ℂ) → (cod : (x : El {{Approx}} dom ) → ℂ) → ℂ
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
       --TODO: is it only error if BOTH are error?
-    El (CΣ dom cod) = Σ[ x ∈ ({{domæ : Æ}} → El {{domæ}} dom) ]( El (cod (inl (x {{Approx}}))) )
-    ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
+    El (CΣ dom cod) = Σ[ x ∈ ({{domæ : Æ}} → El {{domæ}} dom) ]( El (cod (x {{Approx}})) )
+    -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
 
     --- Gradual propositional equality i.e. witnesses of consistency
     data _ where
@@ -191,7 +191,7 @@ record CodeModule
       -- The germ of an equality type is a witness of equality between two ⁇s
       ⁇≡ : _≅_ {A = F⁇ Self} ⁇⁇ ⁇⁇ → F⁇ Self
     El (C≡ c x y) = x ≅ y
-    ▹El (C≡ c x y) = ▹El c
+    -- ▹El (C≡ c x y) = ▹El c
     ----------------------------------------------------------------
     --- Gradual inductive types
     data _ where
@@ -202,8 +202,8 @@ record CodeModule
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
       ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
-    El {{æ}} (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc {{æ}} (D d))) 𝟙 i
-    ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
+    El {{æ}} (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+    -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
 
     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
@@ -220,142 +220,140 @@ record CodeModule
 --     ----------------------------------------------------------------------
 
     -- ⁇ Is the guarded fixed point of F⁇
-    ⁇ = fix F⁇
+    ⁇ = A.fix F⁇
 
 
     ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
     data ℂDesc  where
       CEnd : (i : El {{Approx}} I) → ℂDesc I
-      CArg : (c : ℂ) → (D : (El {{Approx}} c ⊎ ▹El c) → ℂDesc I) → ℂDesc  I
+      CArg : (c : ℂ) → (D : (El {{Approx}} c ) → ℂDesc I) → ℂDesc  I
       CRec : (j :  El {{Approx}} I) → (D :  ℂDesc I) → ℂDesc I
-      CHRec : (c : ℂ) → (j : El {{Approx}} c → El {{Approx}} I) → (D : (El {{Approx}} c ⊎ ▹El c) → ℂDesc I) → ℂDesc I
+      CHRec : (c : ℂ) → (j : El {{Approx}} c → El {{Approx}} I) → (D : (El {{Approx}} c ) → ℂDesc I) → ℂDesc I
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc {I = I} D = CommandD D ◃ ResponseD D  ◃  (λ _ → 𝟘) / inextD D
+    interpDesc D  = CommandD D  ◃ ResponseD  D   ◃  (λ _ → 𝟘) / inextD D
 
     CommandD (CEnd j) i = i ≅ j
-    CommandD (CArg c D) i = Σ[ a ∈ El c ] CommandD (D (inl a)) i
+    CommandD (CArg c D) i = Σ[ a ∈ ({{xæ : Æ}} → El {{xæ}} c) ] CommandD (D (a {{Approx}})) i
     CommandD (CRec j D) i = CommandD D i
-    CommandD (CHRec c j D) i = (a : El c) → CommandD (D (inl a)) i
+    CommandD (CHRec c j D) i = (a : {{_ : Æ}} → El c) → CommandD (D (a {{Approx}})) i
     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) com = 𝟘
-    ResponseD (CArg c D) (a , com) = ResponseD (D (inl a)) com
+    ResponseD (CArg c D) (a , com) = ResponseD (D (a {{Approx}})) com
     ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (ResponseD D com)
-    ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ El c ] ResponseD (D (inl a)) (com a))
+    ResponseD (CHRec c j D) com = Rec⇒ ({{_ : Æ}} → El c)    Rest⇒ (Σ[ a ∈ ({{_ : Æ}} → El c) ] ResponseD (D (a {{Approx}})) (com a))
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
 
 
-    inextD (CArg c D) {i} (a , com) res = inextD (D (inl a)) com res
+    inextD (CArg c D) {i} (a , com) res = inextD (D (a {{Approx}})) com res
     inextD (CRec j D) {i} com (Rec x) = j
     inextD (CRec j D) {i} com (Rest x) = inextD D com x
-    inextD (CHRec c j D) {i} com (Rec res) = j res
-    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (inl a)) (com a) res
+    inextD (CHRec c j D) {i} com (Rec res) = j (res {{Approx}})
+    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (a {{Approx}})) (com a) res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
 
-    ▹interpDesc {I = I} D = (λ _ → ▹CommandD D) ◃ ▹ResponseD D  ◃  (λ _ → 𝟘) / λ _ _ → tt
+    -- ▹interpDesc {I = I} D = (λ _ → ▹CommandD D) ◃ ▹ResponseD D  ◃  (λ _ → 𝟘) / λ _ _ → tt
 
-    ▹CommandD (CEnd j) = 𝟙
-    ▹CommandD (CArg c D) = Σ[ a ∈ ▹El c ] ▹CommandD (D (inr a))
-    ▹CommandD (CRec j D) = ▹CommandD D
-    ▹CommandD (CHRec c j D) = (a : ▹El c) → ▹CommandD (D (inr a))
-    -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
+    -- ▹CommandD (CEnd j) = 𝟙
+    -- ▹CommandD (CArg c D) = Σ[ a ∈ ▹El c ] ▹CommandD (D (inr a))
+    -- ▹CommandD (CRec j D) = ▹CommandD D
+    -- ▹CommandD (CHRec c j D) = (a : ▹El c) → ▹CommandD (D (inr a))
+    -- -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
-    ▹ResponseD (CEnd i) com = 𝟘
-    ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
-    ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
-    ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
+    -- ▹ResponseD (CEnd i) com = 𝟘
+    -- ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
+    -- ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
+    -- ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
 -----------------------------------------------------------------------
 
 
 
 
--- -- We can then recursively build the codes for each level
--- -- We take a guarded fixed-point, so we can have a code CSelf such that
--- -- El CSelf = ℂ
--- -- This gives us a version of Girard's Paradox that is safely stowed behind the guarded modality
--- CodeModuleAt : ∀ ℓ →  CodeModule ℓ
--- CodeModuleAt zero = fix λ ModSelf →
---   record
---     { ℂ-1 = 𝟘
---     ; El-1 = λ ()
---     ; ⁇-1 = 𝟘
---     ; ℧-1 = λ { {{()}} }
---     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
---     }
--- CodeModuleAt (suc ℓ) = fix λ ModSelf →
---   record
---     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
---     ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
---     ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
---     ; ℧-1 = CodeModule.ℂ.C℧
---     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
---     }
+-- We can then recursively build the codes for each level
+-- We take a guarded fixed-point, so we can have a code CSelf such that
+-- El CSelf = ℂ
+-- This gives us a version of Girard's Paradox that is safely stowed behind the guarded modality
+CodeModuleAt : ∀  ℓ →  CodeModule ℓ
+CodeModuleAt zero = G.fix λ ModSelf →
+  record
+    { ℂ-1 = 𝟘
+    ; El-1 = λ ()
+    ; ⁇-1 = 𝟘
+    ; ℧-1 = λ { {{()}} }
+    -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
+    }
+CodeModuleAt (suc ℓ) = G.fix λ ModSelf →
+  record
+    { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
+    ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
+    ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
+    ; ℧-1 = CodeModule.ℂ.C℧
+    -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
+    }
 
--- -- Expose each value in the Code module with implicit level ℓ
--- -- Except for ℂ and ⁇, which each need an explicit level
--- module CIMod {ℓ} where
---   open CodeModule (CodeModuleAt ℓ) public hiding (ℂ ; ⁇ )
+-- Expose each value in the Code module with implicit level ℓ
+-- Except for ℂ and ⁇, which each need an explicit level
+module CIMod {ℓ} {{_ : Æ}} where
+  open CodeModule (CodeModuleAt ℓ) public hiding (ℂ ; ⁇ )
 
--- open CIMod public
+open CIMod public
 
--- -- Make the levels explicit for each code
--- ℂ : ∀ ℓ → Set
--- ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
--- {-# INJECTIVE ℂ #-}
+-- Make the levels explicit for each code
+ℂ : ℕ → Set
+ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
 
--- ⁇Ty : ∀ ℓ → Set
--- ⁇Ty ℓ = (CodeModule.⁇ (CodeModuleAt ℓ))
--- {-# INJECTIVE ⁇Ty #-}
+⁇Ty : ∀ {{_ : Æ}} ℓ → Set
+⁇Ty ℓ = (CodeModule.⁇ (CodeModuleAt ℓ))
 
 
--- ⁇lob : ∀ {ℓ} → ⁇Ty ℓ ≡ F⁇ {ℓ} (next (⁇Ty ℓ))
--- ⁇lob {ℓ} = cong (λ P → F⁇ {ℓ} P) (pfix (F⁇ {ℓ}))
+⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ F⁇ {ℓ} (A.next (⁇Ty ℓ))
+⁇lob {ℓ} = cong (λ P → F⁇ {ℓ} P) (A.pfix (F⁇ {ℓ}))
 
 
 
--- unfold⁇ : ∀ {ℓ} → ⁇Ty ℓ →  F⁇ (next (⁇Ty ℓ))
--- unfold⁇ {ℓ} x = subst (λ x → x) ⁇lob x
+unfold⁇ : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ →  F⁇ (A.next (⁇Ty ℓ))
+unfold⁇ {ℓ} x = subst (λ x → x) ⁇lob x
 
 
--- fold⁇ : ∀ {ℓ} →  F⁇ (next (⁇Ty ℓ))  → ⁇Ty ℓ
--- fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
+fold⁇ : ∀ {{_ : Æ}} {ℓ} →  F⁇ (A.next (⁇Ty ℓ))  → ⁇Ty ℓ
+fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
--- -- The least precise argument to a guarded function from ⁇ to ⁇
--- -- Used for checking if functions are errors
--- -- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
--- -- topArg {ℓ} = Dep▸ ℧Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
-
-
-
--- -- Relation for whether a value is an error in type ⁇
--- -- data ℧≡ {ℓ} : ⁇Ty ℓ → Set where
--- --          ℧℧ : ℧≡ ⁇℧
--- --          ⁇Π℧ : ∀ {f} → ⁇℧ ≡ f topArg  → ℧≡ (⁇Π f)
--- --          -- ⁇Π℧ : ∀ {f : ▸ map▹ ⁇Self Self → F⁇ Self  } → ⁇℧ ≡ f (λ tic → ℧Self (Self tic))  → ℧≡ (⁇Π f)
--- --          ⁇Type℧ : {{_ : 0< ℓ}} → ℧≡ (⁇Type ℧-1)
--- --          ⁇Σ℧ : ℧≡ (⁇Σ (⁇℧ , ⁇℧))
--- --          ⁇≡℧ : ℧≡ (⁇≡ ⁇℧)
--- --          ⁇μ℧ : ∀ (tyCtor : CName) (ctor : DName tyCtor)
--- --            → ℧≡ (⁇μ tyCtor ctor μ℧)
+-- The least precise argument to a guarded function from ⁇ to ⁇
+-- Used for checking if functions are errors
+-- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
+-- topArg {ℓ} = Dep▸ ℧Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
 
 
--- -- Every type has an error element
--- ℧ : ∀ {ℓ} → (c : ℂ ℓ) → El c
--- ℧ CodeModule.C⁇ = ⁇℧
--- ℧ CodeModule.C℧ = tt
--- ℧ CodeModule.C𝟘 = tt
--- ℧ CodeModule.C𝟙 = false
--- ℧ {suc ℓ} CodeModule.CType = C℧
--- ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (inl x)))
--- ℧ (CodeModule.CΣ dom cod) = ℧ dom , ℧ (cod (inl (℧ dom)))
--- ℧ (CodeModule.C≡ c x y) = ℧ c ⊢ x ≅ y
--- ℧ (CodeModule.Cμ tyCtor c D x) = W℧
+
+-- Relation for whether a value is an error in type ⁇
+-- data ℧≡ {ℓ} : ⁇Ty ℓ → Set where
+--          ℧℧ : ℧≡ ⁇℧
+--          ⁇Π℧ : ∀ {f} → ⁇℧ ≡ f topArg  → ℧≡ (⁇Π f)
+--          -- ⁇Π℧ : ∀ {f : ▸ map▹ ⁇Self Self → F⁇ Self  } → ⁇℧ ≡ f (λ tic → ℧Self (Self tic))  → ℧≡ (⁇Π f)
+--          ⁇Type℧ : {{_ : 0< ℓ}} → ℧≡ (⁇Type ℧-1)
+--          ⁇Σ℧ : ℧≡ (⁇Σ (⁇℧ , ⁇℧))
+--          ⁇≡℧ : ℧≡ (⁇≡ ⁇℧)
+--          ⁇μ℧ : ∀ (tyCtor : CName) (ctor : DName tyCtor)
+--            → ℧≡ (⁇μ tyCtor ctor μ℧)
+
+
+-- Every type has an error element
+℧ : ∀ {ℓ} → (c : ℂ ℓ) → {{_ : Æ}} → El c
+℧ CodeModule.C⁇ = ⁇℧
+℧ CodeModule.C℧ = tt
+℧ CodeModule.C𝟘 = tt
+℧ CodeModule.C𝟙 = false
+℧ {suc ℓ} CodeModule.CType = C℧
+℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (x {{_}})))
+℧ (CodeModule.CΣ dom cod) {{æ}} = (λ {{domæ}} → ℧ dom) , ℧ (cod (℧ dom {{Approx}}))
+℧ (CodeModule.C≡ c x y) = ℧ c {{Approx}} ⊢ x ≅ y
+℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
 
 -- {-# DISPLAY CodeModule.ℂ _ = ℂ  #-}

@@ -69,18 +69,20 @@ unliftFunDep mf a = do
 uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
 uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
 
+data GUnit {ℓ} : Set ℓ where
+  U⁇ U℧ : GUnit
 
 
 instance
   approxExact : {{_ : Æ}} → GuardedAlgebra
-  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → Unit*
-  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → Unit*
-  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ _ → tt*
-  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
-  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ _ → tt*
-  GuardedAlgebra.pfix (approxExact ⦃ Approx ⦄) = λ _ → refl
+  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → GUnit
+  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → GUnit
+  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ x → U⁇
+  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ { f U⁇ → U⁇ ; f U℧ → U℧}
+  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ x → U⁇
+  GuardedAlgebra.pfix (approxExact ⦃ Approx ⦄) = λ x → refl
   GuardedAlgebra.hollowEq (approxExact ⦃ Approx ⦄) = refl
-  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
+  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ { f U⁇ → U⁇ ; f U℧ → U℧}
   GuardedAlgebra.▹ approxExact ⦃ Exact ⦄ = λ A → G.▹ A
   GuardedAlgebra.▸ approxExact ⦃ Exact ⦄ = λ ▹A → G.▸ ▹A
   GuardedAlgebra.next (approxExact ⦃ Exact ⦄) = G.next
