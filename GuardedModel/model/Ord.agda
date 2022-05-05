@@ -40,7 +40,7 @@ C𝔹 = C𝟙
 data Ord : Set where
   OZ : Ord
   O↑ : Ord -> Ord
-  OLim : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord) → Ord
+  OLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord) → Ord
   -- OBisim : ∀ {ℓ} {c : ℂ ℓ} → (f g : El c → Ord) → {!!} → OLim c f ≡ OLim c g
 
 O1 = O↑ OZ

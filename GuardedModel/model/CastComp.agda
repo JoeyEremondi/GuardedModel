@@ -99,7 +99,7 @@ record CastMeet (cSize vSize : Ord) : Set where
 
     oToDataGerm : ∀ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI )
       → {i : El cI}
-      → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize (Cμ tyCtor cI D i)) (germDescSize ? ?)  ≡p cSize }
+      → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize (Cμ tyCtor cI D i)) (germDescSize {!!} {!!})  ≡p cSize }
       → (x : ℂμ tyCtor D i)
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize }
       → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
