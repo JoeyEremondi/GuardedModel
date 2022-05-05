@@ -108,6 +108,10 @@ approx : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed T {{æ}} →
 approx ⦃ æ = Approx ⦄ x = x
 approx ⦃ æ = Exact ⦄ x = fst x
 
+exact : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed (λ {{æ : Æ}} → T {{æ}}) {{æ}}  → T {{æ}}
+exact ⦃ æ = Approx ⦄ x = x
+exact ⦃ æ = Exact ⦄ x = snd x
+
 pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
 pairWithApprox ⦃ æ = Approx ⦄ a e = a
 pairWithApprox ⦃ æ = Exact ⦄ a e = a , e
