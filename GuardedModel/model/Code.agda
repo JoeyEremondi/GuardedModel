@@ -73,9 +73,9 @@ record CodeModule
   : Set (lsuc lzero) where
   field
     ℂ-1 : Set
-    El-1 : {{_ : Æ}} → ℂ-1 -> Set
-    ⁇-1 : {{_ : Æ}} → Set
-    ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
+    -- El-1 : {{_ : Æ}} → ℂ-1 -> Set
+    -- ⁇-1 : {{_ : Æ}} → Set
+    -- ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
 
   interleaved mutual
@@ -282,26 +282,26 @@ record CodeModule
 -- El CSelf = ℂ
 -- This gives us a version of Girard's Paradox that is safely stowed behind the guarded modality
 CodeModuleAt : ∀  ℓ →  CodeModule ℓ
-CodeModuleAt zero = G.fix λ ModSelf →
+CodeModuleAt zero = --G.fix λ ModSelf →
   record
     { ℂ-1 = 𝟘
-    ; El-1 = λ ()
-    ; ⁇-1 = 𝟘
-    ; ℧-1 = λ { {{()}} }
+    -- ; El-1 = λ ()
+    -- ; ⁇-1 = 𝟘
+    -- ; ℧-1 = λ { {{()}} }
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
     }
-CodeModuleAt (suc ℓ) = G.fix λ ModSelf →
+CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
   record
     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
-    ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
-    ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
-    ; ℧-1 = CodeModule.ℂ.C℧
+    -- ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
+    -- ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
+    -- ; ℧-1 = CodeModule.ℂ.C℧
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
     }
 
 -- Expose each value in the Code module with implicit level ℓ
 -- Except for ℂ and ⁇, which each need an explicit level
-module CIMod {ℓ} {{_ : Æ}} where
+module CIMod {ℓ} where
   open CodeModule (CodeModuleAt ℓ) public hiding (ℂ ; ⁇ )
 
 open CIMod public
