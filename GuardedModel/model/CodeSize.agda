@@ -262,29 +262,12 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
   in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)
 
 
-checkCtorSmaller :
-     {{_ : Æ}}
-     → (ℓ : ℕ)
-     → (tyCtor : CName)
-     → (cI : ℂ ℓ)
-     → (D : ℂDesc cI )
-     → (GD : GermDesc)
-     → (pf : DataGermIsCode ℓ GD)
-     → (d : DName tyCtor)
-     → Maybe (germDescSize GD pf ≤o descSize D)
-checkCtorSmaller ℓ tyCtor cI D d = {!!}
-
-checkDataGermSmaller :
-     {{_ : Æ}}
-     → (ℓ : ℕ)
-     → (tyCtor : CName)
-     → (cI : ℂ ℓ)
-     → (D : DName tyCtor → ℂDesc cI )
-     → (i : ApproxEl cI)
-     → Maybe (dataGermDescSize ℓ tyCtor ≤o codeSize (Cμ tyCtor cI D i))
-checkDataGermSmaller ℓ tyCtor cI D i = {!!}
-
-
+record DataTypeCodes : Set2 where
+  field
+    ℓₚ : (ℓ : ℕ) → CName → ℕ
+    Params : (ℓ : ℕ) → (tyCtor : CName) → ℂ (ℓₚ ℓ tyCtor)
+    Indices : (ℓ : ℕ) → (tyCtor : CName) → El {{æ = Approx}} (Params ℓ tyCtor) → ℂ ℓ
+    IndDesc : (ℓ : ℕ) → (tyCtor : CName) → (params : El {{æ = Approx}} (Params ℓ tyCtor)) → ℂDesc (Indices ℓ tyCtor params)
 
 
 -- codeSuc : ∀ {ℓ} (c : ℂ ℓ) → Σ[ o ∈ Ord ](codeSize c ≡p O↑ o)
