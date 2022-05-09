@@ -96,12 +96,12 @@ record CodeModule
     -- The unknown type, i.e. the fixed-point of F⁇
     ⁇ : {{_ : Æ}} → Set
     -- Code-based Descriptions of inductive data types
-    data ℂDesc (I : ℂ) : Set
+    data ℂDesc (I : ℂ) : ℂ → Set
     -- Interpretation of description codes into descriptions
-    interpDesc : ∀ {{_ : Æ}} {I} →  (ℂDesc I) → Container (ApproxEl I)
-    CommandD : ∀ {{_ : Æ}}  {I} → ℂDesc I → ApproxEl I → Set
-    ResponseD : ∀ {{_ :  Æ}} {I} → (D : ℂDesc I) → ∀ {i : ApproxEl I} → CommandD D i → Set
-    inextD : ∀ {{_ : Æ}} {I} → (D : ℂDesc I) → ∀ {i} → (c : CommandD D i) → ResponseD D c → ApproxEl  I
+    interpDesc : ∀ {{_ : Æ}} {I} {cB} →  (ℂDesc I cB) → ApproxEl cB → Container (ApproxEl I)
+    CommandD : ∀ {{_ : Æ}}  {I cB} → ℂDesc I cB → ApproxEl I → (ApproxEl cB → Set)
+    ResponseD : ∀ {{_ :  Æ}} {I cB} → (D : ℂDesc I cB) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
+    inextD : ∀ {{_ : Æ}} {I cB} → (D : ℂDesc I cB) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
@@ -198,13 +198,13 @@ record CodeModule
     --- Gradual inductive types
     data _ where
       Cμ :  (tyCtor : CName) → (cI : ℂ)
-        → (D : DName tyCtor → ℂDesc cI)
+        → (D : DName tyCtor → ℂDesc cI C𝟙)
         → ApproxEl cI → ℂ
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
-      ⁇μ : (tyCtor : CName) → (x : W (germContainer ℓ tyCtor Self) (F⁇ Self ) tt) →  F⁇ Self
-    El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d))) 𝟙 i
+      ⁇μ : (tyCtor : CName) → (x : FGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
+    El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d) true)) 𝟙 i
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
 
@@ -228,34 +228,35 @@ record CodeModule
     ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
     data ℂDesc  where
-      CEnd : (i : ApproxEl  I) → ℂDesc I
-      CArg : (c : ℂ) → (D : (ApproxEl c ) → ℂDesc I) → ℂDesc  I
-      CRec : (j :  ApproxEl I) → (D :  ℂDesc I) → ℂDesc I
-      CHRec : (c : ℂ) → (j : ApproxEl c → ApproxEl I) → (D : (ApproxEl c ) → ℂDesc I) → ℂDesc I
+      CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB
+      CArg : ∀ {cB} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c)) → ℂDesc  I cB
+      CRec : ∀ {cB} (j :  ApproxEl I) → (D :  ℂDesc I cB) → ℂDesc I cB
+      CHRec : ∀ {cB} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB) → ℂDesc I cB
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc D   = CommandD D  ◃ ResponseD  D   ◃  (λ _ → 𝟘) / inextD D
+    interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b ◃ (λ _ → 𝟘) / inextD D b
+    -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
-    CommandD (CEnd j) i = i ≅ j
-    CommandD (CArg c D) i = Σ[ a ∈ Approxed (El c) ] CommandD (D (approx a)) i
-    CommandD (CRec j D) i = CommandD D i
-    CommandD (CHRec c j D) i = (a : Approxed (El c)) → CommandD (D (approx a)) i
-    -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
+    CommandD (CEnd j) i b = i ≅ j
+    CommandD (CArg c D) i b = Σ[ a ∈ Approxed (El (c b)) ] CommandD D i (b , approx a)
+    CommandD (CRec j D) i b = CommandD D i b
+    CommandD (CHRec c j D) i b = CommandD D i b
+--     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
-    ResponseD (CEnd i) com = 𝟘
-    ResponseD (CArg c D) (a , com) = ResponseD (D (approx a)) com
-    ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (ResponseD D com)
-    ResponseD (CHRec c j D) com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} c))    Rest⇒ (Σ[ a ∈ Approxed (El c) ] ResponseD (D (approx a)) (com a))
+    ResponseD (CEnd i) b com = 𝟘
+    ResponseD (CArg c D) b (a , com) = ResponseD D (b , approx a) com
+    ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
+    ResponseD (CHRec c j D) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (Σ[ a ∈ Approxed (λ {{æ}} → El {{æ}} (c b)) ] ResponseD D b com)
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
 
 
-    inextD (CArg c D) {i} (a , com) res = inextD (D (approx a)) com res
-    inextD (CRec j D) {i} com (Rec x) = j
-    inextD (CRec j D) {i} com (Rest x) = inextD D com x
-    inextD (CHRec c j D) {i} com (Rec res) = j (approx res)
-    inextD (CHRec c j D) {i} com (Rest (a , res)) = inextD (D (approx a)) (com a) res
+    inextD (CArg c D) {i} b (a , com) res = inextD D (b , approx a) com res
+    inextD (CRec j D) {i} b com (Rec x) = j
+    inextD (CRec j D) {i} b com (Rest x) = inextD D b com x
+    inextD (CHRec c j D) {i} b com (Rec res) = j b (approx res)
+    inextD (CHRec c j D) {i} b com (Rest (a , res)) = inextD D b com res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
