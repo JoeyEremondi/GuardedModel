@@ -103,24 +103,24 @@ germIndSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFIndSize tyCtor (dat
 
 
 
--- codeSize : ∀ {ℓ} → ℂ ℓ → Ord
--- descSize : ∀  {ℓ} →  {c : ℂ ℓ} → ℂDesc c → Ord
--- elSize : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → El c → Ord
--- -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
--- ⁇Size : ∀ {{ _ : Æ}} {ℓ} → ⁇Ty ℓ → Ord
--- CμSize : ∀ {{_ : Æ}} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI) {i} → ? → Ord
--- CElSize : ∀ {{ _ : Æ }} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI) (E : DName tyCtor → ℂDesc cI) {i} → ? → Ord
--- -- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
--- --   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
--- --   → □ _ (λ _ → Ord) (tt , cs)
--- --   → Ord
-
--- -- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
--- -- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
--- germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
---   → (DataGermIsCode ℓ D)
---   → B
+codeSize : ∀ {ℓ} → ℂ ℓ → Ord
+descSize : ∀  {ℓ} →  {cI cB : ℂ ℓ} → ℂDesc cI cB → Ord
+elSize : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → El c → Ord
+-- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
+⁇Size : ∀ {{ _ : Æ}} {ℓ} → ⁇Ty ℓ → Ord
+CμSize : ∀ {{_ : Æ}} {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI cB) {i} → {!!} → Ord
+CElSize : ∀ {{ _ : Æ }} {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {i} → {!!} → Ord
+-- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
+--   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+--   → □ _ (λ _ → Ord) (tt , cs)
 --   → Ord
+
+-- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
+-- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
+germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
+  → (DataGermIsCode ℓ D)
+  → B
+  → Ord
 
 
 -- germDescSize  GEnd GEndCode = O1
@@ -203,18 +203,18 @@ germIndSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFIndSize tyCtor (dat
 -- elSize (CΠ dom cod) f = OLim dom (λ x → elSize (cod (approx x)) (f x)) -- (OLim dom λ x → elSize (cod (approx x)) (f ?))
 -- elSize (CΣ dom cod) (x , y) = (omax (elSize dom (exact x)) (elSize (cod (approx x)) y))
 -- elSize (C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) = (elSize {{Approx}} c x)
--- elSize (Cμ tyCtor cI D i) x = CμSize D (transport⁻ ℂμW x)
+-- elSize (Cμ tyCtor cI D i) x = ? -- CμSize D (transport⁻ ℂμW x)
 
 
 
--- CμSize D (Cinit d x) = O↑ (CElSize (D d) D x)
--- CμSize D Cμ⁇ = O1
--- CμSize D Cμ℧ = O1
+-- -- CμSize D (Cinit d x) = O↑ (CElSize (D d) D x)
+-- -- CμSize D Cμ⁇ = O1
+-- -- CμSize D Cμ℧ = O1
 
--- CElSize {cI = cI} .(CEnd j) E {i} (ElEnd j (w ⊢ _ ≅ _)) = elSize {{Approx}} cI w
--- CElSize {{æ}} (CArg c D) E (ElArg a x) = O↑ (omax (elSize {{æ}} c (exact a)) (CElSize (D (approx a)) E x))
--- CElSize (CRec j D) E (ElRec x x₁) = O↑ (omax (CμSize E x) (CElSize D E x₁))
--- CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f a)) (CElSize (D (approx a)) E (x a)))
+-- -- CElSize {cI = cI} .(CEnd j) E {i} (ElEnd j (w ⊢ _ ≅ _)) = elSize {{Approx}} cI w
+-- -- CElSize {{æ}} (CArg c D) E (ElArg a x) = O↑ (omax (elSize {{æ}} c (exact a)) (CElSize (D (approx a)) E x))
+-- -- CElSize (CRec j D) E (ElRec x x₁) = O↑ (omax (CμSize E x) (CElSize D E x₁))
+-- -- CElSize (CHRec c j D) E (ElHRec f x) = O↑ (OLim c λ a → omax (CμSize E (f a)) (CElSize (D (approx a)) E (x a)))
 -- -- We can't use guarded arguments in size calcs, that's why they're guarded
 -- -- So we use the size at the error value
 -- -- CElSize (CHGuard c D1 D2) E (ElHGuard x x₁) = O↑ (omax (CElSize D1 E (x (next (℧ c)))) (CElSize D2 E x₁))
