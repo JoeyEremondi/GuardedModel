@@ -188,8 +188,8 @@ GermResponseUnk (GArg A D) b (a , com) = GermResponseUnk D (b , a) com
 GermResponseUnk (GHRec A D) b com = GermResponseUnk D b com
 GermResponseUnk (GRec D) b com = GermResponseUnk D b com
 
-interpGermCtor : GermCtor 𝟙 → Container 𝟙
-interpGermCtor D = (GermCommand D) ◃ (GermResponse D tt) ◃ (GermResponseUnk D tt) / (λ _ _ → tt)
+interpGermCtor : ∀ {B} → GermCtor B → B → Container 𝟙
+interpGermCtor D b = (λ _ → GermCommand D b) ◃ (GermResponse D b) ◃ (GermResponseUnk D b) / (λ _ _ → tt)
 
 
 
@@ -232,7 +232,7 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
   germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
-  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d)
+  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d) tt
   FGerm : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set → Set → Set
   FGerm ℓ c Self Unk = W (germContainer ℓ c Self) Unk tt
 

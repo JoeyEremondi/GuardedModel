@@ -101,11 +101,9 @@ record InductiveCodes : Set2 where
       → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
       → (d : DName tyCtor)
       → ℂDesc (CΣ (posIndices ℓ tyCtor par⁺) (λ ind⁺ → negIndices ℓ tyCtor par⁺ par⁻ ind⁺)) C𝟙
-    germWF : {{_ : Æ}} → (ℓ : ℕ) → (tyCtor : CName)
-      → Σ[ par⁺ ∈ {!!} ]
-        Iso
-          (FGerm ℓ tyCtor (▹⁇ ℓ) (⁇Ty ℓ))
-          {!!}
+    --Every data germ can be described by a code, with some parts hidden behind the guarded modality
+    dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
+      → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
 
   -- Predicate that determines if a code is well formed
   -- with respect to the inductive types it refers to
@@ -133,16 +131,4 @@ record InductiveCodes : Set2 where
      → IndWF (Cμ tyCtor cI D i)
 
 
--- record DataGermCodes : Set2 where
---   field
---     -- dataGermCode : ∀ ℓ → (c : CName) → DName c → ℂDesc (C𝟙 {ℓ = ℓ})
---     dataGermIsCode : ∀ {{_ : Æ}} ℓ (tyCtor : CName) → (d : DName tyCtor)
---       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (dfix (F⁇ {ℓ})) d)
---     -- dataGermSize : ∀ {ℓ} (tyCtor : CName) → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
---     -- dataGermCodeEq : ∀ ℓ → (tyCtor : CName) → ℂμ tyCtor (dataGermCode ℓ tyCtor) true ≡ W (Arg (dataGerm tyCtor (dfix (F⁇ {ℓ})))) (⁇Ty ℓ) tt
---     -- dataGermFEq : ∀ ℓ {X : Set} → (tyCtor : CName) → (d : DName tyCtor) → ℂDescEl (dataGermCode ℓ tyCtor d) (λ _ → X) true ≡ FContainer (dataGerm tyCtor (dfix (F⁇ {ℓ})) d) (λ _ → X) (⁇Ty ℓ) tt
-
--- open DataGermCodes {{...}} public
-
-
--- -- --The result gives something equivalent to the non-coded Arg function in Inductives.agda
+open InductiveCodes {{...}} public
