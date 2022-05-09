@@ -24,7 +24,6 @@ open import ApproxExact
 open import InductiveCodes
 open import Cubical.Foundations.Transport
 
-open import DataGerm
 
 -- Brouwer Tree ordinals
 -- Based on the presentation by Kraus, Forsburg and Xu

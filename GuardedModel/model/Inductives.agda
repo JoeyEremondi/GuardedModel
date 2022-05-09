@@ -162,9 +162,9 @@ data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
 data GermCtor : Set → Set1 where
   GEnd : ∀ {B} → GermCtor B
   GArg : ∀ {B} → (A : B → Set) → (D : GermCtor (Σ[ b ∈ B ] A b)) → GermCtor B
-  GHRec : ∀ {B} → (A : Set) → (D : GermCtor B) → GermCtor B
+  GHRec : ∀ {B} → (A : B → Set) → (D : GermCtor B) → GermCtor B
   GRec : ∀ {B} → (D : GermCtor B) → GermCtor B
-  GUnk : ∀ {B} → (A : Set) → (D : GermCtor B) → GermCtor B
+  GUnk : ∀ {B} → (A : B → Set) → (D : GermCtor B) → GermCtor B
 
 GermCommand : ∀ {B} → GermCtor B → (B → Set)
 GermCommand {B} GEnd _ = Unit
@@ -176,13 +176,13 @@ GermCommand {B} (GUnk A D) b = GermCommand D b
 GermResponse : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
 GermResponse {B} GEnd b com = 𝟘
 GermResponse {B} (GArg A D) b (a , com) = GermResponse D (b , a) com
-GermResponse {B} (GHRec A D) b com =  Rec⇒ A   Rest⇒ (Σ[ a ∈ A ] GermResponse D b com)
+GermResponse {B} (GHRec A D) b com =  Rec⇒ A b   Rest⇒ (Σ[ a ∈ A b ] GermResponse D b com)
 GermResponse {B} (GRec D) b com = Rec⇒ 𝟙   Rest⇒ GermResponse D b com
 GermResponse {B} (GUnk A D) b com = GermResponse D b com
 
 
 GermResponseUnk : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
-GermResponseUnk (GUnk A D) b com = Rec⇒ A  Rest⇒ (A × GermResponseUnk D b com)
+GermResponseUnk (GUnk A D) b com = Rec⇒ A b  Rest⇒ (A b × GermResponseUnk D b com)
 GermResponseUnk GEnd b x = 𝟘
 GermResponseUnk (GArg A D) b (a , com) = GermResponseUnk D (b , a) com
 GermResponseUnk (GHRec A D) b com = GermResponseUnk D b com
