@@ -42,6 +42,7 @@ ISet X = X → Set
 
 data _≅_ {ℓ} {A : Set ℓ} : A → A → Set ℓ where
   _⊢_≅_ : A → (x y : A ) →   x ≅ y
+  ⁇⊢_≅_ : (x y : A ) →   x ≅ y
 
 
 --Shamelessley copied from

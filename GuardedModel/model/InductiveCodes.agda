@@ -87,20 +87,13 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2
 
 record InductiveCodes : Set2 where
   field
-    paramLevel : (ℓ : ℕ) → CName → ℕ
-    posParams : (ℓ : ℕ) → (tyCtor : CName) → ℂ (paramLevel ℓ tyCtor)
-    negParams : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (posParams ℓ tyCtor) → ℂ (paramLevel ℓ tyCtor)
-    posIndices : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (posParams ℓ tyCtor) → ℂ ℓ
-    negIndices : (ℓ : ℕ) → (tyCtor : CName)
-      → (par⁺ : ApproxEl (posParams ℓ tyCtor))
-      → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
-      → (ind⁺ : ApproxEl (posIndices ℓ tyCtor par⁺))
-      → ℂ ℓ
+    ℓₚ : (ℓ : ℕ) → CName → ℕ
+    Params : (ℓ : ℕ) → (tyCtor : CName) → ℂ (ℓₚ ℓ tyCtor)
+    Indices : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (Params ℓ tyCtor) → ℂ ℓ
     descFor : (ℓ : ℕ) → (tyCtor : CName)
-      → (par⁺ : ApproxEl (posParams ℓ tyCtor))
-      → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
+      → (pars : ApproxEl (Params ℓ tyCtor))
       → (d : DName tyCtor)
-      → ℂDesc (CΣ (posIndices ℓ tyCtor par⁺) (λ ind⁺ → negIndices ℓ tyCtor par⁺ par⁻ ind⁺)) C𝟙
+      → ℂDesc (Indices ℓ tyCtor pars) C𝟙
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
@@ -124,10 +117,9 @@ record InductiveCodes : Set2 where
      → IndWF (CΣ dom cod)
    IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
    IWFμ : ∀ {tyCtor cI D i}
-     → (par⁺ : ApproxEl (posParams ℓ tyCtor))
-     → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
-     → (indEq : cI ≡ CΣ (posIndices ℓ tyCtor par⁺) (negIndices ℓ tyCtor par⁺ par⁻))
-     → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor par⁺ par⁻ d))
+     → (pars : ApproxEl (Params ℓ tyCtor))
+     → (indEq : cI ≡ Indices ℓ tyCtor pars)
+     → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor pars d))
      → IndWF (Cμ tyCtor cI D i)
 
 
