@@ -196,8 +196,12 @@ record CodeModule
     -- ▹El (C≡ c x y) = ▹El c
     ----------------------------------------------------------------
     --- Gradual inductive types
+    ---
+
     data _ where
-      Cμ :  (tyCtor : CName) → (cI : ℂ)
+      Cμ :
+        (tyCtor : CName)
+        → (cI : ℂ)
         → (D : DName tyCtor → ℂDesc cI C𝟙)
         → ApproxEl cI → ℂ
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways

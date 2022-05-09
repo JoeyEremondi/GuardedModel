@@ -56,7 +56,7 @@ open import Ord -- ℂ El ℧ C𝟙 refl
 
 
 -- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
---
+--TODO: do we still need this with the more strict code requirements?
 data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2  where
  GEndCode : ∀ {B} → DataGermIsCode ℓ {B} GEnd
  GRecCode : ∀ {B} {D : GermCtor B} (c : B → ℂ ℓ)
@@ -82,6 +82,55 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2
    → DataGermIsCode ℓ (GUnk A D)
 
 
+
+
+
+record InductiveCodes : Set2 where
+  field
+    paramLevel : (ℓ : ℕ) → CName → ℕ
+    posParams : (ℓ : ℕ) → (tyCtor : CName) → ℂ (paramLevel ℓ tyCtor)
+    negParams : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (posParams ℓ tyCtor) → ℂ (paramLevel ℓ tyCtor)
+    posIndices : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (posParams ℓ tyCtor) → ℂ ℓ
+    negIndices : (ℓ : ℕ) → (tyCtor : CName)
+      → (par⁺ : ApproxEl (posParams ℓ tyCtor))
+      → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
+      → (ind⁺ : ApproxEl (posIndices ℓ tyCtor par⁺))
+      → ℂ ℓ
+    descFor : (ℓ : ℕ) → (tyCtor : CName)
+      → (par⁺ : ApproxEl (posParams ℓ tyCtor))
+      → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
+      → (d : DName tyCtor)
+      → ℂDesc (CΣ (posIndices ℓ tyCtor par⁺) (λ ind⁺ → negIndices ℓ tyCtor par⁺ par⁻ ind⁺)) C𝟙
+    germWF : {{_ : Æ}} → (ℓ : ℕ) → (tyCtor : CName)
+      → Σ[ par⁺ ∈ {!!} ]
+        Iso
+          (FGerm ℓ tyCtor (▹⁇ ℓ) (⁇Ty ℓ))
+          {!!}
+
+  -- Predicate that determines if a code is well formed
+  -- with respect to the inductive types it refers to
+  -- i.e. if it's an instantation of that type's parameters and indices
+  data IndWF {ℓ} : ℂ ℓ → Prop where
+   IWF⁇ : IndWF C⁇
+   IWF℧ : IndWF C℧
+   IWF𝟘 : IndWF C𝟘
+   IWF𝟙 : IndWF C𝟙
+   IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
+   IWFΠ : ∀ {dom cod}
+     → IndWF dom
+     → (∀ x → IndWF (cod x))
+     → IndWF (CΠ dom cod)
+   IWFΣ : ∀ {dom cod}
+     → IndWF dom
+     → (∀ x → IndWF (cod x))
+     → IndWF (CΣ dom cod)
+   IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
+   IWFμ : ∀ {tyCtor cI D i}
+     → (par⁺ : ApproxEl (posParams ℓ tyCtor))
+     → (par⁻ : ApproxEl (negParams ℓ tyCtor par⁺))
+     → (indEq : cI ≡ CΣ (posIndices ℓ tyCtor par⁺) (negIndices ℓ tyCtor par⁺ par⁻))
+     → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor par⁺ par⁻ d))
+     → IndWF (Cμ tyCtor cI D i)
 
 
 -- record DataGermCodes : Set2 where
