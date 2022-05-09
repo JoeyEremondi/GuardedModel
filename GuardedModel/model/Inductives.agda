@@ -159,29 +159,47 @@ data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
 
 data GermDesc : Set1 where
   GEnd : GermDesc
-  GArg : (A : Set) → (A → GermDesc) → GermDesc
-  GHRec : (A : Set) → (A → GermDesc) → GermDesc
-  GUnk : (A : Set) → GermDesc → GermDesc
+  GArg : (A : Set) → (D : A → GermDesc) → GermDesc
+  GHRec : (A : Set) → (D : A → GermDesc) → GermDesc
+  GRec : (D : GermDesc) → GermDesc
+  GUnk : (A : Set) → (D : GermDesc) → GermDesc
 
 GermCommand : GermDesc → Set
 GermCommand GEnd = Unit
 GermCommand (GArg A D) = Σ[ x ∈ A ] GermCommand (D x)
 GermCommand (GHRec A D) = (a : A) → GermCommand (D a)
+GermCommand (GRec D) = GermCommand D
 GermCommand (GUnk A D) = GermCommand D
 
 GermResponse : (D : GermDesc) → GermCommand D → Set
 GermResponse GEnd _ = 𝟘
 GermResponse (GArg A D) (a , com) = GermResponse (D a) com
 GermResponse (GHRec A D) com = Rec⇒ A  Rest⇒ (Σ[ a ∈ A ] GermResponse (D a) (com a))
+GermResponse (GRec D) com = Rec⇒ 𝟙  Rest⇒ (GermResponse D com)
 GermResponse (GUnk A D) x = GermResponse D x
 GermResponseUnk : (D : GermDesc) → GermCommand D → Set
 GermResponseUnk (GUnk A D) x = Rec⇒ A  Rest⇒ (A × GermResponseUnk D x)
 GermResponseUnk GEnd x = 𝟘
 GermResponseUnk (GArg A D) (a , com) = GermResponseUnk (D a) com
 GermResponseUnk (GHRec A D) com = Σ[ a ∈ A ] GermResponseUnk (D a) (com a)
+GermResponseUnk (GRec D) com = GermResponseUnk D com
 
 interpGerm : GermDesc → Container 𝟙
 interpGerm D = (λ _ → GermCommand D) ◃ (GermResponse D) ◃ (GermResponseUnk D) / (λ _ _ → tt)
+
+
+data IndSig : Set where
+  SigE SigA SigR SigHR SigU : IndSig
+
+open import Cubical.Data.List
+
+data GermDescSig : GermDesc → List IndSig → Set1 where
+  GDE : GermDescSig GEnd [ SigE ]
+  GDA : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → ((a : A) → GermDescSig (D a) sig) → GermDescSig (GArg A D) (SigA ∷ sig)
+  GDHR : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → GermDescSig {!!} {!!}
+  GDR : ∀ {sig} →  GermDesc → GermDescSig {!!} {!!}
+  GDU : ∀ {sig} →  (A : Set) → GermDesc → GermDescSig {!!} {!!}
+
 
 open import GuardedAlgebra
 
@@ -192,10 +210,13 @@ record DataTypes : Set1 where
   CName = Fin numTypes
   field
     numCtors : CName → ℕ
+    indSig : CName → IndSig
   DName : CName → Set
   DName tyCtor = Fin (numCtors tyCtor)
 
 open DataTypes {{...}} public
+
+
 
 record DataGerms {{_ : DataTypes}} : Set1 where
   field
@@ -203,6 +224,7 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
     dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
+    germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
   germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
   germContainer ℓ c Self  = interpGerm (GArg (DName c) (dataGerm ℓ c Self))
 
