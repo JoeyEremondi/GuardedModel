@@ -157,48 +157,54 @@ data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
   GuardedArg : A → GuardedArg⇒ A Rest⇒ B
   GRest : B → GuardedArg⇒ A Rest⇒ B
 
-data GermDesc : Set1 where
-  GEnd : GermDesc
-  GArg : (A : Set) → (D : A → GermDesc) → GermDesc
-  GHRec : (A : Set) → (D : A → GermDesc) → GermDesc
-  GRec : (D : GermDesc) → GermDesc
-  GUnk : (A : Set) → (D : GermDesc) → GermDesc
+-- "Flattened" descriptions. We index by the type that that fields are parameterized over
+-- So the shape is never dependent on previous values, only the types
+data GermCtor : Set → Set1 where
+  GEnd : ∀ {B} → GermCtor B
+  GArg : ∀ {B} → (A : B → Set) → (D : GermCtor (Σ[ b ∈ B ] A b)) → GermCtor B
+  GHRec : ∀ {B} → (A : Set) → (D : GermCtor B) → GermCtor B
+  GRec : ∀ {B} → (D : GermCtor B) → GermCtor B
+  GUnk : ∀ {B} → (A : Set) → (D : GermCtor B) → GermCtor B
 
-GermCommand : GermDesc → Set
-GermCommand GEnd = Unit
-GermCommand (GArg A D) = Σ[ x ∈ A ] GermCommand (D x)
-GermCommand (GHRec A D) = (a : A) → GermCommand (D a)
-GermCommand (GRec D) = GermCommand D
-GermCommand (GUnk A D) = GermCommand D
+GermCommand : ∀ {B} → GermCtor B → (B → Set)
+GermCommand {B} GEnd _ = Unit
+GermCommand {B} (GArg A D) b = Σ[ a ∈ A b ] (GermCommand D (b , a))
+GermCommand {B} (GHRec A D) b = GermCommand D b
+GermCommand {B} (GRec D) b = GermCommand D b
+GermCommand {B} (GUnk A D) b = GermCommand D b
 
-GermResponse : (D : GermDesc) → GermCommand D → Set
-GermResponse GEnd _ = 𝟘
-GermResponse (GArg A D) (a , com) = GermResponse (D a) com
-GermResponse (GHRec A D) com = Rec⇒ A  Rest⇒ (Σ[ a ∈ A ] GermResponse (D a) (com a))
-GermResponse (GRec D) com = Rec⇒ 𝟙  Rest⇒ (GermResponse D com)
-GermResponse (GUnk A D) x = GermResponse D x
-GermResponseUnk : (D : GermDesc) → GermCommand D → Set
-GermResponseUnk (GUnk A D) x = Rec⇒ A  Rest⇒ (A × GermResponseUnk D x)
-GermResponseUnk GEnd x = 𝟘
-GermResponseUnk (GArg A D) (a , com) = GermResponseUnk (D a) com
-GermResponseUnk (GHRec A D) com = Σ[ a ∈ A ] GermResponseUnk (D a) (com a)
-GermResponseUnk (GRec D) com = GermResponseUnk D com
-
-interpGerm : GermDesc → Container 𝟙
-interpGerm D = (λ _ → GermCommand D) ◃ (GermResponse D) ◃ (GermResponseUnk D) / (λ _ _ → tt)
+GermResponse : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
+GermResponse {B} GEnd b com = 𝟘
+GermResponse {B} (GArg A D) b (a , com) = GermResponse D (b , a) com
+GermResponse {B} (GHRec A D) b com =  Rec⇒ A   Rest⇒ (Σ[ a ∈ A ] GermResponse D b com)
+GermResponse {B} (GRec D) b com = Rec⇒ 𝟙   Rest⇒ GermResponse D b com
+GermResponse {B} (GUnk A D) b com = GermResponse D b com
 
 
-data IndSig : Set where
-  SigE SigA SigR SigHR SigU : IndSig
+GermResponseUnk : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
+GermResponseUnk (GUnk A D) b com = Rec⇒ A  Rest⇒ (A × GermResponseUnk D b com)
+GermResponseUnk GEnd b x = 𝟘
+GermResponseUnk (GArg A D) b (a , com) = GermResponseUnk D (b , a) com
+GermResponseUnk (GHRec A D) b com = GermResponseUnk D b com
+GermResponseUnk (GRec D) b com = GermResponseUnk D b com
 
-open import Cubical.Data.List
+interpGermCtor : GermCtor 𝟙 → Container 𝟙
+interpGermCtor D = (GermCommand D) ◃ (GermResponse D tt) ◃ (GermResponseUnk D tt) / (λ _ _ → tt)
 
-data GermDescSig : GermDesc → List IndSig → Set1 where
-  GDE : GermDescSig GEnd [ SigE ]
-  GDA : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → ((a : A) → GermDescSig (D a) sig) → GermDescSig (GArg A D) (SigA ∷ sig)
-  GDHR : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → GermDescSig {!!} {!!}
-  GDR : ∀ {sig} →  GermDesc → GermDescSig {!!} {!!}
-  GDU : ∀ {sig} →  (A : Set) → GermDesc → GermDescSig {!!} {!!}
+
+
+-- data IndSig : Set where
+--   SigE SigA SigR SigHR SigU : IndSig
+
+-- open import Cubical.Data.List
+
+-- data GermDescSig : GermDesc → List IndSig → Set1 where
+--   GDE : GermDescSig GEnd [ SigE ]
+--   GDA : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → ((a : A) → GermDescSig (D a) sig) → GermDescSig (GArg A D) (SigA ∷ sig)
+--   GDHR : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → GermDescSig {!!} {!!}
+--   GDR : ∀ {sig} →  GermDesc → GermDescSig {!!} {!!}
+--   GDU : ∀ {sig} →  (A : Set) → GermDesc → GermDescSig {!!} {!!}
+
 
 
 open import GuardedAlgebra
@@ -210,7 +216,7 @@ record DataTypes : Set1 where
   CName = Fin numTypes
   field
     numCtors : CName → ℕ
-    indSig : CName → IndSig
+    -- indSig : CName → IndSig
   DName : CName → Set
   DName tyCtor = Fin (numCtors tyCtor)
 
@@ -223,11 +229,12 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
-    germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermDesc )
+    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
   germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
-  germContainer ℓ c Self  = interpGerm (GArg (DName c) (dataGerm ℓ c Self))
-
+  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d)
+  FGerm : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set → Set → Set
+  FGerm ℓ c Self Unk = W (germContainer ℓ c Self) Unk tt
 
 
 open DataGerms {{...}} public
