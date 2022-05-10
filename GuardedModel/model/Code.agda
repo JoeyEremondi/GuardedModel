@@ -364,17 +364,17 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ (CodeModule.C≡ c x y) = ℧ c {{Approx}} ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
-⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
-⁇ CodeModule.C⁇ = ⁇⁇
-⁇ CodeModule.C℧ = tt
-⁇ CodeModule.C𝟘 = tt
-⁇ CodeModule.C𝟙 = false
-⁇ {suc ℓ} CodeModule.CType = C⁇
-⁇ (CodeModule.CΠ dom cod) = λ x → (⁇ (cod (approx x)))
-⁇ (CodeModule.CΣ dom cod)  = pairWithApprox (⁇ dom {{Approx}}) (⁇ dom ) , ⁇ (cod _)
--- ⁇ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (⁇ dom {{Approx}} , ⁇ dom {{Exact}}) , ⁇ (cod (⁇ dom {{Approx}})) {{Exact}}
-⁇ (CodeModule.C≡ c x y) = ⁇⊢ x ≅ y
-⁇ (CodeModule.Cμ tyCtor c D x) = W⁇
+-- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
+-- ⁇ CodeModule.C⁇ = ⁇⁇
+-- ⁇ CodeModule.C℧ = tt
+-- ⁇ CodeModule.C𝟘 = tt
+-- ⁇ CodeModule.C𝟙 = false
+-- ⁇ {suc ℓ} CodeModule.CType = C⁇
+-- ⁇ (CodeModule.CΠ dom cod) = λ x → (⁇ (cod (approx x)))
+-- ⁇ (CodeModule.CΣ dom cod)  = pairWithApprox (⁇ dom {{Approx}}) (⁇ dom ) , ⁇ (cod _)
+-- -- ⁇ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (⁇ dom {{Approx}} , ⁇ dom {{Exact}}) , ⁇ (cod (⁇ dom {{Approx}})) {{Exact}}
+-- ⁇ (CodeModule.C≡ c x y) = ⁇⊢ x ≅ y
+-- ⁇ (CodeModule.Cμ tyCtor c D x) = W⁇
 
 -- {-# DISPLAY CodeModule.ℂ _ = ℂ  #-}
 -- {-# DISPLAY CodeModule.El _  = El  #-}
