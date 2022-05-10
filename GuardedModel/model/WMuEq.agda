@@ -277,8 +277,12 @@ toFromCEl (CHRec c j D) E (ElHRec x x₁) = cong₂ ElHRec (funExt (λ a → toF
 -- toFromCElF (CHRec c j D) (ElHRec x x₁) = cong (ElHRec x) (funExt λ a → toFromCElF (D (approx a)) (x₁ a))
 -- -- toFromCElF (CHGuard c D1 D2) (ElHGuard x x₁) = cong₂ ElHGuard (funExt λ a → toFromCElF D1 (x a)) (toFromCElF D2 x₁)
 
+CμWiso :
+  ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙} {i : ApproxEl cI}
+  → Iso (ℂμ tyCtor D i) (WArg D i)
+CμWiso = (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
 
-ℂμW = isoToPath (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
+ℂμW = isoToPath CμWiso
 
 ℂμWext = funExt λ i → ℂμW {i = i}
 
