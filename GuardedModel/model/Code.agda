@@ -250,7 +250,7 @@ record CodeModule
     ResponseD (CEnd i) b com = 𝟘
     ResponseD (CArg c D) b (a , com) = ResponseD D (b , approx a) com
     ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
-    ResponseD (CHRec c j D) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (Σ[ a ∈ Approxed (λ {{æ}} → El {{æ}} (c b)) ] ResponseD D b com)
+    ResponseD (CHRec c j D) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (ResponseD D b com)
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
@@ -260,7 +260,7 @@ record CodeModule
     inextD (CRec j D) {i} b com (Rec x) = j
     inextD (CRec j D) {i} b com (Rest x) = inextD D b com x
     inextD (CHRec c j D) {i} b com (Rec res) = j b (approx res)
-    inextD (CHRec c j D) {i} b com (Rest (a , res)) = inextD D b com res
+    inextD (CHRec c j D) {i} b com (Rest res) = inextD D b com res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 

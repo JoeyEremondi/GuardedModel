@@ -55,70 +55,35 @@ open import Ord -- ℂ El ℧ C𝟙 refl
 -- Like El, but interprets C⁇ to ▹⁇
 
 
--- Predicate for when a type is the interpretation of some code, modulo guardedness
-data IsGuardedCode {ℓ} {{æ : Æ}} : ℂ ℓ → Set → Set1
-codeToGuarded : ∀ {ℓ} {{æ : Æ}} {c : ℂ ℓ} {A : Set} → IsGuardedCode c A → El {{æ = æ}} c → A
-data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set1
-
-data IsGuardedCode {{æ1}} where
-  IsGRefl : ∀ {A } c → Iso A (El c) → IsGuardedCode c A
-  IsGGuarded : ∀ {A c} → IsGuardedCode c A → IsGuardedCode c (▹ A)
-  IsGΠ  : ∀ {dom} {cod} {Dom : {{æ : Æ}} → Set} {Cod : Dom {{Approx}} → Set}
-    → (pf : ∀ {{æ}} → IsGuardedCode  {{æ}} dom (Dom {{æ}}))
-    → ((x : (ApproxEl dom)) → IsGuardedCode (cod x) (Cod (codeToGuarded {{Approx}} (pf {{Approx}}) x)))
-    → IsGuardedCode (CΠ dom cod)  ((x : Approxed (λ {{æ}} → Dom {{æ}}) {{æ1}} ) → Cod (approx x))
-  IsGΣ  : ∀ {dom} {cod} {Dom : {{æ : Æ}} → Set} {Cod : Dom {{Approx}} → Set}
-    → (pf : ∀ {{æ}} → IsGuardedCode  {{æ}} dom (Dom {{æ}}))
-    → ((x : (ApproxEl dom)) → IsGuardedCode (cod x) (Cod (codeToGuarded {{Approx}} (pf {{Approx}}) x)))
-    → IsGuardedCode (CΣ dom cod)  (Σ[ x ∈ Approxed (λ {{æ}} → Dom {{æ}}) {{æ1}} ] Cod (approx x))
-  IsG≡ : ∀ {c} {A : {{æ : Æ}} → Set} (x y : ApproxEl c)
-    → (pf : ∀ {{æ}} → IsGuardedCode  {{æ}} c (A {{æ}}))
-    → IsGuardedCode (C≡ c x y) (codeToGuarded {{Approx}} (pf {{Approx}}) x ≅ codeToGuarded {{Approx}} (pf {{Approx}}) y)
-  -- There's no case for inductives: any inductives must either be encoded direclty, or put directly behind the guarded modality
-  -- TODO: is this right?
-  -- IsGμ : ∀ (tyCtor : CName) (D : DName tyCtor → GermCtor Unit)  → (∀ d → DataGermIsCode ℓ (D d)) → IsGuardedCode ℓ (FGerm ℓ tyCtor (▹⁇ ℓ) (⁇Ty ℓ))
-
 -- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
 --TODO: do we still need this with the more strict code requirements?
-
-data DataGermIsCode ℓ where
+data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2  where
  GEndCode : ∀ {B} → DataGermIsCode ℓ {B} GEnd
- GRecCode : ∀ {B} {D : GermCtor B}
+ GRecCode : ∀ {B} {D : GermCtor B} (c : B → ℂ ℓ)
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GRec D)
- GArgCode : ∀ {B} {A : B → Set} {D : GermCtor (Σ B A)} → (c : B → ℂ ℓ) → (∀ b → IsGuardedCode (c b) (A b))
+ GArgCode : ∀ {B} {A : B → Set} {D : GermCtor (Σ B A)} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GArg A D)
- GHRecCode : ∀ {B} {A : B → Set} {D : GermCtor B} → (c : B → ℂ ℓ) → (∀ b → IsGuardedCode (c b) (A b))
+ GHRecCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GHRec A D)
- GUnkCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → IsGuardedCode (c b) (A b))
+ GUnkCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
+   → DataGermIsCode ℓ D
+   → DataGermIsCode ℓ (GUnk A D)
+ GGuardedArgCode : ∀ {B} {A : B → Set} {D : GermCtor (Σ B A)} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ (El (c b))))
+   → DataGermIsCode ℓ D
+   → DataGermIsCode ℓ (GArg A D)
+ GGuardedHRecCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ El (c b)))
+   → DataGermIsCode ℓ D
+   → DataGermIsCode ℓ (GHRec A D)
+ GGuardedUnkCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ El (c b)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk A D)
 
-codeToGuarded (IsGRefl _ isom) x = Iso.inv isom x
-codeToGuarded (IsGGuarded pf) x = next (codeToGuarded pf x)
-codeToGuarded ⦃ æ = Approx ⦄ (IsGΠ pdom pcod) f x = {!!}
-codeToGuarded ⦃ æ = Exact ⦄ (IsGΠ pdom pcod) f x = {!!}
-codeToGuarded (IsGΣ pf x₁) x = {!!}
-codeToGuarded (IsG≡ x₁ y pf) x = {!!}
 
--- underlyingCode : ∀ {ℓ A} → IsGuardedCode ℓ {{Approx}} A → ℂ ℓ
--- toUnderlying : ∀ {{_ : Æ}} {ℓ A} → (pf : ∀ {{æ}} → IsGuardedCode ℓ {{æ}} A) → A → El (underlyingCode (pf {{Approx}}))
--- fromUnderlying : ∀ {{_ : Æ}} {ℓ A} → (pf : IsGuardedCode ℓ {{Approx}} A) → El (underlyingCode pf) → A
 
--- underlyingCode (IsGRefl c x) = c
--- underlyingCode (IsGGuarded pf) = underlyingCode pf
--- underlyingCode (IsGΠ dpf cpf) = CΠ (underlyingCode (dpf {{Approx}})) λ x → underlyingCode (cpf (fromUnderlying {{Approx}} (dpf {{Approx}}) x))
--- underlyingCode (IsGΣ dpf cpf) = CΣ (underlyingCode (dpf {{Approx}})) λ x → underlyingCode (cpf (fromUnderlying {{Approx}} (dpf {{Approx}}) x))
--- underlyingCode (IsG≡ x y pf) = C≡ (underlyingCode pf) (toUnderlying ⦃ Approx ⦄ {!λ {{_}} → pf!} x) (toUnderlying {{Approx}} {!!} y)
 
--- toUnderlying (IsGRefl c isom) x = Iso.fun isom x
--- toUnderlying (IsGGuarded pf) x = {!!}
--- toUnderlying (IsGΠ x₁ x₂) x = {!!}
--- toUnderlying (IsGΣ x₁ x₂) x = {!!}
--- toUnderlying (IsG≡ x₁ y pf) x = {!!}
--- underlyingCode (IsGμ tyCtor D x) = Cμ tyCtor {!!} {!!} {!!}
 
 record InductiveCodes : Set2 where
   field
