@@ -33,42 +33,7 @@ open import Ord
 -- open Ord ℂ El ℧ C𝟙 refl
 
 
-
-germ : {{_ : Æ}} → TyHead → (ℓ : ℕ) → Set -- ℂ ℓ
-germ HΠ ℓ = (x : ⁇Ty ℓ) → ⁇Ty ℓ
-germ HΣ ℓ = ⁇Ty ℓ × ⁇Ty ℓ
-germ H≅ ℓ = dyn ≅ dyn
-  where
-    dyn : ⁇Ty ℓ
-    dyn = ⁇⁇
-germ H𝟙 _ = Bool
-germ H𝟘 _ = Unit
-germ HType zero = Unit
-germ HType (suc ℓ) = ℂ ℓ
-germ (HCtor tyCtor) ℓ  = W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
-
-germTo⁇ : ∀ {{_ : Æ}} {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
-germFrom⁇ : ∀ {{_ : Æ}} {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → (germ h ℓ)
-
-
-germTo⁇ {h = HΠ} f = ⦇ ⁇Π (liftFun (λ ▹x → θL ⁇⁇ (map▹ Now (transport hollowEq ▹x)))) ⦈
-germTo⁇ {h = HΣ} (x , y) = pure (⁇Σ (x , y))
-germTo⁇ {h = H≅} x = pure (⁇≡ x)
-germTo⁇ {h = H𝟙} false = pure ⁇℧
-germTo⁇ {h = H𝟙} true = pure ⁇𝟙
-germTo⁇ {h = H𝟘} tt = pure ⁇℧
-germTo⁇ {h = HType} {zero} x = pure ⁇℧
-germTo⁇ {h = HType} {suc ℓ} x = pure (⁇Type x)
-germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
-
-germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq x = f (transport⁻ hollowEq (next x))
-germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = true
-germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp =  x
-germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
-germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
-germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = (Wsup x)
-germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp =  W⁇
-
+open import Germ
 
 
 
@@ -131,15 +96,15 @@ castMeetRec cSize vSize self = record
     ⁇ {suc ℓ} CodeModule.CType {reflp} = pure C⁇
     ⁇ (CodeModule.CΠ dom cod) {reflp} = liftFunDep
       λ x →
-       self ? -- (≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
+       self {!!} -- (≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
          .o⁇ (cod (approx x))
     ⁇ (CodeModule.CΣ dom cod) {reflp} = do
         ⁇x ← self (≤oo-sucL (≤o-trans (≤o-refl _) omax-≤L))
           .o⁇ dom
-        ⁇y ← self ? --(≤oo-sucL (≤o-trans (≤o-cocone _ ⁇x (≤o-refl _)) omax-≤R))
-          .o⁇ ? -- (cod (approx {{æ = æ}} (⁇x {{æ}})  ))
-        ? --pure (⁇x , ⁇y)
-    ⁇ (CodeModule.C≡ c x y) {reflp} = ?
+        ⁇y ← self {!!} --(≤oo-sucL (≤o-trans (≤o-cocone _ ⁇x (≤o-refl _)) omax-≤R))
+          .o⁇ {!!} -- (cod (approx {{æ = æ}} (⁇x {{æ}})  ))
+        {!!} --pure (⁇x , ⁇y)
+    ⁇ (CodeModule.C≡ c x y) {reflp} = {!!}
     -- do
     --   wit ← self  (<ooL (≤o-sucMono omax-≤L))
     --     .oMeet c x y
