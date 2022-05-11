@@ -24,24 +24,41 @@ data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
 pure : ∀ {ℓ} {A : Set ℓ} {{_ : Æ}} → A → LÆ A
 pure = Now
 
+data _≤Æ_ : Æ → Æ → Set where
+  ≤æRefl : Exact ≤Æ Exact
+  instance ≤æBot : ∀ {æ} → Approx ≤Æ æ
+
+instance exactTrans : ∀ {æ1 æ2} → {{_ : æ1 ≤Æ æ2}} → {{_ : IsExact æ1}} → IsExact æ2
+exactTrans {Exact} {Exact} = isExact
+
+instance exactRefl : ∀ {æ} → æ ≤Æ æ
+exactRefl {Approx} = ≤æBot
+exactRefl {Exact} = ≤æRefl
 
 _>>=_ :
-  ∀ {{_ : Æ}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
-  → LÆ A → (A → LÆ B) → LÆ B
+  ∀ {æA} {æB} {{_ : æA ≤Æ æB}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
+  → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} B
 Now a >>= f = f a
-Later x >>= f = Later λ tic → x tic >>= f
-_>>=_ {A = A} (Extract x i) f = path {a = x} i
+Later x >>= f = Later  λ tic → x tic >>= f
+_>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
   where
-    path : ∀ {a : LÆ A} → Later (G.next (a >>= f)) ≡ a >>= f
-    path {a = a} = Extract (a >>= f)
+    path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
+    path {a = a} = Extract {{æ = æB}} (a >>= f)
 
 
-_>>_ : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} { A : Set ℓ₁ } {B : Set ℓ₂} → LÆ A → (A → LÆ B) → LÆ Unit
-_>>_ ma f = ma >>= λ a → f a >>= λ _ → pure tt
+_>>_ :
+  ∀ {æA} {æB} {{_ : æA ≤Æ æB}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
+  → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} Unit
+_>>_ {æB = æB} ma f = ma >>= λ a → f a >>= λ _ → pure {{æB}} tt
 
 _<*>_ : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} { A : Set ℓ₁ } {B : Set ℓ₂} → LÆ (A → B) → LÆ A → LÆ B
 mf <*> mx = do
    f ← mf
+   x ← mx
+   pure (f x)
+
+_<$>_ : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} { A : Set ℓ₁ } {B : Set ℓ₂} → (A → B) → LÆ A → LÆ B
+f <$> mx = do
    x ← mx
    pure (f x)
 
@@ -112,14 +129,33 @@ exact : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed (λ {{æ : Æ
 exact ⦃ æ = Approx ⦄ x = x
 exact ⦃ æ = Exact ⦄ x = snd x
 
-pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
-pairWithApprox ⦃ æ = Approx ⦄ a e = a
-pairWithApprox ⦃ æ = Exact ⦄ a e = a , e
+withApprox : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) →  T {{æ}} )  → Approxed T {{æRet}}
+withApprox {{Approx}} f   = f Approx
+withApprox {{Exact}} f  = f Approx  , f Exact
 
-approxPairEq : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → (a : T {{Approx}}) → (e : T {{æ}}) →
-  approx (pairWithApprox {T} a e) ≡p a
-approxPairEq ⦃ æ = Approx ⦄ _ _ = reflp
-approxPairEq ⦃ æ = Exact ⦄ _ _ = reflp
+
+withApproxL : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T {{æ}}) )  → LÆ {{æRet}} (Approxed T {{æRet}})
+withApproxL {{Approx}} f   = f Approx
+withApproxL {{Exact}} f  = do
+  a ← f Approx
+  e ← f Exact
+  pure {{Exact}} (a , e)
+
+withApproxL' : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) (conv : Approxed T {{æRet}} → Approxed T {{æ}}) → LÆ {{æ}} (T {{æ}}) )  → LÆ {{æRet}} (Approxed T {{æRet}})
+withApproxL' {{Approx}} f   = f Approx λ x → x
+withApproxL' {{Exact}} {T = T} f  = do
+  a ← f Approx (approx {T = T} {{Exact}} )
+  e ← f Exact λ x → x
+  pure {{Exact}} (a , e)
+
+-- pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
+-- pairWithApprox ⦃ æ = Approx ⦄ a e = a
+-- pairWithApprox ⦃ æ = Exact ⦄ a e = a , e
+
+-- approxPairEq : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → (a : T {{Approx}}) → (e : T {{æ}}) →
+--   approx (pairWithApprox {T} a e) ≡p a
+-- approxPairEq ⦃ æ = Approx ⦄ _ _ = reflp
+-- approxPairEq ⦃ æ = Exact ⦄ _ _ = reflp
 
 
 -- LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}

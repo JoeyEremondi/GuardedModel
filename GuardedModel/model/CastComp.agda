@@ -37,32 +37,32 @@ open import Germ
 
 
 
-record CastMeet {{_ : Æ}} (cSize vSize : Ord) : Set where
+record CastMeet (cSize vSize : Ord) : Set where
   field
-    o⁇ : ∀ {ℓ} → (c : ℂ ℓ)
+    o⁇ : ∀ {{_ : Æ}} {ℓ} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : codeSize c ≡p cSize }
       → {@(tactic default (reflp {A = Ord} {O1})) pf : O1 ≡p vSize }
       → LÆ (El c)
-    oMeet : ∀ {ℓ}
+    oMeet : ∀ {{_ : Æ}} {ℓ}
       → (c : ℂ ℓ)
       → (x y : El c)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c)  ≡p cSize }
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : omax (elSize c x) (elSize c y)  ≡p vSize }
       → LÆ (El c)
-    oToGerm : ∀ {ℓ h} → (c : ℂ ℓ)
+    oToGerm : ∀ {{_ : Æ}}{ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
       → codeHead c ≡p HStatic h
       → (x : El c)
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize c x ≡p vSize }
       → LÆ (germ h ℓ)
-    oFromGerm : ∀ {ℓ h} → (c : ℂ ℓ)
+    oFromGerm : ∀ {{_ : Æ}}{ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
       → codeHead c ≡p HStatic h
       → (x : germ h ℓ)
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
 
-    oToDataGerm : ∀ {ℓ} {cI cB : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
+    oToDataGerm : ∀ {{_ : Æ}}{ℓ} {cI cB : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
       → {i : ApproxEl cI}
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize (Cμ tyCtor cI D i)) (dataGermDescSize ℓ tyCtor)  ≡p cSize }
       → (x : ℂμ tyCtor D i)
@@ -70,7 +70,7 @@ record CastMeet {{_ : Æ}} (cSize vSize : Ord) : Set where
       → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
 
 
-    oCast : ∀ {ℓ}
+    oCast : ∀ {{_ : Æ}}{ℓ}
       → (c₁ c₂ : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize c₁) (codeSize c₂) ≡p cSize}
       →  (x : El c₁)
@@ -81,11 +81,11 @@ open CastMeet
 
 
 castMeetRec :  (cSize vSize : Ord)  →
-      (self : {{_ : Æ}} {cs' vs' : Ord} → ((cs' , vs') <oo (cSize , vSize)) → CastMeet cs' vs') → {{_ : Æ}} → CastMeet cSize vSize
+      (self : ∀ {cs' vs' : Ord} → ((cs' , vs') <oo (cSize , vSize)) → CastMeet cs' vs') →  CastMeet cSize vSize
 castMeetRec cSize vSize self = record
                           { o⁇ = ⁇ ; oMeet = meet ; oToGerm = toGerm ; oFromGerm = fromGerm ; oCast = cast }
   where
-    ⁇ : ∀ {ℓ} → (c : ℂ ℓ)
+    ⁇ : ∀ {{_ : Æ}} {ℓ} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : codeSize c ≡p cSize }
       → {@(tactic default (reflp {A = Ord} {O1})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
@@ -96,19 +96,20 @@ castMeetRec cSize vSize self = record
     ⁇ {suc ℓ} CodeModule.CType {reflp} = pure C⁇
     ⁇ (CodeModule.CΠ dom cod) {reflp} = liftFunDep
       λ x →
-       self {!!} -- (≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
+       self (≤oo-sucL (≤o-trans (≤o-cocone {{æ = Approx}} _ (approx x) (≤o-refl _)) omax-≤R))
          .o⁇ (cod (approx x))
-    ⁇ (CodeModule.CΣ dom cod) {reflp} = do
-        ⁇x ← self (≤oo-sucL (≤o-trans (≤o-refl _) omax-≤L))
-          .o⁇ dom
-        ⁇y ← self {!!} --(≤oo-sucL (≤o-trans (≤o-cocone _ ⁇x (≤o-refl _)) omax-≤R))
-          .o⁇ {!!} -- (cod (approx {{æ = æ}} (⁇x {{æ}})  ))
-        {!!} --pure (⁇x , ⁇y)
-    ⁇ (CodeModule.C≡ c x y) {reflp} = {!!}
-    -- do
-    --   wit ← self  (<ooL (≤o-sucMono omax-≤L))
-    --     .oMeet c x y
-    --   pure (wit ⊢ x ≅ y)
+    ⁇ {{æ}} (CodeModule.CΣ dom cod) {reflp} = do
+        ⁇x ← withApproxL λ æ →
+           self (≤oo-sucL (≤o-trans (≤o-refl _) omax-≤L))
+           .o⁇ {{æ}} dom
+        --TODO: problem is monadic bind isn't polymorphic enough in Æ
+        ⁇y ← self  (≤oo-sucL (≤o-trans (≤o-cocone {{æ = Approx}} _ (approx ⁇x) (≤o-refl _)) omax-≤R))
+          .o⁇ (cod (approx ⁇x))
+        pure (⁇x , ⁇y)
+    ⁇ (CodeModule.C≡ c x y) {reflp} = do
+      wit ← self  (<ooL (≤o-sucMono omax-≤L))
+        .oMeet {{Approx}} c x y
+      pure (wit ⊢ x ≅ y)
     ⁇ (CodeModule.Cμ tyCtor c D x) {reflp} = pure W⁇
 
     -- codeMeet   : ∀ {ℓ}
@@ -116,55 +117,55 @@ castMeetRec cSize vSize self = record
     --   → {@(tactic default (reflp {A = Ord} {size})) pf : omax (codeSize x) (codeSize y) ≡p size }
     --   → LÆ (ℂ ℓ)
 
-    meet   : ∀ {ℓ}
+    meet   : ∀ {{_ : Æ}} {ℓ}
       → (c : ℂ ℓ)
       → (x y : El c)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : omax (elSize c x) (elSize c y)  ≡p vSize }
       → LÆ (El c)
---     meet c x y with codeHead c in eqc
---     ... | ch with valueHead c eqc x in eq1 | valueHead c eqc y in eq2 | valHeadMatchView (valueHead c eqc x) (valueHead c eqc y)
---     -- If either arg is bottom or there is a head mismatch, produce error
---     ... |  h1 |  h2 |  VH℧L x₁ = pure (℧ c)
---     ... |  h1 |  h2 |  VH℧R x₁ = pure (℧ c)
---     ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHNeq⁇ x₁ = pure (℧ c)
---     ... |  .(HVal _) |  .(HVal _) |  VHNeq x₁ = pure (℧ c)
---     -- If either is ⁇, then return the other argument
---     ... |  h1 |  h2 |  VH⁇L x₁ x₂ = pure y
---     ... |  .(HVal _) |  h2 |  VH⁇R x₁ = pure x
---     ... |  h1 |  h2 |  VHIn⁇L x₁ x₂ = pure y
---     ... |  .(HVIn⁇ _ _) |  h2 |  VHIn⁇R x₁ = pure x
---     -- Otherwise the head matches, so we do case-analysis on the type to see how to proceed
---     meet CodeModule.C𝟙 true true {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
---       = pure true
---     meet {ℕ.suc ℓ} CodeModule.CType x y | HStatic HType  | HVal h  | .(HVal _)  | VHEq reflp = {!!}
---     -- The meet of two functions is the function that takes the meet of the two arguments
---     meet (CodeModule.CΠ dom cod) f1 f2 {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
---       = liftFunDep λ x →
---         self ? --(≤oo-sucL (≤o-trans (≤o-cocone _ x (≤o-refl _)) omax-≤R))
---           .oMeet (cod (approx x)) (f1 x) (f2 x)
---     -- To take the meet of dependent pairs, we take the meet of the first elements
---     -- then cast the seconds to the codomain applied to the meet of the firsts
---     -- and take their meet
---     meet (CodeModule.CΣ dom cod) (x1 , x2) (y1 , y2) {reflp} {pf2} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp =  do
---       xy1 ← self (≤oo-sucL omax-≤L)
---         .oMeet dom ? ? -- (approx x1) (approx y1)
---       x2cast ← self ? -- (≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone _ x1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
---         .oCast (cod (approx x1)) ? ? -- (cod (approx xy1)) x2
---       y2cast ← self ? --(≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone _ y1 (≤o-refl _)) (≤o-cocone _ xy1 (≤o-refl _))) omax-≤R))
---         .oCast (cod (approx y1)) ? ? -- (cod (approx xy1)) y2
---       xy2 ← self ? --(≤oo-sucL (≤o-trans (≤o-cocone _ xy1 (≤o-refl _)) omax-≤R))
---         .oMeet ? ? ? --(cod (approx xy1)) x2cast y2cast
---       pure ? -- (exact xy1 , exact xy2)
---     --Meet of two equality proofs is just the meet of their witnesses
---     meet (CodeModule.C≡ c x₁ y₁) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = do
---       w12 ← self (≤oo-sucL omax-≤L)
---         .oMeet c w1 w2
---       pure (w12 ⊢ x₁ ≅ y₁)
---     meet (CodeModule.Cμ tyCtor c D x₁) x y | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
---     ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHEq⁇ x₁ = {!!}
+    meet c x y with codeHead c in eqc
+    ... | ch with valueHead c eqc x in eq1 | valueHead c eqc y in eq2 | valHeadMatchView (valueHead c eqc x) (valueHead c eqc y)
+    -- If either arg is bottom or there is a head mismatch, produce error
+    ... |  h1 |  h2 |  VH℧L x₁ = pure (℧ c)
+    ... |  h1 |  h2 |  VH℧R x₁ = pure (℧ c)
+    ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHNeq⁇ x₁ = pure (℧ c)
+    ... |  .(HVal _) |  .(HVal _) |  VHNeq x₁ = pure (℧ c)
+    -- If either is ⁇, then return the other argument
+    ... |  h1 |  h2 |  VH⁇L x₁ x₂ = pure y
+    ... |  .(HVal _) |  h2 |  VH⁇R x₁ = pure x
+    ... |  h1 |  h2 |  VHIn⁇L x₁ x₂ = pure y
+    ... |  .(HVIn⁇ _ _) |  h2 |  VHIn⁇R x₁ = pure x
+    -- Otherwise the head matches, so we do case-analysis on the type to see how to proceed
+    meet CodeModule.C𝟙 true true {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
+      = pure true
+    meet {ℕ.suc ℓ} CodeModule.CType x y | HStatic HType  | HVal h  | .(HVal _)  | VHEq reflp = {!!}
+    -- The meet of two functions is the function that takes the meet of the two arguments
+    meet (CodeModule.CΠ dom cod) f1 f2 {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
+      = liftFunDep λ x →
+        self (≤oo-sucL (≤o-trans (≤o-cocone {{æ = Approx}} _ (approx  x) (≤o-refl _)) omax-≤R))
+          .oMeet (cod (approx x)) (f1 x) (f2 x)
+    -- To take the meet of dependent pairs, we take the meet of the first elements
+    -- then cast the seconds to the codomain applied to the meet of the firsts
+    -- and take their meet
+    meet {{æInit}} (CodeModule.CΣ dom cod) (x1 , x2) (y1 , y2) {reflp} {pf2} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp =  do
+      xy1 ← withApproxL' λ æ conv → self (≤oo-sucL omax-≤L)
+        .oMeet {{æ}} dom (exact {{æ}} (conv x1) ) (exact {{æ}} (conv y1))
+      x2cast ← self (≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone {{æ = Approx}} _ (approx x1) (≤o-refl _)) (≤o-cocone {{æ = Approx}} _ (approx xy1) (≤o-refl _))) omax-≤R))
+        .oCast (cod (approx x1)) (cod (approx xy1)) x2
+      y2cast ← self (≤oo-sucL (≤o-trans (omax-LUB (≤o-cocone {{æ = Approx}} _ (approx y1) (≤o-refl _)) (≤o-cocone {{æ = Approx}} _ (approx xy1) (≤o-refl _))) omax-≤R))
+        .oCast (cod (approx y1)) (cod (approx xy1)) y2
+      xy2 ← self (≤oo-sucL (≤o-trans (≤o-cocone {{æ = Approx}} _ (approx xy1) (≤o-refl _)) omax-≤R))
+        .oMeet (cod (approx xy1)) x2cast y2cast
+      pure (xy1 , xy2)
+    --Meet of two equality proofs is just the meet of their witnesses
+    meet (CodeModule.C≡ c x₁ y₁) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = do
+      w12 ← self (≤oo-sucL omax-≤L)
+        .oMeet {{Approx}} c w1 w2
+      pure (w12 ⊢ x₁ ≅ y₁)
+    meet (CodeModule.Cμ tyCtor c D x₁) x y | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp = {!!}
+    ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHEq⁇ x₁ = {!!}
 
-    toGerm : ∀ {ℓ h} → (c : ℂ ℓ)
+    toGerm : ∀ {{ _ : Æ}} {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
       → codeHead c ≡p HStatic h
       → (x : El c)
@@ -185,14 +186,14 @@ castMeetRec cSize vSize self = record
 --     toGerm (CodeModule.C≡ c x₁ y) {reflp} reflp x = {!!}
 --     toGerm (CodeModule.Cμ tyCtor c D x₁) {reflp} reflp x = {!!}
 
-    fromGerm : ∀ {ℓ h} → (c : ℂ ℓ)
+    fromGerm : ∀ {{_ : Æ}} {ℓ h} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : (codeSize c) ≡p cSize }
       → codeHead c ≡p HStatic h
       → (x : germ h ℓ)
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : O1 ≡p vSize }
       → LÆ (El c)
 
-    cast : ∀ {ℓ}
+    cast : ∀ {{_ : Æ}} {ℓ}
       → (c₁ c₂ : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : omax (codeSize c₁) (codeSize c₂) ≡p cSize}
       →  (x : El c₁)

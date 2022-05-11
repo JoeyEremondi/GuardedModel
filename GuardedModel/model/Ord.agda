@@ -88,7 +88,7 @@ o1 <o o2 = O↑ o1 ≤o o2
 ≤∘<-in-< {x} {y} {z} x≤y y<z = ≤o-trans (≤o-sucMono x≤y) y<z
 
 underLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} o →  (f : Approxed (El c) → Ord) → (∀ k → o ≤o f k) → o ≤o OLim c f
-underLim {c = c} o f all = ≤o-trans (≤o-cocone {c = c} (λ _ → o) (pairWithApprox (℧  c {{Approx}}) (℧ c )) (≤o-refl o)) (≤o-limiting (λ _ → o) (λ k → ≤o-cocone f k (all k)))
+underLim {c = c} o f all = ≤o-trans (≤o-cocone {c = c} (λ _ → o) (withApprox (λ æ → ℧ {{æ = æ}} c)) (≤o-refl o)) (≤o-limiting (λ _ → o) (λ k → ≤o-cocone f k (all k)))
 
 extLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : Approxed (El c) → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
 extLim {c = c} f1 f2 all = ≤o-limiting f1 (λ k → ≤o-cocone f2 k (all k))
@@ -179,7 +179,7 @@ OLim c f +o OLim c₁ f₁ = OLim c λ a → OLim c₁ λ a₁ → f a +o f₁ a
 +o-≤-R (O↑ o1) o2 = ≤o-trans (+o-≤-R o1 o2) (≤↑ (o1 +o o2))
 +o-≤-R (OLim c f) OZ = ≤o-Z
 +o-≤-R (OLim c f) (O↑ o2) = ≤o-sucMono (+o-≤-R (OLim c f) o2)
-+o-≤-R (OLim c f) (OLim c₁ f₁) = ≤o-limiting f₁ (λ k → ≤o-cocone (λ a → OLim c₁ (λ a₁ → f a +o f₁ a₁)) (pairWithApprox (℧ c {{Approx}}) (℧ c )) (≤o-cocone _ k (+o-≤-R (f _) (f₁ k))))
++o-≤-R (OLim c f) (OLim c₁ f₁) = ≤o-limiting f₁ (λ k → ≤o-cocone (λ a → OLim c₁ (λ a₁ → f a +o f₁ a₁)) (withApprox (λ æ → ℧ {{æ = æ}} c)) (≤o-cocone _ k (+o-≤-R (f _) (f₁ k))))
 
 
 

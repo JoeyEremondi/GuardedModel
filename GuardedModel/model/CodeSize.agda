@@ -236,8 +236,8 @@ CElSize (CHRec c j D) E {b = b} (ElHRec f x) = O↑ (OLim (c b) λ a → omax (C
 ℧size C𝟙 = ≤o-refl _
 ℧size {suc ℓ} CType = ≤o-refl _
 ℧size (CΠ c cod) = ≤o-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
-℧size ⦃ Approx ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Approx}} c ) (℧size ⦃ Approx ⦄ (cod (℧ c {{Approx}})))
-℧size ⦃ Exact ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Exact}} c ) (℧size ⦃ Exact ⦄ (cod (℧ c {{Approx}})))
+℧size ⦃ Approx ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Approx}} c ) (℧size ⦃ Approx ⦄ (cod (℧ {{æ = Approx}} c)))
+℧size ⦃ Exact ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Exact}} c ) (℧size ⦃ Exact ⦄ (cod (℧ {{æ = Approx}} c )))
 ℧size (C≡ c x y) = ℧size {{Approx}} c
 ℧size (Cμ tyCtor c D x) = ≤o-refl _
 

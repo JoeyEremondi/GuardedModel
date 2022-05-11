@@ -20,7 +20,7 @@ open import Util
 open import Cubical.Data.Maybe
 open import Cubical.Data.Sum
 
-open import ApproxExact using (Approx ; Exact ; Æ ; Approxed ; approx ; pairWithApprox)
+open import ApproxExact using (Approx ; Exact ; Æ ; Approxed ; approx ; withApprox)
 
 import GuardedAlgebra as A
 import GuardedModality as G
@@ -352,16 +352,16 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
 -- Every type has an error element
-℧ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
+℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
 ℧ CodeModule.C⁇ = ⁇℧
 ℧ CodeModule.C℧ = tt
 ℧ CodeModule.C𝟘 = tt
 ℧ CodeModule.C𝟙 = false
 ℧ {suc ℓ} CodeModule.CType = C℧
 ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
-℧ (CodeModule.CΣ dom cod)  = pairWithApprox (℧ dom {{Approx}}) (℧ dom ) , ℧ (cod _)
+℧ (CodeModule.CΣ dom cod)  = withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
 -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
-℧ (CodeModule.C≡ c x y) = ℧ c {{Approx}} ⊢ x ≅ y
+℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
 -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
