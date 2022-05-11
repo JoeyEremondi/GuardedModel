@@ -18,7 +18,7 @@ open import Inductives
 open import GuardedAlgebra
 open import ApproxExact
 
-module Head {{_ : Æ}} {{_ : Datatypes}} where
+module Head {{_ : Æ}} {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 
