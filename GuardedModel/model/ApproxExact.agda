@@ -121,6 +121,7 @@ approxPairEq : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → (a : T {{Approx
 approxPairEq ⦃ æ = Approx ⦄ _ _ = reflp
 approxPairEq ⦃ æ = Exact ⦄ _ _ = reflp
 
+
 -- LFix : ∀ {{_ : Æ}} {ℓ} {A : Set ℓ} {{apprx : Approxable A}}
 --   → (LÆ A → LÆ  A) → LÆ  A
 -- LFix {{Approx}} f = f (Now default)
