@@ -75,19 +75,19 @@ record SizedCastMeet (ℓ : ℕ) (cSize1 cSize2 vSize1 vSize2 : Ord) : Set where
       → LÆ (wfEl c)
     oToGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
       → ( pfc1 : (wfSize c) ≡p cSize1 )
-      → ( pfc2 : O1 ≡p cSize2 )
+      → ( pfc2 : (wfSize c) ≡p cSize2 )
       → codeHead (code c) ≡p HStatic h
       → (x : wfEl c)
       → ( pfv1 : wfElSize c x ≡p vSize1 )
-      → ( pfv2 : O1 ≡p vSize2 )
+      → ( pfv2 : wfElSize c x ≡p vSize2 )
       → LÆ (germ h ℓ)
     oFromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-      → ( pfc1 : O1 ≡p cSize1 )
+      → ( pfc1 : wfSize c ≡p cSize1 )
       → ( pfc2 : (wfSize c) ≡p cSize2 )
       → codeHead (code c) ≡p HStatic h
-      → (x : germ h ℓ)
-      → ( pfv1 : O1 ≡p vSize1 )
-      → ( pfv2 : O1 ≡p vSize2 )
+      → (x : ⁇Ty ℓ)
+      → ( pfv1 : elSize {ℓ} C⁇ x ≡p vSize1 )
+      → ( pfv2 : elSize {ℓ} C⁇ x ≡p vSize2 )
       → LÆ (wfEl c)
 
     oToDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
@@ -130,13 +130,13 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
   where
     ----------------------------------------------------------------------------------------------------------
     -- Nicer interfaces to our "smaller" functions, so we don't have to muck around with quadruples of ordinals
-    ⁇_By_ : ∀ {{_ : Æ}} {{pf : O1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
+    ⁇_By_ : ∀ {{_ : Æ}} {{pf : cSize1 ≡p cSize2}}
       → (c : ℂwf ℓ) → wfSize c <o cSize1 → (wfEl c)
-    ⁇_By_ {{pf = reflp}} {{reflp}} {{reflp}} c lt = o⁇ (self (<oQuadL (<oPairL lt))) c reflp reflp reflp reflp
+    ⁇_By_ {{pf = reflp}}  c lt = o⁇ (self (<oQuadL (<oPairL lt))) c reflp reflp reflp reflp
 
-    [_]⁇_By_ : ∀ (æ : Æ) {{pf : O1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
+    [_]⁇_By_ : ∀ (æ : Æ) {{pf : cSize1 ≡p cSize2}}
       → (c : ℂwf ℓ) → wfSize c <o cSize1 → (wfEl {{æ = æ}} c)
-    [_]⁇_By_ æ = ⁇_By_ {{æ}}
+    [_]⁇_By_ æ  = ⁇_By_ {{æ}}
 
     _∋_⊓_By_ : ∀ {{_ : Æ}}
       → {{pfc2 : cSize1  ≡p cSize2}}
@@ -170,9 +170,7 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
 
     ⁇ : ∀ {{_ : Æ}}  → (c : ℂwf ℓ)
       → (_ : wfSize c ≡p cSize1)
-      → {{_ : O1  ≡p cSize2 }}
-      → {{_ : O1 ≡p vSize1 }}
-      → {{_ : O1 ≡p vSize2 }}
+      → {{_ : cSize1  ≡p cSize2 }}
       → (wfEl c)
     ⁇ (C⁇ |wf| _) reflp = ⁇⁇
     ⁇ (C℧ |wf| _) reflp = tt
@@ -254,19 +252,19 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
 
     toGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
       →  (pfc1 : (wfSize c) ≡p cSize2)
-      →  (pfc2 : O1 ≡p cSize1)
+      →  (pfc2 : (wfSize c) ≡p cSize1)
       → codeHead (code c) ≡p HStatic h
       → (x : wfEl c)
       → (pfv1 : wfElSize c x ≡p vSize1)
-      →  (pfv2 : O1 ≡p vSize2)
+      →  (pfv2 : wfElSize c x ≡p vSize2)
       → LÆ (germ h ℓ)
     fromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-      → (pfc1 : O1 ≡p cSize1)
+      → (pfc1 : wfSize c ≡p cSize1)
       →  (pfc2 : wfSize c ≡p cSize2)
       → codeHead (code c) ≡p HStatic h
       → (x : El {ℓ} C⁇)
       →  (pfv1 : elSize C⁇ x ≡p vSize1)
-      →  (pfv2 : O1 ≡p vSize2)
+      →  (pfv2 : elSize C⁇ x ≡p vSize2)
       → LÆ (wfEl c)
 
     toDataGerm : ∀ {{_ : Æ}} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
@@ -306,7 +304,8 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
     cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H℧  | H⁇L reflp x₂ with () ← x₂ reflp
     -- We convert to ⁇ by going through the germ
     cast (csource |wf| swf) (CodeModule.C⁇ |wf| dwf) reflp reflp x reflp reflp | .(HStatic _) |  H⁇ | H⁇R x₁ = do
-      xgerm ← toGerm (csource |wf| swf) reflp reflp eq1 x reflp reflp
+      xgerm ← oToGerm (self {!!}) (csource |wf| swf) reflp reflp eq1 x reflp reflp
+      -- toGerm (csource |wf| swf) reflp reflp eq1 x reflp reflp
       germTo⁇ xgerm
     -- Converting from ⁇ to a static-headed type, we go throug the germ, checking that the head matches
     cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ with valueHead {ℓ} C⁇ reflp x in vheq
