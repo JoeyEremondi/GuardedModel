@@ -188,7 +188,7 @@ noCodeZero (Cμ tyCtor c D x) () | ℕ.suc n
 ⁇Size (⁇Π f) = O↑ (OLim C⁇ (λ x → ⁇Size (f (transport (sym hollowEq) (next (exact x)))))) -- O↑ (OLim C⁇ (λ x → LUnk æ ))
 ⁇Size (⁇Σ (x , y)) = O↑ (omax (⁇Size x) (⁇Size y))
 ⁇Size (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = O↑ (⁇Size x)
-⁇Size {ℓ = ℓ} (⁇μ tyCtor x) = ((germIndSize tyCtor x))
+⁇Size {ℓ = ℓ} (⁇μ tyCtor x) = O↑ ((germIndSize tyCtor x))
 -- O1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where
@@ -196,15 +196,15 @@ noCodeZero (Cμ tyCtor c D x) () | ℕ.suc n
   --   cx =  transport⁻ (dataGermCodeEq ℓ tyCtor) x
 
 
-elSize C⁇ x = ⁇Size x
+elSize C⁇ x = O↑ (⁇Size x)
 elSize C℧ x = O1
 elSize C𝟘 x = O1
 elSize C𝟙 x = O1
-elSize {suc ℓ} CType x = (codeSize x)
-elSize (CΠ dom cod) f = OLim dom (λ x → elSize (cod (approx x)) (f x)) -- (OLim dom λ x → elSize (cod (approx x)) (f ?))
-elSize (CΣ dom cod) (x , y) = (omax (elSize dom (exact x)) (elSize (cod (approx x)) y))
-elSize (C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) = (elSize {{Approx}} c x)
-elSize (Cμ tyCtor cI D i) x = CμSize D (Iso.inv CμWiso x)
+elSize {suc ℓ} CType x = O↑ (codeSize x)
+elSize (CΠ dom cod) f = O↑ (OLim dom (λ x → elSize (cod (approx x)) (f x))) -- (OLim dom λ x → elSize (cod (approx x)) (f ?))
+elSize (CΣ dom cod) (x , y) = O↑ (omax (elSize dom (exact x)) (elSize (cod (approx x)) y))
+elSize (C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) = O↑ (elSize {{Approx}} c x)
+elSize (Cμ tyCtor cI D i) x = O↑  (CμSize D (Iso.inv CμWiso x))
 
 CμSize D (Cinit d x) = O↑ (CElSize (D d) D x)
 CμSize D Cμ⁇ = O1
@@ -229,17 +229,26 @@ CElSize (CHRec c j D) E {b = b} (ElHRec f x) = O↑ (OLim (c b) λ a → omax (C
 
 
 
-℧size : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
-℧size C⁇ = ≤o-refl _
-℧size C℧ = ≤o-refl _
-℧size C𝟘 = ≤o-refl _
-℧size C𝟙 = ≤o-refl _
-℧size {suc ℓ} CType = ≤o-refl _
-℧size (CΠ c cod) = ≤o-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
-℧size ⦃ Approx ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Approx}} c ) (℧size ⦃ Approx ⦄ (cod (℧ {{æ = Approx}} c)))
-℧size ⦃ Exact ⦄ (CodeModule.CΣ c cod) = omax-LUB (℧size {{Exact}} c ) (℧size ⦃ Exact ⦄ (cod (℧ {{æ = Approx}} c )))
-℧size (C≡ c x y) = ℧size {{Approx}} c
-℧size (Cμ tyCtor c D x) = ≤o-refl _
+-- ℧size : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
+-- ℧size CodeModule.C⁇ = {!!}
+-- ℧size CodeModule.C℧ = {!!}
+-- ℧size CodeModule.C𝟘 = {!!}
+-- ℧size CodeModule.C𝟙 = {!!}
+-- ℧size CodeModule.CType = {!!}
+-- ℧size (CodeModule.CΠ c cod) = {!!}
+-- ℧size (CodeModule.CΣ c cod) = {!!}
+-- ℧size (CodeModule.C≡ c x y) = {!!}
+-- ℧size (CodeModule.Cμ tyCtor c D x) = {!!}
+-- ℧size C⁇ = ≤o-sucMono (≤o-Z)
+-- ℧size C℧ = ≤o-sucMono (≤o-Z)
+-- ℧size C𝟘 = ≤o-sucMono (≤o-Z)
+-- ℧size C𝟙 = ≤o-sucMono (≤o-Z)
+-- ℧size {suc ℓ} CType = ≤o-sucMono (≤o-Z)
+-- ℧size (CΠ c cod) = ≤o-sucMono (≤o-Z)
+-- ℧size ⦃ Approx ⦄ (CodeModule.CΣ c cod) = ≤o-sucMono (≤o-Z)
+-- ℧size ⦃ Exact ⦄ (CodeModule.CΣ c cod) =  ≤o-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
+-- ℧size (C≡ c x y) = ℧size {{Approx}} c
+-- ℧size (Cμ tyCtor c D x) = ≤o-refl _
 
 codeSuc : ∀ {ℓ} (c : ℂ ℓ) → OZ <o codeSize c
 codeSuc C⁇ = ≤o-refl _
@@ -259,6 +268,17 @@ codeMaxL c = omax-LUB (codeSuc c) (≤o-refl _)
 
 codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → omax (codeSize c) O1 ≤o codeSize c
 codeMaxR c = omax-LUB (≤o-refl _) (codeSuc c)
+
+
+⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
+⁇suc CodeModule.⁇⁇ = ≤o-sucMono ≤o-Z
+⁇suc CodeModule.⁇℧ = ≤o-sucMono ≤o-Z
+⁇suc CodeModule.⁇𝟙 = ≤o-sucMono ≤o-Z
+⁇suc {suc ℓ} (CodeModule.⁇Type x) = ≤o-sucMono ≤o-Z
+⁇suc (CodeModule.⁇Π x) = ≤o-sucMono ≤o-Z
+⁇suc (CodeModule.⁇Σ x) = ≤o-sucMono ≤o-Z
+⁇suc (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤o-sucMono ≤o-Z
+⁇suc (CodeModule.⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
 
 open import Cubical.Data.Maybe
 
