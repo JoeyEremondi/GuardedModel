@@ -51,17 +51,25 @@ open SizedPrec
 record PrecModule (cSize : Ord) : Set1 where
   field
     self : ∀ {size' : Ord} → size' <o cSize → SizedPrec size'
+  _⊑_oBy_SizeL_SizeR_ : ∀ {{_ : Æ}} {ℓ} {c'1 c'2}
+    → (c₁ c₂ : ℂ ℓ)
+    →  omax (codeSize c'1) (codeSize c'2) ≡p cSize
+    → (codeSize c₁ <o codeSize c'1)
+    → (codeSize c₂ <o codeSize c'2)
+    → Set
+  c₁ ⊑ c₂ oBy pf SizeL lt1 SizeR lt2 = o⊑c (self ?) c₁ c₂
   interleaved mutual
-    data _⊑_ {{_ : Æ}} {ℓ}
+    data _⊑_By_ {{_ : Æ}} {ℓ}
       : (c₁ c₂ : ℂ ℓ)
+      → omax (codeSize c₁) (codeSize c₂) ≡p cSize
       → Set
     data _⊑_⦂_  {{_ : Æ}} {ℓ}
-      : {c₁ c₂ : ℂ ℓ}
+      : ∀ {c₁ c₂ : ℂ ℓ} {pf}
       → El c₁
       → El c₂
-      → c₁ ⊑ c₂
+      → c₁ ⊑ c₂ By pf
       → Set
     data _ where
-      ⊑⁇ : ∀ {c} → c ⊑ C⁇
+      ⊑⁇ : ∀ {c pf} → c ⊑ C⁇ By pf
   sizedPrec : SizedPrec cSize
-  sizedPrec = record { o⊑c = λ c₁ c₂ {pf} → c₁ ⊑ c₂  ; o⊑v = λ v1 v2 c⊑ → v1 ⊑ v2 ⦂ c⊑ }
+  sizedPrec = record { o⊑c = λ c₁ c₂ {pf} → c₁ ⊑ c₂ By pf  ; o⊑v = λ v1 v2 c⊑ → v1 ⊑ v2 ⦂ c⊑ }

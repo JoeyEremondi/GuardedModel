@@ -111,9 +111,17 @@ ordWF (OLim c f) = acc helper
     helper : (y : Ord) → (y <o OLim c f) → Acc _<o_ y
     helper y (≤o-cocone .f k y<fk) = smaller-accessible (f k) (ordWF (f k)) y (<-in-≤ y<fk)
 
+-- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
+-- and the size of a value of that (c)ode's interpetation
 data _<oo_ : (Ord × Ord) → (Ord × Ord) → Set where
-  <ooL : ∀ {o1 o2 o1' o2'} → o1 <o o2 → (o1 , o1') <oo (o2 , o2')
-  <ooR : ∀ {o1 o2 o1' o2'} → o1 ≡p o2 → o1' <o o2' → (o1 , o1') <oo (o2 , o2')
+  <ooL : ∀ {o1c o2c o1v o2v} → o1c <o o2c → (o1c , o1v) <oo (o2c , o2v)
+  <ooR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <o o2v → (o1c , o1v) <oo (o2c , o2v)
+
+
+-- Similar to the above, but there are two codes and two values being compared
+data _<ooo_ : ((Ord × Ord) × Ord) → ((Ord × Ord) × Ord) → Set where
+  <oooL : ∀ {o1c o2c o1v o2v} → o1c <oo o2c → (o1c , o1v) <ooo (o2c , o2v)
+  <oooR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <o o2v → (o1c , o1v) <ooo (o2c , o2v)
 
 ≤oo-reflL : ∀ {o o1' o2'} → (o , o1') <oo (O↑ o , o2')
 ≤oo-reflL = <ooL (≤o-refl _)
@@ -129,12 +137,20 @@ data _<oo_ : (Ord × Ord) → (Ord × Ord) → Set where
 ≤oo-sucR lt = <ooR reflp (≤o-sucMono lt)
 
 -- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
-ordOrdWf : WellFounded _<oo_
-ordOrdWf (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
+ooWF : WellFounded _<oo_
+ooWF (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
   where
     helper : ∀ {x1 x2} → Acc _<o_ x1 → Acc _<o_ x2 → WFRec _<oo_ (Acc _<oo_) (x1 , x2)
     helper (acc rec₁) acc₂ (y1 , y2) (<ooL lt) = acc (helper (rec₁ y1 lt) (ordWF y2))
     helper acc₁ (acc rec₂) (y1 , y2) (<ooR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
+
+
+oooWF : WellFounded _<ooo_
+oooWF (x1 , x2) = acc (helper (ooWF x1) (ordWF x2))
+  where
+    helper : ∀ {x1 x2} → Acc _<oo_ x1 → Acc _<o_ x2 → WFRec _<ooo_ (Acc _<ooo_) (x1 , x2)
+    helper (acc rec₁) acc₂ (y1 , y2) (<oooL lt) = acc (helper (rec₁ y1 lt) (ordWF y2))
+    helper acc₁ (acc rec₂) (y1 , y2) (<oooR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 abstract
   omax : Ord → Ord → Ord
@@ -158,6 +174,7 @@ abstract
 
   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (omax o1 o2) ≤o (omax o1' o2')
   omax-mono lt1 lt2 = omax-LUB (≤o-trans lt1 omax-≤L) (≤o-trans lt2 omax-≤R)
+
 
 _+o_ : Ord → Ord → Ord
 OZ +o o2 = o2
@@ -198,8 +215,18 @@ oorec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
   → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oo (x1 , x2)) → P y1 y2 ) → P x1 x2)
   → ∀ {o1 o2} → P o1 o2
 oorec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
-  where open WFI (ordOrdWf)
+  where open WFI (ooWF)
+-- ooorec : ∀ {ℓ} (P : (Ord × Ord) → Ord → Set ℓ)
+--   → (∀ x1 x2 → (rec : ∀ y1 y2 → (_ : (y1 , y2) <ooo (x1 , x2)) → P y1 y2 ) → P x1 x2)
+--   → ∀ {o1 o2} → P o1 o2
+-- ooorec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+--   where open WFI (ooWF)
 
+-- ooorec : ∀ {ℓ} (P : Ord → Ord → Ord → Set ℓ)
+--   → ((x1 x2 x3 : Ord) → (rec : (y1 y2 y3 : Ord) → (_ : (y1 , y2) <oo (x1 , x2)) → P y1 y2 ) → P x1 x2)
+--   → ∀ {o1 o2} → P o1 o2
+-- oorec P f = induction (λ (x1 , x2 , x3) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+--   where open WFI (ooWF)
 
 
 oplus-suc-swap : ∀ o1 o2 → ((O↑ o1) +o o2) ≤o (o1 +o (O↑ o2))
