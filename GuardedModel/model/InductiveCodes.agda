@@ -102,7 +102,7 @@ record InductiveCodes : Set2 where
   -- with respect to the inductive types it refers to
   -- i.e. if it's an instantation of that type's parameters and indices
   data IndWF {ℓ} : ℂ ℓ → Prop where
-   IWF⁇ : IndWF C⁇
+   insIWF⁇ : IndWF C⁇
    IWF℧ : IndWF C℧
    IWF𝟘 : IndWF C𝟘
    IWF𝟙 : IndWF C𝟙
