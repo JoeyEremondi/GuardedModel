@@ -101,8 +101,8 @@ record InductiveCodes : Set2 where
   -- Predicate that determines if a code is well formed
   -- with respect to the inductive types it refers to
   -- i.e. if it's an instantation of that type's parameters and indices
-  data IndWF {ℓ} : ℂ ℓ → Prop where
-   insIWF⁇ : IndWF C⁇
+  data IndWF {ℓ} : ℂ ℓ → Set where
+   IWF⁇ : IndWF C⁇
    IWF℧ : IndWF C℧
    IWF𝟘 : IndWF C𝟘
    IWF𝟙 : IndWF C𝟙
