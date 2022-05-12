@@ -73,50 +73,50 @@ record SizedCastMeet (ℓ : ℕ) (cSize1 cSize2 vSize1 vSize2 : Ord) : Set where
       → ( pfv1 : (wfElSize c x)  ≡p vSize1 )
       → ( pfv2 : (wfElSize c y)  ≡p vSize2 )
       → LÆ (wfEl c)
-    -- oToGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-    --   → ( pfc1 : (wfSize c) ≡p cSize1 )
-    --   → ( pfc2 : O1 ≡p cSize2 )
-    --   → codeHead (code c) ≡p HStatic h
-    --   → (x : wfEl c)
-    --   → ( pfv1 : wfElSize c x ≡p vSize1 )
-    --   → ( pfv2 : wfElSize c x ≡p vSize2 )
-    --   → LÆ (germ h ℓ)
-    -- oFromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-    --   → ( pfc1 : O1 ≡p cSize1 )
-    --   → ( pfc2 : (wfSize c) ≡p cSize2 )
-    --   → codeHead (code c) ≡p HStatic h
-    --   → (x : germ h ℓ)
-    --   → ( pfv1 : O1 ≡p vSize1 )
-    --   → ( pfv2 : O1 ≡p vSize2 )
-    --   → LÆ (wfEl c)
+    oToGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
+      → ( pfc1 : (wfSize c) ≡p cSize1 )
+      → ( pfc2 : O1 ≡p cSize2 )
+      → codeHead (code c) ≡p HStatic h
+      → (x : wfEl c)
+      → ( pfv1 : wfElSize c x ≡p vSize1 )
+      → ( pfv2 : O1 ≡p vSize2 )
+      → LÆ (germ h ℓ)
+    oFromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
+      → ( pfc1 : O1 ≡p cSize1 )
+      → ( pfc2 : (wfSize c) ≡p cSize2 )
+      → codeHead (code c) ≡p HStatic h
+      → (x : germ h ℓ)
+      → ( pfv1 : O1 ≡p vSize1 )
+      → ( pfv2 : O1 ≡p vSize2 )
+      → LÆ (wfEl c)
 
-    -- oToDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
-    --   → {i : ApproxEl cI}
-    --   → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
-    --   → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
-    --   → (x : ℂμ tyCtor D i)
-    --   → ( pfv1 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize1 )
-    --   → ( pfv2 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize2 )
-    --   → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
+    oToDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
+      → {i : ApproxEl cI}
+      → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
+      → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
+      → (x : ℂμ tyCtor D i)
+      → ( pfv1 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize1 )
+      → ( pfv2 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize2 )
+      → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
 
-    -- oFromDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
-    --   → {i : ApproxEl cI}
-    --   → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
-    --   → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
-    --   → (x : W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt)
-    --   → ( pfv1 : O1  ≡p vSize1 )
-    --   → ( pfv2 : O1  ≡p vSize2 )
-    --   → (ℂμ tyCtor D i)
+    oFromDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
+      → {i : ApproxEl cI}
+      → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
+      → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
+      → (x : W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt)
+      → ( pfv1 : O1  ≡p vSize1 )
+      → ( pfv2 : O1  ≡p vSize2 )
+      → (ℂμ tyCtor D i)
 
 
     oCast : ∀ {{_ : Æ}}
-      → (c₁ c₂ : ℂwf ℓ)
-      → ( pfc1 :(wfSize c₁)  ≡p cSize1)
-      → ( pfc2 :  (wfSize c₂) ≡p cSize2)
-      →  (x : wfEl c₁)
-      → ( pfv1 : wfElSize c₁ x ≡p vSize1)
-      → ( pfv2 : wfElSize c₁ x ≡p vSize2)
-      -> LÆ ( wfEl c₂)
+      → (csource cdest : ℂwf ℓ)
+      → ( pfc1 :(wfSize cdest)  ≡p cSize1)
+      → ( pfc2 :  (wfSize csource) ≡p cSize2)
+      →  (x : wfEl csource)
+      → ( pfv1 : wfElSize csource x ≡p vSize1)
+      → ( pfv2 : wfElSize csource x ≡p vSize2)
+      -> LÆ ( wfEl cdest)
 
 open SizedCastMeet
 
@@ -130,11 +130,11 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
   where
     ----------------------------------------------------------------------------------------------------------
     -- Nicer interfaces to our "smaller" functions, so we don't have to muck around with quadruples of ordinals
-    ⁇_By_ : ∀ {{_ : Æ}} {{pf : cSize1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
+    ⁇_By_ : ∀ {{_ : Æ}} {{pf : O1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
       → (c : ℂwf ℓ) → wfSize c <o cSize1 → (wfEl c)
     ⁇_By_ {{pf = reflp}} {{reflp}} {{reflp}} c lt = o⁇ (self (<oQuadL (<oPairL lt))) c reflp reflp reflp reflp
 
-    [_]⁇_By_ : ∀ (æ : Æ) {{pf : cSize1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
+    [_]⁇_By_ : ∀ (æ : Æ) {{pf : O1 ≡p cSize2}} {{_ : O1 ≡p vSize1}} {{_ : O1 ≡p vSize2}}
       → (c : ℂwf ℓ) → wfSize c <o cSize1 → (wfEl {{æ = æ}} c)
     [_]⁇_By_ æ = ⁇_By_ {{æ}}
 
@@ -157,20 +157,20 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
     ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
       → (cdest csource : ℂwf ℓ)
       → (x : wfEl csource)
-      → wfSize csource <o cSize1
+      → wfSize cdest <o cSize1
       → LÆ (wfEl cdest)
     ⟨ cdest ⇐ csource ⟩ x By lt1 =
       oCast (self (<oQuadL (<oPairL lt1))) csource cdest reflp reflp x reflp reflp
     [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
       → (cdest csource : ℂwf ℓ)
       → (x : wfEl {{æ = æ}} csource)
-      → wfSize csource <o cSize1
+      → wfSize cdest <o cSize1
       → LÆ {{æ = æ}} (wfEl {{æ = æ}} cdest)
     [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
 
     ⁇ : ∀ {{_ : Æ}}  → (c : ℂwf ℓ)
       → (_ : wfSize c ≡p cSize1)
-      → {{_ : cSize1  ≡p cSize2 }}
+      → {{_ : O1  ≡p cSize2 }}
       → {{_ : O1 ≡p vSize1 }}
       → {{_ : O1 ≡p vSize2 }}
       → (wfEl c)
@@ -236,10 +236,10 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
             By (≤o-sucMono omax-≤L)
       x2cast ←
         ⟨ cod (approx xy1) |wf| codwf (approx xy1) ⇐ (cod (approx x1) |wf| codwf (approx x1)) ⟩ x2
-          By ≤o-sucMono (≤o-trans (≤o-cocone ⦃ æ = Approx ⦄ _ (approx x1) (≤o-refl _)) omax-≤R)
+          By ≤o-sucMono (≤o-trans (≤o-cocone ⦃ æ = Approx ⦄ _ (approx xy1) (≤o-refl _)) omax-≤R)
       y2cast ←
         ⟨ cod (approx xy1) |wf| codwf _ ⇐ cod (approx y1) |wf| codwf _ ⟩ y2
-          By ≤o-sucMono (≤o-trans (≤o-cocone ⦃ æ = Approx ⦄ _ (approx y1) (≤o-refl _)) omax-≤R)
+          By ≤o-sucMono (≤o-trans (≤o-cocone ⦃ æ = Approx ⦄ _ (approx xy1) (≤o-refl _)) omax-≤R)
       xy2 ←  (cod (approx xy1) |wf| codwf _) ∋ x2cast ⊓ y2cast
           By ≤o-sucMono (≤o-trans (≤o-cocone ⦃ æ = Approx ⦄ _ (approx xy1) (≤o-refl _)) omax-≤R)
       pure (xy1 , xy2)
@@ -252,20 +252,20 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
     ... |  .(HVIn⁇ _ _) |  .(HVIn⁇ _ _) |  VHEq⁇ x₁ = {!!}
 
 
-    toGerm : ∀ {{_ : Æ}}{ h} → (c : ℂ ℓ)
-      → {@(tactic default (reflp {A = Ord} {cSize1})) pfc1 : (codeSize c) ≡p cSize1 }
-      → {@(tactic default (reflp {A = Ord} {cSize2})) pfc2 : (codeSize c) ≡p cSize2 }
-      → codeHead c ≡p HStatic h
-      → (x : El c)
-      → {@(tactic default (reflp {A = Ord} {vSize1})) pfv1 : elSize c x ≡p vSize1 }
-      → {@(tactic default (reflp {A = Ord} {vSize2})) pfv2 : elSize c x ≡p vSize2 }
+    toGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
+      →  (pfc1 : (wfSize c) ≡p cSize2)
+      →  (pfc2 : O1 ≡p cSize1)
+      → codeHead (code c) ≡p HStatic h
+      → (x : wfEl c)
+      → (pfv1 : wfElSize c x ≡p vSize1)
+      →  (pfv2 : O1 ≡p vSize2)
       → LÆ (germ h ℓ)
     fromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
       → (pfc1 : O1 ≡p cSize1)
       →  (pfc2 : wfSize c ≡p cSize2)
       → codeHead (code c) ≡p HStatic h
-      → (x : germ h ℓ)
-      →  (pfv1 : O1 ≡p vSize1)
+      → (x : El {ℓ} C⁇)
+      →  (pfv1 : elSize C⁇ x ≡p vSize1)
       →  (pfv2 : O1 ≡p vSize2)
       → LÆ (wfEl c)
 
@@ -289,31 +289,35 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
 
 
     cast : ∀ {{_ : Æ}}
-      → (c₁ c₂ : ℂwf ℓ)
-      → (pfc1 :(wfSize c₁)  ≡p cSize1)
-      → ( pfc2 :  (wfSize c₂) ≡p cSize2)
-      →  (x : wfEl c₁)
-      → (pfv1 : wfElSize c₁ x ≡p vSize1)
-      → {{ pfv2 : vSize1 ≡p vSize2}}
-      -> LÆ ( wfEl c₂)
-    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp with  codeHead csource in eq1 | codeHead cdest in eq2 | headMatchView (codeHead csource) (codeHead cdest)
+      → (csource cdest : ℂwf ℓ)
+      → (pfc1 :(wfSize cdest)  ≡p cSize1)
+      → ( pfc2 :  (wfSize csource) ≡p cSize2)
+      →  (x : wfEl csource)
+      → (pfv1 : wfElSize csource x ≡p vSize1)
+      → (pfv2 : O1 ≡p vSize2)
+      -> LÆ ( wfEl cdest)
+    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp with  codeHead csource in eq1 | codeHead cdest in eq2 | headMatchView (codeHead csource) (codeHead cdest)
     -- If either the source or target is error, or there is a head mismatch, we produce an error
-    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | h1  | h2  | H℧L x₁ = pure (℧ cdest)
-    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | h1  | h2  | H℧R x₁ = pure (℧ cdest)
-    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | .(HStatic _)  | .(HStatic _)  | HNeq x₁ = pure (℧ cdest)
+    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | h1  | h2  | H℧L x₁ = pure (℧ cdest)
+    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | h1  | h2  | H℧R x₁ = pure (℧ cdest)
+    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .(HStatic _)  | .(HStatic _)  | HNeq x₁ = pure (℧ cdest)
     -- Converting from ⁇ to itself is the identity
-    cast (CodeModule.C⁇ |wf| swf) (C⁇ |wf| dwf) reflp reflp x reflp | .H⁇  | H⁇  | H⁇L reflp x₂ = pure x
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | .H⁇  | H℧  | H⁇L reflp x₂ with () ← x₂ reflp
-    -- Converting from ⁇ to a static-headed type, we go throug the germ, checking that the head matches
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | .H⁇  | HStatic x₁  | H⁇L reflp x₂ = do
-      let xgerm = germFrom⁇ x
-      pure {!!}
+    cast (CodeModule.C⁇ |wf| swf) (C⁇ |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H⁇  | H⁇L reflp x₂ = pure x
+    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H℧  | H⁇L reflp x₂ with () ← x₂ reflp
     -- We convert to ⁇ by going through the germ
-    cast (csource |wf| swf) (CodeModule.C⁇ |wf| dwf) reflp reflp x reflp | .(HStatic _) |  H⁇ | H⁇R x₁ = do
-      xgerm ← toGerm {!!} {!!} {!!}
-      {!!}
+    cast (csource |wf| swf) (CodeModule.C⁇ |wf| dwf) reflp reflp x reflp reflp | .(HStatic _) |  H⁇ | H⁇R x₁ = do
+      xgerm ← toGerm (csource |wf| swf) reflp reflp eq1 x reflp reflp
+      germTo⁇ xgerm
+    -- Converting from ⁇ to a static-headed type, we go throug the germ, checking that the head matches
+    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ with valueHead {ℓ} C⁇ reflp x in vheq
+    --Error at type ⁇ turns to error
+    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH℧  = pure (℧ cdest)
+    -- ⁇ at type ⁇ turns to ⁇ at the destination type
+    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH⁇⁇  =
+      {!⁇!}
+    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ h₁ hx  = {!!}
     -- Otherwise, we have a conversion between types with the same head
-    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp | .(HStatic _)  | .(HStatic _)  | HEq x₁ = {!!}
+    cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .(HStatic _)  | .(HStatic _)  | HEq x₁ = {!!}
 
 
 -- castMeet : ∀ ℓ cs1 cs2 vs1 vs2 → SizedCastMeet ℓ cs1 cs2 vs1 vs2
