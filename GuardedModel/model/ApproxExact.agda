@@ -8,6 +8,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Equality
+open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 
 data Æ : Set where
   Approx Exact : Æ
@@ -115,6 +116,10 @@ instance
 
 open import GuardedAlgebra
 
+-- We can always get the value in Approx mode
+fromL : ∀ {ℓ} → {A : Set ℓ} → LÆ {{Approx}} A → A
+fromL (Now a) = a
+
 -- If we're in approximate mode, this is just an approximate version of a T
 -- In exact mode, it's a pair with an approximate and exact version of a T
 Approxed : ∀ (T : {{_ : Æ }} → Set) → {{æ : Æ}} → Set
@@ -147,6 +152,13 @@ withApproxL' {{Exact}} {T = T} f  = do
   a ← f Approx (approx {T = T} {{Exact}} )
   e ← f Exact λ x → x
   pure {{Exact}} (a , e)
+
+
+--Termination and divergence for LÆ
+Terminates : ∀ {ℓ} {A : Set ℓ} → LÆ {{Exact}} A → Set ℓ
+Terminates {A = A} xL = Σ[ x ∈ A ](xL ≡ Now x)
+
+
 
 -- pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
 -- pairWithApprox ⦃ æ = Approx ⦄ a e = a
