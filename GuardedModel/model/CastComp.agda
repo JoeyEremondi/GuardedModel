@@ -37,7 +37,7 @@ open import Germ
 
 
 
-record CastMeet (cSize vSize : Ord) : Set where
+record SizedCastMeet (cSize vSize : Ord) : Set where
   field
     o⁇ : ∀ {{_ : Æ}} {ℓ} → (c : ℂ ℓ)
       → {@(tactic default (reflp {A = Ord} {cSize})) pf : codeSize c ≡p cSize }
@@ -77,11 +77,11 @@ record CastMeet (cSize vSize : Ord) : Set where
       → {@(tactic default (reflp {A = Ord} {vSize})) pf2 : elSize c₁ x ≡p vSize}
       -> LÆ ( El c₂)
 
-open CastMeet
+open SizedCastMeet
 
 
 castMeetRec :  (cSize vSize : Ord)  →
-      (self : ∀ {cs' vs' : Ord} → ((cs' , vs') <oo (cSize , vSize)) → CastMeet cs' vs') →  CastMeet cSize vSize
+      (self : ∀ {cs' vs' : Ord} → ((cs' , vs') <oo (cSize , vSize)) → SizedCastMeet cs' vs') →  SizedCastMeet cSize vSize
 castMeetRec cSize vSize self = record
                           { o⁇ = ⁇ ; oMeet = meet ; oToGerm = toGerm ; oFromGerm = fromGerm ; oCast = cast }
   where
@@ -138,6 +138,7 @@ castMeetRec cSize vSize self = record
     -- Otherwise the head matches, so we do case-analysis on the type to see how to proceed
     meet CodeModule.C𝟙 true true {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
       = pure true
+    -- We have a special function for the meet of two types
     meet {ℕ.suc ℓ} CodeModule.CType x y | HStatic HType  | HVal h  | .(HVal _)  | VHEq reflp = {!!}
     -- The meet of two functions is the function that takes the meet of the two arguments
     meet (CodeModule.CΠ dom cod) f1 f2 {reflp} | .(HStatic _)  | .(HVal _)  | .(HVal _)  | VHEq reflp
