@@ -73,41 +73,14 @@ record SizedCastMeet (ℓ : ℕ) (cSize1 cSize2 vSize1 vSize2 : Ord) : Set where
       → ( pfv1 : (wfElSize c x)  ≡p vSize1 )
       → ( pfv2 : (wfElSize c y)  ≡p vSize2 )
       → LÆ (wfEl c)
-    -- oToGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-    --   → ( pfc1 : O1 ≡p cSize1 )
-    --   → ( pfc2 : (wfSize c) ≡p cSize2 )
-    --   → codeHead (code c) ≡p HStatic h
-    --   → (x : wfEl c)
-    --   → ( pfv1 : O1 ≡p vSize1 )
-    --   → ( pfv2 : wfElSize c x ≡p vSize2 )
-    --   → LÆ (germ h ℓ)
-    -- oFromGerm : ∀ {{_ : Æ}}{ h} → (c : ℂwf ℓ)
-    --   → ( pfc1 : wfSize c ≡p cSize1 )
-    --   → ( pfc2 : O1 ≡p cSize2 )
-    --   → codeHead (code c) ≡p HStatic h
-    --   → (x : ⁇Ty ℓ)
-    --   → ( pfv1 : elSize {ℓ} C⁇ x ≡p vSize1 )
-    --   → ( pfv2 : O1 ≡p vSize2 )
-    --   → LÆ (wfEl c)
 
-    -- oToDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
-    --   → {i : ApproxEl cI}
-    --   → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
-    --   → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
-    --   → (x : ℂμ tyCtor D i)
-    --   → ( pfv1 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize1 )
-    --   → ( pfv2 : elSize (Cμ tyCtor cI D i) (transport ℂμW x)  ≡p vSize2 )
-    --   → W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
-
-    -- oFromDataGerm : ∀ {{_ : Æ}} {cI  : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙 )
-    --   → {i : ApproxEl cI}
-    --   → ( pfc1 :  (codeSize (Cμ tyCtor cI D i))  ≡p cSize1 )
-    --   → ( pfc2 :  (dataGermDescSize ℓ tyCtor)  ≡p cSize2 )
-    --   → (x : W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt)
-    --   → ( pfv1 : O1  ≡p vSize1 )
-    --   → ( pfv2 : O1  ≡p vSize2 )
-    --   → (ℂμ tyCtor D i)
-
+    oCodeMeet :
+      (c1 c2 : ℂwf ℓ)
+      → ( pfc1 : (wfSize c1)  ≡p cSize1 )
+      → ( pfc2 : wfSize c2  ≡p cSize2 )
+      → ( pfv1 : O1  ≡p vSize1 )
+      → ( pfv2 : O1  ≡p vSize2 )
+      → (ℂwf ℓ)
 
     oCast : ∀ {{_ : Æ}}
       → (csource cdest : ℂwf ℓ)
@@ -154,6 +127,13 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
       → LÆ {{æ = æ}} (wfEl {{æ = æ}} c)
     [_]_∋_⊓_By_ æ = _∋_⊓_By_ {{æ}}
 
+    _⊓_By_ :
+      (c1 c2 : ℂwf ℓ)
+      → (wfSize c1 <o cSize1)
+      → (ℂwf ℓ)
+    _⊓_By_  c1 c2 lt =
+      oCodeMeet (self (<oQuadL (<oPairL lt))) c1 c2 reflp reflp reflp reflp
+
     ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
       → (cdest csource : ℂwf ℓ)
       → (x : wfEl csource)
@@ -192,6 +172,47 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
         wit = fromL ([ Approx ] (c |wf| wf) ∋  x ⊓ y By (≤o-sucMono omax-≤L))
       in (wit ⊢ x ≅ y)
     ⁇ (Cμ tyCtor c D x |wf| _) reflp = W⁇
+
+    codeMeet : ∀ {{_ : Æ}}
+      → (c1 c2 : ℂwf ℓ )
+      → (wfSize c1 ≡p cSize1)
+      → (wfSize c2 ≡p cSize2)
+      → (O1 ≡p vSize1)
+      → (O1 ≡p vSize2)
+      → (ℂwf ℓ)
+    codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp reflp reflp with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
+    -- If either is ℧ or the heads don't match, the result is ℧
+    codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp reflp reflp | h1  | h2  | H℧L x =  C℧ |wf| IWF℧
+    codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp reflp reflp | h1  | h2  | H℧R x = C℧ |wf| IWF℧
+    codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp reflp reflp | .(HStatic _)  | .(HStatic _)  | HNeq x = C℧ |wf| IWF℧
+    -- If either is ⁇, then the meet is just the other code
+    codeMeet (C⁇ |wf| wf1) (c2 |wf| wf2) reflp reflp reflp reflp | h1  | h2  | H⁇L reflp x₁ = c2 |wf| wf2
+    codeMeet (c1 |wf| wf1) (C⁇ |wf| wf2) reflp reflp reflp reflp | .(HStatic _)  | h2  | H⁇R reflp = c1 |wf| wf1
+    -- Otherwise, we have two codes with the same head
+    -- Trivial cases with no arguments: both inputs are identical
+    codeMeet (C𝟙 |wf| wf1) (C𝟙 |wf| wf2) reflp reflp reflp reflp | HStatic H𝟙  | .(HStatic H𝟙)  | HEq reflp = C𝟙 |wf| IWF𝟙
+    codeMeet (C𝟘 |wf| wf1) (C𝟘 |wf| wf2) reflp reflp reflp reflp | HStatic H𝟘  | .(HStatic H𝟘)  | HEq reflp = C𝟘 |wf| IWF𝟘
+    codeMeet (CType {{suc<}} |wf| wf1) (CType |wf| wf2) reflp reflp reflp reflp | HStatic HType  | .(HStatic HType)  | HEq reflp = CType {{_}} {{_}} {{suc<}} |wf| IWFType
+    codeMeet (CΠ dom1 cod1 |wf| (IWFΠ domwf1 codwf1)) (CΠ dom2 cod2 |wf| (IWFΠ domwf2 codwf2)) reflp reflp reflp reflp | HStatic HΠ  | .(HStatic HΠ)  | HEq reflp
+      =
+        let
+          dom12 = (dom1 |wf| domwf1) ⊓ (dom2 |wf| domwf2)
+                        By ≤o-sucMono omax-≤L
+          cod12 : (x : wfApproxEl dom12) → ℂwf ℓ
+          cod12 x12 =
+            let
+              x1 = [ Approx ]⟨ dom1 |wf| domwf1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+              x2 = [ Approx ]⟨ dom2 |wf| domwf2 ⇐ dom12 ⟩ x12 By {!!}
+            in
+              (cod1 (fromL x1) |wf| codwf1 _) ⊓ cod2 (fromL x2) |wf| codwf2 _
+                      By {!!}
+        in CΠ
+          (code dom12)
+          {!λ x → !}
+        |wf| {!!}
+    codeMeet (CΣ c1 cod |wf| wf1) (CΣ c2 cod₁ |wf| wf2) reflp reflp reflp reflp | HStatic HΣ  | .(HStatic HΣ)  | HEq reflp = {!!}
+    codeMeet (C≡ c1 x y |wf| wf1) (C≡ c2 x₁ y₁ |wf| wf2) reflp reflp reflp reflp | HStatic H≅  | .(HStatic H≅)  | HEq reflp = {!!}
+    codeMeet (Cμ tyCtor c1 D x |wf| wf1) (Cμ tyCtor₁ c2 D₁ x₁ |wf| wf2) reflp reflp reflp reflp | HStatic (HCtor x₂)  | .(HStatic (HCtor x₂))  | HEq reflp = {!!}
 
     meet : ∀ {{_ : Æ}}
       → (c : ℂwf ℓ)
@@ -300,24 +321,24 @@ castMeetRec ℓ cSize1 cSize2 vSize1 vSize2 self ℓself = {!!} -- record
     cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | h1  | h2  | H℧R x₁ = pure (℧ cdest)
     cast (csource |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .(HStatic _)  | .(HStatic _)  | HNeq x₁ = pure (℧ cdest)
     -- Converting from ⁇ to itself is the identity
-    cast (CodeModule.C⁇ |wf| swf) (C⁇ |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H⁇  | H⁇L reflp x₂ = pure x
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H℧  | H⁇L reflp x₂ with () ← x₂ reflp
+    cast (C⁇ |wf| swf) (C⁇ |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H⁇  | H⁇L reflp x₂ = pure x
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | H℧  | H⁇L reflp x₂ with () ← x₂ reflp
     -- We convert to ⁇ by going through the germ
-    cast (csource |wf| swf) (CodeModule.C⁇ |wf| dwf) reflp reflp x reflp reflp | .(HStatic _) |  H⁇ | H⁇R x₁ = do
+    cast (csource |wf| swf) (C⁇ |wf| dwf) reflp reflp x reflp reflp | .(HStatic _) |  H⁇ | H⁇R x₁ = do
       xgerm ← toGerm (csource |wf| swf) reflp reflp eq1 x reflp reflp
       germTo⁇ xgerm
     -- Converting from ⁇ to a static-headed type, we go throug the germ, checking that the head matches
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ with valueHead {ℓ} C⁇ reflp x in vheq
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ with valueHead {ℓ} C⁇ reflp x in vheq
     --Error at type ⁇ turns to error
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH℧  = pure (℧ cdest)
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH℧  = pure (℧ cdest)
     -- ⁇ at type ⁇ turns to ⁇ at the destination type
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH⁇⁇  =
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | VH⁇⁇  =
       pure (o⁇ (self (<oQuadR reflp (<oPairL (≤o-sucMono (⁇suc x))))) (cdest |wf| dwf) reflp reflp reflp reflp)
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _ with headDecEq h hx
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _ with headDecEq h hx
     -- If the heads don't match, the cast produces an error
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _  | no _ = pure (℧ cdest)
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _  | no _ = pure (℧ cdest)
     -- If the heads match, then we convert from ⁇ to the germ, then to the destination
-    cast (CodeModule.C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _  | yes reflp = do
+    cast (C⁇ |wf| swf) (cdest |wf| dwf) reflp reflp x reflp reflp | .H⁇  | HStatic h  | H⁇L reflp x₂ | HVIn⁇ hx _  | yes reflp = do
       let xg = germFrom⁇ x vheq
       fromGerm (cdest |wf| dwf) reflp reflp eq2 x reflp reflp
     -- Otherwise, we have a conversion between types with the same head
