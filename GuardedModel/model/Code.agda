@@ -364,6 +364,9 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
 
+℧Approx : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → Approxed (El c)
+℧Approx c = withApprox λ æ → ℧ {{æ = æ}} c
+
 -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
 -- ⁇ CodeModule.C⁇ = ⁇⁇
 -- ⁇ CodeModule.C℧ = tt
