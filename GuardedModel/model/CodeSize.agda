@@ -362,7 +362,7 @@ record CodePairSize {ℓ} (c1 c2 : ℂ ℓ) : Set where
     ltL : codeSize c1 ≤o csize
     ltR : codeSize c2 ≤o csize
 
-open CodePairSize
+open CodePairSize public
 
 codePairSize : ∀ {ℓ} → (c1 c2 : ℂ ℓ) → CodePairSize c1 c2
 descPairSize : ∀ {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Σ[ o ∈ Ord ]( descSize D1 ≤o o × descSize D2 ≤o o )
@@ -420,6 +420,9 @@ descPairSize {cI = cI} {cB = cB} {cI' = cI'} {cB' = cB'} (CHRec c1 j1 D1) (CHRec
   , ≤o-sucMono (omax-mono (extLim ⦃ æ = Approx ⦄ _ _ λ b → ≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ a →  ≤o-℧ {{æ = Approx}} omax-≤L))) (fst (snd (descPairSize D1 D2))))
   , ≤o-sucMono (omax-mono (≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ a' → ≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _ (λ k → omax-≤R))))) (snd (snd (descPairSize D1 D2))))
 
+
+wfPairSize : ∀ {ℓ} (c1 c2 : ℂwf ℓ) → Ord
+wfPairSize c1 c2 = csize (codePairSize (code c1) (code c2))
 
 -- -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
 -- -- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
