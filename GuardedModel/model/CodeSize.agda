@@ -105,12 +105,12 @@ germIndSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFIndSize tyCtor (dat
 
 
 codeSize : ∀ {ℓ} → ℂ ℓ → Ord
-descSize : ∀  {ℓ} →  {cI cB : ℂ ℓ} → ℂDesc cI cB → Ord
+descSize : ∀  {ℓ sig} →  {cI cB : ℂ ℓ} → ℂDesc cI cB sig → Ord
 elSize : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → El c → Ord
 -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
 ⁇Size : ∀ {{ _ : Æ}} {ℓ} → ⁇Ty ℓ → Ord
-CμSize : ∀ {{_ : Æ}} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI C𝟙) {i} → ℂμ tyCtor D i → Ord
-CElSize : ∀ {{ _ : Æ }} {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Ord
+CμSize : ∀ {{_ : Æ}} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i} → ℂμ tyCtor D i → Ord
+CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Ord
 -- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
 --   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
 --   → □ _ (λ _ → Ord) (tt , cs)
@@ -123,6 +123,11 @@ germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
   → B
   → Ord
 
+
+DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Ord) → Ord
+DLim tyCtor f with numCtors tyCtor
+... | ℕ.zero = OZ
+... | ℕ.suc n = OLim ⦃ æ = Approx ⦄ (CFin n) (λ x → f (fromCFin x))
 
 germDescSize  GEnd GEndCode b = O1
 germDescSize  (GArg A D) (GArgCode c isom pf) b = O↑ (omax (codeSize (c b)) (OLim (c b) (λ a → germDescSize D pf (b , Iso.inv (isom b) (exact a) ))))
@@ -152,9 +157,7 @@ codeSize CType = O1
 codeSize (CΠ dom cod) = O↑ (omax (codeSize dom) (OLim {{æ = Approx}} dom λ x → codeSize (cod x)))
 codeSize (CΣ dom cod) = O↑ (omax (codeSize dom) ( OLim  {{æ = Approx}} dom λ x → codeSize (cod x)))
 codeSize  (C≡ c x y) = O↑ (omax (codeSize c) (omax (elSize {{Approx}} c x) (elSize {{Approx}}  c y)) )
-codeSize (Cμ tyCtor c D x) with numCtors tyCtor
-... | ℕ.zero = O↑ OZ
-... | ℕ.suc n = O↑ (OLim {{æ = Approx}} (CFin n) λ x → descSize (D (fromCFin x)))
+codeSize (Cμ tyCtor c D x) = O↑ (DLim tyCtor λ d → descSize (D d))
 
 descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
 descSize {cB = cB} (CArg c D) = O↑ (OLim {{æ = Approx}} cB λ b → omax (codeSize (c b)) (descSize D))
@@ -163,11 +166,16 @@ descSize {cI = cI} {cB = cB} (CHRec c j D) = O↑ (OLim {{æ = Approx}} cB λ b 
 
 
 -- There are no codes of size zero
-noCodeZero : ∀ {ℓ} (c : ℂ ℓ) → ¬ (codeSize c ≡p OZ)
-noCodeZero (Cμ tyCtor c D x) eq with numCtors tyCtor
-noCodeZero (Cμ tyCtor c D x) () | ℕ.zero
-noCodeZero (Cμ tyCtor c D x) () | ℕ.suc n
-
+-- noCodeZero : ∀ {ℓ} (c : ℂ ℓ) → ¬ (codeSize c ≡p OZ)
+-- noCodeZero CodeModule.C⁇ ()
+-- noCodeZero CodeModule.C℧ pf = {!!}
+-- noCodeZero CodeModule.C𝟘 pf = {!!}
+-- noCodeZero CodeModule.C𝟙 pf = {!!}
+-- noCodeZero CodeModule.CType pf = {!!}
+-- noCodeZero (CodeModule.CΠ c cod) pf = {!!}
+-- noCodeZero (CodeModule.CΣ c cod) pf = {!!}
+-- noCodeZero (CodeModule.C≡ c x y) pf = {!!}
+-- noCodeZero (CodeModule.Cμ tyCtor c D x) pf = {!!}
 
 -- argLessLeft : ∀ o1 o2 → o1 <o O↑ (omax o1 o2)
 -- argLessLeft o1 o2 = ≤o-sucMono omax-≤L
@@ -259,9 +267,7 @@ codeSuc CType = ≤o-refl _
 codeSuc (CΠ c cod) = ≤o-sucMono ≤o-Z
 codeSuc (CΣ c cod) = ≤o-sucMono ≤o-Z
 codeSuc (C≡ c x y) = ≤o-sucMono ≤o-Z
-codeSuc (Cμ tyCtor c D x) with numCtors tyCtor
-... | ℕ.zero = ≤o-refl _
-... | ℕ.suc n = ≤o-sucMono ≤o-Z
+codeSuc (Cμ tyCtor c D x) = ≤o-sucMono ≤o-Z
 
 codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → omax O1 (codeSize c) ≤o codeSize c
 codeMaxL c = omax-LUB (codeSuc c) (≤o-refl _)
@@ -301,37 +307,34 @@ open DataGermsSmaller {{...}} public
 
 
 -- Used for well-founded 2-argument induction
-codePairSize : ∀ {{_ : Æ}} {ℓ} → ℂ ℓ → ℂ ℓ → Ord
-descPairSize : ∀ {{_ : Æ}} {ℓ} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB) (D2 : ℂDesc cI' cB') → Ord
+-- descPairSize : ∀ {{_ : Æ}} {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Ord
 
-codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
-... | h1 |  h2 |  H℧L x = O1
-... | h1 |  h2 |  H℧R x = O1
-... | h1 |  h2 |  H⁇L x x₁ = codeSize c2
-... | .(HStatic _) |  h2 |  H⁇R x = codeSize c1
-... | .(HStatic _) |  .(HStatic _) |  HNeq x = O1
-codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
-  = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
-codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
-   = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
-codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
-  = O↑ (codePairSize c1 c2)
-codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1
-codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1
-codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1
-codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2 with numCtors tyCtor
-... | ℕ.zero = O1
-... | ℕ.suc n  = O↑ (OLim {{æ = Approx}} (CFin n) λ x → descPairSize (D (fromCFin x)) (D₁ (fromCFin x)))
+-- codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
+-- ... | h1 |  h2 |  H℧L x = codeSize c2
+-- ... | h1 |  h2 |  H℧R x = codeSize c1
+-- ... | h1 |  h2 |  H⁇L x x₁ = codeSize c2
+-- ... | .(HStatic _) |  h2 |  H⁇R x = codeSize c1
+-- ... | .(HStatic _) |  .(HStatic _) |  HNeq x = omax (codeSize c1) (codeSize c2)
+-- codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
+--   = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
+-- codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+--    = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
+-- codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
+--   = O↑ (codePairSize c1 c2)
+-- codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1
+-- codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1
+-- codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1
+-- codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
+--   = O↑ (DLim tyCtor λ d → descPairSize (D d) (D₁ d))
 
 
-descPairSize {cB = cB} {cB' = cB'} (CArg c D1) (CArg c' D2)
-  = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
-descPairSize (CRec j D1) (CRec j' D2)
-  = O↑ (descPairSize  D1 D2)
-descPairSize {cB = cB} {cB' = cB'} (CHRec c j D1) (CHRec c' j' D2)
-  = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
-descPairSize _ _ = O1
-
+-- descPairSize (CEnd i) (CEnd i₁) = O1
+-- descPairSize {cB = cB} {cB' = cB'} (CArg c D1) (CArg c' D2)
+--   = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
+-- descPairSize (CRec j D1) (CRec j' D2)
+--   = O↑ (descPairSize  D1 D2)
+-- descPairSize {cB = cB} {cB' = cB'} (CHRec c j D1) (CHRec c' j' D2)
+--   = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
 
 
 -- Sizes for well-formed codes
@@ -342,14 +345,24 @@ wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
 wfElSize c x = elSize (code c) x
 
 
-codePair-≤L : ∀ {{_ : Æ}} {ℓ}
-  → (c1 c2 : ℂ ℓ)
-  → (wf1 : IndWF c1)
-  → (wf2 : IndWF c2)
-  → codeHead c1 ≡p codeHead c2
-  → codePairSize c1 c2 ≤o codeSize c1
-
-
+codePairSize : ∀ {{_ : Æ}} {ℓ} → (c1 c2 : ℂ ℓ) → Σ[ o ∈ Ord ]( omax (codeSize c1) (codeSize c2) ≤o o )
+codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
+... | h1 |  h2 |  H℧L reflp with C℧ ← c1 = codeSize c2 , {!c1!}
+... | h1 |  h2 |  H℧R reflp = codeSize c1 , {!!}
+... | h1 |  h2 |  H⁇L reflp x₁ = codeSize c2 , {!!}
+... | .(HStatic _) |  h2 |  H⁇R x = codeSize c1 , {!!}
+... | .(HStatic _) |  .(HStatic _) |  HNeq x = omax (codeSize c1) (codeSize c2) , ≤o-refl _
+codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
+  = {!!}
+codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+   = {!!}
+codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
+  = {!!}
+codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1 , {!!}
+codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1 , {!!}
+codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1 , {!!}
+codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
+  = {!!}
 
 
 -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x

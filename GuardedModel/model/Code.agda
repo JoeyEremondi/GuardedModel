@@ -96,12 +96,12 @@ record CodeModule
     -- The unknown type, i.e. the fixed-point of F⁇
     ⁇ : {{_ : Æ}} → Set
     -- Code-based Descriptions of inductive data types
-    data ℂDesc (I : ℂ) : ℂ → Set
+    data ℂDesc (I : ℂ) : ℂ → IndSig → Set
     -- Interpretation of description codes into descriptions
-    interpDesc : ∀ {{_ : Æ}} {I} {cB} →  (ℂDesc I cB) → ApproxEl cB → Container (ApproxEl I)
-    CommandD : ∀ {{_ : Æ}}  {I cB} → ℂDesc I cB → ApproxEl I → (ApproxEl cB → Set)
-    ResponseD : ∀ {{_ :  Æ}} {I cB} → (D : ℂDesc I cB) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
-    inextD : ∀ {{_ : Æ}} {I cB} → (D : ℂDesc I cB) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
+    interpDesc : ∀ {{_ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
+    CommandD : ∀ {{_ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
+    ResponseD : ∀ {{_ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
+    inextD : ∀ {{_ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
@@ -198,11 +198,12 @@ record CodeModule
     --- Gradual inductive types
     ---
 
+
     data _ where
       Cμ :
         (tyCtor : CName)
         → (cI : ℂ)
-        → (D : DName tyCtor → ℂDesc cI C𝟙)
+        → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
         → ApproxEl cI → ℂ
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
@@ -232,10 +233,10 @@ record CodeModule
     ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
     data ℂDesc  where
-      CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB
-      CArg : ∀ {cB} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c)) → ℂDesc  I cB
-      CRec : ∀ {cB} (j :  ApproxEl I) → (D :  ℂDesc I cB) → ℂDesc I cB
-      CHRec : ∀ {cB} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB) → ℂDesc I cB
+      CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB SigE
+      CArg : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c) rest) → ℂDesc  I cB (SigA rest)
+      CRec : ∀ {cB} {rest} (j :  ApproxEl I) → (D :  ℂDesc I cB rest) → ℂDesc I cB (SigR rest)
+      CHRec : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB rest) → ℂDesc I cB (SigHR rest)
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
     interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b ◃ (λ _ → 𝟘) / inextD D b
@@ -366,6 +367,11 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 ℧Approx : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → Approxed (El c)
 ℧Approx c = withApprox λ æ → ℧ {{æ = æ}} c
+
+
+DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
+DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d)
+
 
 -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
 -- ⁇ CodeModule.C⁇ = ⁇⁇

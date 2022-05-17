@@ -192,8 +192,10 @@ GermResponseUnk (GRec D) b com = GermResponseUnk D b com
 interpGermCtor : ∀ {B} → GermCtor B → B → Container 𝟙
 interpGermCtor D b = (λ _ → GermCommand D b) ◃ (GermResponse D b) ◃ (GermResponseUnk D b) / (λ _ _ → tt)
 
-
-
+-- Used to classify the "skeleton" of inductive types before we've defined codes
+data IndSig : Set where
+  SigE : IndSig
+  SigA SigR SigHR : IndSig → IndSig
 -- data IndSig : Set where
 --   SigE SigA SigR SigHR SigU : IndSig
 
@@ -220,6 +222,8 @@ record DataTypes : Set1 where
     -- indSig : CName → IndSig
   DName : CName → Set
   DName tyCtor = Fin (numCtors tyCtor)
+  field
+    indSkeleton : (c : CName) → (DName c) → IndSig
 
 open DataTypes {{...}} public
 

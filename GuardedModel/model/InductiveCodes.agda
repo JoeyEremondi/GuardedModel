@@ -81,12 +81,6 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk A D)
 
--- Whether two inductive types have the same shape
-data DescMatch   {ℓ} {cI cB cI' cB' : ℂ ℓ} : (D1 : ℂDesc cI cB) (D2 : ℂDesc cI' cB') → Set where
-  EndMatch : ∀ {i j} → DescMatch (CEnd i) (CEnd j)
-  ArgMatch : ∀ {c1 c2 D1 D2} → DescMatch D1 D2 → DescMatch (CArg c1 D1) (CArg c2 D2)
-  RecMatch : ∀ {i1 i2 D1 D2} → DescMatch D1 D2 → DescMatch (CRec i1 D1) (CRec i2 D2)
-  HRecMatch : ∀ {c1 c2 i1 i2 D1 D2} → DescMatch D1 D2 → DescMatch (CHRec c1 i1 D1) (CHRec c2 i2 D2)
 
 
 
@@ -97,13 +91,7 @@ record InductiveCodes : Set2 where
     Indices : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (Params ℓ tyCtor) → ℂ ℓ
     descFor : (ℓ : ℕ) → (tyCtor : CName)
       → (pars : ApproxEl (Params ℓ tyCtor))
-      → (d : DName tyCtor)
-      → ℂDesc (Indices ℓ tyCtor pars) C𝟙
-    -- All instantiations of a datatype have the same shape
-    descMatch : ∀ ℓ (tyCtor : CName)
-      → (pars1 pars2 : ApproxEl (Params ℓ tyCtor))
-      → (d : DName tyCtor)
-      → DescMatch (descFor ℓ tyCtor pars1 d) (descFor ℓ tyCtor pars2 d)
+      → (DCtors tyCtor (Indices ℓ tyCtor pars))
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
@@ -132,8 +120,9 @@ record InductiveCodes : Set2 where
       IWFμ : ∀ {tyCtor cI D i}
         → (pars : ApproxEl (Params ℓ tyCtor))
         → (indEq : cI ≡ Indices ℓ tyCtor pars)
-        → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor pars d))
+        → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙 (indSkeleton tyCtor d)) (D d) (descFor ℓ tyCtor pars d))
         → IndWF (Cμ tyCtor cI D i)
+
 
 
 

@@ -43,24 +43,24 @@ open import Util
 -- Works because we ensure the paramter types are always codes, not types
 -- So we can stay in Set
 -- Also, Cubical Agda recognizes these as strictly decreasing, which is nice
-data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : (cB : ℂ ℓ) →  ℂDesc cI cB → ApproxEl cI → ApproxEl cB → Set where
+data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cI cB sig → ApproxEl cI → ApproxEl cB → Set where
   ElEnd : ∀ {cB b i} j → i ≅ j →  ℂDescEl' cI X cB (CEnd j) i b
-  ElArg : ∀ {cB cA D i b} → (a : Approxed (El (cA b)) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D) i b
-  ElRec : ∀ {cB b i} {j : ApproxEl cI} {D : ℂDesc cI cB} →
+  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : Approxed (El (cA b)) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D) i b
+  ElRec : ∀ {cB b i sig} {j : ApproxEl cI} {D : ℂDesc cI cB sig} →
     X j → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CRec j D) i b
-  ElHRec : ∀ {cB b i } {c : ApproxEl cB → ℂ ℓ} {j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl cI} {D : ℂDesc cI cB} →
+  ElHRec : ∀ {cB b i sig} {c : ApproxEl cB → ℂ ℓ} {j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl cI} {D : ℂDesc cI cB sig} →
     ((x : Approxed (λ {{æ}} → El {{æ = æ}} (c b))) → X (j b (approx x))) → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CHRec c j D) i b
 
 
 
-ℂDescEl : ∀  {ℓ} {cI cB : ℂ ℓ} → ℂDesc cI cB → (ApproxEl cI → Set) → ApproxEl cI → ApproxEl cB → Set
+ℂDescEl : ∀  {ℓ sig} {cI cB : ℂ ℓ} → ℂDesc cI cB sig → (ApproxEl cI → Set) → ApproxEl cI → ApproxEl cB → Set
 ℂDescEl {cI = cI} {cB} D X i b = ℂDescEl' cI X cB D i b
 
 -- Fixed Points of inductive descriptions from codes
 -- We always ensure the first layer of descriptions is data-constructors
 -- Since we use these for comparing things for consistency
 
-data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI C𝟙) (i : ApproxEl cI)  : Set where
+data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : ApproxEl cI)  : Set where
   Cinit : (d : DName tyCtor) → ℂDescEl (D d) (ℂμ tyCtor D) i true → ℂμ  tyCtor D i
   Cμ⁇ Cμ℧ :  ℂμ tyCtor D  i
 
@@ -68,7 +68,7 @@ data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc c
 -- ℂμ1 : ∀ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI) (i : ApproxEl cI)  → Set
 -- ℂμ1 tyCtor D i = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
-WArg : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI C𝟙) → ApproxEl cI →  Set
+WArg : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) → ApproxEl cI →  Set
 WArg D  = W (Arg λ d → interpDesc (D d) true) Unit
 
 
@@ -79,11 +79,11 @@ WArg D  = W (Arg λ d → interpDesc (D d) true) Unit
 -- is identical to the version given by W-types
 -- I don't know if we'll actually use this, but it was an important sanity check
 -- Proof is at the bottom of this file
-ℂμWext : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙}  →
+ℂμWext : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI }  →
   ℂμ tyCtor D ≡ WArg D
 
 
-ℂμW : ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙} {i : ApproxEl cI}  →
+ℂμW : ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}  →
   ℂμ tyCtor D i ≡ WArg D i
 
 
@@ -93,7 +93,7 @@ WArg D  = W (Arg λ d → interpDesc (D d) true) Unit
 -- Machinery for the isomorphism between W types and descriptions
 
 
-fromCElCommand : ∀ {ℓ} {cI cB : ℂ ℓ} (D : ℂDesc cI cB) {i : ApproxEl cI} {X : ApproxEl cI → Set} {b : ApproxEl cB}
+fromCElCommand : ∀ {ℓ sig} {cI cB : ℂ ℓ} (D : ℂDesc cI cB sig) {i : ApproxEl cI} {X : ApproxEl cI → Set} {b : ApproxEl cB}
   → ℂDescEl  D X i b
   → CommandD D i b
 fromCElCommand .(CEnd j) (ElEnd j x) = x
@@ -103,7 +103,7 @@ fromCElCommand (CHRec c j D) (ElHRec f x) = fromCElCommand D x
 
 
 
-fromCElF : ∀ {ℓ} {cI cB : ℂ ℓ} (D : ℂDesc cI cB) {X : ApproxEl cI → Set} {i : ApproxEl cI} {b : ApproxEl cB}
+fromCElF : ∀ {ℓ sig} {cI cB : ℂ ℓ} (D : ℂDesc cI cB sig) {X : ApproxEl cI → Set} {i : ApproxEl cI} {b : ApproxEl cB}
   → (x : ℂDescEl  D X i b)
   → (r : ResponseD D b (fromCElCommand D x ) )
       → X (inextD D b (fromCElCommand D x ) r)
@@ -115,10 +115,10 @@ fromCElF (CHRec c i D) (ElHRec f1 f2) (Rest r) = fromCElF D f2 r --fromCElF (D (
 
 
 
-fromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙} {i : ApproxEl cI}
+fromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}
   → ℂμ tyCtor D i
   → WArg D i
-fromCEl : ∀ {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {i : ApproxEl cI} {b : ApproxEl cB}
+fromCEl : ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i : ApproxEl cI} {b : ApproxEl cB}
   → (x : ℂDescEl  D (ℂμ tyCtor E) i b)
   → (r : ResponseD D b (fromCElCommand D x))
       → WArg E (inextD D b (fromCElCommand D x ) r )
@@ -137,7 +137,7 @@ fromCEl (CHRec c i D) E (ElHRec f1 f2) (Rest r) = fromCEl D E f2 r
 
 
 toCEl :
-  ∀ {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {ix : ApproxEl cI} {b : ApproxEl cB} →
+  ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI ) {ix : ApproxEl cI} {b : ApproxEl cB} →
   (com : CommandD D ix b) →
   (k : (r : ResponseD D b com ) →
                   WArg E (inextD D b com r))
@@ -148,7 +148,7 @@ toCEl :
   → (ℂDescEl  D (ℂμ tyCtor E) ix b)
 
 
-toCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI C𝟙) {ix : ApproxEl cI}
+toCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {ix : ApproxEl cI}
   → (x : WArg D ix)
   → ℂμ tyCtor D ix
 toCμ D = wInd (λ (i , _) → ℂμ _ D i) (λ {i} (FC (d , com) k _) φ → Cinit d (toCEl (D d) D com k φ)) Cμ℧ Cμ⁇
@@ -161,7 +161,7 @@ toCEl (CHRec c j D) E com k φ = ElHRec (λ a → φ (Rec a)) (toCEl D E com (λ
 
 
 toCElF :
-  ∀ {ℓ} {cI cB : ℂ ℓ} {X : ApproxEl cI → Set} (D : ℂDesc cI cB)  {ix : ApproxEl cI} {b : ApproxEl cB} →
+  ∀ {ℓ sig} {cI cB : ℂ ℓ} {X : ApproxEl cI → Set} (D : ℂDesc cI cB sig)  {ix : ApproxEl cI} {b : ApproxEl cB} →
   (com : CommandD D ix b) →
   (k : (r : ResponseD D b com ) → X (inextD D b com r))
   → (ℂDescEl D X ix b)
@@ -173,7 +173,7 @@ toCElF (CHRec c j D) com k = ElHRec (λ a → k (Rec a)) (toCElF D com (λ r →
 
 
 fromToCElCommand :
-  ∀ {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {ix : ApproxEl cI} {b : ApproxEl cB}
+  ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {ix : ApproxEl cI} {b : ApproxEl cB}
   → (com : CommandD D ix b)
   → (k : (r : ResponseD D b com ) →
                   WArg E (inextD D b com r))
@@ -200,7 +200,7 @@ fromToCElCommand (CHRec c j D) E com k   = fromToCElCommand D E com (λ r → k 
 --   --   (fromToCElCommandF D₁ com2 (λ r → k (GRest r))  )
 
 fromToCEl :
-  ∀ {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {ix : ApproxEl cI} {b : ApproxEl cB}
+  ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {ix : ApproxEl cI} {b : ApproxEl cB}
   → (com : CommandD D ix b)
   → (k : (r : ResponseD D b com ) →
                   WArg E (inextD D b com r))
@@ -218,7 +218,7 @@ fromToCEl (CodeModule.CHRec c j D) E com k φ 𝕚 (Rec a) = φ (Rec a) 𝕚
 fromToCEl (CodeModule.CHRec c j D) E com k φ 𝕚 (Rest r) = fromToCEl D E com (λ r → k (Rest r)) (λ r → φ (Rest r)) 𝕚 r
 
 
-fromToCμ :  ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DName tyCtor → ℂDesc cI C𝟙) {ix : ApproxEl cI}
+fromToCμ :  ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {ix : ApproxEl cI}
   → (x : WArg D ix)
   → fromCμ (toCμ D x) ≡ x
 fromToCμ {cI = cI} D = wInd
@@ -232,10 +232,10 @@ fromToCμ {cI = cI} D = wInd
         λ _ → tt)
 
 
-toFromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙} {i : ApproxEl cI}
+toFromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}
   → (x : ℂμ tyCtor D i)
   → toCμ D (fromCμ x) ≡ x
-toFromCEl : ∀ {ℓ} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB) (E : DName tyCtor → ℂDesc cI C𝟙) {i : ApproxEl cI} {b : ApproxEl cB}
+toFromCEl : ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i : ApproxEl cI} {b : ApproxEl cB}
   → (x : ℂDescEl  D (ℂμ tyCtor E) i b)
   → toCEl D E (fromCElCommand D x) (fromCEl D E x) (λ r → toCμ E (fromCEl D E x r)) ≡ x
 
@@ -278,7 +278,7 @@ toFromCEl (CHRec c j D) E (ElHRec x x₁) = cong₂ ElHRec (funExt (λ a → toF
 -- -- toFromCElF (CHGuard c D1 D2) (ElHGuard x x₁) = cong₂ ElHGuard (funExt λ a → toFromCElF D1 (x a)) (toFromCElF D2 x₁)
 
 CμWiso :
-  ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI C𝟙} {i : ApproxEl cI}
+  ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}
   → Iso (ℂμ tyCtor D i) (WArg D i)
 CμWiso = (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
 
