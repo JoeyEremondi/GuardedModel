@@ -345,65 +345,83 @@ wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
 wfElSize c x = elSize (code c) x
 
 
-codePairSize : ∀ {{_ : Æ}} {ℓ} → (c1 c2 : ℂ ℓ) → Σ[ o ∈ Ord ]( omax (codeSize c1) (codeSize c2) ≤o o )
+record CodePairSize {ℓ} (c1 c2 : ℂ ℓ) : Set where
+  constructor CPSize
+  field
+    csize : Ord
+    ltL : codeSize c1 ≤o csize
+    ltR : codeSize c2 ≤o csize
+
+open CodePairSize
+
+codePairSize : ∀ {{_ : Æ}} {ℓ} → (c1 c2 : ℂ ℓ) → CodePairSize c1 c2
 codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
-... | h1 |  h2 |  H℧L reflp with C℧ ← c1 = codeSize c2 , {!c1!}
-... | h1 |  h2 |  H℧R reflp = codeSize c1 , {!!}
-... | h1 |  h2 |  H⁇L reflp x₁ = codeSize c2 , {!!}
-... | .(HStatic _) |  h2 |  H⁇R x = codeSize c1 , {!!}
-... | .(HStatic _) |  .(HStatic _) |  HNeq x = omax (codeSize c1) (codeSize c2) , ≤o-refl _
+... | h1 |  h2 |  H℧L reflp with C℧ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
+... | h1 |  h2 |  H℧R reflp with C℧ ← c2 =  CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
+... | h1 |  h2 |  H⁇L reflp x₁ with C⁇ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
+... | .(HStatic _) |  h2 |  H⁇R reflp with C⁇ ← c2 = CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
+... | .(HStatic _) |  .(HStatic _) |  HNeq x
+  = CPSize (omax (codeSize c1) (codeSize c2)) omax-≤L omax-≤R
 codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
-  = {!!}
-codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
-   = {!!}
-codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
-  = {!!}
-codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1 , {!!}
-codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1 , {!!}
-codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1 , {!!}
-codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
-  = {!!}
+  = CPSize
+      (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 (approx {{Approx}} x1)) (cod2 (approx {{Approx}} x2))))))
+      (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _ λ k → {!!} )))
+      {!!}
+    where
+      codHelperL : ∀ k → codeSize (cod1 k) ≤o
+        OLim dom2
+        (λ x2 → csize (codePairSize (cod1 (approx {{æ = Approx}} k)) (cod2 (approx x2))))
+
+-- codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+--    = {!!}
+-- codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
+--   = {!!}
+-- codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1 , {!!}
+-- codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1 , {!!}
+-- codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1 , {!!}
+-- codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
+--   = {!!}
 
 
--- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
--- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
--- codeSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → O1 ≤o codeSize c
+-- -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
+-- -- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
+-- -- codeSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → O1 ≤o codeSize c
 
--- codeSizeLowerBound C⁇ = ≤o-refl _
--- codeSizeLowerBound C℧ = ≤o-refl _
--- codeSizeLowerBound C𝟘 = ≤o-refl _
--- codeSizeLowerBound C𝟙 = ≤o-refl _
--- codeSizeLowerBound CType = ≤o-refl _
--- codeSizeLowerBound (CΠ c cod) = ≤o-sucMono ≤o-Z
--- codeSizeLowerBound (CΣ c cod) = ≤o-sucMono ≤o-Z
--- codeSizeLowerBound (C≡ c x y) = ≤o-sucMono ≤o-Z
--- codeSizeLowerBound (Cμ tyCtor c D x) with numCtors tyCtor
--- ... | ℕ.zero = ≤o-refl _
--- ... | ℕ.suc n = ≤o-sucMono ≤o-Z
+-- -- codeSizeLowerBound C⁇ = ≤o-refl _
+-- -- codeSizeLowerBound C℧ = ≤o-refl _
+-- -- codeSizeLowerBound C𝟘 = ≤o-refl _
+-- -- codeSizeLowerBound C𝟙 = ≤o-refl _
+-- -- codeSizeLowerBound CType = ≤o-refl _
+-- -- codeSizeLowerBound (CΠ c cod) = ≤o-sucMono ≤o-Z
+-- -- codeSizeLowerBound (CΣ c cod) = ≤o-sucMono ≤o-Z
+-- -- codeSizeLowerBound (C≡ c x y) = ≤o-sucMono ≤o-Z
+-- -- codeSizeLowerBound (Cμ tyCtor c D x) with numCtors tyCtor
+-- -- ... | ℕ.zero = ≤o-refl _
+-- -- ... | ℕ.suc n = ≤o-sucMono ≤o-Z
 
--- elSizeLowerBound C⁇ x = ⁇SizeLowerBound x
--- elSizeLowerBound C℧ x = ≤o-refl _
--- elSizeLowerBound C𝟘 x = ≤o-refl _
--- elSizeLowerBound C𝟙 x = ≤o-refl _
--- elSizeLowerBound {suc ℓ} CType x = codeSizeLowerBound x
--- elSizeLowerBound (CΠ dom cod) f = underLim O1 (λ x → elSize (cod (approx x)) (f x)) (λ k → elSizeLowerBound (cod k) (f k))
--- elSizeLowerBound (CΣ c cod) (x , y) = ≤o-trans (elSizeLowerBound c x) omax-≤L
--- elSizeLowerBound (C≡ c x₁ y) (x ⊢ _ ≅ _) = elSizeLowerBound c x
--- elSizeLowerBound (Cμ tyCtor c D x₁) (Wsup x) = ≤o-sucMono ≤o-Z
--- elSizeLowerBound (Cμ tyCtor c D x₁) W℧ = ≤o-sucMono ≤o-Z
--- elSizeLowerBound (Cμ tyCtor c D x₁) W⁇ = ≤o-sucMono ≤o-Z
+-- -- elSizeLowerBound C⁇ x = ⁇SizeLowerBound x
+-- -- elSizeLowerBound C℧ x = ≤o-refl _
+-- -- elSizeLowerBound C𝟘 x = ≤o-refl _
+-- -- elSizeLowerBound C𝟙 x = ≤o-refl _
+-- -- elSizeLowerBound {suc ℓ} CType x = codeSizeLowerBound x
+-- -- elSizeLowerBound (CΠ dom cod) f = underLim O1 (λ x → elSize (cod (approx x)) (f x)) (λ k → elSizeLowerBound (cod k) (f k))
+-- -- elSizeLowerBound (CΣ c cod) (x , y) = ≤o-trans (elSizeLowerBound c x) omax-≤L
+-- -- elSizeLowerBound (C≡ c x₁ y) (x ⊢ _ ≅ _) = elSizeLowerBound c x
+-- -- elSizeLowerBound (Cμ tyCtor c D x₁) (Wsup x) = ≤o-sucMono ≤o-Z
+-- -- elSizeLowerBound (Cμ tyCtor c D x₁) W℧ = ≤o-sucMono ≤o-Z
+-- -- elSizeLowerBound (Cμ tyCtor c D x₁) W⁇ = ≤o-sucMono ≤o-Z
 
--- ⁇SizeLowerBound ⁇⁇ = ≤o-refl _
--- ⁇SizeLowerBound ⁇℧ = ≤o-refl _
--- ⁇SizeLowerBound ⁇𝟙 = ≤o-refl _
--- ⁇SizeLowerBound {suc ℓ} (⁇Type x) = codeSizeLowerBound x
--- ⁇SizeLowerBound (⁇Π x) = ≤o-sucMono ≤o-Z
--- ⁇SizeLowerBound (⁇Σ x) = ≤o-sucMono ≤o-Z
--- ⁇SizeLowerBound (⁇≡ (x ⊢ _ ≅ _)) = ≤o-sucMono ≤o-Z
--- ⁇SizeLowerBound (⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
+-- -- ⁇SizeLowerBound ⁇⁇ = ≤o-refl _
+-- -- ⁇SizeLowerBound ⁇℧ = ≤o-refl _
+-- -- ⁇SizeLowerBound ⁇𝟙 = ≤o-refl _
+-- -- ⁇SizeLowerBound {suc ℓ} (⁇Type x) = codeSizeLowerBound x
+-- -- ⁇SizeLowerBound (⁇Π x) = ≤o-sucMono ≤o-Z
+-- -- ⁇SizeLowerBound (⁇Σ x) = ≤o-sucMono ≤o-Z
+-- -- ⁇SizeLowerBound (⁇≡ (x ⊢ _ ≅ _)) = ≤o-sucMono ≤o-Z
+-- -- ⁇SizeLowerBound (⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
 
--- onePlusCode-L : ∀ {ℓ} {c1 c2 : ℂ ℓ} → codeSize c1 <o ((codeSize c1) +o (codeSize c2))
--- onePlusCode-L {c1 = c1} {c2} with (o1 , pf1) ← codeSuc c1 | (o2 , pf2) ← codeSuc c2 rewrite pf1 rewrite pf2 = ≤o-sucMono (≤o-trans (≤o-sucMono (+o-≤-L o1 o2)) (oplus-suc-swap o1 o2))
+-- -- onePlusCode-L : ∀ {ℓ} {c1 c2 : ℂ ℓ} → codeSize c1 <o ((codeSize c1) +o (codeSize c2))
+-- -- onePlusCode-L {c1 = c1} {c2} with (o1 , pf1) ← codeSuc c1 | (o2 , pf2) ← codeSuc c2 rewrite pf1 rewrite pf2 = ≤o-sucMono (≤o-trans (≤o-sucMono (+o-≤-L o1 o2)) (oplus-suc-swap o1 o2))
 
--- onePlusCode-R : ∀ {ℓ} {c1 c2 : ℂ ℓ} → codeSize c2 <o ((codeSize c1) +o (codeSize c2))
--- onePlusCode-R {c1 = c1} {c2} with (o1 , pf1) ← codeSuc c1 | (o2 , pf2) ← codeSuc c2 rewrite pf1 rewrite pf2 = ≤o-sucMono (≤o-trans (≤o-sucMono (+o-≤-R o1 o2)) (oplus-suc-swap o1 o2))
+-- -- onePlusCode-R : ∀ {ℓ} {c1 c2 : ℂ ℓ} → codeSize c2 <o ((codeSize c1) +o (codeSize c2))
+-- -- onePlusCode-R {c1 = c1} {c2} with (o1 , pf1) ← codeSuc c1 | (o2 , pf2) ← codeSuc c2 rewrite pf1 rewrite pf2 = ≤o-sucMono (≤o-trans (≤o-sucMono (+o-≤-R o1 o2)) (oplus-suc-swap o1 o2))
