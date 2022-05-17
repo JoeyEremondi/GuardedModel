@@ -43,7 +43,7 @@ module CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes }} wher
 
 open import Code
 open import WMuEq
--- open import Head
+open import Head
 open import Util
 
 open import Ord -- ℂ El ℧ C𝟙 refl
@@ -230,23 +230,23 @@ CElSize (CHRec c j D) E {b = b} (ElHRec f x) = O↑ (OLim (c b) λ a → omax (C
 
 
 -- ℧size : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤o O1
--- ℧size CodeModule.C⁇ = {!!}
--- ℧size CodeModule.C℧ = {!!}
--- ℧size CodeModule.C𝟘 = {!!}
--- ℧size CodeModule.C𝟙 = {!!}
--- ℧size CodeModule.CType = {!!}
--- ℧size (CodeModule.CΠ c cod) = {!!}
--- ℧size (CodeModule.CΣ c cod) = {!!}
--- ℧size (CodeModule.C≡ c x y) = {!!}
--- ℧size (CodeModule.Cμ tyCtor c D x) = {!!}
+-- ℧size C⁇ = {!!}
+-- ℧size C℧ = {!!}
+-- ℧size C𝟘 = {!!}
+-- ℧size C𝟙 = {!!}
+-- ℧size CType = {!!}
+-- ℧size (CΠ c cod) = {!!}
+-- ℧size (CΣ c cod) = {!!}
+-- ℧size (C≡ c x y) = {!!}
+-- ℧size (Cμ tyCtor c D x) = {!!}
 -- ℧size C⁇ = ≤o-sucMono (≤o-Z)
 -- ℧size C℧ = ≤o-sucMono (≤o-Z)
 -- ℧size C𝟘 = ≤o-sucMono (≤o-Z)
 -- ℧size C𝟙 = ≤o-sucMono (≤o-Z)
 -- ℧size {suc ℓ} CType = ≤o-sucMono (≤o-Z)
 -- ℧size (CΠ c cod) = ≤o-sucMono (≤o-Z)
--- ℧size ⦃ Approx ⦄ (CodeModule.CΣ c cod) = ≤o-sucMono (≤o-Z)
--- ℧size ⦃ Exact ⦄ (CodeModule.CΣ c cod) =  ≤o-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
+-- ℧size ⦃ Approx ⦄ (CΣ c cod) = ≤o-sucMono (≤o-Z)
+-- ℧size ⦃ Exact ⦄ (CΣ c cod) =  ≤o-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
 -- ℧size (C≡ c x y) = ℧size {{Approx}} c
 -- ℧size (Cμ tyCtor c D x) = ≤o-refl _
 
@@ -271,14 +271,14 @@ codeMaxR c = omax-LUB (≤o-refl _) (codeSuc c)
 
 
 ⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
-⁇suc CodeModule.⁇⁇ = ≤o-sucMono ≤o-Z
-⁇suc CodeModule.⁇℧ = ≤o-sucMono ≤o-Z
-⁇suc CodeModule.⁇𝟙 = ≤o-sucMono ≤o-Z
-⁇suc {suc ℓ} (CodeModule.⁇Type x) = ≤o-sucMono ≤o-Z
-⁇suc (CodeModule.⁇Π x) = ≤o-sucMono ≤o-Z
-⁇suc (CodeModule.⁇Σ x) = ≤o-sucMono ≤o-Z
-⁇suc (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤o-sucMono ≤o-Z
-⁇suc (CodeModule.⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
+⁇suc ⁇⁇ = ≤o-sucMono ≤o-Z
+⁇suc ⁇℧ = ≤o-sucMono ≤o-Z
+⁇suc ⁇𝟙 = ≤o-sucMono ≤o-Z
+⁇suc {suc ℓ} (⁇Type x) = ≤o-sucMono ≤o-Z
+⁇suc (⁇Π x) = ≤o-sucMono ≤o-Z
+⁇suc (⁇Σ x) = ≤o-sucMono ≤o-Z
+⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤o-sucMono ≤o-Z
+⁇suc (⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
 
 open import Cubical.Data.Maybe
 
@@ -298,6 +298,39 @@ record DataGermsSmaller : Set2 where
     dataGermSmaller : ∀ {{_ : Æ}} (ℓ) tyCtor {pars : ApproxEl (Params ℓ tyCtor)} {indices} → dataGermDescSize ℓ tyCtor ≤o descSize (descFor ℓ tyCtor pars indices)
 
 open DataGermsSmaller {{...}} public
+
+
+-- Used for well-founded 2-argument induction
+codePairSize : ∀ {{_ : Æ}} {ℓ} → ℂ ℓ → ℂ ℓ → Ord
+descPairSize : ∀ {{_ : Æ}} {ℓ} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB) (D2 : ℂDesc cI' cB') → Ord
+
+codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
+... | h1 |  h2 |  H℧L x = O1
+... | h1 |  h2 |  H℧R x = O1
+... | h1 |  h2 |  H⁇L x x₁ = codeSize c2
+... | .(HStatic _) |  h2 |  H⁇R x = codeSize c1
+... | .(HStatic _) |  .(HStatic _) |  HNeq x = O1
+codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
+  = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
+codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+   = O↑ (omax (codePairSize dom1 dom2) (OLim dom1 λ x1 → OLim dom2 λ x2 → codePairSize (cod1 (approx x1)) (cod2 (approx x2))))
+codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
+  = O↑ (codePairSize c1 c2)
+codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1
+codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1
+codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1
+codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2 with numCtors tyCtor
+... | ℕ.zero = O1
+... | ℕ.suc n  = O↑ (OLim {{æ = Approx}} (CFin n) λ x → descPairSize (D (fromCFin x)) (D₁ (fromCFin x)))
+
+
+descPairSize {cB = cB} {cB' = cB'} (CArg c D1) (CArg c' D2)
+  = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
+descPairSize (CRec j D1) (CRec j' D2)
+  = O↑ (descPairSize  D1 D2)
+descPairSize {cB = cB} {cB' = cB'} (CHRec c j D1) (CHRec c' j' D2)
+  = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
+descPairSize _ _ = O1
 
 -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
 -- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
