@@ -81,7 +81,12 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk A D)
 
-
+-- Whether two inductive types have the same shape
+data DescMatch   {ℓ} {cI cB cI' cB' : ℂ ℓ} : (D1 : ℂDesc cI cB) (D2 : ℂDesc cI' cB') → Set where
+  EndMatch : ∀ {i j} → DescMatch (CEnd i) (CEnd j)
+  ArgMatch : ∀ {c1 c2 D1 D2} → DescMatch D1 D2 → DescMatch (CArg c1 D1) (CArg c2 D2)
+  RecMatch : ∀ {i1 i2 D1 D2} → DescMatch D1 D2 → DescMatch (CRec i1 D1) (CRec i2 D2)
+  HRecMatch : ∀ {c1 c2 i1 i2 D1 D2} → DescMatch D1 D2 → DescMatch (CHRec c1 i1 D1) (CHRec c2 i2 D2)
 
 
 
@@ -94,6 +99,11 @@ record InductiveCodes : Set2 where
       → (pars : ApproxEl (Params ℓ tyCtor))
       → (d : DName tyCtor)
       → ℂDesc (Indices ℓ tyCtor pars) C𝟙
+    -- All instantiations of a datatype have the same shape
+    descMatch : ∀ ℓ (tyCtor : CName)
+      → (pars1 pars2 : ApproxEl (Params ℓ tyCtor))
+      → (d : DName tyCtor)
+      → DescMatch (descFor ℓ tyCtor pars1 d) (descFor ℓ tyCtor pars2 d)
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
@@ -101,26 +111,51 @@ record InductiveCodes : Set2 where
   -- Predicate that determines if a code is well formed
   -- with respect to the inductive types it refers to
   -- i.e. if it's an instantation of that type's parameters and indices
-  data IndWF {ℓ} : ℂ ℓ → Set where
-   IWF⁇ : IndWF C⁇
-   IWF℧ : IndWF C℧
-   IWF𝟘 : IndWF C𝟘
-   IWF𝟙 : IndWF C𝟙
-   IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
-   IWFΠ : ∀ {dom cod}
-     → IndWF dom
-     → (∀ x → IndWF (cod x))
-     → IndWF (CΠ dom cod)
-   IWFΣ : ∀ {dom cod}
-     → IndWF dom
-     → (∀ x → IndWF (cod x))
-     → IndWF (CΣ dom cod)
-   IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
-   IWFμ : ∀ {tyCtor cI D i}
-     → (pars : ApproxEl (Params ℓ tyCtor))
-     → (indEq : cI ≡ Indices ℓ tyCtor pars)
-     → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor pars d))
-     → IndWF (Cμ tyCtor cI D i)
+  interleaved mutual
+    data IndWF {ℓ} : ℂ ℓ → Set
+    -- data DescIndWF {ℓ} {cI cB : ℂ ℓ } : ℂDesc cI cB → Set
+    data _ where
+      IWF⁇ : IndWF C⁇
+      IWF℧ : IndWF C℧
+      IWF𝟘 : IndWF C𝟘
+      IWF𝟙 : IndWF C𝟙
+      IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
+      IWFΠ : ∀ {dom cod}
+        → IndWF dom
+        → (∀ x → IndWF (cod x))
+        → IndWF (CΠ dom cod)
+      IWFΣ : ∀ {dom cod}
+        → IndWF dom
+        → (∀ x → IndWF (cod x))
+        → IndWF (CΣ dom cod)
+      IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
+      IWFμ : ∀ {tyCtor cI D i}
+        → (pars : ApproxEl (Params ℓ tyCtor))
+        → (indEq : cI ≡ Indices ℓ tyCtor pars)
+        → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙) (D d) (descFor ℓ tyCtor pars d))
+        → IndWF (Cμ tyCtor cI D i)
+
+
 
 
 open InductiveCodes {{...}} public
+
+
+record  ℂwf {{_ : InductiveCodes}} ℓ : Set where
+  constructor _|wf|_
+  field
+    code : ℂ ℓ
+    codeWF : IndWF code -- IndWF code
+
+open ℂwf public
+
+
+
+
+wfEl : ∀ {{_ : InductiveCodes}} {{æ : Æ}} {ℓ} → ℂwf ℓ → Set
+wfEl {{ æ = æ}} c = El {{æ = æ}} (code c)
+
+
+
+wfApproxEl : ∀ {{_ : InductiveCodes}} {ℓ} → ℂwf ℓ → Set
+wfApproxEl  c = El {{æ = Approx}} (code c)

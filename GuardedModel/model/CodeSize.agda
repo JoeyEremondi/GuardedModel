@@ -332,6 +332,26 @@ descPairSize {cB = cB} {cB' = cB'} (CHRec c j D1) (CHRec c' j' D2)
   = O↑ (omax (OLim cB λ x1 → OLim cB' λ x2 → codePairSize (c (approx x1)) (c' (approx x2)) ) (descPairSize D1 D2))
 descPairSize _ _ = O1
 
+
+
+-- Sizes for well-formed codes
+wfSize : ∀ {ℓ} → ℂwf ℓ → Ord
+wfSize c = codeSize (code c)
+
+wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
+wfElSize c x = elSize (code c) x
+
+
+codePair-≤L : ∀ {{_ : Æ}} {ℓ}
+  → (c1 c2 : ℂ ℓ)
+  → (wf1 : IndWF c1)
+  → (wf2 : IndWF c2)
+  → codeHead c1 ≡p codeHead c2
+  → codePairSize c1 c2 ≤o codeSize c1
+
+
+
+
 -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
 -- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
 -- codeSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → O1 ≤o codeSize c

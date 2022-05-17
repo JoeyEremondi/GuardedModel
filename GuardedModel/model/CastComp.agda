@@ -35,27 +35,6 @@ open import Ord
 
 open import Germ
 
-record ℂwf ℓ : Set where
-  constructor _|wf|_
-  field
-    code : ℂ ℓ
-    codeWF : IndWF code -- IndWF code
-
-open ℂwf public
-
-wfSize : ∀ {ℓ} → ℂwf ℓ → Ord
-wfSize c = codeSize (code c)
-
-
-
-wfEl : ∀ {{æ : Æ}} {ℓ} → ℂwf ℓ → Set
-wfEl {{æ}} c = El {{æ = æ}} (code c)
-
-wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
-wfElSize c x = elSize (code c) x
-
-wfApproxEl : ∀ {ℓ} → ℂwf ℓ → Set
-wfApproxEl  c = El {{æ = Approx}} (code c)
 
 record SizedCastMeet (ℓ : ℕ) (cSize1 cSize2 vSize1 vSize2 : Ord) : Set where
   field
