@@ -364,40 +364,41 @@ record CodePairSize {ℓ} (c1 c2 : ℂ ℓ) : Set where
 
 open CodePairSize public
 
-codePairSize : ∀ {ℓ} → (c1 c2 : ℂ ℓ) → CodePairSize c1 c2
+codePairSize : ∀ {ℓ h1 h2} → (c1 c2 : ℂ ℓ)
+  → {@(tactic default (headMatchView (codeHead c1) (codeHead c2))) view : HeadMatchView h1 h2}
+  → {@(tactic default (reflp {x = codeHead c1})) eq1 : h1 ≡p codeHead c1}
+  → {@(tactic default (reflp {x = codeHead c2})) eq2 : h2 ≡p codeHead c2}
+  → CodePairSize c1 c2
 descPairSize : ∀ {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Σ[ o ∈ Ord ]( descSize D1 ≤o o × descSize D2 ≤o o )
 
-codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
-... | h1 |  h2 |  H℧L reflp with C℧ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
-... | h1 |  h2 |  H℧R reflp with C℧ ← c2 =  CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
-... | h1 |  h2 |  H⁇L reflp x₁ with C⁇ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
-... | .(HStatic _) |  h2 |  H⁇R reflp with C⁇ ← c2 = CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
-... | .(HStatic _) |  .(HStatic _) |  HNeq x
-  = CPSize (omax (codeSize c1) (codeSize c2)) omax-≤L omax-≤R
-codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
+codePairSize c1 c2 {H℧L reflp}  with C℧ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
+codePairSize c1 c2 {H℧R reflp}  with C℧ ← c2 = CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
+codePairSize c1 c2 {H⁇L reflp x₁}  with C⁇ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
+codePairSize c1 c2 {H⁇R reflp}  with C⁇ ← c2 = CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
+codePairSize c1 c2 {HNeq x}  =  CPSize (omax (codeSize c1) (codeSize c2)) omax-≤L omax-≤R
+codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) {HEq {h1 = HΠ} reflp}
   = CPSize
       (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 x1) (cod2 x2)))))
       (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _
         (λ k → ≤o-℧ {{æ = Approx}} (ltL (codePairSize (cod1 k) (cod2 _)))) )))
       (≤o-sucMono (omax-mono (ltR (codePairSize dom1 dom2)) (≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _
         λ k → ltR (codePairSize (cod1 (℧Approx dom1)) (cod2 k))))))
-
-codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) {HEq {h1 = HΣ} reflp}
   = CPSize
       (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 x1) (cod2 x2)))))
       (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _
         (λ k → ≤o-℧ {{æ = Approx}} (ltL (codePairSize (cod1 k) (cod2 _)))) )))
       (≤o-sucMono (omax-mono (ltR (codePairSize dom1 dom2)) (≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _
         λ k → ltR (codePairSize (cod1 (℧Approx dom1)) (cod2 k))))))
-codePairSize (C≡ c1 x1 y1) (C≡ c2 x2 y2) | HStatic H≅ |  HStatic _ |  HEq reflp with rec ← codePairSize c1 c2
+codePairSize (C≡ c1 x1 y1) (C≡ c2 x2 y2) {HEq {h1 = H≅} reflp} with rec ← codePairSize c1 c2
   = CPSize
     (O↑ (omax (csize rec) (omax (omax (elSize {{Approx}} c1 x1) (elSize {{Approx}} c1 y1)) (omax (elSize {{Approx}} c2 x2) (elSize {{Approx}} c2 y2)))))
     (≤o-sucMono (omax-mono (ltL rec) omax-≤L))
     (≤o-sucMono (omax-mono (ltR rec) omax-≤R))
-codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
-codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
-codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
-codePairSize (Cμ tyCtor c1 D1 x) (Cμ tyCtor₁ c2 D2 x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
+codePairSize C𝟙 C𝟙 {HEq {h1 = H𝟙} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize C𝟘 C𝟘 {HEq {h1 = H𝟘} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize CType CType {HEq {h1 = HType} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize (Cμ tyCtor c1 D1 i) (Cμ _ c2 D2 i2) {HEq {h1 = HCtor x₂} reflp} {reflp} {reflp}
   = CPSize (O↑ (DLim tyCtor (λ d → fst (descPairSize (D1 d) (D2 d)))))
     (≤o-sucMono (extDLim tyCtor _ _ (λ d → fst (snd (descPairSize (D1 d) (D2 d))))))
     (≤o-sucMono (extDLim tyCtor _ _ (λ d → snd (snd (descPairSize (D1 d) (D2 d))))))
