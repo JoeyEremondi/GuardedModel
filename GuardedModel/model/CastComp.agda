@@ -74,49 +74,6 @@ castMeetRec ℓ cSize vSize self ℓself = {!!} -- record
   where
     ----------------------------------------------------------------------------------------------------------
     -- Nicer interfaces to our "smaller" functions, so we don't have to muck around with quadruples of ordinals
-    ⁇_By_ : ∀ {{_ : Æ}}
-      → (c : ℂwf ℓ) → wfSize c <o cSize → (wfEl c)
-    ⁇_By_ c lt = o⁇ (self (<oPairL lt)) c reflp reflp
-
-    [_]⁇_By_ : ∀ (æ : Æ)
-      → (c : ℂwf ℓ) → wfSize c <o cSize → (wfEl {{æ = æ}} c)
-    [_]⁇_By_ æ  = ⁇_By_ {{æ}}
-
-    _∋_⊓_By_ : ∀ {{_ : Æ}}
-      → (c : ℂwf ℓ)
-      → (x y : wfEl c)
-      → (wfSize c <o cSize)
-      → LÆ (wfEl c)
-    _∋_⊓_By_   c x y lt =
-      oMeet (self ( (<oPairL lt))) c x y reflp reflp
-    [_]_∋_⊓_By_ : ∀ (æ : Æ)
-      → (c : ℂwf ℓ)
-      → (x y : wfEl {{æ = æ}} c)
-      → (wfSize c <o cSize)
-      → LÆ {{æ = æ}} (wfEl {{æ = æ}} c)
-    [_]_∋_⊓_By_ æ = _∋_⊓_By_ {{æ}}
-
-    _⊓_By_ :
-      (c1 c2 : ℂwf ℓ)
-      → (wfPairSize c1 c2 <o cSize)
-      → (ℂwf ℓ)
-    _⊓_By_  c1 c2 lt =
-      oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp
-
-    ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
-      → (cdest csource : ℂwf ℓ)
-      → (x : wfEl csource)
-      → wfPairSize csource cdest <o cSize
-      → LÆ (wfEl cdest)
-    ⟨ cdest ⇐ csource ⟩ x By lt1 =
-      oCast (self ((<oPairL lt1))) csource cdest reflp x reflp
-
-    [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
-      → (cdest csource : ℂwf ℓ)
-      → (x : wfEl {{æ = æ}} csource)
-      → wfPairSize csource cdest <o cSize
-      → LÆ {{æ = æ}} (wfEl {{æ = æ}} cdest)
-    [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
 
     ⁇ : ∀ {{_ : Æ}}  → (c : ℂwf ℓ)
       → (_ : wfSize c ≡p cSize)
@@ -143,14 +100,26 @@ castMeetRec ℓ cSize vSize self ℓself = {!!} -- record
       in (wit ⊢ x ≅ y)
     ⁇ (Cμ tyCtor c D x |wf| _) reflp = W⁇
 
-    codeMeet : ∀ {{_ : Æ}}
+    codeMeet : ∀ {{_ : Æ}} {h1 h2}
       → (c1 c2 : ℂ ℓ )
       → IndWF c1 → IndWF c2
+      → HeadMatchView h1 h2
+      → h1 ≡p codeHead c1
+      → h2 ≡p codeHead c2
       → (csize (codePairSize c1 c2) ≡p cSize)
       → (OZ ≡p vSize)
       → (ℂ ℓ)
-    codeMeet c1 c2 wf1 wf2 ceq veq with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
-    codeMeet c1 c2 wf1 wf2 ceq veq | h1 | h2 | v = ?
+    -- Error cases: the meet is ℧ if either argument is ℧
+    -- or the heads don't match
+    codeMeet _ c2 wf1 wf2 (H℧L reflp) eq1 eq2 reflp reflp = C℧
+    codeMeet c1 _ wf1 wf2 (H℧R reflp) eq1 eq2 reflp reflp = C℧
+    codeMeet c1 c2 wf1 wf2 (HNeq x) eq1 eq2 reflp reflp = C℧
+    -- Meet of anything with ⁇ is that thing
+    codeMeet _ c2 wf1 wf2 (H⁇L reflp x₁) eq1 eq2 reflp reflp = c2
+    codeMeet c1 _ wf1 wf2 (H⁇R reflp) eq1 eq2 reflp reflp = c1
+    -- Otherwise, we have two codes with the same head, so we take the meet of the parts
+    -- after performing the required castsa
+    codeMeet c1 c2 wf1 wf2 (HEq {h1 = h} reflp) eq1 eq2 reflp reflp = {!h c1 c2!}
 --     -- If either is ℧ or the heads don't match, the result is ℧
 --     codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp | h1  | h2  | H℧L reflp =  C℧ |wf| IWF℧
 --     codeMeet (c1 |wf| wf1) (c2 |wf| wf2) reflp reflp | h1  | h2  | H℧R x = C℧ |wf| IWF℧
