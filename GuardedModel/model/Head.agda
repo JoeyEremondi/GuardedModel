@@ -18,7 +18,7 @@ open import Inductives
 open import GuardedAlgebra
 open import ApproxExact
 
-module Head {{_ : Æ}} {{_ : DataTypes}} {{_ : DataGerms}} where
+module Head {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 
@@ -226,7 +226,7 @@ codeHead (C≡ c x y) = HStatic H≅
 codeHead (Cμ tyCtor c D x) = HStatic (HCtor tyCtor)
 -- codeHead {suc ℓ} (CCumul t) = codeHead t
 
-valueHead : ∀ {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
+valueHead : ∀ {{_ : Æ}} {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
 valueHead C℧ _ x = VH℧
 valueHead C𝟘 _ tt = VH℧
 valueHead C𝟙 _ false = VH℧

@@ -129,6 +129,12 @@ DLim tyCtor f with numCtors tyCtor
 ... | ℕ.zero = OZ
 ... | ℕ.suc n = OLim ⦃ æ = Approx ⦄ (CFin n) (λ x → f (fromCFin x))
 
+extDLim : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Ord) → (∀ d → f1 d ≤o f2 d) → (DLim tyCtor f1) ≤o (DLim tyCtor f2)
+extDLim tyCtor f1 f2 lt with numCtors tyCtor
+... | ℕ.zero = ≤o-Z
+... | ℕ.suc n = extLim ⦃ æ = Approx ⦄ (λ x → f1 (fromCFin x)) (λ x → f2 (fromCFin x)) (λ k → lt (fromCFin k))
+
+
 germDescSize  GEnd GEndCode b = O1
 germDescSize  (GArg A D) (GArgCode c isom pf) b = O↑ (omax (codeSize (c b)) (OLim (c b) (λ a → germDescSize D pf (b , Iso.inv (isom b) (exact a) ))))
 germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) b = O1
@@ -160,22 +166,26 @@ codeSize  (C≡ c x y) = O↑ (omax (codeSize c) (omax (elSize {{Approx}} c x) (
 codeSize (Cμ tyCtor c D x) = O↑ (DLim tyCtor λ d → descSize (D d))
 
 descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
-descSize {cB = cB} (CArg c D) = O↑ (OLim {{æ = Approx}} cB λ b → omax (codeSize (c b)) (descSize D))
+descSize {cB = cB} (CArg c D) = O↑ (omax (OLim {{æ = Approx}} cB λ b → codeSize (c b)) (descSize D))
 descSize {cI = c} (CRec j D) = O↑ (omax (descSize D) (elSize {{Approx}} c j))
-descSize {cI = cI} {cB = cB} (CHRec c j D) = O↑ (OLim {{æ = Approx}} cB λ b → OLim {{æ = Approx}} (c b) λ a → omax (descSize D) (elSize {{Approx}} cI (j b a)))
+descSize {cI = cI} {cB = cB} (CHRec c j D) =
+  O↑
+    (omax
+      (OLim {{æ = Approx}} cB λ b → OLim {{æ = Approx}} (c b) λ a →  (elSize {{Approx}} cI (j b a)))
+      (descSize D) )
 
 
 -- There are no codes of size zero
 -- noCodeZero : ∀ {ℓ} (c : ℂ ℓ) → ¬ (codeSize c ≡p OZ)
--- noCodeZero CodeModule.C⁇ ()
--- noCodeZero CodeModule.C℧ pf = {!!}
--- noCodeZero CodeModule.C𝟘 pf = {!!}
--- noCodeZero CodeModule.C𝟙 pf = {!!}
--- noCodeZero CodeModule.CType pf = {!!}
--- noCodeZero (CodeModule.CΠ c cod) pf = {!!}
--- noCodeZero (CodeModule.CΣ c cod) pf = {!!}
--- noCodeZero (CodeModule.C≡ c x y) pf = {!!}
--- noCodeZero (CodeModule.Cμ tyCtor c D x) pf = {!!}
+-- noCodeZero C⁇ ()
+-- noCodeZero C℧ pf = {!!}
+-- noCodeZero C𝟘 pf = {!!}
+-- noCodeZero C𝟙 pf = {!!}
+-- noCodeZero CType pf = {!!}
+-- noCodeZero (CΠ c cod) pf = {!!}
+-- noCodeZero (CΣ c cod) pf = {!!}
+-- noCodeZero (C≡ c x y) pf = {!!}
+-- noCodeZero (Cμ tyCtor c D x) pf = {!!}
 
 -- argLessLeft : ∀ o1 o2 → o1 <o O↑ (omax o1 o2)
 -- argLessLeft o1 o2 = ≤o-sucMono omax-≤L
@@ -354,7 +364,9 @@ record CodePairSize {ℓ} (c1 c2 : ℂ ℓ) : Set where
 
 open CodePairSize
 
-codePairSize : ∀ {{_ : Æ}} {ℓ} → (c1 c2 : ℂ ℓ) → CodePairSize c1 c2
+codePairSize : ∀ {ℓ} → (c1 c2 : ℂ ℓ) → CodePairSize c1 c2
+descPairSize : ∀ {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Σ[ o ∈ Ord ]( descSize D1 ≤o o × descSize D2 ≤o o )
+
 codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView (codeHead c1) (codeHead c2)
 ... | h1 |  h2 |  H℧L reflp with C℧ ← c1 = CPSize (codeSize c2) (codeSuc c2) (≤o-refl _)
 ... | h1 |  h2 |  H℧R reflp with C℧ ← c2 =  CPSize (codeSize c1) (≤o-refl _) (codeSuc c1)
@@ -364,23 +376,49 @@ codePairSize c1 c2 with codeHead c1 in eq1 | codeHead c2 in eq2 | headMatchView 
   = CPSize (omax (codeSize c1) (codeSize c2)) omax-≤L omax-≤R
 codePairSize (CΠ dom1 cod1) (CΠ dom2 cod2) | HStatic HΠ |  HStatic _ |  HEq reflp
   = CPSize
-      (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 (approx {{Approx}} x1)) (cod2 (approx {{Approx}} x2))))))
-      (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _ λ k → {!!} )))
-      {!!}
-    where
-      codHelperL : ∀ k → codeSize (cod1 k) ≤o
-        OLim dom2
-        (λ x2 → csize (codePairSize (cod1 (approx {{æ = Approx}} k)) (cod2 (approx x2))))
+      (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 x1) (cod2 x2)))))
+      (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _
+        (λ k → ≤o-℧ {{æ = Approx}} (ltL (codePairSize (cod1 k) (cod2 _)))) )))
+      (≤o-sucMono (omax-mono (ltR (codePairSize dom1 dom2)) (≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _
+        λ k → ltR (codePairSize (cod1 (℧Approx dom1)) (cod2 k))))))
 
--- codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
---    = {!!}
--- codePairSize (C≡ c1 x y) (C≡ c2 x₁ y₁) | HStatic H≅ |  HStatic _ |  HEq reflp
---   = {!!}
--- codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = O1 , {!!}
--- codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = O1 , {!!}
--- codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = O1 , {!!}
--- codePairSize (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
---   = {!!}
+codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) | HStatic HΣ |  HStatic _ |  HEq reflp
+  = CPSize
+      (O↑ (omax (csize (codePairSize dom1 dom2)) (OLim {{æ = Approx}} dom1 λ x1 → OLim {{æ = Approx}} dom2 λ x2 → csize (codePairSize (cod1 x1) (cod2 x2)))))
+      (≤o-sucMono (omax-mono (ltL (codePairSize dom1 dom2)) (extLim {{æ = Approx}} _ _
+        (λ k → ≤o-℧ {{æ = Approx}} (ltL (codePairSize (cod1 k) (cod2 _)))) )))
+      (≤o-sucMono (omax-mono (ltR (codePairSize dom1 dom2)) (≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _
+        λ k → ltR (codePairSize (cod1 (℧Approx dom1)) (cod2 k))))))
+codePairSize (C≡ c1 x1 y1) (C≡ c2 x2 y2) | HStatic H≅ |  HStatic _ |  HEq reflp with rec ← codePairSize c1 c2
+  = CPSize
+    (O↑ (omax (csize rec) (omax (omax (elSize {{Approx}} c1 x1) (elSize {{Approx}} c1 y1)) (omax (elSize {{Approx}} c2 x2) (elSize {{Approx}} c2 y2)))))
+    (≤o-sucMono (omax-mono (ltL rec) omax-≤L))
+    (≤o-sucMono (omax-mono (ltR rec) omax-≤R))
+codePairSize C𝟙 C𝟙 | HStatic H𝟙 |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize C𝟘 C𝟘 | HStatic H𝟘 |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize CType CType | HStatic HType |  HStatic _ |  HEq reflp = CPSize O1 (≤o-refl _) (≤o-refl _)
+codePairSize (Cμ tyCtor c1 D1 x) (Cμ tyCtor₁ c2 D2 x₁) | HStatic (HCtor x₂) |  HStatic _ |  HEq reflp with reflp ← eq1 with reflp ← eq2
+  = CPSize (O↑ (DLim tyCtor (λ d → fst (descPairSize (D1 d) (D2 d)))))
+    (≤o-sucMono (extDLim tyCtor _ _ (λ d → fst (snd (descPairSize (D1 d) (D2 d))))))
+    (≤o-sucMono (extDLim tyCtor _ _ (λ d → snd (snd (descPairSize (D1 d) (D2 d))))))
+
+descPairSize {cB = cB} {cB' = cB'} (CEnd i) (CEnd i₁) = O↑ (omax (elSize ⦃ Approx ⦄ _ i) (elSize {{Approx}} _ i₁)) , ≤o-sucMono omax-≤L , ≤o-sucMono omax-≤R
+descPairSize {cB = cB} {cB' = cB'} (CArg c1 D1) (CArg c2 D2) =
+  O↑ (omax (OLim ⦃ æ = Approx ⦄ cB λ b → OLim {{æ = Approx}} cB' λ b' →  csize (codePairSize (c1 b) (c2 b'))) (fst (descPairSize D1 D2)))
+  , ≤o-sucMono (omax-mono (extLim ⦃ æ = Approx ⦄ _ _ λ k → ≤o-℧ ⦃ æ = Approx ⦄ (ltL (codePairSize _ _))) (fst (snd (descPairSize D1 D2))))
+  ,  ≤o-sucMono (omax-mono (≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ k → ltR (codePairSize (c1 _) (c2 _))))) (snd (snd (descPairSize D1 D2))))
+descPairSize {cI = cI} {cB = cB} {cI' = cI'} {cB' = cB'} (CRec j1 D1) (CRec j2 D2) =
+  O↑ (omax (fst (descPairSize D1 D2)) (omax (elSize ⦃ Approx ⦄ cI j1) (elSize {{Approx}} cI' j2)))
+  , ≤o-sucMono (omax-mono (fst (snd (descPairSize D1 D2))) omax-≤L)
+  , ≤o-sucMono (omax-mono (snd (snd (descPairSize D1 D2))) omax-≤R)
+descPairSize {cI = cI} {cB = cB} {cI' = cI'} {cB' = cB'} (CHRec c1 j1 D1) (CHRec c2 j2 D2) =
+  O↑
+    (omax
+      (OLim {{æ = Approx}} cB λ b → OLim {{æ = Approx}} cB' λ b' → OLim {{æ = Approx}} (c1 b) λ a → OLim {{æ = Approx}}(c2 b') λ a' →
+        omax (elSize ⦃ Approx ⦄ cI (j1 b a)) (elSize {{Approx}} cI' (j2 b' a')))
+      (fst (descPairSize D1 D2)))
+  , ≤o-sucMono (omax-mono (extLim ⦃ æ = Approx ⦄ _ _ λ b → ≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ a →  ≤o-℧ {{æ = Approx}} omax-≤L))) (fst (snd (descPairSize D1 D2))))
+  , ≤o-sucMono (omax-mono (≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ a' → ≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _ (λ k → omax-≤R))))) (snd (snd (descPairSize D1 D2))))
 
 
 -- -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
