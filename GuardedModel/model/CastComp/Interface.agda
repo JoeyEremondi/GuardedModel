@@ -56,6 +56,15 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → ( pfv1 : wfElSize csource x ≡p vSize)
       -> LÆ ( wfEl cdest)
 
+    -- Take a code and approximate it until it is as small as the other code
+    -- Used to convert to and from the germ of an inductive type
+    -- Eventually we'll prove as a meta-theorem that this is the identity for well-formed inductive types
+    -- TODO: is this the wrong approach?
+    truncateCode : ∀ {ℓ} → (c1 c2 : ℂ ℓ)
+      → (codeSize c1 ≡p cSize)
+      → (OZ c1 ≡p vSize)
+      → Σ[ c ∈ ℂ ℓ ](codeSize c ≤o codeSize c1)
+
 open SizedCastMeet
 
 record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where

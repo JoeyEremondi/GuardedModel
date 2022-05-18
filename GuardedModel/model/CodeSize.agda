@@ -425,6 +425,8 @@ descPairSize {cI = cI} {cB = cB} {cI' = cI'} {cB' = cB'} (CHRec c1 j1 D1) (CHRec
 wfPairSize : ∀ {ℓ} (c1 c2 : ℂwf ℓ) → Ord
 wfPairSize c1 c2 = csize (codePairSize (code c1) (code c2))
 
+
+
 -- -- elSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → (x : El c) → O1 ≤o elSize c x
 -- -- ⁇SizeLowerBound : ∀ {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
 -- -- codeSizeLowerBound : ∀ {ℓ} (c : ℂ ℓ) → O1 ≤o codeSize c
@@ -450,7 +452,6 @@ wfPairSize c1 c2 = csize (codePairSize (code c1) (code c2))
 -- -- elSizeLowerBound (CΣ c cod) (x , y) = ≤o-trans (elSizeLowerBound c x) omax-≤L
 -- -- elSizeLowerBound (C≡ c x₁ y) (x ⊢ _ ≅ _) = elSizeLowerBound c x
 -- -- elSizeLowerBound (Cμ tyCtor c D x₁) (Wsup x) = ≤o-sucMono ≤o-Z
--- -- elSizeLowerBound (Cμ tyCtor c D x₁) W℧ = ≤o-sucMono ≤o-Z
 -- -- elSizeLowerBound (Cμ tyCtor c D x₁) W⁇ = ≤o-sucMono ≤o-Z
 
 -- -- ⁇SizeLowerBound ⁇⁇ = ≤o-refl _
