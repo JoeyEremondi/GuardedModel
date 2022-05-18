@@ -51,7 +51,7 @@ data _≤o_ : Ord → Ord → Set where
   ≤o-Z : ∀ {o} → OZ ≤o o
   ≤o-sucMono : ∀ {o1 o2} → o1 ≤o o2 → O↑ o1 ≤o O↑ o2
   ≤o-cocone : ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} (f : Approxed (El c) {{æ}} → Ord) (k : Approxed (El c)) → o ≤o f k → o ≤o OLim c f
-  ≤o-limiting : ∀  {{_ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (∀ k → f k ≤o o) → OLim c f ≤o o
+  ≤o-limiting : ∀  {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (∀ k → f k ≤o o) → OLim c f ≤o o
 
 ≤o-refl : ∀ o → o ≤o o
 ≤o-refl OZ = ≤o-Z

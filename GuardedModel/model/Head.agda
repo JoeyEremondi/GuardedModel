@@ -270,6 +270,17 @@ headMatchView (HStatic h1) (HStatic h2) with headDecEq h1 h2
 ... | yes pf = HEq pf
 ... | no npf = HNeq npf
 
+-- reverseHMV : ∀ {h1 h2} →  HeadMatchView h1 h2 → HeadMatchView h2 h1
+-- reverseHMV (H℧L x) = H℧R x
+-- reverseHMV (H℧R x) = H℧L x
+-- reverseHMV {H⁇} {h2 = H⁇} (H⁇L x x₁) = H⁇L reflp (λ ())
+-- reverseHMV {H⁇} {h2 = H℧} (H⁇L x x₁) with () ← x₁ reflp
+-- reverseHMV {H⁇} {h2 = HStatic x₂} (H⁇L x x₁) = H⁇R x
+-- reverseHMV (H⁇R x) = H⁇L x (λ ())
+-- reverseHMV (HEq x) = HEq (pSym x)
+-- reverseHMV (HNeq x) = HNeq (λ pf → x (pSym pf) )
+
+
 
 data ValHeadMatchView  : {h : GHead} →  ValHead h → ValHead h → Set where
   VH℧L : ∀ {h} {h1 h2 : ValHead h} → h1 ≡p VH℧ → ValHeadMatchView h1 h2
