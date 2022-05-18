@@ -32,11 +32,11 @@ open import Ord
 open import Germ
 record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   field
-    o⁇ : ∀ {{_ : Æ}}  → (c : ℂ ℓ)
+    o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
       → (pfc1 : codeSize c ≡p cSize )
       → ( pfv2 : OZ ≡p vSize )
       → (El c)
-    oMeet : ∀ {{_ : Æ}}
+    oMeet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
       → ( pfc1 : (codeSize c)  ≡p cSize )
@@ -49,7 +49,7 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → ( pfv1 : OZ  ≡p vSize )
       → (ℂ ℓ)
 
-    oCast : ∀ {{_ : Æ}}
+    oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
       → ( pfc1 : codeSize2 csource cdest  ≡p cSize)
       →  (x : El csource)
@@ -65,7 +65,7 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (OZ ≡p vSize)
       → Σ[ c ∈ ℂ ℓ ](codeSize c ≤o codeSize c1)
 
-open SizedCastMeet
+open SizedCastMeet public
 
 record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   field
@@ -115,4 +115,3 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → codeSize2 csource cdest <o cSize
       → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
-open SmallerCastMeet {{...}} public

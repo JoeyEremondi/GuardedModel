@@ -26,7 +26,7 @@ open import Ord
 open import CastComp.Interface
 
 module CastComp.CodeMeet {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} {{_ : DataGermsSmaller}}
-    {ℓ} (cSize : Ord) (vSize : Ord) {{_ : SmallerCastMeet ℓ cSize vSize}}
+    {ℓ} (cSize : Ord) (vSize : Ord) (scm : SmallerCastMeet ℓ cSize vSize)
 
   where
 
@@ -35,10 +35,14 @@ open import Head
 open import Util
 
 
+open SmallerCastMeet scm
+
+
+{-# DISPLAY SmallerCastMeet._⊓_By_  = _⊓_By_  #-}
+{-# DISPLAY SmallerCastMeet._∋_⊓_By_  = _∋_⊓_By_  #-}
 
 codeMeet : ∀ {{_ : Æ}} {h1 h2}
   → (c1 c2 : ℂ ℓ )
-  → IndWF c1 → IndWF c2
   → (view : HeadMatchView h1 h2)
   → (eq1 : h1 ≡p codeHead c1)
   → (eq2 : h2 ≡p codeHead c2)
@@ -47,22 +51,36 @@ codeMeet : ∀ {{_ : Æ}} {h1 h2}
   → (ℂ ℓ)
 -- Error cases: the meet is ℧ if either argument is ℧
 -- or the heads don't match
-codeMeet _ c2 wf1 wf2 (H℧L reflp) eq1 eq2 reflp reflp = C℧
-codeMeet c1 _ wf1 wf2 (H℧R reflp) eq1 eq2 reflp reflp = C℧
-codeMeet c1 c2 wf1 wf2 (HNeq x) eq1 eq2 reflp reflp = C℧
+codeMeet _ c2  (H℧L reflp) eq1 eq2 reflp reflp = C℧
+codeMeet c1 _  (H℧R reflp) eq1 eq2 reflp reflp = C℧
+codeMeet c1 c2  (HNeq x) eq1 eq2 reflp reflp = C℧
 -- Meet of anything with ⁇ is that thing
-codeMeet _ c2 wf1 wf2 (H⁇L reflp x₁) eq1 eq2 reflp reflp = c2
-codeMeet c1 _ wf1 wf2 (H⁇R reflp) eq1 eq2 reflp reflp = c1
+codeMeet _ c2  (H⁇L reflp x₁) eq1 eq2 reflp reflp = c2
+codeMeet c1 _  (H⁇R reflp) eq1 eq2 reflp reflp = c1
 -- Otherwise, we have two codes with the same head, so we take the meet of the parts
 -- after performing the required casts
 -- First: trivial cases, where both types are identical
-codeMeet CodeModule.C𝟙 CodeModule.C𝟙 wf1 wf2 (HEq {h1 = H𝟙} reflp) eq1 eq2 reflp reflp = C𝟙
-codeMeet CodeModule.C𝟘 CodeModule.C𝟘 wf1 wf2 (HEq {h1 = H𝟘} reflp) eq1 eq2 reflp reflp = C𝟘
-codeMeet CodeModule.CType CodeModule.CType wf1 wf2 (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = {!!}
-codeMeet (CodeModule.CΠ c1 cod) (CodeModule.CΠ c2 cod₁) wf1 wf2 (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp = {!!}
-codeMeet (CodeModule.CΣ c1 cod) (CodeModule.CΣ c2 cod₁) wf1 wf2 (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp = {!!}
-codeMeet (CodeModule.C≡ c1 x y) (CodeModule.C≡ c2 x₁ y₁) wf1 wf2 (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp = {!!}
-codeMeet (CodeModule.Cμ tyCtor c1 D x) (CodeModule.Cμ tyCtor₁ c2 D₁ x₁) wf1 wf2 (HEq {h1 = HCtor x₂} reflp) eq1 eq2 reflp reflp = {!!}
+codeMeet C𝟙 C𝟙  (HEq {h1 = H𝟙} reflp) eq1 eq2 reflp reflp = C𝟙
+codeMeet C𝟘 C𝟘  (HEq {h1 = H𝟘} reflp) eq1 eq2 reflp reflp = C𝟘
+codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = CType {{inst = inst}}
+-- Pi and Sigma types: we take the meet of the domains, then produce a codomain that takes the meet
+-- after casting the argument to the appropriate type
+codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
+        = let
+          dom12 = dom1 ⊓ dom2
+                        By ≤o-sucMono omax-≤L
+          cod12 : (x : ApproxEl dom12) → ℂ ℓ
+          cod12 x12 =
+            let
+              x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono (≤o-trans {!!} omax-≤L) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+              x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12 By {!!}
+            in {!!}
+              -- (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)
+              --         By {!!}
+        in CΠ {!!} {!!}
+codeMeet (CΣ c1 cod) (CΣ c2 cod₁)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp = {!!}
+codeMeet (C≡ c1 x y) (C≡ c2 x₁ y₁)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp = {!!}
+codeMeet (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁)  (HEq {h1 = HCtor x₂} reflp) eq1 eq2 reflp reflp = {!!}
 
 
 
