@@ -179,6 +179,9 @@ abstract
   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (omax o1 o2) ≤o (omax o1' o2')
   omax-mono lt1 lt2 = omax-LUB (≤o-trans lt1 omax-≤L) (≤o-trans lt2 omax-≤R)
 
+  omax-commut : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
+  omax-commut = omax-LUB omax-≤R omax-≤L
+
   data UBView : Ord → Ord → Set where
     UB-ZL : ∀ o → UBView OZ o
     UB-ZR : ∀ o → UBView o OZ

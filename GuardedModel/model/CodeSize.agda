@@ -390,11 +390,13 @@ codePairSize (CΣ dom1 cod1) (CΣ dom2 cod2) {HEq {h1 = HΣ} reflp}
         (λ k → ≤o-℧ {{æ = Approx}} (ltL (codePairSize (cod1 k) (cod2 _)))) )))
       (≤o-sucMono (omax-mono (ltR (codePairSize dom1 dom2)) (≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _
         λ k → ltR (codePairSize (cod1 (℧Approx dom1)) (cod2 k))))))
-codePairSize (C≡ c1 x1 y1) (C≡ c2 x2 y2) {HEq {h1 = H≅} reflp} with rec ← codePairSize c1 c2
+codePairSize (C≡ c1 x1 y1) (C≡ c2 x2 y2) {HEq {h1 = H≅} reflp}
   = CPSize
-    (O↑ (omax (csize rec) (omax (omax (elSize {{Approx}} c1 x1) (elSize {{Approx}} c1 y1)) (omax (elSize {{Approx}} c2 x2) (elSize {{Approx}} c2 y2)))))
-    (≤o-sucMono (omax-mono (ltL rec) omax-≤L))
-    (≤o-sucMono (omax-mono (ltR rec) omax-≤R))
+    (O↑ (omax (csize rrec) (omax (omax (elSize {{Approx}} c1 x1) (elSize {{Approx}} c1 y1)) (omax (elSize {{Approx}} c2 x2) (elSize {{Approx}} c2 y2)))))
+    (≤o-sucMono (omax-mono (ltL rrec) omax-≤L))
+    (≤o-sucMono (omax-mono (ltR rrec) omax-≤R))
+    where
+      rrec = codePairSize c1 c2
 codePairSize C𝟙 C𝟙 {HEq {h1 = H𝟙} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
 codePairSize C𝟘 C𝟘 {HEq {h1 = H𝟘} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
 codePairSize CType CType {HEq {h1 = HType} reflp} = CPSize O1 (≤o-refl _) (≤o-refl _)
@@ -439,18 +441,51 @@ codePairSizeCommut {_} {_} {HStatic x} c1 c2 {H⁇L reflp x₁} {H⁇R reflp} {e
 codePairSizeCommut c1 c2 {H⁇R reflp} {H⁇L reflp x₁} {eq1} {eq2} with C⁇ ← c2 = ≤o-refl _
 codePairSizeCommut c1 c2 {HNeq x₁} {HEq reflp} {eq1} {eq2} with () ← x₁ reflp
 codePairSizeCommut c1 c2 {HEq reflp} {HNeq x₁} {eq1} {eq2} with () ← x₁ reflp
-codePairSizeCommut c1 c2 {HNeq x} {HNeq x₁} {eq1} {eq2} = omax-LUB omax-≤R omax-≤L
+codePairSizeCommut c1 c2 {HNeq x} {HNeq x₁} {eq1} {eq2} = omax-commut
 codePairSizeCommut c1 c2 {HEq reflp} {HEq pf} {eq1} {eq2} rewrite decUIP headDecEq pf reflp = helper c1 c2 eq1 eq2
   where
     helper : ∀ {ℓ} {h} → (c1 c2 : ℂ ℓ) → (eq1 : HStatic h ≡p codeHead c1) → (eq2 : HStatic h ≡p codeHead c2)
       → csize (codePairSize c1 c2 {HEq reflp} {eq1} {eq2} ) ≤o csize (codePairSize c2 c1 {HEq reflp} {eq2} {eq1})
-    helper {h = HΠ} (CodeModule.CΠ c1 cod) (CodeModule.CΠ c2 cod₁) eq1 eq2 = {!!}
-    helper {h = HΣ} (CodeModule.CΣ c1 cod) (CodeModule.CΣ c2 cod₁) eq1 eq2 = {!!}
-    helper {h = H≅} (CodeModule.C≡ c1 x y) (CodeModule.C≡ c2 x₁ y₁) eq1 eq2 = {!!}
-    helper {h = H𝟙} CodeModule.C𝟙 CodeModule.C𝟙 eq1 eq2 = {!!}
-    helper {h = H𝟘} CodeModule.C𝟘 CodeModule.C𝟘 eq1 eq2 = {!!}
-    helper {h = HType} CodeModule.CType CodeModule.CType eq1 eq2 = {!!}
-    helper {h = HCtor x} (CodeModule.Cμ tyCtor c1 D x₁) (CodeModule.Cμ tyCtor₁ c2 D₁ x₂) eq1 eq2 = {!!}
+    helper {h = HΠ} (CodeModule.CΠ dom1 cod1) (CodeModule.CΠ dom2 cod2) eq1 eq2
+      = ≤o-sucMono
+        (omax-mono
+          (codePairSizeCommut dom1 dom2)
+          (≤o-limiting ⦃ æ = Approx ⦄ _ (λ k1 → extLim ⦃ æ = Approx ⦄ _ _ (λ k2 →
+            ≤o-cocone ⦃ æ = Approx ⦄ _ k1 (codePairSizeCommut (cod1 k1) (cod2 k2))))))
+    helper {h = HΣ} (CodeModule.CΣ dom1 cod1) (CodeModule.CΣ dom2 cod2) eq1 eq2
+      = ≤o-sucMono
+        (omax-mono
+          (codePairSizeCommut dom1 dom2)
+          (≤o-limiting ⦃ æ = Approx ⦄ _ (λ k1 → extLim ⦃ æ = Approx ⦄ _ _ (λ k2 →
+            ≤o-cocone ⦃ æ = Approx ⦄ _ k1 (codePairSizeCommut (cod1 k1) (cod2 k2))))))
+    helper {h = H≅} (CodeModule.C≡ c1 x y) (CodeModule.C≡ c2 x₁ y₁) eq1 eq2
+      = ≤o-sucMono (omax-mono
+        (codePairSizeCommut c1 c2)
+        omax-commut)
+    helper {h = H𝟙} CodeModule.C𝟙 CodeModule.C𝟙 eq1 eq2 = ≤o-refl _
+    helper {h = H𝟘} CodeModule.C𝟘 CodeModule.C𝟘 eq1 eq2 = ≤o-refl _
+    helper {h = HType} CodeModule.CType CodeModule.CType eq1 eq2 = ≤o-refl _
+    helper {h = HCtor x} (CodeModule.Cμ tyCtor c1 D1 x₁) (CodeModule.Cμ tyCtor₁ c2 D2 x₂) reflp reflp
+      = ≤o-sucMono (extDLim x _ _ (λ d → helperDesc (D1 d) (D2 d)))
+      where
+        helperDesc : ∀ {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → fst (descPairSize D1 D2) ≤o fst (descPairSize D2 D1)
+        helperDesc (CodeModule.CEnd i) (CodeModule.CEnd i₁) = ≤o-sucMono omax-commut
+        helperDesc (CodeModule.CArg c D1) (CodeModule.CArg c₁ D2)
+          = ≤o-sucMono (omax-mono
+              (≤o-limiting ⦃ æ = Approx ⦄ _ (λ k → extLim {{æ = Approx}} _ _ λ k' →
+                ≤o-cocone ⦃ æ = Approx ⦄ _ k (codePairSizeCommut (c k) (c₁ k'))))
+              (helperDesc D1 D2)
+              )
+        helperDesc (CodeModule.CRec j D1) (CodeModule.CRec j₁ D2)
+          = ≤o-sucMono (omax-mono
+            (helperDesc D1 D2)
+            omax-commut)
+        helperDesc (CodeModule.CHRec c j D1) (CodeModule.CHRec c₁ j₁ D2)
+          = ≤o-sucMono (omax-mono
+            (≤o-limiting ⦃ æ = Approx ⦄ _ (λ b → extLim {{æ = Approx}} _ _ λ b' →
+                ≤o-cocone ⦃ æ = Approx ⦄ _ b (≤o-limiting ⦃ æ = Approx ⦄ _ (λ a → extLim {{æ = Approx}} _ _ λ a' →
+                  ≤o-cocone ⦃ æ = Approx ⦄ _ a omax-commut))))
+            (helperDesc D1 D2))
 
 codeSize2 : ∀ {ℓ} → ℂ ℓ → ℂ ℓ → Ord
 codeSize2 c1 c2 = csize (codePairSize c1 c2)
