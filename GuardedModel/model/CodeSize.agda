@@ -348,11 +348,11 @@ open DataGermsSmaller {{...}} public
 
 
 -- Sizes for well-formed codes
-wfSize : ∀ {ℓ} → ℂwf ℓ → Ord
-wfSize c = codeSize (code c)
+-- wfSize : ∀ {ℓ} → ℂwf ℓ → Ord
+-- wfSize c = codeSize (code c)
 
-wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
-wfElSize c x = elSize (code c) x
+-- wfElSize : ∀ {{_ : Æ}} {ℓ} → (c : ℂwf ℓ) → wfEl c → Ord
+-- wfElSize c x = elSize (code c) x
 
 
 record CodePairSize {ℓ} (c1 c2 : ℂ ℓ) : Set where
@@ -422,8 +422,14 @@ descPairSize {cI = cI} {cB = cB} {cI' = cI'} {cB' = cB'} (CHRec c1 j1 D1) (CHRec
   , ≤o-sucMono (omax-mono (≤o-℧ ⦃ æ = Approx ⦄ (extLim ⦃ æ = Approx ⦄ _ _ (λ a' → ≤o-℧ {{æ = Approx}} (extLim ⦃ æ = Approx ⦄ _ _ (λ k → omax-≤R))))) (snd (snd (descPairSize D1 D2))))
 
 
-wfPairSize : ∀ {ℓ} (c1 c2 : ℂwf ℓ) → Ord
-wfPairSize c1 c2 = csize (codePairSize (code c1) (code c2))
+codeSize2 : ∀ {ℓ} → ℂ ℓ → ℂ ℓ → Ord
+codeSize2 c1 c2 = csize (codePairSize c1 c2)
+
+codeSize2≤ : ∀ {ℓ} (c1 c2 : ℂ ℓ) → omax (codeSize c1) (codeSize c2) ≤o codeSize2 c1 c2
+codeSize2≤ c1 c2 = omax-LUB (ltL (codePairSize c1 c2)) (ltR (codePairSize c1 c2))
+
+-- wfPairSize : ∀ {ℓ} (c1 c2 : ℂwf ℓ) → Ord
+-- wfPairSize c1 c2 = csize (codePairSize (code c1) (code c2))
 
 
 

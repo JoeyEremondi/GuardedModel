@@ -32,29 +32,29 @@ open import Ord
 open import Germ
 record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   field
-    o⁇ : ∀ {{_ : Æ}}  → (c : ℂwf ℓ)
-      → (pfc1 : wfSize c ≡p cSize )
+    o⁇ : ∀ {{_ : Æ}}  → (c : ℂ ℓ)
+      → (pfc1 : codeSize c ≡p cSize )
       → ( pfv2 : OZ ≡p vSize )
-      → (wfEl c)
+      → (El c)
     oMeet : ∀ {{_ : Æ}}
-      → (c : ℂwf ℓ)
-      → (x y : wfEl c)
-      → ( pfc1 : (wfSize c)  ≡p cSize )
-      → ( pfv1 : omax (wfElSize c x) (wfElSize c y)  ≡p vSize )
-      → LÆ (wfEl c)
+      → (c : ℂ ℓ)
+      → (x y : El c)
+      → ( pfc1 : (codeSize c)  ≡p cSize )
+      → ( pfv1 : omax (elSize c x) (elSize c y)  ≡p vSize )
+      → LÆ (El c)
 
     oCodeMeet :
-      (c1 c2 : ℂwf ℓ)
-      → ( pfc1 : (wfPairSize c1 c2)  ≡p cSize )
+      (c1 c2 : ℂ ℓ)
+      → ( pfc1 : (codeSize2 c1 c2)  ≡p cSize )
       → ( pfv1 : OZ  ≡p vSize )
-      → (ℂwf ℓ)
+      → (ℂ ℓ)
 
     oCast : ∀ {{_ : Æ}}
-      → (csource cdest : ℂwf ℓ)
-      → ( pfc1 : wfPairSize csource cdest  ≡p cSize)
-      →  (x : wfEl csource)
-      → ( pfv1 : wfElSize csource x ≡p vSize)
-      -> LÆ ( wfEl cdest)
+      → (csource cdest : ℂ ℓ)
+      → ( pfc1 : codeSize2 csource cdest  ≡p cSize)
+      →  (x : El csource)
+      → ( pfv1 : elSize csource x ≡p vSize)
+      -> LÆ ( El cdest)
 
     -- Take a code and approximate it until it is as small as the other code
     -- Used to convert to and from the germ of an inductive type
@@ -62,7 +62,7 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
     -- TODO: is this the wrong approach?
     truncateCode : ∀ {ℓ} → (c1 c2 : ℂ ℓ)
       → (codeSize c1 ≡p cSize)
-      → (OZ c1 ≡p vSize)
+      → (OZ ≡p vSize)
       → Σ[ c ∈ ℂ ℓ ](codeSize c ≤o codeSize c1)
 
 open SizedCastMeet
@@ -73,46 +73,46 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
     ℓself : ∀ {cs vs} {{ _ : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
   
   ⁇_By_ : ∀ {{_ : Æ}}
-      → (c : ℂwf ℓ) → wfSize c <o cSize → (wfEl c)
+      → (c : ℂ ℓ) → codeSize c <o cSize → (El c)
   ⁇_By_ c lt = o⁇ (self (<oPairL lt)) c reflp reflp
 
   [_]⁇_By_ : ∀ (æ : Æ)
-      → (c : ℂwf ℓ) → wfSize c <o cSize → (wfEl {{æ = æ}} c)
+      → (c : ℂ ℓ) → codeSize c <o cSize → (El {{æ = æ}} c)
   [_]⁇_By_ æ  = ⁇_By_ {{æ}}
 
   _∋_⊓_By_ : ∀ {{_ : Æ}}
-      → (c : ℂwf ℓ)
-      → (x y : wfEl c)
-      → (wfSize c <o cSize)
-      → LÆ (wfEl c)
+      → (c : ℂ ℓ)
+      → (x y : El c)
+      → (codeSize c <o cSize)
+      → LÆ (El c)
   _∋_⊓_By_   c x y lt =
       oMeet (self ( (<oPairL lt))) c x y reflp reflp
   [_]_∋_⊓_By_ : ∀ (æ : Æ)
-      → (c : ℂwf ℓ)
-      → (x y : wfEl {{æ = æ}} c)
-      → (wfSize c <o cSize)
-      → LÆ {{æ = æ}} (wfEl {{æ = æ}} c)
+      → (c : ℂ ℓ)
+      → (x y : El {{æ = æ}} c)
+      → (codeSize c <o cSize)
+      → LÆ {{æ = æ}} (El {{æ = æ}} c)
   [_]_∋_⊓_By_ æ = _∋_⊓_By_ {{æ}}
 
   _⊓_By_ :
-      (c1 c2 : ℂwf ℓ)
-      → (wfPairSize c1 c2 <o cSize)
-      → (ℂwf ℓ)
+      (c1 c2 : ℂ ℓ)
+      → (codeSize2 c1 c2 <o cSize)
+      → (ℂ ℓ)
   _⊓_By_  c1 c2 lt =
       oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp
 
   ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
-      → (cdest csource : ℂwf ℓ)
-      → (x : wfEl csource)
-      → wfPairSize csource cdest <o cSize
-      → LÆ (wfEl cdest)
+      → (cdest csource : ℂ ℓ)
+      → (x : El csource)
+      → codeSize2 csource cdest <o cSize
+      → LÆ (El cdest)
   ⟨ cdest ⇐ csource ⟩ x By lt1 =
       oCast (self ((<oPairL lt1))) csource cdest reflp x reflp
 
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
-      → (cdest csource : ℂwf ℓ)
-      → (x : wfEl {{æ = æ}} csource)
-      → wfPairSize csource cdest <o cSize
-      → LÆ {{æ = æ}} (wfEl {{æ = æ}} cdest)
+      → (cdest csource : ℂ ℓ)
+      → (x : El {{æ = æ}} csource)
+      → codeSize2 csource cdest <o cSize
+      → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
 open SmallerCastMeet {{...}} public

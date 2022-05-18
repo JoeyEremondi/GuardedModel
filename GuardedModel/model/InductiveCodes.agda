@@ -99,29 +99,29 @@ record InductiveCodes : Set2 where
   -- Predicate that determines if a code is well formed
   -- with respect to the inductive types it refers to
   -- i.e. if it's an instantation of that type's parameters and indices
-  interleaved mutual
-    data IndWF {ℓ} : ℂ ℓ → Set
-    -- data DescIndWF {ℓ} {cI cB : ℂ ℓ } : ℂDesc cI cB → Set
-    data _ where
-      IWF⁇ : IndWF C⁇
-      IWF℧ : IndWF C℧
-      IWF𝟘 : IndWF C𝟘
-      IWF𝟙 : IndWF C𝟙
-      IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
-      IWFΠ : ∀ {dom cod}
-        → IndWF dom
-        → (∀ x → IndWF (cod x))
-        → IndWF (CΠ dom cod)
-      IWFΣ : ∀ {dom cod}
-        → IndWF dom
-        → (∀ x → IndWF (cod x))
-        → IndWF (CΣ dom cod)
-      IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
-      IWFμ : ∀ {tyCtor cI D i}
-        → (pars : ApproxEl (Params ℓ tyCtor))
-        → (indEq : cI ≡ Indices ℓ tyCtor pars)
-        → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙 (indSkeleton tyCtor d)) (D d) (descFor ℓ tyCtor pars d))
-        → IndWF (Cμ tyCtor cI D i)
+  -- interleaved mutual
+  --   data IndWF {ℓ} : ℂ ℓ → Set
+  --   -- data DescIndWF {ℓ} {cI cB : ℂ ℓ } : ℂDesc cI cB → Set
+  --   data _ where
+  --     IWF⁇ : IndWF C⁇
+  --     IWF℧ : IndWF C℧
+  --     IWF𝟘 : IndWF C𝟘
+  --     IWF𝟙 : IndWF C𝟙
+  --     IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
+  --     IWFΠ : ∀ {dom cod}
+  --       → IndWF dom
+  --       → (∀ x → IndWF (cod x))
+  --       → IndWF (CΠ dom cod)
+  --     IWFΣ : ∀ {dom cod}
+  --       → IndWF dom
+  --       → (∀ x → IndWF (cod x))
+  --       → IndWF (CΣ dom cod)
+  --     IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
+  --     IWFμ : ∀ {tyCtor cI D i}
+  --       → (pars : ApproxEl (Params ℓ tyCtor))
+  --       → (indEq : cI ≡ Indices ℓ tyCtor pars)
+  --       → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙 (indSkeleton tyCtor d)) (D d) (descFor ℓ tyCtor pars d))
+  --       → IndWF (Cμ tyCtor cI D i)
 
 
 
@@ -130,21 +130,21 @@ record InductiveCodes : Set2 where
 open InductiveCodes {{...}} public
 
 
-record  ℂwf {{_ : InductiveCodes}} ℓ : Set where
-  constructor _|wf|_
-  field
-    code : ℂ ℓ
-    codeWF : IndWF code -- IndWF code
+-- record  ℂwf {{_ : InductiveCodes}} ℓ : Set where
+--   constructor _|wf|_
+--   field
+--     code : ℂ ℓ
+--     codeWF : IndWF code -- IndWF code
 
-open ℂwf public
-
-
-
-
-wfEl : ∀ {{_ : InductiveCodes}} {{æ : Æ}} {ℓ} → ℂwf ℓ → Set
-wfEl {{ æ = æ}} c = El {{æ = æ}} (code c)
+-- open ℂwf public
 
 
 
-wfApproxEl : ∀ {{_ : InductiveCodes}} {ℓ} → ℂwf ℓ → Set
-wfApproxEl  c = El {{æ = Approx}} (code c)
+
+-- wfEl : ∀ {{_ : InductiveCodes}} {{æ : Æ}} {ℓ} → ℂwf ℓ → Set
+-- wfEl {{ æ = æ}} c = El {{æ = æ}} (code c)
+
+
+
+-- wfApproxEl : ∀ {{_ : InductiveCodes}} {ℓ} → ℂwf ℓ → Set
+-- wfApproxEl  c = El {{æ = Approx}} (code c)
