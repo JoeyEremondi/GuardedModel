@@ -18,6 +18,7 @@ open import Cubical.Foundations.Prelude
 open import ApproxExact
 open import InductiveCodes
 open import CodeSize
+open import CodePair
 open import WMuEq
 
 module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} {{_ : DataGermsSmaller}}  where

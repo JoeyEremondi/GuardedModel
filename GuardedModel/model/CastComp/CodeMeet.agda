@@ -20,12 +20,13 @@ open import Cubical.Foundations.Prelude
 open import ApproxExact
 open import InductiveCodes
 open import CodeSize
+open import CodePair
 open import WMuEq
 open import Ord
 
 open import CastComp.Interface
 
-module CastComp.CodeMeet {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} {{_ : DataGermsSmaller}}
+module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}} {{dgs : DataGermsSmaller}}
     {ℓ} (cSize : Ord) (vSize : Ord) (scm : SmallerCastMeet ℓ cSize vSize)
 
   where
