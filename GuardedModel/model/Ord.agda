@@ -101,6 +101,10 @@ data _<o_ : Ord → Ord → Set where
   <ParR : ∀ {oLow o1 o2 oHigh} → (low≤o2 : oLow ≤o o2) → (par≤high : (o1 |O| o2) ≤o oHigh) → oLow <o oHigh
 
 
+
+<o-refl : ∀ {o} → o <o O↑ o
+<o-refl = <ParL ≤o-refl ≤o-refl
+
 -- _<o_ : Ord → Ord → Set
 -- o1 <o o2 = O↑ o1 ≤o o2
 
@@ -159,46 +163,36 @@ ordWF (OLim c f) = acc helper
     helper y (<ParR low≤o2 (≤o-cocone .f k par≤high)) = smaller-accessible (f k) (ordWF (f k)) y (≤o-trans low≤o2 (≤o-trans (≤o-parR ≤o-refl) par≤high))
 
 
--- -- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
--- -- and the size of a value of that (c)ode's interpetation
--- data _<oPair_ : (Ord × Ord) → (Ord × Ord) → Set where
---   <oPairL : ∀ {o1c o2c o1v o2v} → o1c <o o2c → (o1c , o1v) <oPair (o2c , o2v)
---   <oPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <o o2v → (o1c , o1v) <oPair (o2c , o2v)
+-- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
+-- and the size of a value of that (c)ode's interpetation
+data _<oPair_ : (Ord × Ord) → (Ord × Ord) → Set where
+  <oPairL : ∀ {o1c o2c o1v o2v} → o1c <o o2c → (o1c , o1v) <oPair (o2c , o2v)
+  <oPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <o o2v → (o1c , o1v) <oPair (o2c , o2v)
 
 
--- -- Similar to the above, but there are two codes and two values being compared
--- data _<oQuad_ : ((Ord × Ord) × (Ord × Ord)) → ((Ord × Ord) × (Ord × Ord)) → Set where
---   <oQuadL : ∀ {o1c o2c o1v o2v} → o1c <oPair o2c → (o1c , o1v) <oQuad (o2c , o2v)
---   <oQuadR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <oPair o2v → (o1c , o1v) <oQuad (o2c , o2v)
 
--- ≤oo-reflL : ∀ {o o1' o2'} → (o , o1') <oPair (O↑ o , o2')
--- ≤oo-reflL = <oPairL (≤o-refl _)
+≤oo-reflL : ∀ {o o1' o2'} → (o , o1') <oPair (O↑ o , o2')
+≤oo-reflL = <oPairL <o-refl
 
 
--- ≤oo-reflR : ∀ {o o'} → (o , o') <oPair (o , O↑ o')
--- ≤oo-reflR = <oPairR reflp (≤o-refl _)
+≤oo-reflR : ∀ {o o'} → (o , o') <oPair (o , O↑ o')
+≤oo-reflR = <oPairR reflp <o-refl
 
--- ≤oo-sucL : ∀ {o1 o2 o1' o2'} → o1 ≤o o2 → (o1 , o1') <oPair (O↑ o2 , o2')
--- ≤oo-sucL lt = <oPairL (≤o-sucMono lt)
+≤oo-sucL : ∀ {o1 o2 o1' o2'} → o1 ≤o o2 → (o1 , o1') <oPair (O↑ o2 , o2')
+≤oo-sucL lt = <oPairL (≤∘<-in-< lt <o-refl) --(≤o-sucMono lt)
 
--- ≤oo-sucR : ∀ {o o1' o2'} → o1' ≤o o2' → (o , o1') <oPair (o , O↑ o2')
--- ≤oo-sucR lt = <oPairR reflp (≤o-sucMono lt)
+≤oo-sucR : ∀ {o o1' o2'} → o1' ≤o o2' → (o , o1') <oPair (o , O↑ o2')
+≤oo-sucR lt = <oPairR reflp (≤∘<-in-< lt <o-refl) --(≤o-sucMono lt)
 
--- -- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
--- oPairWF : WellFounded _<oPair_
--- oPairWF (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
---   where
---     helper : ∀ {x1 x2} → Acc _<o_ x1 → Acc _<o_ x2 → WFRec _<oPair_ (Acc _<oPair_) (x1 , x2)
---     helper (acc rec₁) acc₂ (y1 , y2) (<oPairL lt) = acc (helper (rec₁ y1 lt) (ordWF y2))
---     helper acc₁ (acc rec₂) (y1 , y2) (<oPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
+-- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
+oPairWF : WellFounded _<oPair_
+oPairWF (x1 , x2) = acc (helper (ordWF x1) (ordWF x2))
+  where
+    helper : ∀ {x1 x2} → Acc _<o_ x1 → Acc _<o_ x2 → WFRec _<oPair_ (Acc _<oPair_) (x1 , x2)
+    helper (acc rec₁) acc₂ (y1 , y2) (<oPairL lt) = acc (helper (rec₁ y1 lt) (ordWF y2))
+    helper acc₁ (acc rec₂) (y1 , y2) (<oPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 
--- oQuadWF : WellFounded _<oQuad_
--- oQuadWF (x1 , x2) = acc (helper (oPairWF x1) (oPairWF x2))
---   where
---     helper : ∀ {x1 x2} → Acc _<oPair_ x1 → Acc _<oPair_ x2 → WFRec _<oQuad_ (Acc _<oQuad_) (x1 , x2)
---     helper (acc rec₁) acc₂ (y1 , y2) (<oQuadL lt) = acc (helper (rec₁ y1 lt) (oPairWF y2))
---     helper acc₁ (acc rec₂) (y1 , y2) (<oQuadR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 -- abstract
 --   omax : Ord → Ord → Ord
@@ -298,28 +292,23 @@ ordWF (OLim c f) = acc helper
 
 
 
--- open import Cubical.Induction.WellFounded
+open import Cubical.Induction.WellFounded
 
 
--- orec : ∀ {ℓ} (P : Ord → Set ℓ)
---   → ((x : Ord) → (rec : (y : Ord) → (_ : y <o x) → P y ) → P x)
---   → ∀ {o} → P o
--- orec P f = induction (λ x rec → f x rec) _
---   where open WFI (ordWF)
+orec : ∀ {ℓ} (P : Ord → Set ℓ)
+  → ((x : Ord) → (rec : (y : Ord) → (_ : y <o x) → P y ) → P x)
+  → ∀ {o} → P o
+orec P f = induction (λ x rec → f x rec) _
+  where open WFI (ordWF)
 
 
--- oPairRec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
---   → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oPair (x1 , x2)) → P y1 y2 ) → P x1 x2)
---   → ∀ {o1 o2} → P o1 o2
--- oPairRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
---   where open WFI (oPairWF)
+oPairRec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
+  → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oPair (x1 , x2)) → P y1 y2 ) → P x1 x2)
+  → ∀ {o1 o2} → P o1 o2
+oPairRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+  where open WFI (oPairWF)
 
 
--- oQuadRec : ∀ {ℓ} (P : (Ord × Ord) → (Ord × Ord) → Set ℓ)
---   → ((x1 x2 : Ord × Ord) → (rec : (y1 y2 : Ord × Ord) → (_ : (y1 , y2) <oQuad (x1 , x2)) → P y1 y2 ) → P x1 x2)
---   → ∀ {o1 o2} → P o1 o2
--- oQuadRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
---   where open WFI (oQuadWF)
 
 -- oplus-suc-swap : ∀ o1 o2 → ((O↑ o1) +o o2) ≤o (o1 +o (O↑ o2))
 -- oplus-suc-swap OZ o2 = ≤o-refl (O↑ OZ +o o2)
@@ -328,8 +317,6 @@ ordWF (OLim c f) = acc helper
 -- oplus-suc-swap (OLim c f) (O↑ o2) = ≤o-refl _
 -- oplus-suc-swap (OLim c f) (OLim c₁ f₁) = ≤o-refl _
 
--- LT-refl : ∀ {o} → o <o O↑ o
--- LT-refl = ≤o-refl _
 
 -- maxLT-L : ∀ {o1 o2} → o1 <o O↑ (omax o1 o2)
 -- maxLT-L {o1} {o2} = ≤o-sucMono omax-≤L
@@ -337,8 +324,8 @@ ordWF (OLim c f) = acc helper
 -- maxLT-R : ∀ {o1 o2} → o2 <o O↑ (omax o1 o2)
 -- maxLT-R {o1} {o2} = ≤o-sucMono omax-≤R
 
--- limLT : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ}  {f : Approxed (El c) → Ord} { x} → f x <o O↑ (OLim c f)
--- limLT {c = c} {f} {x} = ≤o-sucMono (≤o-cocone f x (≤o-refl (f x)))
+limLT : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ}  {f : Approxed (El c) → Ord} { x} → f x <o O↑ (OLim c f)
+limLT {c = c} {f} {x} = ≤∘<-in-< (≤o-cocone f x ≤o-refl) <o-refl -- ≤o-sucMono (≤o-cocone f x (≤o-refl (f x)))
 
 -- limMaxLT-R : ∀ {{_ : Æ}} {o} {ℓ} {c : ℂ ℓ} {f : Approxed (El c) → Ord} { x} → f x <o O↑ (omax o (OLim c f))
 -- limMaxLT-R {f = f} {x = x} = ≤o-sucMono (≤o-trans (≤o-cocone f x (≤o-refl (f x))) omax-≤R)
