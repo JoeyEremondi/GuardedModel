@@ -40,43 +40,46 @@ C𝔹 = C𝟙
 
 data Ord : Set where
   OZ : Ord
-  O↑ : Ord -> Ord
+  -- O↑ : Ord -> Ord
   OLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord) → Ord
   -- "Parallel composition" of ords i.e. injective, monotone pairs
   _|O|_ : Ord → Ord → Ord
   -- OBisim : ∀ {ℓ} {c : ℂ ℓ} → (f g : El c → Ord) → {!!} → OLim c f ≡ OLim c g
 
+O↑ : Ord → Ord
+O↑ o = o |O| OZ
+
 O1 = O↑ OZ
 
-data IsSucO : Ord → Set where
-  instance isSucO : ∀ {o} → IsSucO (O↑ o)
+-- data IsSucO : Ord → Set where
+--   instance isSucO : ∀ {o} → IsSucO (O↑ o)
 
 
 -- from Kraus et al https://arxiv.org/pdf/2104.02549.pdf
 data _≤o_ : Ord → Ord → Set where
   ≤o-Z : ∀ {o} → OZ ≤o o
-  ≤o-sucMono : ∀ {o1 o2} → o1 ≤o o2 → O↑ o1 ≤o O↑ o2
-  ≤o-cocone : ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} (f : Approxed (El c) {{æ}} → Ord) (k : Approxed (El c)) → o ≤o f k → o ≤o OLim c f
-  ≤o-limiting : ∀  {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (∀ k → f k ≤o o) → OLim c f ≤o o
-  ≤o-parL : ∀ {o o1 o2} → o ≤o o1 → o ≤o (o1 |O| o2)
-  ≤o-parR : ∀ {o o1 o2} → o ≤o o2 → o ≤o (o1 |O| o2)
+  -- ≤o-sucMono : ∀ {o1 o2} → o1 ≤o o2 → O↑ o1 ≤o O↑ o2
+  ≤o-cocone : ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} (f : Approxed (El c) {{æ}} → Ord) (k : Approxed (El c)) → (≤k : o ≤o f k) → o ≤o OLim c f
+  ≤o-limiting : ∀  {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (≤all : ∀ k → f k ≤o o) → OLim c f ≤o o
+  ≤o-parL : ∀ {o o1 o2} → (low≤L : o ≤o o1) → o ≤o (o1 |O| o2)
+  ≤o-parR : ∀ {o o1 o2} → (low≤R : o ≤o o2) → o ≤o (o1 |O| o2)
   ≤o-parMono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (o1 |O| o2) ≤o (o1' |O| o2')
   -- ≤o-parStrict : ∀ {o1 o2 o1' o2'} → O↑ o1 ≤o o1' → O↑ o2 ≤o o2' → O↑ (o1 |O| o2) ≤o (o1' |O| o2')
 
 
-O1≤ : ∀ {o} → {{_ : IsSucO o}} → O1 ≤o o
-O1≤ {{isSucO}} = ≤o-sucMono ≤o-Z
+-- O1≤ : ∀ {o} → {{_ : IsSucO o}} → O1 ≤o o
+-- O1≤ {{isSucO}} = ≤o-sucMono ≤o-Z
 
-≤o-refl : ∀ o → o ≤o o
-≤o-refl OZ = ≤o-Z
-≤o-refl (O↑ o) = ≤o-sucMono (≤o-refl o)
-≤o-refl (OLim c f) = ≤o-limiting f (λ k → ≤o-cocone f k (≤o-refl (f k)))
-≤o-refl (o1 |O| o2) = ≤o-parMono (≤o-refl o1) (≤o-refl o2)
+≤o-refl : ∀ {o} → o ≤o o
+≤o-refl {OZ} = ≤o-Z
+-- ≤o-refl (O↑ o) = ≤o-sucMono (≤o-refl o)
+≤o-refl {(OLim c f)} = ≤o-limiting f (λ k → ≤o-cocone f k (≤o-refl {f k}))
+≤o-refl {(o1 |O| o2)} = ≤o-parMono (≤o-refl) (≤o-refl)
 
 
 ≤o-trans : ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
 ≤o-trans ≤o-Z p23 = ≤o-Z
-≤o-trans (≤o-sucMono p12) (≤o-sucMono p23) = ≤o-sucMono (≤o-trans p12 p23)
+-- ≤o-trans (≤o-sucMono p12) (≤o-sucMono p23) = ≤o-sucMono (≤o-trans p12 p23)
 ≤o-trans p12 (≤o-cocone f k p23) = ≤o-cocone f k (≤o-trans p12 p23)
 ≤o-trans (≤o-limiting f x) p23 = ≤o-limiting f (λ k → ≤o-trans (x k) p23)
 ≤o-trans (≤o-cocone f k p12) (≤o-limiting .f x) = ≤o-trans p12 (x k)
@@ -87,60 +90,74 @@ O1≤ {{isSucO}} = ≤o-sucMono ≤o-Z
 ≤o-trans (≤o-parMono p12 p12') (≤o-parMono p23 p23') = ≤o-parMono (≤o-trans p12 p23) (≤o-trans p12' p23')
 
 
+≤o-sucMono : ∀ {o1 o2} → o1 ≤o o2 → O↑ o1 ≤o O↑ o2
+≤o-sucMono pf = ≤o-parMono pf ≤o-Z
+
 ≤o-℧ :  ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} {f : Approxed (El c) {{æ}} → Ord} → o ≤o f (℧Approxed c) → o ≤o OLim c f
 ≤o-℧ {c = c} lt = ≤o-cocone _ (℧Approxed c) lt
 
 data _<o_ : Ord → Ord → Set where
-  <↑ : ∀ {o1 o2} → O↑ o1 ≤o o2 → o1 <o o2
-  <ParL : ∀ {oLow o1 o2 oHigh} → oLow ≤o o1 → (o1 |O| o2) ≤o oHigh → oLow <o oHigh
+  <ParL : ∀ {oLow o1 o2 oHigh} → (low≤o1 : oLow ≤o o1) → (par≤high : (o1 |O| o2) ≤o oHigh) → oLow <o oHigh
+  <ParR : ∀ {oLow o1 o2 oHigh} → (low≤o2 : oLow ≤o o2) → (par≤high : (o1 |O| o2) ≤o oHigh) → oLow <o oHigh
 
 
 -- _<o_ : Ord → Ord → Set
 -- o1 <o o2 = O↑ o1 ≤o o2
 
--- ≤↑ : ∀ o → o ≤o O↑ o
--- ≤↑ OZ = ≤o-Z
--- ≤↑ (O↑ o) = ≤o-sucMono (≤↑ o)
--- ≤↑ (OLim c f) = ≤o-limiting f λ k → ≤o-trans (≤↑ (f k)) (≤o-sucMono (≤o-cocone f k (≤o-refl (f k))))
--- ≤↑ (o1 |O| o2) = {!!}
+≤↑ : ∀ o → o ≤o O↑ o
+≤↑ OZ = ≤o-Z
+≤↑ (OLim c f) = ≤o-limiting f λ k → ≤o-trans (≤↑ (f k)) (≤o-sucMono (≤o-cocone f k (≤o-refl {f k})))
+≤↑ (o1 |O| o2) = ≤o-parL ≤o-refl
 
 <-in-≤ : ∀ {x y} → x <o y → x ≤o y
-<-in-≤ (<↑ x) = {!!}
-<-in-≤ (<ParL x x₁) = {!!}
+<-in-≤ (<ParL low≤o1 par≤high) = ≤o-trans low≤o1 (≤o-trans (≤o-parL ≤o-refl) par≤high)
+<-in-≤ (<ParR low≤o2 par≤high) = ≤o-trans low≤o2 (≤o-trans (≤o-parR ≤o-refl) par≤high)
 
--- -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
--- -- TODO: proper credit
--- <∘≤-in-< : ∀ {x y z} → x <o y → y ≤o z → x <o z
--- <∘≤-in-< x<y y≤z = ≤o-trans x<y y≤z
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+<∘≤-in-< : ∀ {x y z} → x <o y → y ≤o z → x <o z
+<∘≤-in-< (<ParL low≤o1 par≤high) y≤z = <ParL low≤o1 (≤o-trans par≤high y≤z )
+<∘≤-in-< (<ParR low≤o2 par≤high) y≤z = <ParR low≤o2 (≤o-trans par≤high y≤z )
 
--- -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
--- -- TODO: proper credit
--- ≤∘<-in-< : ∀ {x y z} → x ≤o y → y <o z → x <o z
--- ≤∘<-in-< {x} {y} {z} x≤y y<z = ≤o-trans (≤o-sucMono x≤y) y<z
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+≤∘<-in-< : ∀ {x y z} → x ≤o y → y <o z → x <o z
+≤∘<-in-< {x} {y} {z} x≤y (<ParL low≤o1 par≤high) = <ParL (≤o-trans x≤y low≤o1) par≤high
+≤∘<-in-< {x} {y} {z} x≤y (<ParR low≤o2 par≤high) = <ParR (≤o-trans x≤y low≤o2) par≤high
 
--- underLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} o →  (f : Approxed (El c) → Ord) → (∀ k → o ≤o f k) → o ≤o OLim c f
--- underLim {c = c} o f all = ≤o-trans (≤o-℧ {c = c} (≤o-refl _)) (≤o-limiting (λ _ → o) (λ k → ≤o-cocone f k (all k)))
+underLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} o →  (f : Approxed (El c) → Ord) → (∀ k → o ≤o f k) → o ≤o OLim c f
+underLim {c = c} o f all = ≤o-trans (≤o-℧ {c = c} (≤o-refl )) (≤o-limiting (λ _ → o) (λ k → ≤o-cocone f k (all k)))
 
--- extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : Approxed (El c) → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
--- extLim {c = c} f1 f2 all = ≤o-limiting f1 (λ k → ≤o-cocone f2 k (all k))
+extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : Approxed (El c) → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
+extLim {c = c} f1 f2 all = ≤o-limiting f1 (λ k → ≤o-cocone f2 k (all k))
 
--- ¬Z<↑ : ∀  o → ¬ ((O↑ o) ≤o OZ)
--- ¬Z<↑ o ()
+¬Z<↑ : ∀  o → ¬ ((O↑ o) ≤o OZ)
+¬Z<↑ o ()
 
--- -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
--- -- TODO: proper credit
--- smaller-accessible : (x : Ord) → Acc _<o_ x → ∀ y → y ≤o x → Acc _<o_ y
--- smaller-accessible x isAcc y x<y = acc (λ y' y'<y → access isAcc y' (<∘≤-in-< y'<y x<y))
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+smaller-accessible : (x : Ord) → Acc _<o_ x → ∀ y → y ≤o x → Acc _<o_ y
+smaller-accessible x isAcc y x<y = acc (λ y' y'<y → access isAcc y' (<∘≤-in-< y'<y x<y))
 
--- -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
--- -- TODO: proper credit
--- ordWF : WellFounded _<o_
--- ordWF OZ = acc λ _ ()
--- ordWF (O↑ x) = acc (λ { y (≤o-sucMono y≤x) → smaller-accessible x (ordWF x) y y≤x})
--- ordWF (OLim c f) = acc helper
---   where
---     helper : (y : Ord) → (y <o OLim c f) → Acc _<o_ y
---     helper y (≤o-cocone .f k y<fk) = smaller-accessible (f k) (ordWF (f k)) y (<-in-≤ y<fk)
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+ordWF : WellFounded _<o_
+ordWF OZ = acc λ { y (<ParL low≤o1 ()) ; y (<ParR low≤o2 ())}
+ordWF (o1 |O| o2) = acc helper
+  where
+    helper : (y : Ord) → y <o (o1 |O| o2) → Acc _<o_ y
+    helper y (<ParL low≤o1 (≤o-parL par≤high)) = smaller-accessible o1 (ordWF o1) y (≤o-trans low≤o1 (≤o-trans (≤o-parL ≤o-refl) par≤high))
+    helper y (<ParL low≤o1 (≤o-parR par≤high)) = smaller-accessible o2 (ordWF o2) y (≤o-trans low≤o1 (≤o-trans (≤o-parL ≤o-refl) par≤high))
+    helper y (<ParL low≤o1 (≤o-parMono par≤high par≤high₁)) = smaller-accessible o1 (ordWF o1) y (≤o-trans low≤o1 par≤high)
+    helper y (<ParR low≤o2 (≤o-parL par≤high)) =  smaller-accessible o1 (ordWF o1) y (≤o-trans low≤o2 (≤o-trans (≤o-parR ≤o-refl) par≤high))
+    helper y (<ParR low≤o2 (≤o-parR par≤high)) =  smaller-accessible o2 (ordWF o2) y (≤o-trans low≤o2 (≤o-trans (≤o-parR ≤o-refl) par≤high))
+    helper y (<ParR low≤o2 (≤o-parMono par≤high par≤high₁)) = smaller-accessible o2 (ordWF o2) y (≤o-trans low≤o2 par≤high₁)
+ordWF (OLim c f) = acc helper
+  where
+    helper : (y : Ord) → (y <o OLim c f) → Acc _<o_ y
+    helper y (<ParL low≤o1 (≤o-cocone .f k par≤high)) = smaller-accessible (f k) (ordWF (f k)) y (≤o-trans low≤o1 (≤o-trans (≤o-parL ≤o-refl) par≤high))
+    helper y (<ParR low≤o2 (≤o-cocone .f k par≤high)) = smaller-accessible (f k) (ordWF (f k)) y (≤o-trans low≤o2 (≤o-trans (≤o-parR ≤o-refl) par≤high))
+
 
 -- -- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
 -- -- and the size of a value of that (c)ode's interpetation
