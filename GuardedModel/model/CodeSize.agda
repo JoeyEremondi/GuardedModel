@@ -33,7 +33,7 @@ open import Cubical.Foundations.Transport
 -- The main difference is that we allow the limit over the elements of any code type, not just natural numbers
 
 open import InductiveCodes
-module CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes }} where
+module CodeSize {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes }} where
 
 
 
@@ -46,7 +46,7 @@ open import WMuEq
 open import Head
 open import Util
 
-open import Ord -- ℂ El ℧ C𝟙 refl
+open import Ord {{dt}} {{dg}}
 
 
 
@@ -268,33 +268,43 @@ CElSize (CHRec c j D) E {b = b} (ElHRec f x) = O↑ (OLim (c b) λ a → omax (C
 -- ℧size (C≡ c x y) = ℧size {{Approx}} c
 -- ℧size (Cμ tyCtor c D x) = ≤o-refl _
 
-codeSuc : ∀ {ℓ} (c : ℂ ℓ) → OZ <o codeSize c
-codeSuc C⁇ = ≤o-refl _
-codeSuc C℧ = ≤o-refl _
-codeSuc C𝟘 = ≤o-refl _
-codeSuc C𝟙 = ≤o-refl _
-codeSuc CType = ≤o-refl _
-codeSuc (CΠ c cod) = ≤o-sucMono ≤o-Z
-codeSuc (CΣ c cod) = ≤o-sucMono ≤o-Z
-codeSuc (C≡ c x y) = ≤o-sucMono ≤o-Z
-codeSuc (Cμ tyCtor c D x) = ≤o-sucMono ≤o-Z
+codeIsSuc : ∀ {ℓ} {c : ℂ ℓ} → IsSucO (codeSize c)
+codeIsSuc {c = C⁇} = isSucO
+codeIsSuc {c = C℧} = isSucO
+codeIsSuc {c = C𝟘} = isSucO
+codeIsSuc {c = C𝟙} = isSucO
+codeIsSuc {c = CType} = isSucO
+codeIsSuc {c = CΠ c cod} = isSucO
+codeIsSuc {c = CΣ c cod} = isSucO
+codeIsSuc {c = C≡ c x y} = isSucO
+codeIsSuc {c = Cμ tyCtor c D x} = isSucO
+
+
+
+⁇IsSuc : ∀ {{_ : Æ}} {ℓ} {x : ⁇Ty ℓ} → IsSucO (⁇Size x)
+⁇IsSuc {x = CodeModule.⁇⁇} = isSucO
+⁇IsSuc {x = CodeModule.⁇℧} = isSucO
+⁇IsSuc {x = CodeModule.⁇𝟙} = isSucO
+⁇IsSuc {x = CodeModule.⁇Type ⦃ suc< ⦄ x} = isSucO
+⁇IsSuc {x = CodeModule.⁇Π x} = isSucO
+⁇IsSuc {x = CodeModule.⁇Σ x} = isSucO
+⁇IsSuc {x = CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)} = isSucO
+⁇IsSuc {x = CodeModule.⁇μ tyCtor x} = isSucO
+
+codeSuc : ∀ {ℓ} → {c : ℂ ℓ} → O1 ≤o codeSize c
+codeSuc  = O1≤ {{codeIsSuc}}
+
+⁇Suc : ∀ {{_ : Æ}} {ℓ} {x : ⁇Ty ℓ} → O1 ≤o ⁇Size x
+⁇Suc = O1≤ {{⁇IsSuc}}
+
 
 codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → omax O1 (codeSize c) ≤o codeSize c
-codeMaxL c = omax-LUB (codeSuc c) (≤o-refl _)
+codeMaxL c = omax-LUB codeSuc (≤o-refl _)
 
 codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → omax (codeSize c) O1 ≤o codeSize c
-codeMaxR c = omax-LUB (≤o-refl _) (codeSuc c)
+codeMaxR c = omax-LUB (≤o-refl _) codeSuc
 
 
-⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x
-⁇suc ⁇⁇ = ≤o-sucMono ≤o-Z
-⁇suc ⁇℧ = ≤o-sucMono ≤o-Z
-⁇suc ⁇𝟙 = ≤o-sucMono ≤o-Z
-⁇suc {suc ℓ} (⁇Type x) = ≤o-sucMono ≤o-Z
-⁇suc (⁇Π x) = ≤o-sucMono ≤o-Z
-⁇suc (⁇Σ x) = ≤o-sucMono ≤o-Z
-⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤o-sucMono ≤o-Z
-⁇suc (⁇μ tyCtor x) = ≤o-sucMono ≤o-Z
 
 open import Cubical.Data.Maybe
 
