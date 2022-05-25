@@ -20,7 +20,7 @@ open import Cubical.Foundations.Prelude
 open import ApproxExact
 open import InductiveCodes
 open import CodeSize
-open import CodePair
+-- open import CodePair
 open import WMuEq
 open import Ord
 
@@ -47,7 +47,7 @@ codeMeet : ∀ {{_ : Æ}} {h1 h2}
   → (view : HeadMatchView h1 h2)
   → (eq1 : h1 ≡p codeHead c1)
   → (eq2 : h2 ≡p codeHead c2)
-  → (csize (codePairSize c1 c2 {view} {eq1} {eq2}) ≡p cSize)
+  → (codeSize c1 |O| codeSize c2 ≡p cSize)
   → (OZ ≡p vSize)
   → (ℂ ℓ)
 -- Error cases: the meet is ℧ if either argument is ℧
@@ -69,11 +69,11 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = 
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
         = let
           dom12 = dom1 ⊓ dom2
-                        By ≤o-sucMono omax-≤L
+                        By {!!}
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
             let
-              x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono (≤o-trans {!!} omax-≤L) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+              x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By {!!} -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
               x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12 By {!!}
             in {!!}
               -- (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)
