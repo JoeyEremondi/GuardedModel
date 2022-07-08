@@ -225,189 +225,185 @@ abstract
   omax-monoR' {o1} {o2} {o2'}  (≤o-sucMono lt) = ≤o-sucMono ( (omax-monoR {o1 = o1} lt))
   omax-monoR' {o1} {o2} {.(OLim _ f)} (≤o-cocone f k lt)
     = ≤o-cocone _ k (omax-monoR' {o1 = o1} lt)
-  -- with f k in eq
-  -- omax-monoR' {o1} {o2} {.(OLim _ f)} (≤o-cocone f k (≤o-sucMono lt)) | O↑ kf
-  --   = ≤o-cocone _ k (≤o-trans (≤o-sucMono (omax-monoR {o1 = o1} lt)) (≤o-reflEq (pCong (λ x → omax (O↑ o1) x) (pSym eq))))
-  -- omax-monoR' {o1} {o2} {.(OLim _ f)} (≤o-cocone f k (≤o-cocone .f₁ k₁ lt)) | OLim c f₁
-  --   = ≤o-cocone _ k {!!}
-  -- omax-monoL : ∀ {o1 o1' o2} → o1 ≤o o1' → omax o1 o2 ≤o omax o1' o2
-  -- omax-monoL' : ∀ {o1 o1' o2} → o1 <o o1' → omax o1 o2 <o omax o1' (O↑ o2)
 
---   omax-monoL {o1} {o1'} {o2} lt with maxView o1 o2 in eq1 | maxView o1' o2 in eq2
---   ... | MaxZ-L | v2 = ≤o-trans (omax-≤R {o1 = o1'}) (≤o-reflEq (pCong omax' eq2))
---   ... | MaxZ-R | v2 = ≤o-trans lt (≤o-trans (omax-≤L {o1 = o1'}) (≤o-reflEq (pCong omax' eq2)))
---   omax-monoL {.(OLim _ _)} {.(OLim _ f)} {o2} (≤o-cocone f k lt) | MaxLim-L  | MaxLim-L
---     = ≤o-cocone (λ x → omax (f x) o2) k (omax-monoL lt)
---   omax-monoL {.(OLim _ _)} {o1'} {o2} (≤o-limiting f lt) | MaxLim-L |  v2
---     = ≤o-limiting (λ x₁ → omax (f x₁) o2) λ k → ≤o-trans (omax-monoL (lt k)) (≤o-reflEq (pCong omax' eq2))
---   omax-monoL {.OZ} {.OZ} {.(OLim _ _)} ≤o-Z | MaxLim-R neq  | MaxZ-L  = ≤o-refl _
---   omax-monoL  {.(OLim _ f)} {.OZ} {.(OLim _ _)} (≤o-limiting f x) | MaxLim-R neq | MaxZ-L
---     with () ← neq reflp
---   omax-monoL {o1} {.(OLim _ _)} {.(OLim _ _)} (≤o-cocone _ k lt) | MaxLim-R {f = f} neq | MaxLim-L {f = f'}
---     = ≤o-limiting (λ x → omax o1 (f x)) (λ y → ≤o-cocone (λ x → omax (f' x) (OLim _ _)) k
---       (≤o-trans (omax-monoL lt) (omax-monoR {o1 = f' k} (≤o-cocone f y (≤o-refl _)))))
---   ... | MaxLim-R neq | MaxLim-R {f = f} neq' = extLim (λ x → omax o1 (f x)) (λ x → omax o1' (f x)) (λ k → omax-monoL lt)
---   omax-monoL {.(O↑ _)} {.(O↑ _)} {.(O↑ _)} (≤o-sucMono lt) | MaxLim-Suc  | MaxLim-Suc
---     = ≤o-sucMono (omax-monoL lt)
---   omax-monoL {.(O↑ _)} {.(OLim _ f)} {.(O↑ _)} (≤o-cocone f k lt) | MaxLim-Suc  | MaxLim-L
---     = ≤o-cocone (λ x → omax (f x) (O↑ _)) k (omax-monoL' lt)
 
---   omax-monoL' {o1} {o1'} {o2} lt with maxView o1 o2 in eq1 | maxView o1' o2 in eq2
---   omax-monoL' {o1} {.(O↑ _)} {o2} (≤o-sucMono lt) | v1 | v2 = ≤o-sucMono (≤o-trans (≤o-reflEq (pCong omax' (pSym eq1))) (omax-monoL lt))
---   omax-monoL' {o1} {.(OLim _ f)} {o2} (≤o-cocone f k lt) | v1 | v2
---     = ≤o-cocone _ k (≤o-trans (≤o-sucMono (≤o-reflEq (pCong omax' (pSym eq1)))) (omax-monoL' lt))
+  omax-monoL : ∀ {o1 o1' o2} → o1 ≤o o1' → omax o1 o2 ≤o omax o1' o2
+  omax-monoL' : ∀ {o1 o1' o2} → o1 <o o1' → omax o1 o2 <o omax o1' (O↑ o2)
+  omax-monoL {o1} {o1'} {o2} lt with maxView o1 o2 in eq1 | maxView o1' o2 in eq2
+  ... | MaxZ-L | v2 = ≤o-trans (omax-≤R {o1 = o1'}) (≤o-reflEq (pCong omax' eq2))
+  ... | MaxZ-R | v2 = ≤o-trans lt (≤o-trans (omax-≤L {o1 = o1'}) (≤o-reflEq (pCong omax' eq2)))
+  omax-monoL {.(OLim _ _)} {.(OLim _ f)} {o2} (≤o-cocone f k lt) | MaxLim-L  | MaxLim-L
+    = ≤o-cocone (λ x → omax (f x) o2) k (omax-monoL lt)
+  omax-monoL {.(OLim _ _)} {o1'} {o2} (≤o-limiting f lt) | MaxLim-L |  v2
+    = ≤o-limiting (λ x₁ → omax (f x₁) o2) λ k → ≤o-trans (omax-monoL (lt k)) (≤o-reflEq (pCong omax' eq2))
+  omax-monoL {.OZ} {.OZ} {.(OLim _ _)} ≤o-Z | MaxLim-R neq  | MaxZ-L  = ≤o-refl _
+  omax-monoL  {.(OLim _ f)} {.OZ} {.(OLim _ _)} (≤o-limiting f x) | MaxLim-R neq | MaxZ-L
+    with () ← neq reflp
+  omax-monoL {o1} {.(OLim _ _)} {.(OLim _ _)} (≤o-cocone _ k lt) | MaxLim-R {f = f} neq | MaxLim-L {f = f'}
+    = ≤o-limiting (λ x → omax o1 (f x)) (λ y → ≤o-cocone (λ x → omax (f' x) (OLim _ _)) k
+      (≤o-trans (omax-monoL lt) (omax-monoR {o1 = f' k} (≤o-cocone f y (≤o-refl _)))))
+  ... | MaxLim-R neq | MaxLim-R {f = f} neq' = extLim (λ x → omax o1 (f x)) (λ x → omax o1' (f x)) (λ k → omax-monoL lt)
+  omax-monoL {.(O↑ _)} {.(O↑ _)} {.(O↑ _)} (≤o-sucMono lt) | MaxLim-Suc  | MaxLim-Suc
+    = ≤o-sucMono (omax-monoL lt)
+  omax-monoL {.(O↑ _)} {.(OLim _ f)} {.(O↑ _)} (≤o-cocone f k lt) | MaxLim-Suc  | MaxLim-L
+    = ≤o-cocone (λ x → omax (f x) (O↑ _)) k (omax-monoL' lt)
+
+  omax-monoL' {o1} {o1'} {o2} lt with maxView o1 o2 in eq1 | maxView o1' o2 in eq2
+  omax-monoL' {o1} {.(O↑ _)} {o2} (≤o-sucMono lt) | v1 | v2 = ≤o-sucMono (≤o-trans (≤o-reflEq (pCong omax' (pSym eq1))) (omax-monoL lt))
+  omax-monoL' {o1} {.(OLim _ f)} {o2} (≤o-cocone f k lt) | v1 | v2
+    = ≤o-cocone _ k (≤o-trans (≤o-sucMono (≤o-reflEq (pCong omax' (pSym eq1)))) (omax-monoL' lt))
 
 
 
--- --   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → omax o1 o2 ≤o omax o1' o2'
--- --   omax-mono {o1} {o2} {o1'} {o2'} lt1 lt2 with maxView o1 o2 in eq1 | maxView o1' o2' in eq2
--- --   ... | MaxZ-L | v2 = ≤o-trans lt2  (≤o-trans (omax-≤R {o1 = o1'}) (≤o-reflEq (pCong omax' eq2)))
--- --   ... | MaxZ-R | v2 = ≤o-trans lt1 (≤o-trans (omax-≤L {o2 = o2'}) (≤o-reflEq (pCong omax' eq2)))
--- --   omax-mono {(OLim _ f1)} {o2} {(OLim _ f2)} {o2'} (≤o-cocone f k lt1) lt2 | MaxLim-L |  MaxLim-L
--- --     = ≤o-cocone (λ x → omax (f x) o2') k (omax-mono lt1 lt2)
--- --   omax-mono {(OLim _ _)} {o2} {o1'} {o2'} (≤o-limiting f1 lt1) lt2 | MaxLim-L |  v2
--- --     = ≤o-limiting (λ x₁ → omax (f1 x₁) o2) λ k → ≤o-trans (omax-mono (lt1 k) lt2) (≤o-reflEq (pCong omax' eq2))
--- --   omax-mono {o1} {(OLim _ _)} {.OZ} {.(OLim _ f)} ≤o-Z (≤o-cocone f k lt2) | MaxLim-R  | MaxZ-L
--- --     = ≤o-cocone f k lt2
--- --   omax-mono {o1} {.(OLim _ _)} {.(OLim _ _)} {.(OLim _ f)} lt1 (≤o-cocone f k lt2) | MaxLim-R  | MaxLim-L
--- --     = {!!}
--- --   omax-mono {o1} {.(OLim _ _)} {o1'} {.(OLim _ f)} lt1 (≤o-cocone f k lt2) | MaxLim-R  | MaxLim-R
--- --     = ≤o-cocone (λ x → omax o1' (f x)) k {!!}
--- --   omax-mono {o1} {.(OLim _ _)} {o1'} {o2'} lt1 (≤o-limiting _ x) | MaxLim-R |  v2
--- --     = {!!}
--- --   ... | MaxLim-Suc | v2 = {!!}
+--   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → omax o1 o2 ≤o omax o1' o2'
+--   omax-mono {o1} {o2} {o1'} {o2'} lt1 lt2 with maxView o1 o2 in eq1 | maxView o1' o2' in eq2
+--   ... | MaxZ-L | v2 = ≤o-trans lt2  (≤o-trans (omax-≤R {o1 = o1'}) (≤o-reflEq (pCong omax' eq2)))
+--   ... | MaxZ-R | v2 = ≤o-trans lt1 (≤o-trans (omax-≤L {o2 = o2'}) (≤o-reflEq (pCong omax' eq2)))
+--   omax-mono {(OLim _ f1)} {o2} {(OLim _ f2)} {o2'} (≤o-cocone f k lt1) lt2 | MaxLim-L |  MaxLim-L
+--     = ≤o-cocone (λ x → omax (f x) o2') k (omax-mono lt1 lt2)
+--   omax-mono {(OLim _ _)} {o2} {o1'} {o2'} (≤o-limiting f1 lt1) lt2 | MaxLim-L |  v2
+--     = ≤o-limiting (λ x₁ → omax (f1 x₁) o2) λ k → ≤o-trans (omax-mono (lt1 k) lt2) (≤o-reflEq (pCong omax' eq2))
+--   omax-mono {o1} {(OLim _ _)} {.OZ} {.(OLim _ f)} ≤o-Z (≤o-cocone f k lt2) | MaxLim-R  | MaxZ-L
+--     = ≤o-cocone f k lt2
+--   omax-mono {o1} {.(OLim _ _)} {.(OLim _ _)} {.(OLim _ f)} lt1 (≤o-cocone f k lt2) | MaxLim-R  | MaxLim-L
+--     = {!!}
+--   omax-mono {o1} {.(OLim _ _)} {o1'} {.(OLim _ f)} lt1 (≤o-cocone f k lt2) | MaxLim-R  | MaxLim-R
+--     = ≤o-cocone (λ x → omax o1' (f x)) k {!!}
+--   omax-mono {o1} {.(OLim _ _)} {o1'} {o2'} lt1 (≤o-limiting _ x) | MaxLim-R |  v2
+--     = {!!}
+--   ... | MaxLim-Suc | v2 = {!!}
 
--- --   omax-strictMono : ∀ {o1 o2 o1' o2'} → o1 <o o1' → o2 <o o2' → omax o1 o2 <o omax o1' o2'
--- --   omax-strictMono lt1 lt2 = omax-mono lt1 lt2
+--   omax-strictMono : ∀ {o1 o2 o1' o2'} → o1 <o o1' → o2 <o o2' → omax o1 o2 <o omax o1' o2'
+--   omax-strictMono lt1 lt2 = omax-mono lt1 lt2
 
--- -- --   omax : Ord → Ord → Ord
--- -- --   omax o1 o2 = OLim {{Approx}} {ℓ = 0} C𝔹 λ a → if a then o1 else o2
-
-
--- -- --   omax-LUB : ∀ {o1 o2 o} → o1 ≤o o → o2 ≤o o → omax o1 o2 ≤o o
--- -- --   omax-LUB {o1} {o2} {o} p1 p2 = ≤o-limiting {{Approx}} _ helper
--- -- --     where
--- -- --       helper : (k : Bool) → (if k then o1 else o2) ≤o o
--- -- --       helper false = p2
--- -- --       helper true = p1
-
--- -- --   omax-≤L : ∀ {o1 o2} → o1 ≤o omax o1 o2
--- -- --   omax-≤L {o1} {o2}   =
--- -- --     ≤o-cocone {{Approx}} _ true (≤o-refl _)
-
--- -- --   omax-≤R : ∀ {o1 o2} → o2 ≤o omax o1 o2
--- -- --   omax-≤R {o1} {o2}   =
--- -- --     ≤o-cocone {{Approx}} _ false (≤o-refl _)
-
--- -- --   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (omax o1 o2) ≤o (omax o1' o2')
--- -- --   omax-mono lt1 lt2 = omax-LUB (≤o-trans lt1 omax-≤L) (≤o-trans lt2 omax-≤R)
-
--- -- --   omax-commut : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
--- -- --   omax-commut = omax-LUB omax-≤R omax-≤L
-
--- -- --   data UBView : Ord → Ord → Set where
--- -- --     UB-ZL : ∀ o → UBView OZ o
--- -- --     UB-ZR : ∀ o → UBView o OZ
--- -- --     UB-SS : ∀ o1 o2 → UBView (O↑ o1) (O↑ o2)
--- -- --     UB-LimL : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} {f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord} { o1 o2} → (¬ (o1 ≡p OZ)) → (¬ (o2 ≡p OZ)) → ((o1 ≡p OLim c f) ⊎ (o2 ≡p OLim c f)) → UBView o1 o2
-
--- -- --   ubView : ∀ o1 o2 → UBView o1 o2
--- -- --   ubView OZ o2 = UB-ZL o2
--- -- --   ubView o1 OZ = UB-ZR o1
--- -- --   ubView (O↑ o1) (O↑ o2) = UB-SS o1 o2
--- -- --   ubView (O↑ o1) (OLim c f) = UB-LimL (λ ()) (λ ()) (inr reflp)
--- -- --   ubView (OLim c f) (O↑ o2) = UB-LimL (λ ()) (λ ()) (inl reflp)
--- -- --   ubView (OLim c f) (OLim c₁ f₁) = UB-LimL (λ ()) (λ ()) (inr reflp)
-
--- -- --   -- An upper-bound of any two ordinals
--- -- --   -- Not a true LUB, but has enough of the properties we need
--- -- --   ub : Ord → Ord → Ord
--- -- --   ub o1 o2 with ubView o1 o2
--- -- --   ... | UB-ZL .o2 = o2
--- -- --   ... | UB-ZR .o1 = o1
--- -- --   ... | UB-SS o1 o2 = O↑ (ub o1 o2)
--- -- --   ... | UB-LimL x x₁ x₂ = omax o1 o2
+-- --   omax : Ord → Ord → Ord
+-- --   omax o1 o2 = OLim {{Approx}} {ℓ = 0} C𝔹 λ a → if a then o1 else o2
 
 
+-- --   omax-LUB : ∀ {o1 o2 o} → o1 ≤o o → o2 ≤o o → omax o1 o2 ≤o o
+-- --   omax-LUB {o1} {o2} {o} p1 p2 = ≤o-limiting {{Approx}} _ helper
+-- --     where
+-- --       helper : (k : Bool) → (if k then o1 else o2) ≤o o
+-- --       helper false = p2
+-- --       helper true = p1
 
--- -- -- _+o_ : Ord → Ord → Ord
--- -- -- OZ +o o2 = o2
--- -- -- (O↑ o1) +o o2 = O↑ (o1 +o o2)
--- -- -- OLim c f +o OZ = OLim c f
--- -- -- OLim c f +o O↑ o2 = O↑ (OLim c f +o o2)
--- -- -- OLim c f +o OLim c₁ f₁ = OLim c λ a → OLim c₁ λ a₁ → f a +o f₁ a₁
--- -- -- -- -- OLim c (λ x → (f x) +o o2)
+-- --   omax-≤L : ∀ {o1 o2} → o1 ≤o omax o1 o2
+-- --   omax-≤L {o1} {o2}   =
+-- --     ≤o-cocone {{Approx}} _ true (≤o-refl _)
 
--- -- -- +o-≤-L : ∀ o1 o2 → o1 ≤o (o1 +o o2)
--- -- -- +o-≤-L OZ o2 = ≤o-Z
--- -- -- +o-≤-L (O↑ o1) o2 = ≤o-sucMono (+o-≤-L o1 o2)
--- -- -- +o-≤-L (OLim c f) OZ = ≤o-refl _
--- -- -- +o-≤-L (OLim c f) (O↑ o2) = ≤o-trans (+o-≤-L (OLim c f) o2) (≤↑ (OLim c f +o o2))
--- -- -- +o-≤-L (OLim c f) (OLim c₁ f₁) = extLim _ _  λ k → underLim (f k) (λ a₁ → f k +o f₁ a₁) (λ k2 → +o-≤-L (f k) (f₁ k2))
+-- --   omax-≤R : ∀ {o1 o2} → o2 ≤o omax o1 o2
+-- --   omax-≤R {o1} {o2}   =
+-- --     ≤o-cocone {{Approx}} _ false (≤o-refl _)
 
--- -- -- +o-≤-R :  ∀ o1 o2 → o2 ≤o (o1 +o o2)
--- -- -- +o-≤-R OZ o2 = ≤o-refl o2
--- -- -- +o-≤-R (O↑ o1) o2 = ≤o-trans (+o-≤-R o1 o2) (≤↑ (o1 +o o2))
--- -- -- +o-≤-R (OLim c f) OZ = ≤o-Z
--- -- -- +o-≤-R (OLim c f) (O↑ o2) = ≤o-sucMono (+o-≤-R (OLim c f) o2)
--- -- -- +o-≤-R (OLim c f) (OLim c₁ f₁) = ≤o-limiting f₁ (λ k → ≤o-℧ {c = c} (≤o-cocone _ k (+o-≤-R (f _) (f₁ k))))
+-- --   omax-mono : ∀ {o1 o2 o1' o2'} → o1 ≤o o1' → o2 ≤o o2' → (omax o1 o2) ≤o (omax o1' o2')
+-- --   omax-mono lt1 lt2 = omax-LUB (≤o-trans lt1 omax-≤L) (≤o-trans lt2 omax-≤R)
+
+-- --   omax-commut : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
+-- --   omax-commut = omax-LUB omax-≤R omax-≤L
+
+-- --   data UBView : Ord → Ord → Set where
+-- --     UB-ZL : ∀ o → UBView OZ o
+-- --     UB-ZR : ∀ o → UBView o OZ
+-- --     UB-SS : ∀ o1 o2 → UBView (O↑ o1) (O↑ o2)
+-- --     UB-LimL : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} {f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord} { o1 o2} → (¬ (o1 ≡p OZ)) → (¬ (o2 ≡p OZ)) → ((o1 ≡p OLim c f) ⊎ (o2 ≡p OLim c f)) → UBView o1 o2
+
+-- --   ubView : ∀ o1 o2 → UBView o1 o2
+-- --   ubView OZ o2 = UB-ZL o2
+-- --   ubView o1 OZ = UB-ZR o1
+-- --   ubView (O↑ o1) (O↑ o2) = UB-SS o1 o2
+-- --   ubView (O↑ o1) (OLim c f) = UB-LimL (λ ()) (λ ()) (inr reflp)
+-- --   ubView (OLim c f) (O↑ o2) = UB-LimL (λ ()) (λ ()) (inl reflp)
+-- --   ubView (OLim c f) (OLim c₁ f₁) = UB-LimL (λ ()) (λ ()) (inr reflp)
+
+-- --   -- An upper-bound of any two ordinals
+-- --   -- Not a true LUB, but has enough of the properties we need
+-- --   ub : Ord → Ord → Ord
+-- --   ub o1 o2 with ubView o1 o2
+-- --   ... | UB-ZL .o2 = o2
+-- --   ... | UB-ZR .o1 = o1
+-- --   ... | UB-SS o1 o2 = O↑ (ub o1 o2)
+-- --   ... | UB-LimL x x₁ x₂ = omax o1 o2
+
+
+
+-- -- _+o_ : Ord → Ord → Ord
+-- -- OZ +o o2 = o2
+-- -- (O↑ o1) +o o2 = O↑ (o1 +o o2)
+-- -- OLim c f +o OZ = OLim c f
+-- -- OLim c f +o O↑ o2 = O↑ (OLim c f +o o2)
+-- -- OLim c f +o OLim c₁ f₁ = OLim c λ a → OLim c₁ λ a₁ → f a +o f₁ a₁
+-- -- -- -- OLim c (λ x → (f x) +o o2)
+
+-- -- +o-≤-L : ∀ o1 o2 → o1 ≤o (o1 +o o2)
+-- -- +o-≤-L OZ o2 = ≤o-Z
+-- -- +o-≤-L (O↑ o1) o2 = ≤o-sucMono (+o-≤-L o1 o2)
+-- -- +o-≤-L (OLim c f) OZ = ≤o-refl _
+-- -- +o-≤-L (OLim c f) (O↑ o2) = ≤o-trans (+o-≤-L (OLim c f) o2) (≤↑ (OLim c f +o o2))
+-- -- +o-≤-L (OLim c f) (OLim c₁ f₁) = extLim _ _  λ k → underLim (f k) (λ a₁ → f k +o f₁ a₁) (λ k2 → +o-≤-L (f k) (f₁ k2))
+
+-- -- +o-≤-R :  ∀ o1 o2 → o2 ≤o (o1 +o o2)
+-- -- +o-≤-R OZ o2 = ≤o-refl o2
+-- -- +o-≤-R (O↑ o1) o2 = ≤o-trans (+o-≤-R o1 o2) (≤↑ (o1 +o o2))
+-- -- +o-≤-R (OLim c f) OZ = ≤o-Z
+-- -- +o-≤-R (OLim c f) (O↑ o2) = ≤o-sucMono (+o-≤-R (OLim c f) o2)
+-- -- +o-≤-R (OLim c f) (OLim c₁ f₁) = ≤o-limiting f₁ (λ k → ≤o-℧ {c = c} (≤o-cocone _ k (+o-≤-R (f _) (f₁ k))))
 
 
 
 
--- -- -- open import Cubical.Induction.WellFounded
+-- -- open import Cubical.Induction.WellFounded
 
 
--- -- -- orec : ∀ {ℓ} (P : Ord → Set ℓ)
--- -- --   → ((x : Ord) → (rec : (y : Ord) → (_ : y <o x) → P y ) → P x)
--- -- --   → ∀ {o} → P o
--- -- -- orec P f = induction (λ x rec → f x rec) _
--- -- --   where open WFI (ordWF)
+-- -- orec : ∀ {ℓ} (P : Ord → Set ℓ)
+-- --   → ((x : Ord) → (rec : (y : Ord) → (_ : y <o x) → P y ) → P x)
+-- --   → ∀ {o} → P o
+-- -- orec P f = induction (λ x rec → f x rec) _
+-- --   where open WFI (ordWF)
 
 
--- -- -- oPairRec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
--- -- --   → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oPair (x1 , x2)) → P y1 y2 ) → P x1 x2)
--- -- --   → ∀ {o1 o2} → P o1 o2
--- -- -- oPairRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
--- -- --   where open WFI (oPairWF)
+-- -- oPairRec : ∀ {ℓ} (P : Ord → Ord → Set ℓ)
+-- --   → ((x1 x2 : Ord) → (rec : (y1 y2 : Ord) → (_ : (y1 , y2) <oPair (x1 , x2)) → P y1 y2 ) → P x1 x2)
+-- --   → ∀ {o1 o2} → P o1 o2
+-- -- oPairRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+-- --   where open WFI (oPairWF)
 
 
--- -- -- oQuadRec : ∀ {ℓ} (P : (Ord × Ord) → (Ord × Ord) → Set ℓ)
--- -- --   → ((x1 x2 : Ord × Ord) → (rec : (y1 y2 : Ord × Ord) → (_ : (y1 , y2) <oQuad (x1 , x2)) → P y1 y2 ) → P x1 x2)
--- -- --   → ∀ {o1 o2} → P o1 o2
--- -- -- oQuadRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
--- -- --   where open WFI (oQuadWF)
+-- -- oQuadRec : ∀ {ℓ} (P : (Ord × Ord) → (Ord × Ord) → Set ℓ)
+-- --   → ((x1 x2 : Ord × Ord) → (rec : (y1 y2 : Ord × Ord) → (_ : (y1 , y2) <oQuad (x1 , x2)) → P y1 y2 ) → P x1 x2)
+-- --   → ∀ {o1 o2} → P o1 o2
+-- -- oQuadRec P f = induction (λ (x1 , x2) rec → f x1 x2 λ y1 y2 → rec (y1 , y2)) _
+-- --   where open WFI (oQuadWF)
 
--- -- -- oplus-suc-swap : ∀ o1 o2 → ((O↑ o1) +o o2) ≤o (o1 +o (O↑ o2))
--- -- -- oplus-suc-swap OZ o2 = ≤o-refl (O↑ OZ +o o2)
--- -- -- oplus-suc-swap (O↑ o1) o2 = ≤o-sucMono (oplus-suc-swap o1 o2)
--- -- -- oplus-suc-swap (OLim c f) OZ = ≤o-refl _
--- -- -- oplus-suc-swap (OLim c f) (O↑ o2) = ≤o-refl _
--- -- -- oplus-suc-swap (OLim c f) (OLim c₁ f₁) = ≤o-refl _
+-- -- oplus-suc-swap : ∀ o1 o2 → ((O↑ o1) +o o2) ≤o (o1 +o (O↑ o2))
+-- -- oplus-suc-swap OZ o2 = ≤o-refl (O↑ OZ +o o2)
+-- -- oplus-suc-swap (O↑ o1) o2 = ≤o-sucMono (oplus-suc-swap o1 o2)
+-- -- oplus-suc-swap (OLim c f) OZ = ≤o-refl _
+-- -- oplus-suc-swap (OLim c f) (O↑ o2) = ≤o-refl _
+-- -- oplus-suc-swap (OLim c f) (OLim c₁ f₁) = ≤o-refl _
 
--- -- -- LT-refl : ∀ {o} → o <o O↑ o
--- -- -- LT-refl = ≤o-refl _
+-- -- LT-refl : ∀ {o} → o <o O↑ o
+-- -- LT-refl = ≤o-refl _
 
--- -- -- maxLT-L : ∀ {o1 o2} → o1 <o O↑ (omax o1 o2)
--- -- -- maxLT-L {o1} {o2} = ≤o-sucMono omax-≤L
+-- -- maxLT-L : ∀ {o1 o2} → o1 <o O↑ (omax o1 o2)
+-- -- maxLT-L {o1} {o2} = ≤o-sucMono omax-≤L
 
--- -- -- maxLT-R : ∀ {o1 o2} → o2 <o O↑ (omax o1 o2)
--- -- -- maxLT-R {o1} {o2} = ≤o-sucMono omax-≤R
+-- -- maxLT-R : ∀ {o1 o2} → o2 <o O↑ (omax o1 o2)
+-- -- maxLT-R {o1} {o2} = ≤o-sucMono omax-≤R
 
--- -- -- limLT : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ}  {f : Approxed (El c) → Ord} { x} → f x <o O↑ (OLim c f)
--- -- -- limLT {c = c} {f} {x} = ≤o-sucMono (≤o-cocone f x (≤o-refl (f x)))
+-- -- limLT : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ}  {f : Approxed (El c) → Ord} { x} → f x <o O↑ (OLim c f)
+-- -- limLT {c = c} {f} {x} = ≤o-sucMono (≤o-cocone f x (≤o-refl (f x)))
 
--- -- -- limMaxLT-R : ∀ {{_ : Æ}} {o} {ℓ} {c : ℂ ℓ} {f : Approxed (El c) → Ord} { x} → f x <o O↑ (omax o (OLim c f))
--- -- -- limMaxLT-R {f = f} {x = x} = ≤o-sucMono (≤o-trans (≤o-cocone f x (≤o-refl (f x))) omax-≤R)
+-- -- limMaxLT-R : ∀ {{_ : Æ}} {o} {ℓ} {c : ℂ ℓ} {f : Approxed (El c) → Ord} { x} → f x <o O↑ (omax o (OLim c f))
+-- -- limMaxLT-R {f = f} {x = x} = ≤o-sucMono (≤o-trans (≤o-cocone f x (≤o-refl (f x))) omax-≤R)
 
--- -- -- maxInLimGen-L : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord}  → OLim c f1 <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
--- -- -- maxInLimGen-L {c = c} {f1} {f2} = ≤o-sucMono (extLim f1 (λ a → omax (f1 a) (f2 a)) (λ k → omax-≤L))
+-- -- maxInLimGen-L : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord}  → OLim c f1 <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
+-- -- maxInLimGen-L {c = c} {f1} {f2} = ≤o-sucMono (extLim f1 (λ a → omax (f1 a) (f2 a)) (λ k → omax-≤L))
 
--- -- -- maxInLimGen-R : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord}  → OLim c f2 <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
--- -- -- maxInLimGen-R {c = c} {f1} {f2} = ≤o-sucMono (≤o-limiting f2 λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤R))
+-- -- maxInLimGen-R : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord}  → OLim c f2 <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
+-- -- maxInLimGen-R {c = c} {f1} {f2} = ≤o-sucMono (≤o-limiting f2 λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤R))
 
--- -- -- maxInLimApp-L : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord} {x}  → f1 x <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
--- -- -- maxInLimApp-L {c = c} {f1} {f2} {x} = ≤o-sucMono (≤o-trans (≤o-cocone {c = c} f1 x (≤o-refl (f1 x))) (≤o-limiting f1 (λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤L))))
+-- -- maxInLimApp-L : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord} {x}  → f1 x <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
+-- -- maxInLimApp-L {c = c} {f1} {f2} {x} = ≤o-sucMono (≤o-trans (≤o-cocone {c = c} f1 x (≤o-refl (f1 x))) (≤o-limiting f1 (λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤L))))
 
--- -- -- maxInLimApp-R : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord} {x}  → f2 x <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
--- -- -- maxInLimApp-R {c = c} {f1} {f2} {x} = ≤o-sucMono (≤o-trans (≤o-cocone {c = c} f2 x (≤o-refl (f2 x))) (≤o-limiting f2 (λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤R))))
+-- -- maxInLimApp-R : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} {f1 f2 : Approxed (El c) → Ord} {x}  → f2 x <o O↑ (OLim c λ a → omax (f1 a) (f2 a))
+-- -- maxInLimApp-R {c = c} {f1} {f2} {x} = ≤o-sucMono (≤o-trans (≤o-cocone {c = c} f2 x (≤o-refl (f2 x))) (≤o-limiting f2 (λ a → (≤o-cocone (λ a₁ → omax (f1 a₁) (f2 a₁)) a omax-≤R))))
