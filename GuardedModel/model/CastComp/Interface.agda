@@ -41,18 +41,18 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (c : ℂ ℓ)
       → (x y : El c)
       → ( pfc1 : (codeSize c)  ≡p cSize )
-      → ( pfv1 : (elSize c x) |O| (elSize c y)  ≡p vSize )
+      → ( pfv1 : omax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
 
     oCodeMeet :
       (c1 c2 : ℂ ℓ)
-      → ( pfc1 : (codeSize c1) |O| (codeSize c2)  ≡p cSize )
+      → ( pfc1 : omax (codeSize c1) (codeSize c2)  ≡p cSize )
       → ( pfv1 : OZ  ≡p vSize )
       → (ℂ ℓ)
 
     oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
-      → ( pfc1 : (codeSize csource) |O| (codeSize cdest)  ≡p cSize)
+      → ( pfc1 : omax (codeSize csource) (codeSize cdest)  ≡p cSize)
       →  (x : El csource)
       → ( pfv1 : elSize csource x ≡p vSize)
       -> LÆ ( El cdest)
@@ -97,7 +97,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
 
   _⊓_By_ :
       (c1 c2 : ℂ ℓ)
-      → (codeSize c1 |O| codeSize c2 <o cSize)
+      → (omax (codeSize c1) (codeSize c2) <o cSize)
       → (ℂ ℓ)
   _⊓_By_  c1 c2 lt =
       oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp
@@ -105,7 +105,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
       → (cdest csource : ℂ ℓ)
       → (x : El csource)
-      → codeSize csource |O| codeSize cdest <o cSize
+      → omax (codeSize csource)  (codeSize cdest) <o cSize
       → LÆ (El cdest)
   ⟨ cdest ⇐ csource ⟩ x By lt1 =
       oCast (self ((<oPairL lt1))) csource cdest reflp x reflp
@@ -113,6 +113,6 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
       → (cdest csource : ℂ ℓ)
       → (x : El {{æ = æ}} csource)
-      → codeSize csource |O| codeSize cdest <o cSize
+      → omax (codeSize csource)  (codeSize cdest) <o cSize
       → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}

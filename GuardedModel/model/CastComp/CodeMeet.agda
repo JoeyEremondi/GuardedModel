@@ -47,7 +47,7 @@ codeMeet : ∀ {{_ : Æ}} {h1 h2}
   → (view : HeadMatchView h1 h2)
   → (eq1 : h1 ≡p codeHead c1)
   → (eq2 : h2 ≡p codeHead c2)
-  → (codeSize c1 |O| codeSize c2 ≡p cSize)
+  → (omax (codeSize c1) ( codeSize c2) ≡p cSize)
   → (OZ ≡p vSize)
   → (ℂ ℓ)
 -- Error cases: the meet is ℧ if either argument is ℧
