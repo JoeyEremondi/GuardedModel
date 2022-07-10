@@ -260,6 +260,29 @@ abstract
   omax-strictMono : ∀ {o1 o2 o1' o2'} → o1 <o o1' → o2 <o o2' → omax o1 o2 <o omax o1' o2'
   omax-strictMono lt1 lt2 = omax-mono lt1 lt2
 
+  omax-LUB : ∀ o1 o2 o → o1 ≤o o → o2 ≤o o → omax o1 o2 ≤o o
+  omax-LUB o1 o2 o lt1 lt2 with maxView o1 o2
+  omax-LUB .OZ o2 o lt1 lt2 | MaxZ-L = lt2
+  omax-LUB o1 .OZ o lt1 lt2 | MaxZ-R = lt1
+  omax-LUB (OLim c f) o2 o lt1 lt2 | MaxLim-L = {!!}
+  omax-LUB o1 (OLim c f) o lt1 lt2 | MaxLim-R x = {!!}
+  omax-LUB .(O↑ _) .(O↑ _) o lt1 lt2 | MaxLim-Suc = {!!}
+
+  omax-refl : ∀ {o} → omax o o ≤o o
+  omax-refl {OZ} = ≤o-Z
+  omax-refl {O↑ o} = ≤o-sucMono omax-refl
+  omax-refl {OLim c f} = ≤o-limiting _ λ k → {!!}
+
+  omax-sym : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
+  omax-sym {o1 }{o2} with maxView o1 o2 in eq1 | maxView o2 o1 in eq2
+  ... | MaxZ-L | v2 = ≤o-trans (omax-≤L {o2 = o1}) (≤o-reflEq (pCong omax' eq2))
+  ... | MaxZ-R | v2 = ≤o-trans (omax-≤R {o1 = o2}) (≤o-reflEq (pCong omax' eq2))
+  ... | MaxLim-L {f = f} | MaxZ-L  = extLim _ _ (λ k → omax-sym {o1 = f k}  )
+  ... | MaxLim-L  | MaxLim-L  = {!!}
+  ... | MaxLim-L  | MaxLim-R neq  = {!!}
+  ... | MaxLim-R neq | v2 = {!!}
+  ... | MaxLim-Suc | v2 = {!!}
+
 -- --   omax : Ord → Ord → Ord
 -- --   omax o1 o2 = OLim {{Approx}} {ℓ = 0} C𝔹 λ a → if a then o1 else o2
 
