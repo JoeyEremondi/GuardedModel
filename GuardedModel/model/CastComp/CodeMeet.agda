@@ -69,11 +69,12 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = 
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
         = let
           dom12 = dom1 ⊓ dom2
-                        By {!!}
+                        By omax-strictMono (≤o-sucMono omax-≤L) (≤o-sucMono omax-≤L)
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
             let
-              x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By {!!} -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+              x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12
+                By {!!} -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
               x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12 By {!!}
             in {!!}
               -- (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)
