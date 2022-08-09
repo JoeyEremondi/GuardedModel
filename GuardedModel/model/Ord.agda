@@ -266,6 +266,10 @@ mutual
   omax-Z (O↑ o) = reflc
   omax-Z (OLim c f) = cong (OLim c) (funExt (λ x → omax-Z (f x)))
 
+  omax-≤Z : ∀ o → omax o OZ ≤o o
+  omax-≤Z OZ = ≤o-refl _
+  omax-≤Z (O↑ o) = ≤o-refl _
+  omax-≤Z (OLim c f) = extLim _ _ (λ k → omax-≤Z (f k))
 
   omax-oneL : ∀ {o} → omax O1 (O↑ o) ≤o O↑ o
   omax-oneL  = ≤o-refl _
@@ -295,6 +299,15 @@ mutual
     (≤o-trans (≤o-limiting _ (λ k → ≤o-limiting _ λ k2 → ≤o-cocone _ k2 (≤o-cocone _ k (≤o-refl _))))
     (≤o-trans (≤o-refl (OLim c2 λ k2 → OLim c λ k → omax (f k) (f2 k2)))
     (extLim _ _ (λ k2 → ≤o-limiting _ λ k1 → ≤o-trans (omax-sym (f k1) (f2 k2)) (omax-monoR {o1 = f2 k2} {o2 = f k1} {o2' = OLim c f} (≤o-cocone _ k1 (≤o-refl _)))))))
+
+
+  omax-assocL : ∀ o1 o2 o3 → omax o1 (omax o2 o3) ≤o omax (omax o1 o2) o3
+  omax-assocL o1 o2 o3 with maxView o2 o3
+  ... | MaxZ-L = omax-monoL {o1 = o1} {o1' = omax o1 OZ} {o2 = o3} omax-≤L
+  ... | MaxZ-R = omax-≤L
+  ... | MaxLim-L {c = c} {f = f} = {!!}
+  ... | MaxLim-R x = {!!}
+  ... | MaxLim-Suc = {!!}
   -- ... | MaxZ-L | MaxZ-L = ≤o-Z
   -- ... | MaxZ-L | MaxZ-R = ≤o-refl _
   -- ... | MaxZ-R | MaxZ-L = ≤o-refl _

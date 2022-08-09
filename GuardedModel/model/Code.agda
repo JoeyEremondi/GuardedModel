@@ -73,8 +73,8 @@ record CodeModule
   : Set (lsuc lzero) where
   field
     ℂ-1 : Set
-    El-1 : {{_ : Æ}} → ℂ-1 -> Set
-    ⁇-1 : {{_ : Æ}} → Set
+    -- El-1 : {{_ : Æ}} → ℂ-1 -> Set
+    -- ⁇-1 : {{_ : Æ}} → Set
     -- ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
 
@@ -87,7 +87,6 @@ record CodeModule
     --Approximate type for a code
     ApproxEl : ℂ → Set
     ApproxEl c = El {{Approx}} c
-
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
     -- ▹El : ℂ → Set
@@ -160,10 +159,10 @@ record CodeModule
     -- El CTypeSelf = ▸ ℂSelf
 
     --For lower universes, we can lift codes to this universe without needing guardedness
-    data _ where
-      CCumul : ℂ-1 → ℂ
-      ⁇Cumul : ⁇-1 → F⁇ Self
-    El (CCumul c) = El-1 c
+    -- data _ where
+    --   CCumul : ℂ-1 → ℂ
+    --   ⁇Cumul : ⁇-1 → F⁇ Self
+    -- El (CCumul c) = El-1 c
 
     ----------------------------------------------------------------
     --- Gradual functions
@@ -292,16 +291,16 @@ CodeModuleAt : ∀  ℓ →  CodeModule ℓ
 CodeModuleAt zero = --G.fix λ ModSelf →
   record
     { ℂ-1 = 𝟘
-    ; El-1 = λ ()
-    ; ⁇-1 = 𝟘
+    -- ; El-1 = λ ()
+    -- ; ⁇-1 = 𝟘
     -- ; ℧-1 = λ { {{()}} }
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
     }
 CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
   record
     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
-    ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
-    ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
+    -- ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
+    -- ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
     -- ; ℧-1 = CodeModule.ℂ.C℧
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
     }
@@ -365,7 +364,6 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
 ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
-℧ {ℓ = suc ℓ} (CodeModule.CCumul x) = ℧ x
 
 ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
 ℧Approx = ℧ {{Approx}}
