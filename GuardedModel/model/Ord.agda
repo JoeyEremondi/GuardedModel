@@ -83,6 +83,7 @@ o1 <o o2 = O↑ o1 ≤o o2
 <-in-≤ : ∀ {x y} → x <o y → x ≤o y
 <-in-≤ pf = ≤o-trans (≤↑ _) pf
 
+
 -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
 -- TODO: proper credit
 <∘≤-in-< : ∀ {x y z} → x <o y → y ≤o z → x <o z
@@ -98,6 +99,11 @@ underLim {c = c} o f all = ≤o-trans (≤o-℧ {c = c} (≤o-refl _)) (≤o-lim
 
 extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : Approxed (El c) → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
 extLim {c = c} f1 f2 all = ≤o-limiting f1 (λ k → ≤o-cocone f2 k (all k))
+
+
+existsLim : ∀ {æ1 æ2 : Æ} {ℓ1 ℓ2} {c1 : ℂ ℓ1} {c2 : ℂ ℓ2} →  (f1 : Approxed (El c1) {{æ = æ1}} → Ord) (f2 : Approxed (El c2) {{æ = æ2}} → Ord) → (∀ k1 → Σ[ k2 ∈ Approxed (El c2) {{æ = æ2}} ] f1 k1 ≤o f2 k2) → OLim {{æ = æ1}} c1 f1 ≤o OLim {{æ = æ2}} c2 f2
+existsLim {æ1} {æ2} f1 f2 allex = ≤o-limiting {{æ = æ1}} f1 (λ k → ≤o-cocone {{æ = æ2}} f2 (fst (allex k)) (snd (allex k)))
+
 
 ¬Z<↑ : ∀  o → ¬ ((O↑ o) ≤o OZ)
 ¬Z<↑ o ()
@@ -159,7 +165,7 @@ oQuadWF (x1 , x2) = acc (helper (oPairWF x1) (oPairWF x2))
     helper acc₁ (acc rec₂) (y1 , y2) (<oQuadR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 -- abstract
-mutual
+private
   data MaxView : Ord → Ord → Set where
     MaxZ-L : ∀ {o} → MaxView OZ o
     MaxZ-R : ∀ {o} → MaxView o OZ
@@ -187,7 +193,7 @@ mutual
   omax' {o1} {(OLim c f)} (MaxLim-R _) = OLim c (λ x → omax o1 (f x))
   omax' {(O↑ o1)} {(O↑ o2)} MaxLim-Suc = O↑ (omax o1 o2)
 
-
+mutual
   omax-≤L : ∀ {o1 o2} → o1 ≤o omax o1 o2
   omax-≤L {o1} {o2} with maxView o1 o2
   ... | MaxZ-L = ≤o-Z
@@ -285,20 +291,20 @@ mutual
   omax-limR f (O↑ o) = extLim _ _ λ k → ≤o-refl _
   omax-limR f (OLim c f₁) = ≤o-limiting _ λ k → ≤o-trans (omax-limR f (f₁ k)) (extLim _ _ (λ k2 → omax-monoL {o1 = f₁ k} {o1' = OLim c f₁} {o2 = f k2}  (≤o-cocone _ k (≤o-refl _))))
 
-  omax-sym : ∀ o1 o2 → omax o1 o2 ≤o omax o2 o1
-  omax-sym o1 o2 with maxView o1 o2
+  omax-commut : ∀ o1 o2 → omax o1 o2 ≤o omax o2 o1
+  omax-commut o1 o2 with maxView o1 o2
   ... | MaxZ-L = omax-≤L
   ... | MaxZ-R = ≤o-refl _
-  ... | MaxLim-R {f = f} x = extLim _ _ (λ k → omax-sym o1 (f k))
-  ... | MaxLim-Suc {o1 = o1} {o2 = o2} = ≤o-sucMono (omax-sym o1 o2)
+  ... | MaxLim-R {f = f} x = extLim _ _ (λ k → omax-commut o1 (f k))
+  ... | MaxLim-Suc {o1 = o1} {o2 = o2} = ≤o-sucMono (omax-commut o1 o2)
   ... | MaxLim-L {c = c} {f = f} with maxView o2 o1
   ... | MaxZ-L = extLim _ _ (λ k → subst (λ x → x ≤o f k) (sym (omax-Z (f k))) (≤o-refl _))
-  ... | MaxLim-R x = extLim _ _ (λ k → omax-sym (f k) o2)
+  ... | MaxLim-R x = extLim _ _ (λ k → omax-commut (f k) o2)
   ... | MaxLim-L {c = c2} {f = f2} =
     ≤o-trans (extLim _ _ λ k → omax-limR f2 (f k))
     (≤o-trans (≤o-limiting _ (λ k → ≤o-limiting _ λ k2 → ≤o-cocone _ k2 (≤o-cocone _ k (≤o-refl _))))
     (≤o-trans (≤o-refl (OLim c2 λ k2 → OLim c λ k → omax (f k) (f2 k2)))
-    (extLim _ _ (λ k2 → ≤o-limiting _ λ k1 → ≤o-trans (omax-sym (f k1) (f2 k2)) (omax-monoR {o1 = f2 k2} {o2 = f k1} {o2' = OLim c f} (≤o-cocone _ k1 (≤o-refl _)))))))
+    (extLim _ _ (λ k2 → ≤o-limiting _ λ k1 → ≤o-trans (omax-commut (f k1) (f2 k2)) (omax-monoR {o1 = f2 k2} {o2 = f k1} {o2' = OLim c f} (≤o-cocone _ k1 (≤o-refl _)))))))
 
 
   omax-assocL : ∀ o1 o2 o3 → omax o1 (omax o2 o3) ≤o omax (omax o1 o2) o3
@@ -313,15 +319,65 @@ mutual
   omax-assocL o1 o2 .(OLim _ _) | MaxLim-R {f = f} x   | MaxLim-Suc = extLim _ _ λ k → omax-assocL o1 o2 (f k)
   omax-assocL (O↑ o1) (O↑ o2) (O↑ o3) | MaxLim-Suc  | MaxLim-Suc = ≤o-sucMono (omax-assocL o1 o2 o3)
   ... | MaxLim-L {f = f} rewrite pSym eq23 = extLim _ _ λ k → omax-assocL (f k) o2 o3
+
+
+  omax-assocR : ∀ o1 o2 o3 →  omax (omax o1 o2) o3 ≤o omax o1 (omax o2 o3)
+  omax-assocR o1 o2 o3 = ≤o-trans (omax-commut (omax o1 o2) o3) (≤o-trans (omax-monoR {o1 = o3} (omax-commut o1 o2))
+    (≤o-trans (omax-assocL o3 o2 o1) (≤o-trans (omax-commut (omax o3 o2) o1) (omax-monoR {o1 = o1} (omax-commut o3 o2)))))
+
+
+
+-- Monotonicity conditions for limits
+-- Since we're working constructively, and with arbitrary codes, not just Nats,
+-- we require that there be some element that produces a bigger element
+-- for each pair of inputs
+--
+data MonoOrd : Ord → Set where
+  MonoZ : MonoOrd OZ
+  MonoSuc : ∀ {o} → MonoOrd o → MonoOrd (O↑ o )
+  MonoLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} {f : Approxed (El c) {{æ}} → Ord}
+    → (monoFun : ∀ {k1 k2} → Σ[ k3 ∈ _ ] (omax (f k1) (f k2) ≤o f k3))
+    (monoRest  : ∀ {k} → MonoOrd (f k) )
+    → MonoOrd (OLim c f)
+
+-- Omax is idempotent on the subset of ords where all limits are for max-respecting functions
+-- Notably, our size computations respect this
+omax-idem : ∀{o} → MonoOrd o → omax o o ≤o o
+omax-idem MonoZ = ≤o-Z
+omax-idem (MonoSuc mo) = ≤o-sucMono (omax-idem mo)
+omax-idem (MonoLim {c = c} {f = f} monoFun monoRest) = ≤o-limiting _ (λ k1 → ≤o-trans (omax-limR f (f k1)) (existsLim _ _ (λ k2 → monoFun)))
+
+--Omax is a least-upper bound on the monotone subset of ords
+omax-lub : ∀ {o1 o2 o3} → MonoOrd o1 → MonoOrd o2 → MonoOrd o3 →
+  o1 ≤o o3 → o2 ≤o o3 → omax o1 o2 ≤o o3
+omax-lub {o1 = o1} {o2 = o2} {o3 = o3} mo1 mo2 mo3 lt1 lt2
+  = ≤o-trans (omax-mono {o1 = o1} {o2 = o2} (≤o-trans (omax-≤L {o2 = o3}) (≤o-trans (omax-monoL lt1) (omax-idem mo3)))
+                                            (≤o-trans (omax-≤L {o2 = o3}) (≤o-trans (omax-monoL lt2) (omax-idem mo3))))
+    (omax-idem mo3)
+
+-- Omax preserves limit monotonicity
+omax-wf : ∀ {o1 o2} → MonoOrd o1 → MonoOrd o2 → MonoOrd (omax o1 o2)
+omax-wf {o1} {o2} mo1 mo2 with maxView o1 o2
+... | MaxZ-L = mo2
+... | MaxZ-R = mo1
+omax-wf {.(OLim _ _)} {o2} (MonoLim monoFun monoRest) mo2 | MaxLim-L
+  = MonoLim
+    (λ {k1} {k2} → {!!})
+    {!!}
+... | MaxLim-R x = {!!}
+omax-wf {.(O↑ _)} {.(O↑ _)} (MonoSuc mo1) (MonoSuc mo2) | MaxLim-Suc = MonoSuc (omax-wf mo1 mo2)
+
+
+
   -- ... | MaxZ-L | MaxZ-L = ≤o-Z
   -- ... | MaxZ-L | MaxZ-R = ≤o-refl _
   -- ... | MaxZ-R | MaxZ-L = ≤o-refl _
   -- ... | MaxZ-R | MaxZ-R = ≤o-Z
-  -- ... | MaxLim-L {o = o} {f = f}  | MaxLim-R _ =  extLim _ _ λ k → omax-sym (f k) o
-  -- ... | MaxLim-R {o = o} {f = f} _ | MaxLim-L = extLim _ _ λ k → omax-sym o (f k)
+  -- ... | MaxLim-L {o = o} {f = f}  | MaxLim-R _ =  extLim _ _ λ k → omax-commut (f k) o
+  -- ... | MaxLim-R {o = o} {f = f} _ | MaxLim-L = extLim _ _ λ k → omax-commut o (f k)
   -- -- ... | MaxLim-Lim {ℓ1 = ℓ1} {ℓ2 = ℓ2} {c1 = c1}  {f1 = f1} {c2 = c2} {f2 = f2} | MaxLim-Lim
-  -- --   =  ≤o-limiting2 {ℓ1 = ℓ1} {ℓ2} (λ x y → omax (f1 x) (f2 y)) λ k1 k2 → ≤o-cocone2 {ℓ1 = ℓ2} {ℓ2 = ℓ1} (λ x y → omax (f2 x) (f1 y)) k2 k1 (omax-sym (f1 k1) (f2 k2))
-  -- ... | MaxLim-Suc {o1 = o1} {o2 = o2} | MaxLim-Suc = ≤o-sucMono (omax-sym o1 o2)
+  -- --   =  ≤o-limiting2 {ℓ1 = ℓ1} {ℓ2} (λ x y → omax (f1 x) (f2 y)) λ k1 k2 → ≤o-cocone2 {ℓ1 = ℓ2} {ℓ2 = ℓ1} (λ x y → omax (f2 x) (f1 y)) k2 k1 (omax-commut (f1 k1) (f2 k2))
+  -- ... | MaxLim-Suc {o1 = o1} {o2 = o2} | MaxLim-Suc = ≤o-sucMono (omax-commut o1 o2)
   -- ... | MaxZ-L | MaxLim-L = {!!}
   -- ... | MaxZ-R | MaxLim-R x = {!!}
   -- ... | MaxLim-L | MaxZ-L = {!!}
@@ -342,11 +398,11 @@ mutual
   -- omax-refl {O↑ o} = ≤o-sucMono omax-refl
   -- omax-refl {OLim c f} = ≤o-limiting _ λ k → {!!}
 
-  -- omax-sym : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
-  -- omax-sym {o1 }{o2} with maxView o1 o2 in eq1 | maxView o2 o1 in eq2
+  -- omax-commut : ∀ {o1 o2} → omax o1 o2 ≤o omax o2 o1
+  -- omax-commut {o1 }{o2} with maxView o1 o2 in eq1 | maxView o2 o1 in eq2
   -- ... | MaxZ-L | v2 = ≤o-trans (omax-≤L {o2 = o1}) (≤o-reflEq (pCong omax' eq2))
   -- ... | MaxZ-R | v2 = ≤o-trans (omax-≤R {o1 = o2}) (≤o-reflEq (pCong omax' eq2))
-  -- ... | MaxLim-L {f = f} | MaxZ-L  = extLim _ _ (λ k → omax-sym {o1 = f k}  )
+  -- ... | MaxLim-L {f = f} | MaxZ-L  = extLim _ _ (λ k → omax-commut {o1 = f k}  )
   -- ... | MaxLim-L  | MaxLim-L  = {!!}
   -- ... | MaxLim-L  | MaxLim-R neq  = {!!}
   -- ... | MaxLim-R neq | v2 = {!!}
