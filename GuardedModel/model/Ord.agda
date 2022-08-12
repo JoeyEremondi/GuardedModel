@@ -302,12 +302,17 @@ mutual
 
 
   omax-assocL : ∀ o1 o2 o3 → omax o1 (omax o2 o3) ≤o omax (omax o1 o2) o3
-  omax-assocL o1 o2 o3 with maxView o2 o3
+  omax-assocL o1 o2 o3 with maxView o2 o3 in eq23
   ... | MaxZ-L = omax-monoL {o1 = o1} {o1' = omax o1 OZ} {o2 = o3} omax-≤L
   ... | MaxZ-R = omax-≤L
-  ... | MaxLim-L {c = c} {f = f} = {!!}
-  ... | MaxLim-R x = {!!}
-  ... | MaxLim-Suc = {!!}
+  ... | m with maxView o1 o2
+  ... | MaxZ-L rewrite pSym eq23 = ≤o-refl _
+  ... | MaxZ-R rewrite pSym eq23 = ≤o-refl _
+  ... | MaxLim-R {f = f} x rewrite pSym eq23 = ≤o-trans (omax-limR (λ x → omax (f x) o3) o1) (extLim _ _ λ k → omax-assocL o1 (f k) o3) -- f,omax-limR f o1
+  omax-assocL .(O↑ _) .(O↑ _) .OZ | MaxZ-R  | MaxLim-Suc = ≤o-refl _
+  omax-assocL o1 o2 .(OLim _ _) | MaxLim-R {f = f} x   | MaxLim-Suc = extLim _ _ λ k → omax-assocL o1 o2 (f k)
+  omax-assocL (O↑ o1) (O↑ o2) (O↑ o3) | MaxLim-Suc  | MaxLim-Suc = ≤o-sucMono (omax-assocL o1 o2 o3)
+  ... | MaxLim-L {f = f} rewrite pSym eq23 = extLim _ _ λ k → omax-assocL (f k) o2 o3
   -- ... | MaxZ-L | MaxZ-L = ≤o-Z
   -- ... | MaxZ-L | MaxZ-R = ≤o-refl _
   -- ... | MaxZ-R | MaxZ-L = ≤o-refl _
