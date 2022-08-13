@@ -360,11 +360,35 @@ omax-wf : ∀ {o1 o2} → MonoOrd o1 → MonoOrd o2 → MonoOrd (omax o1 o2)
 omax-wf {o1} {o2} mo1 mo2 with maxView o1 o2
 ... | MaxZ-L = mo2
 ... | MaxZ-R = mo1
-omax-wf {.(OLim _ _)} {o2} (MonoLim monoFun monoRest) mo2 | MaxLim-L
+omax-wf {(OLim c f)} {o2} (MonoLim monoFun monoRest) mo2 | MaxLim-L
   = MonoLim
-    (λ {k1} {k2} → {!!})
-    {!!}
-... | MaxLim-R x = {!!}
+    (λ {k1} {k2} →
+      let (k , lt) = monoFun {k1 = k1} {k2 = k2}
+      in k ,
+      ≤o-trans (omax-assocR (f k1) o2 (omax (f k2) o2))
+      (≤o-trans
+        (omax-monoR {o1 = f k1}
+          (≤o-trans
+            (omax-monoR {o1 = o2} {o2 = omax (f k2) o2} (omax-commut ((f k2)) o2))
+            (≤o-trans (omax-assocL o2 o2 (f k2))
+            (≤o-trans (omax-monoL (omax-idem mo2)) (omax-commut o2 (f k2))))))
+      (≤o-trans (omax-assocL (f k1) (f k2) o2) (omax-monoL {o1 = omax (f k1) (f k2)} lt))) )
+    λ {k} → omax-wf (monoRest {k = k}) mo2
+omax-wf {o1} {(OLim c f)} mo1 (MonoLim monoFun monoRest) | MaxLim-R x
+  = MonoLim
+    (λ {k1} {k2} →
+      let (k , lt) = monoFun {k1 = k1} {k2 = k2}
+      in k ,
+      ≤o-trans (omax-assocR o1 (f k1) (omax o1 (f k2)))
+      (≤o-trans (omax-monoR {o1 = o1}
+        (≤o-trans (omax-assocL (f k1) o1 (f k2))
+        (≤o-trans (omax-monoL {o1 = omax (f k1) o1} {o2 = f k2} (omax-commut (f k1) o1))
+        (omax-assocR o1 (f k1) (f k2)))))
+      (≤o-trans (omax-assocL o1 o1 (omax (f k1) (f k2)))
+      (≤o-trans (omax-monoL {o1 = omax o1 o1} {o2 = omax (f k1) (f k2)} (omax-idem mo1))
+      (omax-monoR {o1 = o1} lt))))
+      )
+    λ {k} → omax-wf mo1 (monoRest {k = k})
 omax-wf {.(O↑ _)} {.(O↑ _)} (MonoSuc mo1) (MonoSuc mo2) | MaxLim-Suc = MonoSuc (omax-wf mo1 mo2)
 
 
