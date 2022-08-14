@@ -181,7 +181,7 @@ oQuadWF (x1 , x2) = acc (helper (oPairWF x1) (oPairWF x2))
     helper acc₁ (acc rec₂) (y1 , y2) (<oQuadR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
 -- abstract
-private
+mutual
   data MaxView : Ord → Ord → Set where
     MaxZ-L : ∀ {o} → MaxView OZ o
     MaxZ-R : ∀ {o} → MaxView o OZ
@@ -376,9 +376,14 @@ omax-∞ltn (ℕ.suc n) o =
 omax-∞lt : ∀ o → omax (omax∞ o) (omax∞ o) ≤o omax∞ o
 omax-∞lt o = ≤o-limiting {{æ = Approx}} _ λ k → ≤o-trans (omax-commut (nmax o (transport Elℕ k)) (omax∞ o)) (omax-∞ltn (transport Elℕ k) o)
 
-omax∞-preserve : ∀ {o1 o2} → o1 ≤o o2 → (omax∞ o1) ≤o (omax∞ o2)
-omax∞-preserve lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (transport Elℕ k) lt
+omax∞-mono : ∀ {o1 o2} → o1 ≤o o2 → (omax∞ o1) ≤o (omax∞ o2)
+omax∞-mono lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (transport Elℕ k) lt
 
+omax∞-self : ∀ o → o ≤o omax∞ o
+omax∞-self o = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ 1) (subst (λ x → o ≤o nmax o x) (sym (transportTransport⁻ Elℕ 1)) (≤o-refl _))
+
+-- omax∞-< : ∀ o1 o2 → omax∞ (O↑ o1) ≤o omax∞ o2 → omax∞ o1 <o omax∞ o2
+-- omax∞-< o1 o2 lt = {!!}
 
 -- Monotonicity conditions for limits
 -- Since we're working constructively, and with arbitrary codes, not just Nats,
