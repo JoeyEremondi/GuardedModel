@@ -33,7 +33,7 @@ open import Code
 abstract
   -- The type
   Size : Set
-  Size = Σ[ o ∈ Ord ](Σ[ o' ∈ Ord ](o ≡p omax∞ o'))
+  Size = Σ[ o ∈ Ord ](omax o o ≤o o)
 
 -- The ordering on sizes
   _≤ₛ_ : Size → Size → Set
@@ -89,8 +89,8 @@ abstract
 --   smax-strictMono : ∀ {s1 s1' s2 s2'} → s1 <ₛ s1' → s2 <ₛ s2' → smax s1 s2 <ₛ smax s1' s2'
 
 --   -- Well-founded recursion
---   sizeWF : WellFounded _<ₛ_
---   sizeRec : ∀ {ℓ} (P : Size → Set ℓ) → ((sHigh : Size) → ((sLow : Size) → sLow <ₛ sHigh → P sLow) → P sHigh) → ∀ s → P s
+  sizeWF : WellFounded _<ₛ_
+  sizeRec : ∀ {ℓ} (P : Size → Set ℓ) → ((sHigh : Size) → ((sLow : Size) → sLow <ₛ sHigh → P sLow) → P sHigh) → ∀ s → P s
 
 --   ----------------------------------------------------------------
 --   -- Implementations
@@ -98,49 +98,57 @@ abstract
 
   _≤ₛ_ s1 s2 = (fst s1) ≤o (fst s2)
 
-  smax s1 s2 = omax∞ (omax (fst s1) (fst s2)) , _ , reflp
+  smax s1 s2 = omax (fst s1) (fst s2) ,
+    ≤o-trans (omax-assocL (omax (fst s1) (fst s2)) (fst s1) (fst s2))
+    (≤o-trans (omax-monoL {o1 = omax (omax (fst s1) (fst s2)) (fst s1)} {o2 = fst s2} (omax-commut (omax (fst s1) (fst s2)) (fst s1)))
+    (≤o-trans (omax-assocR (fst s1) (omax (fst s1) (fst s2)) (fst s2))
+    (≤o-trans (omax-monoR {o1 = fst s1} (omax-assocR (fst s1) (fst s2) (fst s2)))
+    (≤o-trans (omax-assocL (fst s1) (fst s1) (omax (fst s2) (fst s2)))
+    (omax-mono {o1 = omax (fst s1) (fst s1)}
+       {o2 = omax (fst s2) (fst s2)} {o1' = fst s1} {o2' = fst s2} (snd s1) (snd s2))))))
 
-  SZ = (omax∞ OZ , OZ , reflp)
+  SZ = OZ , ≤o-Z
 
-  S↑ (o , o' , pf) = omax∞ (O↑ o) , O↑ o , reflp
+  S↑ (o , pf) = O↑ o , ≤o-sucMono pf
 
-  SLim c f = omax∞ (OLim c (λ x → fst (f x))) , OLim c (λ x → fst (f x)) , reflp
+  SLim c f = omax∞ (OLim c (λ x → fst (f x))) , omax-∞lt (OLim c (λ x → fst (f x)))
 
-  ≤ₛ-Z {s = (_ , s' , reflp)} = omax∞-mono ≤o-Z
+  ≤ₛ-Z  = ≤o-Z
 
-  ≤ₛ-sucMono {s1 = _ , s1 , reflp} {s2  = _ , s2 , reflp} lt = omax∞-mono (≤o-sucMono lt)
+  ≤ₛ-sucMono lt = ≤o-sucMono lt
 
-  ≤ₛ-cocone {s = _ , s , reflp} f k lt = extLim {{æ = Approx}} _ _ λ n → nmax-mono (transport Elℕ n) (≤o-cocone _ k (≤o-trans (omax∞-self s) lt))
---   ≤ₛ-limiting f lt = ≤o-limiting (oapp f) lt
---   ≤ₛ-refl = ≤o-refl _
---   ≤ₛ-trans = ≤o-trans
+  ≤ₛ-cocone {c = c} f k lt = ≤o-trans (≤o-cocone {c = c} (λ x → fst (f x)) k lt) (omax∞-self (OLim c (λ x → fst (f x))))
+
+  ≤ₛ-limiting {c = c} f lt = ≤o-trans (≤o-limiting {{æ = Approx}} _ λ n → {!!}) (≤o-limiting (λ x → fst (f x)) lt)
+-- --   ≤ₛ-refl = ≤o-refl _
+-- --   ≤ₛ-trans = ≤o-trans
 
   _<ₛ_ s1 s2 = S↑ s1 ≤ₛ s2
 
-  _<ₛ-constr :  ∀ s1 s2 → s1 <ₛ s2 → fst s1 <o fst s2
+--   _<ₛ-constr :  ∀ s1 s2 → s1 <ₛ s2 → fst s1 <o fst s2
 
---   <↑s lt = ≤o-sucMono lt
+-- --   <↑s lt = ≤o-sucMono lt
 
---   smax-≤L = omax-≤L
---   smax-≤R {s1 = s1} = omax-≤R {o1 = fst s1}
+-- --   smax-≤L = omax-≤L
+-- --   smax-≤R {s1 = s1} = omax-≤R {o1 = fst s1}
 
---   smax-LUB {s1 = s1} {s2 = s2} {s = s} lt1 lt2 = omax-lub (snd s1) (snd s2) (snd s) lt1 lt2
---   smax-assocL {s1} {s2} {s3} = omax-assocL (fst s1) (fst s2) (fst s3)
---   smax-assocR {s1} {s2} {s3} = omax-assocR (fst s1) (fst s2) (fst s3)
---   smax-commut {s1} {s2} = omax-commut (fst s1) (fst s2)
---   smax-mono lt1 lt2 = omax-mono lt1 lt2
---   smax-monoL lt = omax-monoL lt
---   smax-monoR {s1 = s1} lt = omax-monoR {o1 = fst s1} lt
---   smax-strictMono lt1 lt2 = omax-strictMono lt1 lt2
---   ≤ₛ↑ {s = s} = ≤↑ (fst s)
-
-
---   accHelper : (s : Size) → Acc _<o_ (erase s) → Acc _<ₛ_ s
---   accHelper s (acc pf) = acc (λ x lt → accHelper x (pf (erase x) lt))
-
---   sizeWF s = accHelper s (ordWF (erase s))
---   sizeRec P f = WFI.induction sizeWF f
+-- --   smax-LUB {s1 = s1} {s2 = s2} {s = s} lt1 lt2 = omax-lub (snd s1) (snd s2) (snd s) lt1 lt2
+-- --   smax-assocL {s1} {s2} {s3} = omax-assocL (fst s1) (fst s2) (fst s3)
+-- --   smax-assocR {s1} {s2} {s3} = omax-assocR (fst s1) (fst s2) (fst s3)
+-- --   smax-commut {s1} {s2} = omax-commut (fst s1) (fst s2)
+-- --   smax-mono lt1 lt2 = omax-mono lt1 lt2
+-- --   smax-monoL lt = omax-monoL lt
+-- --   smax-monoR {s1 = s1} lt = omax-monoR {o1 = fst s1} lt
+-- --   smax-strictMono lt1 lt2 = omax-strictMono lt1 lt2
+-- --   ≤ₛ↑ {s = s} = ≤↑ (fst s)
 
 
--- S1 : Size
--- S1 = S↑ SZ
+  accHelper : (s : Size) → Acc _<o_ (erase s) → Acc _<ₛ_ s
+  accHelper s (acc pf) = acc (λ x lt → accHelper x (pf (erase x) lt))
+
+  sizeWF s = accHelper s (ordWF (erase s))
+  sizeRec P f = WFI.induction sizeWF f
+
+
+-- -- S1 : Size
+-- -- S1 = S↑ SZ

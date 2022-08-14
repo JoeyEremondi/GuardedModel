@@ -382,6 +382,14 @@ omax∞-mono lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (transport Elℕ
 omax∞-self : ∀ o → o ≤o omax∞ o
 omax∞-self o = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ 1) (subst (λ x → o ≤o nmax o x) (sym (transportTransport⁻ Elℕ 1)) (≤o-refl _))
 
+
+nmax-idem : ∀ {o} n → omax o o ≤o o → nmax o n ≤o o
+nmax-idem ℕ.zero lt = ≤o-Z
+nmax-idem {o = o} (ℕ.suc n) lt = ≤o-trans (omax-monoL {o1 = nmax o n} {o2 = o} (nmax-idem n lt)) lt
+
+omax∞-idem : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
+omax∞-idem lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-idem (transport Elℕ k) lt
+
 -- omax∞-< : ∀ o1 o2 → omax∞ (O↑ o1) ≤o omax∞ o2 → omax∞ o1 <o omax∞ o2
 -- omax∞-< o1 o2 lt = {!!}
 
