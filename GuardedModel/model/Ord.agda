@@ -38,6 +38,22 @@ C𝔹 = C𝟙
 -- C𝔹Eq : El (C𝔹 ) ≡ Bool
 -- C𝔹Eq = refl
 
+ChurchNatC : ℂ 2
+ChurchNatC = CΠ CType (λ a → (CCumul a C→ CCumul a) C→ (CCumul a C→ CCumul a))
+
+ChurchNat : Set
+ChurchNat = ApproxEl (ChurchNatC)
+
+churchIter : ∀ (c : ℂ 1) → ApproxEl c → (ApproxEl c → ApproxEl c) → ChurchNat → ApproxEl c
+churchIter c z s n = n c s z
+
+ChurchVecC : ChurchNat → ℂ 0
+ChurchVecC n = churchIter CType C℧ (λ c → C℧ C× c) n
+
+postulate
+  Cℕ : ℂ 0
+  Elℕ : ApproxEl Cℕ ≡ ℕ
+
 data Ord : Set where
   OZ : Ord
   O↑ : Ord -> Ord
@@ -321,10 +337,47 @@ mutual
   ... | MaxLim-L {f = f} rewrite pSym eq23 = extLim _ _ λ k → omax-assocL (f k) o2 o3
 
 
+
   omax-assocR : ∀ o1 o2 o3 →  omax (omax o1 o2) o3 ≤o omax o1 (omax o2 o3)
   omax-assocR o1 o2 o3 = ≤o-trans (omax-commut (omax o1 o2) o3) (≤o-trans (omax-monoR {o1 = o3} (omax-commut o1 o2))
     (≤o-trans (omax-assocL o3 o2 o1) (≤o-trans (omax-commut (omax o3 o2) o1) (omax-monoR {o1 = o1} (omax-commut o3 o2)))))
 
+
+--Attempt to have an idempotent version of max
+
+nmax : Ord → ℕ → Ord
+nmax o ℕ.zero = OZ
+nmax o (ℕ.suc n) = omax (nmax o n) o
+
+nmax-mono : ∀ {o1 o2 } n → o1 ≤o o2 → nmax o1 n ≤o nmax o2 n
+nmax-mono ℕ.zero lt = ≤o-Z
+nmax-mono {o1 = o1} {o2} (ℕ.suc n) lt = omax-mono {o1 = nmax o1 n} {o2 = o1} {o1' = nmax o2 n} {o2' = o2} (nmax-mono n lt) lt
+
+--
+omax∞ : Ord → Ord
+omax∞ o = OLim {{æ = Approx}} Cℕ (λ x → nmax o (transport Elℕ x))
+
+omax-∞lt1 : ∀ o → omax (omax∞ o) o ≤o omax∞ o
+omax-∞lt1 o = ≤o-limiting {{æ = Approx}} _ λ k → helper (transport Elℕ k)
+  where
+    helper : ∀ n → omax (nmax o n) o ≤o omax∞ o
+    helper n = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ (ℕ.suc n)) (subst (λ sn → nmax o (ℕ.suc n) ≤o nmax o sn) (sym (transportTransport⁻ Elℕ (ℕ.suc n))) (≤o-refl _))
+    -- helper (ℕ.suc n) = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ (ℕ.suc (ℕ.suc n))) (subst (λ sn → omax (omax (nmax o n) o) o ≤o nmax o sn) (sym (transportTransport⁻ Elℕ (ℕ.suc n)))
+    --   {!!})
+    --
+
+omax-∞ltn : ∀ n o → omax (omax∞ o) (nmax o n) ≤o omax∞ o
+omax-∞ltn ℕ.zero o = omax-≤Z (omax∞ o)
+omax-∞ltn (ℕ.suc n) o =
+  ≤o-trans (omax-monoR {o1 = omax∞ o} (omax-commut (nmax o n) o))
+  (≤o-trans (omax-assocL (omax∞ o) o (nmax o n))
+  (≤o-trans (omax-monoL {o1 = omax (omax∞ o) o} {o2 = nmax o n} (omax-∞lt1 o)) (omax-∞ltn n o)))
+
+omax-∞lt : ∀ o → omax (omax∞ o) (omax∞ o) ≤o omax∞ o
+omax-∞lt o = ≤o-limiting {{æ = Approx}} _ λ k → ≤o-trans (omax-commut (nmax o (transport Elℕ k)) (omax∞ o)) (omax-∞ltn (transport Elℕ k) o)
+
+omax∞-preserve : ∀ {o1 o2} → o1 ≤o o2 → (omax∞ o1) ≤o (omax∞ o2)
+omax∞-preserve lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (transport Elℕ k) lt
 
 
 -- Monotonicity conditions for limits

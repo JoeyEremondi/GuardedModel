@@ -73,7 +73,7 @@ record CodeModule
   : Set (lsuc lzero) where
   field
     ℂ-1 : Set
-    -- El-1 : {{_ : Æ}} → ℂ-1 -> Set
+    El-1 : {{_ : Æ}} → ℂ-1 -> Set
     -- ⁇-1 : {{_ : Æ}} → Set
     -- ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
@@ -150,6 +150,14 @@ record CodeModule
       ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
     El CType = ℂ-1
     -- ▹El CType = ℂ-1
+    --
+    --For lower universes, we can lift codes to this universe without needing guardedness
+    data _ where
+      CCumul :  ℂ-1 → ℂ
+      ⁇Cumul :  ℂ-1 → F⁇ Self
+      -- ⁇Cumul : ⁇-1 → F⁇ Self
+    El (CCumul c) = El-1 c
+    --
     -----------------------------------------------------------------
     -- Codes can "eat themselves" and have a code denoting the set of all codes
     -- So long as we hide it behind the guarded modality
@@ -176,6 +184,9 @@ record CodeModule
 
 
     El (CΠ dom cod) = (x : Approxed (El dom)) → (El (cod  (approx x)))
+    -- Notation for non-dep functions
+    _C→_ : ℂ → ℂ → ℂ
+    a C→ b = CΠ a (λ _ → b)
 
     ----------------------------------------------------------------
     --- Gradual pairs
@@ -186,6 +197,9 @@ record CodeModule
       --TODO: is it only error if BOTH are error?
     El (CΣ dom cod) = Σ[ x ∈ Approxed (El dom) ]( El (cod (approx x)) )
     -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
+    -- Notation for non-dep pairs
+    _C×_ : ℂ → ℂ → ℂ
+    a C× b = CΣ a (λ _ → b)
 
     --- Gradual propositional equality i.e. witnesses of consistency
     data _ where
@@ -291,7 +305,7 @@ CodeModuleAt : ∀  ℓ →  CodeModule ℓ
 CodeModuleAt zero = --G.fix λ ModSelf →
   record
     { ℂ-1 = 𝟘
-    -- ; El-1 = λ ()
+    ; El-1 = λ ()
     -- ; ⁇-1 = 𝟘
     -- ; ℧-1 = λ { {{()}} }
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
@@ -299,7 +313,7 @@ CodeModuleAt zero = --G.fix λ ModSelf →
 CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
   record
     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
-    -- ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
+    ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
     -- ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
     -- ; ℧-1 = CodeModule.ℂ.C℧
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
@@ -364,6 +378,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
 ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
 ℧ (CodeModule.Cμ tyCtor c D x) = W℧
+℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
 
 ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
 ℧Approx = ℧ {{Approx}}

@@ -22,7 +22,7 @@ open import ApproxExact
 
 open import Cubical.Foundations.Transport
 
-module MonoOrd {{_ : DataTypes}} {{_ : DataGerms}} where
+module SizeOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Ord
 open import Code
@@ -144,3 +144,7 @@ abstract
 
   sizeWF s = accHelper s (ordWF (erase s))
   sizeRec P f = WFI.induction sizeWF f
+
+
+S1 : Size
+S1 = S↑ SZ
