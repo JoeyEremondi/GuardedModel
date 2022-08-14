@@ -390,6 +390,8 @@ nmax-idem {o = o} (ℕ.suc n) lt = ≤o-trans (omax-monoL {o1 = nmax o n} {o2 = 
 omax∞-idem : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
 omax∞-idem lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-idem (transport Elℕ k) lt
 
+lim-idem : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f : Approxed (El c) → Ord) → (∀ k → omax (f k) (f k) ≤o f k) → omax (OLim c f) (OLim c f) ≤o OLim c f
+lim-idem f lt = extLim _ _ (λ k → ≤o-trans {!!} {!!})
 -- omax∞-< : ∀ o1 o2 → omax∞ (O↑ o1) ≤o omax∞ o2 → omax∞ o1 <o omax∞ o2
 -- omax∞-< o1 o2 lt = {!!}
 
