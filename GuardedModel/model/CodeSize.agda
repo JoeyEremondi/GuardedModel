@@ -161,14 +161,14 @@ codeSize C℧ = O1
 codeSize C𝟘 = O1
 codeSize C𝟙 = O1
 codeSize CType = O1
-codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → codeSize (cod x)))
-codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → codeSize (cod x)))
+codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
+codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
 codeSize  (C≡ c x y) = O↑ (omax (omax∞ (codeSize c)) (omax (elSize {{Approx}} c x) (elSize {{Approx}}  c y)) )
 codeSize (Cμ tyCtor c D x) = O↑ (DLim tyCtor λ d → descSize (D d))
 codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
 
 descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
-descSize {cB = cB} (CArg c D) = O↑ (omax (OLim {{æ = Approx}} cB λ b → codeSize (c b)) (descSize D))
+descSize {cB = cB} (CArg c D) = O↑ (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D))
 descSize {cI = c} (CRec j D) = O↑ (omax (descSize D) (elSize {{Approx}} c j))
 descSize {cI = cI} {cB = cB} (CHRec c j D) =
   O↑

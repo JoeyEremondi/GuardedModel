@@ -393,6 +393,35 @@ nmax-≤ {o = o} (ℕ.suc n) lt = ≤o-trans (omax-monoL {o1 = nmax o n} {o2 = o
 omax∞-≤ : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
 omax∞-≤ lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-≤ (CℕtoNat k) lt
 
+
+abstract
+  _≤s_ : Ord → Ord → Set
+  o1 ≤s o2 = (omax∞ o1) ≤o (omax∞ o2)
+
+  smax : Ord → Ord → Ord
+  smax o1 o2 = omax (omax∞ o1) (omax∞ o2)
+
+  ≤s-refl : ∀ {o} → o ≤o o
+  ≤s-refl = ≤o-refl _
+
+  ≤s-trans : ∀ {o1 o2 o3} → o1 ≤s o2 → o2 ≤s o3 → o1 ≤s o3
+  ≤s-trans p12 p23 = ≤o-trans p12 p23
+
+  ≤s-Z : ∀ {o} → OZ ≤s o
+  ≤s-Z = extLim ⦃ æ = Approx ⦄ _ _ λ n → ≤o-trans (helper (CℕtoNat n)) ≤o-Z
+    where
+      helper : ∀ n → nmax OZ n ≤o OZ
+      helper ℕ.zero = ≤o-refl _
+      helper (ℕ.suc n) with helper n | (nmax OZ n) in eq | maxView (nmax OZ n) OZ
+      ... | lt | _ | MaxZ-L = ≤o-Z
+      ... | lt | _ | MaxZ-R rewrite pSym eq = helper n
+      ... | lt | _ | MaxLim-L {f = f} = ≤o-limiting _ (λ k → ≤o-trans (≤o-cocone _ k (omax-≤Z (f k))) (pSubst (λ x → x ≤o OZ) eq lt) )
+
+  -- ≤s-limiting : ∀ {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (∀ k → f k ≤s o) → OLim c f ≤s o
+  -- ≤s-limiting {c = c} f lt =
+  --   extLim {{æ = Approx}} _ _ λ n → nmax-mono (CℕtoNat n) (≤o-limiting _ (λ k → {!lt (CℕfromNat 0)!}))
+
+
 -- omax∞-< : ∀ o1 o2 → omax∞ (O↑ o1) ≤o omax∞ o2 → omax∞ o1 <o omax∞ o2
 -- omax∞-< o1 o2 lt = {!!}
 
@@ -459,6 +488,8 @@ omax-wf {o1} {(OLim c f)} mo1 (MonoLim monoFun monoRest) | MaxLim-R x
       )
     λ {k} → omax-wf mo1 (monoRest {k = k})
 omax-wf {.(O↑ _)} {.(O↑ _)} (MonoSuc mo1) (MonoSuc mo2) | MaxLim-Suc = MonoSuc (omax-wf mo1 mo2)
+
+
 
 
 
