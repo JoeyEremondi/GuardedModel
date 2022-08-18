@@ -10,6 +10,7 @@ open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
+open import Cubical.Data.Empty
 open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
@@ -46,6 +47,8 @@ germ H𝟘 _ = Unit
 germ HType zero = Unit
 germ HType (suc ℓ) = ℂ ℓ
 germ (HCtor tyCtor) ℓ  = W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
+germ HCumul ℕ.zero = ⊥
+germ HCumul (ℕ.suc ℓ) = ℂ ℓ
 
 germTo⁇ : ∀ {{_ : Æ}} {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
 germFrom⁇ : ∀ {{_ : Æ}} {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → (germ h ℓ)
@@ -60,6 +63,8 @@ germTo⁇ {h = H𝟘} tt = pure ⁇℧
 germTo⁇ {h = HType} {zero} x = pure ⁇℧
 germTo⁇ {h = HType} {suc ℓ} x = pure (⁇Type x)
 germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
+germTo⁇ {h = HCumul} {ℓ = ℕ.suc ℓ} x = pure (⁇Cumul x)
+
 
 germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq x = f (transport⁻ hollowEq (next x))
 germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = true
@@ -68,3 +73,4 @@ germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
 germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
 germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = (Wsup x)
 germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp =  W⁇
+germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Cumul x) reflp = x

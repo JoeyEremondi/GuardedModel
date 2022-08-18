@@ -27,20 +27,29 @@ module SizeOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Ord
 open import Code
 
+open import Cubical.HITs.SetQuotients as Q
+
 -- Sizes are like Ords that are well behaved for describing the sizes of terms
 -- This whole module is just a way to give a nice abstract interface over what's in Ord
 
+private
+  data R : Ord → Ord → Set where
+    idemR : ∀ o → R (omax o o) o
+
 abstract
+
   -- The type
   Size : Set
-  Size = Σ[ o ∈ Ord ](omax o o ≤o o)
+  Size = Ord / R
 
 -- The ordering on sizes
-  _≤ₛ_ : Size → Size → Set
+  data _≤ₛ_ : Size → Size → Set where
+    lift≤ : ∀ {o1 o2} → o1 ≤o o2 → [ o1 ] ≤ₛ [ o2 ]
+    squash≤ : ∀ {s1 s2} {p1 p2 : s1 ≤ₛ s2} → p1 ≡ p2
   _<ₛ_ : Size → Size → Set
 
-  erase : Size → Ord
-  erase = fst
+  -- erase : Size → Ord
+  -- erase = fst
 
 
 
@@ -96,59 +105,54 @@ abstract
 --   -- Implementations
 
 
-  _≤ₛ_ s1 s2 = (fst s1) ≤o (fst s2)
-
-  smax s1 s2 = omax (fst s1) (fst s2) ,
-    ≤o-trans (omax-assocL (omax (fst s1) (fst s2)) (fst s1) (fst s2))
-    (≤o-trans (omax-monoL {o1 = omax (omax (fst s1) (fst s2)) (fst s1)} {o2 = fst s2} (omax-commut (omax (fst s1) (fst s2)) (fst s1)))
-    (≤o-trans (omax-assocR (fst s1) (omax (fst s1) (fst s2)) (fst s2))
-    (≤o-trans (omax-monoR {o1 = fst s1} (omax-assocR (fst s1) (fst s2) (fst s2)))
-    (≤o-trans (omax-assocL (fst s1) (fst s1) (omax (fst s2) (fst s2)))
-    (omax-mono {o1 = omax (fst s1) (fst s1)}
-       {o2 = omax (fst s2) (fst s2)} {o1' = fst s1} {o2' = fst s2} (snd s1) (snd s2))))))
-
-  SZ = OZ , ≤o-Z
-
-  S↑ (o , pf) = O↑ o , ≤o-sucMono pf
-
-  SLim c f = omax∞ (OLim c (λ x → fst (f x))) , omax-∞lt (OLim c (λ x → fst (f x)))
-
-  ≤ₛ-Z  = ≤o-Z
-
-  ≤ₛ-sucMono lt = ≤o-sucMono lt
-
-  ≤ₛ-cocone {c = c} f k lt = ≤o-trans (≤o-cocone {c = c} (λ x → fst (f x)) k lt) (omax∞-self (OLim c (λ x → fst (f x))))
-
-  ≤ₛ-limiting {c = c} f lt = ≤o-trans (≤o-limiting {{æ = Approx}} _ λ n → {!!}) (≤o-limiting (λ x → fst (f x)) lt)
--- --   ≤ₛ-refl = ≤o-refl _
--- --   ≤ₛ-trans = ≤o-trans
-
-  _<ₛ_ s1 s2 = S↑ s1 ≤ₛ s2
-
---   _<ₛ-constr :  ∀ s1 s2 → s1 <ₛ s2 → fst s1 <o fst s2
-
--- --   <↑s lt = ≤o-sucMono lt
-
--- --   smax-≤L = omax-≤L
--- --   smax-≤R {s1 = s1} = omax-≤R {o1 = fst s1}
-
--- --   smax-LUB {s1 = s1} {s2 = s2} {s = s} lt1 lt2 = omax-lub (snd s1) (snd s2) (snd s) lt1 lt2
--- --   smax-assocL {s1} {s2} {s3} = omax-assocL (fst s1) (fst s2) (fst s3)
--- --   smax-assocR {s1} {s2} {s3} = omax-assocR (fst s1) (fst s2) (fst s3)
--- --   smax-commut {s1} {s2} = omax-commut (fst s1) (fst s2)
--- --   smax-mono lt1 lt2 = omax-mono lt1 lt2
--- --   smax-monoL lt = omax-monoL lt
--- --   smax-monoR {s1 = s1} lt = omax-monoR {o1 = fst s1} lt
--- --   smax-strictMono lt1 lt2 = omax-strictMono lt1 lt2
--- --   ≤ₛ↑ {s = s} = ≤↑ (fst s)
+  -- _≤ₛ_ s1 s2 = {!!}
 
 
-  accHelper : (s : Size) → Acc _<o_ (erase s) → Acc _<ₛ_ s
-  accHelper s (acc pf) = acc (λ x lt → accHelper x (pf (erase x) lt))
-
-  sizeWF s = accHelper s (ordWF (erase s))
-  sizeRec P f = WFI.induction sizeWF f
+  SZ = [ OZ ]
 
 
--- -- S1 : Size
--- -- S1 = S↑ SZ
+  S↑ = Q.rec Q.squash/ (λ o → [ O↑ o ] ) (λ { _ o (idemR _) → eq/ (O↑ (omax o o)) (O↑ _) (idemR (O↑ _))})
+
+  SLim c f = {!!}
+
+--   SLim c f = omax∞ (OLim c (λ x → fst (f x))) , omax-∞lt (OLim c (λ x → fst (f x)))
+
+--   ≤ₛ-Z  = ≤o-Z
+
+--   ≤ₛ-sucMono lt = ≤o-sucMono lt
+
+--   ≤ₛ-cocone {c = c} f k lt = ≤o-trans (≤o-cocone {c = c} (λ x → fst (f x)) k lt) (omax∞-self (OLim c (λ x → fst (f x))))
+
+--   ≤ₛ-limiting {c = c} f lt = ≤o-trans (≤o-limiting {{æ = Approx}} _ λ n → {!!}) (≤o-limiting (λ x → fst (f x)) lt)
+-- -- --   ≤ₛ-refl = ≤o-refl _
+-- -- --   ≤ₛ-trans = ≤o-trans
+
+--   _<ₛ_ s1 s2 = S↑ s1 ≤ₛ s2
+
+-- --   _<ₛ-constr :  ∀ s1 s2 → s1 <ₛ s2 → fst s1 <o fst s2
+
+-- -- --   <↑s lt = ≤o-sucMono lt
+
+-- -- --   smax-≤L = omax-≤L
+-- -- --   smax-≤R {s1 = s1} = omax-≤R {o1 = fst s1}
+
+-- -- --   smax-LUB {s1 = s1} {s2 = s2} {s = s} lt1 lt2 = omax-lub (snd s1) (snd s2) (snd s) lt1 lt2
+-- -- --   smax-assocL {s1} {s2} {s3} = omax-assocL (fst s1) (fst s2) (fst s3)
+-- -- --   smax-assocR {s1} {s2} {s3} = omax-assocR (fst s1) (fst s2) (fst s3)
+-- -- --   smax-commut {s1} {s2} = omax-commut (fst s1) (fst s2)
+-- -- --   smax-mono lt1 lt2 = omax-mono lt1 lt2
+-- -- --   smax-monoL lt = omax-monoL lt
+-- -- --   smax-monoR {s1 = s1} lt = omax-monoR {o1 = fst s1} lt
+-- -- --   smax-strictMono lt1 lt2 = omax-strictMono lt1 lt2
+-- -- --   ≤ₛ↑ {s = s} = ≤↑ (fst s)
+
+
+--   accHelper : (s : Size) → Acc _<o_ (erase s) → Acc _<ₛ_ s
+--   accHelper s (acc pf) = acc (λ x lt → accHelper x (pf (erase x) lt))
+
+--   sizeWF s = accHelper s (ordWF (erase s))
+--   sizeRec P f = WFI.induction sizeWF f
+
+
+-- -- -- S1 : Size
+-- -- -- S1 = S↑ SZ

@@ -74,7 +74,7 @@ codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp r
           cod12 x12 =
             let
               x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12
-                By ≤o-sucMono {!!} -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+                By ≤o-sucMono (≤o-trans {!!} {!!}) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
               x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12 By {!!}
             in {!!}
               -- (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)

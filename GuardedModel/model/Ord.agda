@@ -52,7 +52,10 @@ ChurchVecC n = churchIter CType C℧ (λ c → C℧ C× c) n
 
 postulate
   Cℕ : ℂ 0
-  Elℕ : ApproxEl Cℕ ≡ ℕ
+  -- Elℕ : ApproxEl Cℕ ≡ ℕ
+  CℕtoNat : ApproxEl Cℕ → ℕ
+  CℕfromNat : ℕ → ApproxEl Cℕ
+  Cℕembed : ∀ x → CℕtoNat (CℕfromNat x) ≡ x
 
 data Ord : Set where
   OZ : Ord
@@ -355,14 +358,14 @@ nmax-mono {o1 = o1} {o2} (ℕ.suc n) lt = omax-mono {o1 = nmax o1 n} {o2 = o1} {
 
 --
 omax∞ : Ord → Ord
-omax∞ o = OLim {{æ = Approx}} Cℕ (λ x → nmax o (transport Elℕ x))
+omax∞ o = OLim {{æ = Approx}} Cℕ (λ x → nmax o (CℕtoNat x))
 
 omax-∞lt1 : ∀ o → omax (omax∞ o) o ≤o omax∞ o
-omax-∞lt1 o = ≤o-limiting {{æ = Approx}} _ λ k → helper (transport Elℕ k)
+omax-∞lt1 o = ≤o-limiting {{æ = Approx}} _ λ k → helper (CℕtoNat k)
   where
     helper : ∀ n → omax (nmax o n) o ≤o omax∞ o
-    helper n = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ (ℕ.suc n)) (subst (λ sn → nmax o (ℕ.suc n) ≤o nmax o sn) (sym (transportTransport⁻ Elℕ (ℕ.suc n))) (≤o-refl _))
-    -- helper (ℕ.suc n) = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ (ℕ.suc (ℕ.suc n))) (subst (λ sn → omax (omax (nmax o n) o) o ≤o nmax o sn) (sym (transportTransport⁻ Elℕ (ℕ.suc n)))
+    helper n = ≤o-cocone ⦃ æ = Approx ⦄ _ (CℕfromNat (ℕ.suc n)) (subst (λ sn → nmax o (ℕ.suc n) ≤o nmax o sn) (sym (Cℕembed (ℕ.suc n))) (≤o-refl _))
+    -- helper (ℕ.suc n) = ≤o-cocone ⦃ æ = Approx ⦄ _ (CℕfromNat (ℕ.suc (ℕ.suc n))) (subst (λ sn → omax (omax (nmax o n) o) o ≤o nmax o sn) (sym (Cℕembed (ℕ.suc n)))
     --   {!!})
     --
 
@@ -373,25 +376,23 @@ omax-∞ltn (ℕ.suc n) o =
   (≤o-trans (omax-assocL (omax∞ o) o (nmax o n))
   (≤o-trans (omax-monoL {o1 = omax (omax∞ o) o} {o2 = nmax o n} (omax-∞lt1 o)) (omax-∞ltn n o)))
 
-omax-∞lt : ∀ o → omax (omax∞ o) (omax∞ o) ≤o omax∞ o
-omax-∞lt o = ≤o-limiting {{æ = Approx}} _ λ k → ≤o-trans (omax-commut (nmax o (transport Elℕ k)) (omax∞ o)) (omax-∞ltn (transport Elℕ k) o)
+omax∞-idem : ∀ o → omax (omax∞ o) (omax∞ o) ≤o omax∞ o
+omax∞-idem o = ≤o-limiting {{æ = Approx}} _ λ k → ≤o-trans (omax-commut (nmax o (CℕtoNat k)) (omax∞ o)) (omax-∞ltn (CℕtoNat k) o)
 
 omax∞-mono : ∀ {o1 o2} → o1 ≤o o2 → (omax∞ o1) ≤o (omax∞ o2)
-omax∞-mono lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (transport Elℕ k) lt
+omax∞-mono lt = extLim {{æ = Approx}} _ _ λ k → nmax-mono (CℕtoNat k) lt
 
 omax∞-self : ∀ o → o ≤o omax∞ o
-omax∞-self o = ≤o-cocone ⦃ æ = Approx ⦄ _ (transport⁻ Elℕ 1) (subst (λ x → o ≤o nmax o x) (sym (transportTransport⁻ Elℕ 1)) (≤o-refl _))
+omax∞-self o = ≤o-cocone ⦃ æ = Approx ⦄ _ (CℕfromNat 1) (subst (λ x → o ≤o nmax o x) (sym (Cℕembed 1)) (≤o-refl _))
 
 
-nmax-idem : ∀ {o} n → omax o o ≤o o → nmax o n ≤o o
-nmax-idem ℕ.zero lt = ≤o-Z
-nmax-idem {o = o} (ℕ.suc n) lt = ≤o-trans (omax-monoL {o1 = nmax o n} {o2 = o} (nmax-idem n lt)) lt
+nmax-≤ : ∀ {o} n → omax o o ≤o o → nmax o n ≤o o
+nmax-≤ ℕ.zero lt = ≤o-Z
+nmax-≤ {o = o} (ℕ.suc n) lt = ≤o-trans (omax-monoL {o1 = nmax o n} {o2 = o} (nmax-≤ n lt)) lt
 
-omax∞-idem : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
-omax∞-idem lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-idem (transport Elℕ k) lt
+omax∞-≤ : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
+omax∞-≤ lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-≤ (CℕtoNat k) lt
 
-lim-idem : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f : Approxed (El c) → Ord) → (∀ k → omax (f k) (f k) ≤o f k) → omax (OLim c f) (OLim c f) ≤o OLim c f
-lim-idem f lt = extLim _ _ (λ k → ≤o-trans {!!} {!!})
 -- omax∞-< : ∀ o1 o2 → omax∞ (O↑ o1) ≤o omax∞ o2 → omax∞ o1 <o omax∞ o2
 -- omax∞-< o1 o2 lt = {!!}
 

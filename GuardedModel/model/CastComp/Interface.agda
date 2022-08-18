@@ -44,11 +44,19 @@ record SizedCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → ( pfv1 : omax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
 
+
+
     oCodeMeet :
       (c1 c2 : ℂ ℓ)
       → ( pfc1 : omax (codeSize c1) (codeSize c2)  ≡p cSize )
       → ( pfv1 : OZ  ≡p vSize )
       → (ℂ ℓ)
+
+    oCodeMeetSize :
+      (c1 c2 : ℂ ℓ)
+      → ( pfc1 : omax (codeSize c1) (codeSize c2)  ≡p cSize )
+      → ( pfv1 : OZ  ≡p vSize )
+      → codeSize (oCodeMeet c1 c2 pfc1 pfv1) ≤o omax (codeSize c1) (codeSize c2)
 
     oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
