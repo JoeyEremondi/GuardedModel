@@ -81,54 +81,54 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
     self : ∀ {cs vs : Ord} → ((cs , vs) <oPair (cSize , vSize)) → SizedCastMeet ℓ cs vs
     ℓself : ∀ {cs vs} {{ _ : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
   
-  ⁇_By_ : ∀ {{_ : Æ}}
-      → (c : ℂ ℓ) → codeSize c <o cSize → (El c)
-  ⁇_By_ c lt = o⁇ (self (<oPairL lt)) c reflp reflp
+  ⁇_By : ∀ {{_ : Æ}}
+      → (c : ℂ ℓ) → {lt : codeSize c <o cSize} → (El c)
+  ⁇_By c {lt} = o⁇ (self (<oPairL lt)) c reflp reflp
 
-  [_]⁇_By_ : ∀ (æ : Æ)
-      → (c : ℂ ℓ) → codeSize c <o cSize → (El {{æ = æ}} c)
-  [_]⁇_By_ æ  = ⁇_By_ {{æ}}
+  [_]⁇_By : ∀ (æ : Æ)
+      → (c : ℂ ℓ) → {lt : codeSize c <o cSize} → (El {{æ = æ}} c)
+  [_]⁇_By æ  = ⁇_By {{æ}}
 
-  _∋_⊓_By_ : ∀ {{_ : Æ}}
+  _∋_⊓_By : ∀ {{_ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
-      → (codeSize c <o cSize)
+      → {lt : codeSize c <o cSize}
       → LÆ (El c)
-  _∋_⊓_By_   c x y lt =
+  _∋_⊓_By   c x y {lt} =
       oMeet (self ( (<oPairL lt))) c x y reflp reflp
-  [_]_∋_⊓_By_ : ∀ (æ : Æ)
+  [_]_∋_⊓_By : ∀ (æ : Æ)
       → (c : ℂ ℓ)
       → (x y : El {{æ = æ}} c)
-      → (codeSize c <o cSize)
+      → {lt : codeSize c <o cSize}
       → LÆ {{æ = æ}} (El {{æ = æ}} c)
-  [_]_∋_⊓_By_ æ = _∋_⊓_By_ {{æ}}
+  [_]_∋_⊓_By æ = _∋_⊓_By {{æ}}
 
-  _⊓_By_ :
+  _⊓_By :
       (c1 c2 : ℂ ℓ)
-      → (omax (codeSize c1) (codeSize c2) <o cSize)
+      → {lt :(omax (codeSize c1) (codeSize c2) <o cSize)}
       → (ℂ ℓ)
-  _⊓_By_  c1 c2 lt =
+  _⊓_By  c1 c2 {lt} =
       oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp
 
 
-  _⊓Size_By_ :
+  _⊓Size_By :
       (c1 c2 : ℂ ℓ)
-      → (lt : omax (codeSize c1) (codeSize c2) <o cSize)
-      → codeSize (c1 ⊓ c2 By lt) ≤o omax (codeSize c1) (codeSize c2)
-  _⊓Size_By_  c1 c2 lt =
+      → {lt : omax (codeSize c1) (codeSize c2) <o cSize}
+      →  codeSize ((c1 ⊓ c2 By) {lt = lt} ) ≤o omax (codeSize c1) (codeSize c2)
+  _⊓Size_By  c1 c2 {lt} =
       oCodeMeetSize (self (<oPairL lt)) c1 c2 reflp reflp
 
-  ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
+  ⟨_⇐_⟩_By : ∀ {{_ : Æ}}
       → (cdest csource : ℂ ℓ)
       → (x : El csource)
-      → omax (codeSize csource)  (codeSize cdest) <o cSize
+      → {lt : omax (codeSize csource)  (codeSize cdest) <o cSize}
       → LÆ (El cdest)
-  ⟨ cdest ⇐ csource ⟩ x By lt1 =
+  ⟨ cdest ⇐ csource ⟩ x By {lt1} =
       oCast (self ((<oPairL lt1))) csource cdest reflp x reflp
 
-  [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
+  [_]⟨_⇐_⟩_By : ∀ (æ : Æ)
       → (cdest csource : ℂ ℓ)
       → (x : El {{æ = æ}} csource)
-      → omax (codeSize csource)  (codeSize cdest) <o cSize
+      → {lt : omax (codeSize csource)  (codeSize cdest) <o cSize}
       → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
-  [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
+  [_]⟨_⇐_⟩_By æ = ⟨_⇐_⟩_By {{æ}}
