@@ -69,16 +69,36 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = 
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
         = let
           dom12 = dom1 ⊓ dom2
-                        By omax-strictMono (≤o-sucMono omax-≤L) (≤o-sucMono omax-≤L)
+                        By
+                          omax-strictMono {o1 = codeSize dom1} {o2 = codeSize dom2} {o1' = O↑ (omax (omax∞ (codeSize dom1)) _)}
+                          (≤o-sucMono (omax∞-self (codeSize dom1) ≤∘ omax-≤L))
+                          (≤o-sucMono (omax∞-self (codeSize dom2) ≤∘ omax-≤L ))
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
             let
               x1 = [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12
-                By ≤o-sucMono (≤o-trans {!!} {!!}) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
-              x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12 By {!!}
-            in {!!}
-              -- (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)
-              --         By {!!}
+                By omax-sucMono (
+                  (omax-monoL {o2 = codeSize dom1} (dom1 ⊓Size dom2 By _ ))
+                  ≤∘ omax-assocR (codeSize dom1) (codeSize dom2) (codeSize dom1)
+                  ≤∘ omax-monoR {o1 = codeSize dom1} (omax-commut (codeSize dom2) (codeSize dom1))
+                  ≤∘ omax-assocL (codeSize dom1) (codeSize dom1) (codeSize dom2)
+                  -- ≤∘ omax-mono (omax-mono (omax∞-self (codeSize dom1)) (omax∞-self (codeSize dom1))) ((omax∞-self (codeSize dom2)))
+                  ≤∘ omax-mono (omax∞-idem∞ (codeSize dom1)) (omax∞-self (codeSize dom2)) -- omax-monoL {o2 = omax∞ (codeSize dom2)} (omax∞-idem (codeSize dom1))
+                  ≤∘ omax-mono {o1 = (omax∞ (codeSize dom1)) }{o2 =  (omax∞ (codeSize dom2))} {o1' = omax (omax∞ (codeSize dom1)) (OLim {{æ = Approx}} dom1 (λ x → omax∞ (codeSize (cod1 x))))}
+                    (omax-≤L {o2 = (OLim {{æ = Approx}} dom1 (λ x → omax∞ (codeSize (cod1 x))))})
+                    (omax-≤L {o2 = (OLim {{æ = Approx}} dom2 (λ x → omax∞ (codeSize (cod2 x))))})
+                  ) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+              x2 = [ Approx ]⟨ dom2 ⇐ dom12 ⟩ x12
+                By omax-sucMono (
+                  omax-monoL {o2 = codeSize dom2} (dom1 ⊓Size dom2 By _)
+                  ≤∘ omax-assocR (codeSize dom1) (codeSize dom2) (codeSize dom2)
+                  ≤∘ omax-mono (omax∞-self (codeSize dom1)) (omax∞-idem∞ (codeSize dom2)) --omax-monoR {o1 = codeSize dom1} (omax-mono (omax∞-self (codeSize dom2)) (omax∞-self (codeSize dom2)))
+                  ≤∘ omax-mono {o1 = (omax∞ (codeSize dom1)) }{o2 =  (omax∞ (codeSize dom2))} {o1' = omax (omax∞ (codeSize dom1)) (OLim {{æ = Approx}} dom1 (λ x → omax∞ (codeSize (cod1 x))))}
+                    (omax-≤L {o2 = (OLim {{æ = Approx}} dom1 (λ x → omax∞ (codeSize (cod1 x))))})
+                    (omax-≤L {o2 = (OLim {{æ = Approx}} dom2 (λ x → omax∞ (codeSize (cod2 x))))})
+                  ) -- [ Approx ]⟨ dom1 ⇐ dom12 ⟩ x12 By ≤o-sucMono omax-≤L
+            in  (cod1 (fromL x1) ) ⊓ cod2 (fromL x2)
+                      By {!!}
         in CΠ {!!} {!!}
 codeMeet (CΣ c1 cod) (CΣ c2 cod₁)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp = {!!}
 codeMeet (C≡ c1 x y) (C≡ c2 x₁ y₁)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp = {!!}
