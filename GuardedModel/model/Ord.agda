@@ -414,6 +414,16 @@ abstract
   omax<-∞ : ∀ {o1 o2 o} → omax (omax∞ (o1)) (omax∞ o2) <o o → omax o1 o2 <o o
   omax<-∞ lt = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) lt
 
+  omax-<Ls : ∀ {o1 o2 o1' o2'} → omax o1 o2 <o omax (O↑ (omax o1 o1')) (O↑ (omax o2 o2'))
+  omax-<Ls {o1} {o2} {o1'} {o2'} = omax-sucMono {o1 = o1} {o2 = o2} {o1' = omax o1 o1'} {o2' = omax o2 o2'}
+    (omax-mono {o1 = o1} {o2 = o2} (omax-≤L) (omax-≤L))
+
+  omax∞-<Ls : ∀ {o1 o2 o1' o2'} → omax o1 o2 <o omax (O↑ (omax (omax∞ o1) o1')) (O↑ (omax (omax∞ o2) o2'))
+  omax∞-<Ls {o1} {o2} {o1'} {o2'} =  <∘≤-in-< (omax-<Ls {o1} {o2} {o1'} {o2'})
+    (omax-mono {o1 = O↑ (omax o1 o1')} {o2 = O↑ (omax o2 o2')}
+      (≤o-sucMono (omax-monoL (omax∞-self o1)))
+      (≤o-sucMono (omax-monoL (omax∞-self o2))))
+
 abstract
   _≤s_ : Ord → Ord → Set
   o1 ≤s o2 = (omax∞ o1) ≤o (omax∞ o2)
