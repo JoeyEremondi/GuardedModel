@@ -184,11 +184,23 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
     (λ d → descMeet {I1 = c1} {I2 = c2} {cB = C𝟙} (D1 d) (D2 d) lt12)
     ixs12
   where
-    lt12 = omax-sucMono (omax-mono (omax-≤L) omax-≤L)
-    ltix12 = ≤o-sucMono (c1 ⊓Size c2 By hide {arg = lt12}) ≤∘ omax-sucMono (omax-mono omax-≤L omax-≤L)
+    lt12 = omax-sucMono (omax-mono (omax∞-self _ ≤∘ omax-≤L) (omax∞-self _ ≤∘ omax-≤L))
+    ltix12 = ≤o-sucMono ((c1 ⊓Size c2 By hide {arg = lt12})) ≤∘ omax-sucMono (omax-mono (omax∞-self _ ≤∘ omax-≤L) (omax∞-self _ ≤∘ omax-≤L))
+    --≤o-sucMono (c1 ⊓Size c2 By hide {arg = lt12}) ≤∘ omax-sucMono (omax-mono omax-≤L omax-≤L)
     c12 = (c1 ⊓ c2 By hide {arg = lt12})
-    ixs1-12 = fromL ([ Approx  ]⟨ c12 ⇐ c1 ⟩ ixs1 By {!!})
-    ixs2-12 = fromL ([ Approx ]⟨ c12 ⇐ c2 ⟩ ixs2 By {!ℂDesc!})
+    lt112 = omax-sucMono
+      (omax-monoR (c1 ⊓Size c2 By hide {arg = lt12})
+      ≤∘ omax-assocL (codeSize c1) (codeSize c1) (codeSize c2)
+      ≤∘ omax-mono (omax∞-idem∞ _) (omax∞-self _)
+      ≤∘ omax-mono omax-≤L omax-≤L)
+    lt212 = omax-sucMono
+      (omax-monoR ((c1 ⊓Size c2 By hide {arg = lt12}) ≤∘ omax-commut (codeSize c1) (codeSize c2))
+      ≤∘ omax-assocL (codeSize c2) (codeSize c2) (codeSize c1)
+      ≤∘ omax-commut _ _
+      ≤∘ omax-mono (omax∞-self _ ≤∘ omax-≤L) (omax∞-idem∞ _ ≤∘ omax-≤L)
+      )
+    ixs1-12 = fromL ([ Approx  ]⟨ c12 ⇐ c1 ⟩ ixs1 By hide {arg = lt112})
+    ixs2-12 = fromL ([ Approx ]⟨ c12 ⇐ c2 ⟩ ixs2 By hide {arg = lt212})
     ixs12 = fromL ([ Approx ] c12 ∋ ixs1-12 ⊓ ixs2-12 By hide {arg = ltix12})
     descMeet : ∀ {I1 I2 cB skel}
       → ℂDesc I1 cB skel
