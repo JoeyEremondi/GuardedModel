@@ -87,10 +87,10 @@ data _≤o_ : Ord → Ord → Set where
 ≤o-trans (≤o-limiting f x) p23 = ≤o-limiting f (λ k → ≤o-trans (x k) p23)
 ≤o-trans (≤o-cocone f k p12) (≤o-limiting .f x) = ≤o-trans p12 (x k)
 
-infixr 10 _≤∘_
+infixr 10 _≤⨟_
 
-_≤∘_ :  ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
-lt1 ≤∘ lt2 = ≤o-trans lt1 lt2
+_≤⨟_ :  ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
+lt1 ≤⨟ lt2 = ≤o-trans lt1 lt2
 
 ≤o-℧ :  ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} {f : Approxed (El c) {{æ}} → Ord} → o ≤o f (℧Approxed c) → o ≤o OLim c f
 ≤o-℧ {c = c} lt = ≤o-cocone _ (℧Approxed c) lt

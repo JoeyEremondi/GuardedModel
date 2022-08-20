@@ -79,6 +79,9 @@ open SizedCastMeet public
 data Hide (a : Set) : Set where
   hide : ∀ {arg : a} → Hide a
 
+reveal : ∀ {a} → Hide a → a
+reveal (hide {arg = x}) = x
+
 record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   field
     self : ∀ {cs vs : Ord} → ((cs , vs) <oPair (cSize , vSize)) → SizedCastMeet ℓ cs vs
@@ -144,3 +147,43 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (lt : Hide (omax (codeSize csource)  (codeSize cdest) <o cSize))
       → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
+
+  -- Helper to manage the common case of having two elements of different codes' types,
+  -- casting them to the meet code, then taking the meet of those two elements
+  infix 20 _,_∋_⊓_By_
+  _,_∋_⊓_By_ :
+    ∀ {{æ : Æ}} c1 c2 →
+      (El c1) →
+      (El c2) →
+      (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize)) →
+      LÆ (El (c1 ⊓ c2 By hide {arg = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) (reveal lt∞)}))
+  _,_∋_⊓_By_ c1 c2 x1 x2 (hide {arg = lt∞}) = do
+   let lt = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) (lt∞)
+   let c12 = (c1 ⊓ c2 By hide {arg = lt})
+   let
+     lt1 =
+       ≤o-sucMono
+         (omax-monoR (c1 ⊓Size c2 By hide {arg = lt})
+         ≤⨟ omax-assocL (codeSize c1) (codeSize c1) (codeSize c2)
+         ≤⨟ omax-mono (omax∞-idem∞ _) (omax∞-self _)
+         )
+         ≤⨟ lt∞
+   let
+     lt2 =
+       ≤o-sucMono (
+         omax-monoR (c1 ⊓Size c2 By hide {arg = lt} ≤⨟ omax-commut _ _)
+         ≤⨟ omax-assocL _ _ _ 
+         ≤⨟ omax-commut _ _
+         ≤⨟ omax-mono (omax∞-self _) (omax∞-idem∞ _)
+         )
+       ≤⨟ lt∞
+   let
+     lt12 =
+       ≤o-sucMono (
+         (c1 ⊓Size c2 By hide {arg = lt})
+         ≤⨟ omax-mono (omax∞-self _) (omax∞-self _))
+       ≤⨟ lt∞
+   x1-12 ←  (⟨ c12 ⇐ c1 ⟩ x1 By
+        hide {arg = lt1 })
+   x2-12 ←  (⟨ c12 ⇐ c2 ⟩ x2 By hide {arg = lt2})
+   c12 ∋ x1-12 ⊓ x2-12 By hide {arg = lt12 }

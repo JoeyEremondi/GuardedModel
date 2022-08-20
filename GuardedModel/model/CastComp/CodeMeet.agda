@@ -207,6 +207,10 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
       → ℂDesc I2 cB skel
       → (ltI : omax ((codeSize I1) ) (codeSize I2) <o cSize)
       → ℂDesc (I1 ⊓ I2 By hide {arg = ltI}) cB skel
+    descMeet (CodeModule.CEnd i) (CodeModule.CEnd i₁) lt = CEnd {!!}
+    descMeet (CodeModule.CArg c D1) (CodeModule.CArg c₁ D2) lt = {!!}
+    descMeet (CodeModule.CRec j D1) (CodeModule.CRec j₁ D2) lt = {!!}
+    descMeet (CodeModule.CHRec c j D1) (CodeModule.CHRec c₁ j₁ D2) lt = {!!}
 codeMeet (CodeModule.CCumul ⦃ suc< ⦄ c1) (CodeModule.CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (ℓself {{inst = inst}}) c1 c2 reflp reflp)
 codeMeet CodeModule.C⁇ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
 codeMeet CodeModule.C℧ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
