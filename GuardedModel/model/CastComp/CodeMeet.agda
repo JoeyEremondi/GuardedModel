@@ -107,18 +107,35 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
   Cμ tyCtor
     (c1 ⊓ c2
       By hide {arg = omax<-∞ omax-<Ls}  )
-    (λ d → descMeet {I1 = c1} {I2 = c2} {cB = C𝟙} (D1 d) (D2 d) _)
+    (λ d → descMeet {I1 = c1} {I2 = c2} {cB1 = C𝟙} {cB2 = C𝟙} (D1 d) (D2 d) {!!})
     (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = omax-<Ls }))
   where
-    descMeet : ∀ {I1 I2 cB skel}
-      → ℂDesc I1 cB skel
-      → ℂDesc I2 cB skel
-      → (ltI : omax (omax∞ (codeSize I1) ) (omax∞ (codeSize I2)) <o cSize)
-      → ℂDesc (I1 ⊓ I2 By hide {arg = omax<-∞ ltI}) cB skel
-    descMeet {I1 = I1} {I2} (CEnd i) (CEnd i₁) lt =
-      CEnd (fromL ([ Approx ] I1 ,, I2 ∋ i ⊓ i₁ By hide {arg = lt}))
-    descMeet (CArg c D1) (CArg c₁ D2) lt =
-      CArg (λ cB → c cB ⊓ c₁ cB By {!lt!}) {!!}
+    descMeet : ∀ {I1 I2 cB1 cB2 cBTarget skel}
+      → (D1 : ℂDesc I1 cB1 skel)
+      → (D2 : ℂDesc I2 cB2 skel)
+      → {ltI : omax (omax∞ (codeSize I1) ) (omax∞ (codeSize I2)) <o cSize}
+      → {ltB : codeSize cBTarget <o cSize}
+      → (lt : omax ( (descSize D1) ) ( (descSize D2)) <o cSize)
+      → ℂDesc (I1 ⊓ I2 By hide {arg = omax<-∞ ltI}) cBTarget skel
+    descMeet {I1 = I1} {I2} (CEnd i) (CEnd i₁) {ltI} lt =
+      CEnd (fromL ([ Approx ] I1 ,, I2 ∋ i ⊓ i₁ By hide {arg = ltI}))
+    descMeet {cB1 = cB1} {cB2} {cBTarget = cB} (CArg c1 D1) (CArg c2 D2) lt =
+      CArg
+        cRet
+        (descMeet D1 D2
+          (≤∘<-in-< (omax-mono (≤↑ (descSize D1) ≤⨟ ≤o-sucMono omax-≤R) (≤↑ (descSize D2) ≤⨟ ≤o-sucMono omax-≤R)) lt))
+      where
+        cRet : ApproxEl  _ → ℂ ℓ
+        cRet cb = c1 cb1 ⊓ c2 cb2
+          By hide {arg = ≤∘<-in-< (omax-mono
+             (≤↑ _ ≤⨟ ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ cb1 (omax∞-self _) ≤⨟ omax-≤L))
+             (≤↑ _ ≤⨟ ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ cb2 (omax∞-self _) ≤⨟ omax-≤L)))
+            lt}
+          where
+            cb1 = fromL (⟨ cB1 ⇐ cB ⟩ cb
+              By {!!})
+            cb2 = fromL (⟨ cB2 ⇐ cB ⟩ cb
+              By {!!})
     descMeet (CRec j D1) (CRec j₁ D2) lt =
       {!!}
     descMeet (CHRec c j D1) (CHRec c₁ j₁ D2) lt =
