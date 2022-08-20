@@ -410,6 +410,9 @@ abstract
   omax∞-≤ : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
   omax∞-≤ lt = ≤o-limiting {{æ = Approx}} _ λ k → nmax-≤ (CℕtoNat k) lt
 
+  -- Convenient helper for turing < with omax∞ into < without
+  omax<-∞ : ∀ {o1 o2 o} → omax (omax∞ (o1)) (omax∞ o2) <o o → omax o1 o2 <o o
+  omax<-∞ lt = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) lt
 
 abstract
   _≤s_ : Ord → Ord → Set

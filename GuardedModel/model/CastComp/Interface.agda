@@ -148,6 +148,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
 
+
   -- Helper to manage the common case of having two elements of different codes' types,
   -- casting them to the meet code, then taking the meet of those two elements
   infix 20 _,_∋_⊓_By_
@@ -156,9 +157,9 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       (El c1) →
       (El c2) →
       (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize)) →
-      LÆ (El (c1 ⊓ c2 By hide {arg = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) (reveal lt∞)}))
-  _,_∋_⊓_By_ c1 c2 x1 x2 (hide {arg = lt∞}) = do
-   let lt = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _)) (lt∞)
+      LÆ (El (c1 ⊓ c2 By hide {arg = omax<-∞ (reveal lt∞)}))
+  _,_∋_⊓_By_ c1 c2 x1 x2 lt∞ = do
+   let lt = omax<-∞ (reveal lt∞)
    let c12 = (c1 ⊓ c2 By hide {arg = lt})
    let
      lt1 =
@@ -167,23 +168,64 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
          ≤⨟ omax-assocL (codeSize c1) (codeSize c1) (codeSize c2)
          ≤⨟ omax-mono (omax∞-idem∞ _) (omax∞-self _)
          )
-         ≤⨟ lt∞
+         ≤⨟ reveal lt∞
    let
      lt2 =
        ≤o-sucMono (
          omax-monoR (c1 ⊓Size c2 By hide {arg = lt} ≤⨟ omax-commut _ _)
-         ≤⨟ omax-assocL _ _ _ 
+         ≤⨟ omax-assocL _ _ _
          ≤⨟ omax-commut _ _
          ≤⨟ omax-mono (omax∞-self _) (omax∞-idem∞ _)
          )
-       ≤⨟ lt∞
+       ≤⨟ reveal lt∞
    let
      lt12 =
        ≤o-sucMono (
          (c1 ⊓Size c2 By hide {arg = lt})
          ≤⨟ omax-mono (omax∞-self _) (omax∞-self _))
-       ≤⨟ lt∞
+       ≤⨟ reveal lt∞
    x1-12 ←  (⟨ c12 ⇐ c1 ⟩ x1 By
         hide {arg = lt1 })
    x2-12 ←  (⟨ c12 ⇐ c2 ⟩ x2 By hide {arg = lt2})
    c12 ∋ x1-12 ⊓ x2-12 By hide {arg = lt12 }
+
+
+  [_]_,_∋_⊓_By_ :
+    ∀ (æ : Æ) c1 c2 →
+      (El {{æ = æ}} c1) →
+      (El {{æ = æ}} c2) →
+      (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize)) →
+      LÆ {{æ = æ}} (El {{æ = æ}} (c1 ⊓ c2 By hide {arg = omax<-∞ (reveal lt∞)}))
+  [_]_,_∋_⊓_By_ æ = _,_∋_⊓_By_ {{æ = æ}}
+
+  ⟨_,_⇐⊓By_⟩_ : ∀ {{æ : Æ}} c1 c2
+    → (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize))
+    → El (c1 ⊓ c2 By (hide {arg = omax<-∞ (reveal lt∞) }) )
+    → LÆ (El c1 × El c2)
+  ⟨_,_⇐⊓By_⟩_ c1 c2 lt∞ x = do
+    let lt12 = omax<-∞ (reveal lt∞)
+    let c12 = c1 ⊓ c2 By hide {arg = lt12}
+    let
+      lt1 =
+        ≤o-sucMono (
+          omax-monoL (c1 ⊓Size c2 By hide {arg = lt12})
+          ≤⨟ omax-commut _ _
+          ≤⨟ omax-assocL _ _ _
+          ≤⨟ omax-mono (omax∞-idem∞ _) (omax∞-self _))
+        ≤⨟ reveal lt∞
+    let
+      lt2 =
+        ≤o-sucMono (
+          omax-monoL (c1 ⊓Size c2 By hide {arg = lt12})
+          ≤⨟ omax-assocR _ _ _
+          ≤⨟ omax-mono (omax∞-self _) (omax∞-idem∞ _))
+        ≤⨟ reveal lt∞
+    x1 ← ⟨ c1 ⇐ c12 ⟩ x By hide {arg = lt1}
+    x2 ←  ⟨ c2 ⇐ c12 ⟩ x By hide {arg = lt2}
+    pure (x1 , x2)
+
+  [_]⟨_,_⇐⊓By_⟩_ : ∀ (æ : Æ) c1 c2
+    → (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize))
+    → El {{æ = æ}} (c1 ⊓ c2 By (hide {arg = omax<-∞ (reveal lt∞) }) )
+    → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
+  [_]⟨_,_⇐⊓By_⟩_ æ =  ⟨_,_⇐⊓By_⟩_ {{æ = æ}}
