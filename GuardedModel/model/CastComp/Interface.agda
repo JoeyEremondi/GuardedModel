@@ -82,7 +82,7 @@ data Hide (a : Set) : Set where
 record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   field
     self : ∀ {cs vs : Ord} → ((cs , vs) <oPair (cSize , vSize)) → SizedCastMeet ℓ cs vs
-    ℓself : ∀ {cs vs} {{ _ : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
+    ℓself : ∀ {cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
   infix 20 ⁇_By_
   ⁇_By_ : ∀ {{_ : Æ}}
       → (c : ℂ ℓ) → (lt : Hide (codeSize c <o cSize)) → (El c)
