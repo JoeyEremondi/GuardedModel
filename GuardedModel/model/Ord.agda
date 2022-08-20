@@ -155,6 +155,9 @@ ordWFAcc x (acc f) = acc λ y → Prop.elim (λ _ → isPropAcc _) λ lt' → or
 ordWFProp : WellFounded (λ x y → ∥ x <o y ∥)
 ordWFProp x = ordWFAcc x (ordWF x)
 
+ordSquash : ∀ {x y} (p1 p2 : ∥ x <o y ∥) → p1 ≡ p2
+ordSquash = Prop.squash
+
 -- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
 -- and the size of a value of that (c)ode's interpetation
 data _<oPair_ : (Ord × Ord) → (Ord × Ord) → Set where

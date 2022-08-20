@@ -89,7 +89,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   infix 20 ⁇_By_
   ⁇_By_ : ∀ {{_ : Æ}}
       → (c : ℂ ℓ) → (lt : Hide (codeSize c <o cSize)) → (El c)
-  ⁇_By_ c (hide {lt}) = o⁇ (self (<oPairL lt)) c reflp reflp
+  ⁇_By_ c (hide {lt}) = o⁇ (self (<oPairL ∣ lt ∣)) c reflp reflp
 
   infix 20 [_]⁇_By_
   [_]⁇_By_ : ∀ (æ : Æ)
@@ -103,7 +103,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (lt : Hide (codeSize c <o cSize))
       → LÆ (El c)
   _∋_⊓_By_   c x y (hide {lt}) =
-      oMeet (self ( (<oPairL lt))) c x y reflp reflp
+      oMeet (self ( (<oPairL ∣ lt ∣))) c x y reflp reflp
 
   infix 20 [_]_∋_⊓_By_
   [_]_∋_⊓_By_ : ∀ (æ : Æ)
@@ -120,8 +120,14 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (lt : Hide (omax (codeSize c1) (codeSize c2) <o cSize))
       → (ℂ ℓ)
   _⊓_By_  c1 c2 (hide {lt}) =
-      oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp
+      oCodeMeet (self (<oPairL ∣ lt ∣)) c1 c2 reflp reflp
 
+
+  codeMeetEq : ∀
+      (c1 c2 : ℂ ℓ)
+      → {lt1 lt2 : Hide (omax (codeSize c1) (codeSize c2) <o cSize)}
+      → ApproxEl (c1 ⊓ c2 By lt1) ≡ ApproxEl (c1 ⊓ c2 By lt2)
+  codeMeetEq c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self (<oPairL lt)) c1 c2 reflp reflp))) (ordSquash ∣ lt1 ∣ ∣ lt2 ∣)
 
   infix 20 _⊓Size_By_
   _⊓Size_By_ :
@@ -129,7 +135,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (lt : Hide (omax (codeSize c1) (codeSize c2) <o cSize))
       →  codeSize (c1 ⊓ c2 By lt ) ≤o omax (codeSize c1) (codeSize c2)
   _⊓Size_By_  c1 c2 (hide {lt}) =
-      oCodeMeetSize (self (<oPairL lt)) c1 c2 reflp reflp
+      oCodeMeetSize (self (<oPairL ∣ lt ∣)) c1 c2 reflp reflp
 
   infix 20 ⟨_⇐_⟩_By_
   ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
@@ -138,7 +144,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
       → (lt : Hide (omax (codeSize csource)  (codeSize cdest) <o cSize))
       → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {lt}) =
-      oCast (self ((<oPairL lt))) csource cdest reflp x reflp
+      oCast (self ((<oPairL ∣ lt ∣))) csource cdest reflp x reflp
 
   infix 20 [_]⟨_⇐_⟩_By_
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
@@ -151,14 +157,14 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
 
   -- Helper to manage the common case of having two elements of different codes' types,
   -- casting them to the meet code, then taking the meet of those two elements
-  infix 20 _,_∋_⊓_By_
-  _,_∋_⊓_By_ :
+  infix 20 _,,_∋_⊓_By_
+  _,,_∋_⊓_By_ :
     ∀ {{æ : Æ}} c1 c2 →
       (El c1) →
       (El c2) →
       (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize)) →
       LÆ (El (c1 ⊓ c2 By hide {arg = omax<-∞ (reveal lt∞)}))
-  _,_∋_⊓_By_ c1 c2 x1 x2 lt∞ = do
+  _,,_∋_⊓_By_ c1 c2 x1 x2 lt∞ = do
    let lt = omax<-∞ (reveal lt∞)
    let c12 = (c1 ⊓ c2 By hide {arg = lt})
    let
@@ -190,13 +196,13 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
    c12 ∋ x1-12 ⊓ x2-12 By hide {arg = lt12 }
 
 
-  [_]_,_∋_⊓_By_ :
+  [_]_,,_∋_⊓_By_ :
     ∀ (æ : Æ) c1 c2 →
       (El {{æ = æ}} c1) →
       (El {{æ = æ}} c2) →
       (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize)) →
       LÆ {{æ = æ}} (El {{æ = æ}} (c1 ⊓ c2 By hide {arg = omax<-∞ (reveal lt∞)}))
-  [_]_,_∋_⊓_By_ æ = _,_∋_⊓_By_ {{æ = æ}}
+  [_]_,,_∋_⊓_By_ æ = _,,_∋_⊓_By_ {{æ = æ}}
 
   ⟨_,_⇐⊓By_⟩_ : ∀ {{æ : Æ}} c1 c2
     → (lt∞ : Hide (omax (omax∞ (codeSize c1)) (omax∞ (codeSize c2)) <o cSize))
