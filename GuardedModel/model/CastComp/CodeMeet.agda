@@ -68,10 +68,11 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = 
 -- after casting the argument to the appropriate type
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
         = let
-          dom12 = dom1 ⊓ dom2 By hide
+          dom12 = dom1 ⊓ dom2
+            By hide {arg = {!!}}
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
-            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} ⟩ x12)
+            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By {!!} )
             in  (cod1 x1 ) ⊓ cod2 x2
                       By hide {arg = omax-sucMono (omax-mono
                         ( ≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
@@ -81,10 +82,11 @@ codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp r
         in CΠ dom12 cod12
 codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp
         = let
-          dom12 = dom1 ⊓ dom2 By hide
+          dom12 = dom1 ⊓ dom2
+            By hide {arg = omax∞-<Ls}
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
-            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} ⟩ x12)
+            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} )
             in  (cod1 x1 ) ⊓ cod2 x2
                       By hide {arg = omax-sucMono (omax-mono
                         ( ≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
@@ -94,7 +96,8 @@ codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp r
         in CΣ dom12 cod12
 codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp
   = let
-      c12 = c1 ⊓ c2 By hide
+      c12 = c1 ⊓ c2
+        By hide {arg = omax∞-<Ls}
       x12 = fromL ([ Approx ] c1 ,, c2 ∋ x1 ⊓ x2 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)})
 
       y12 = fromL ([ Approx ] c1 ,, c2 ∋ y1 ⊓ y2 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)})
@@ -102,29 +105,34 @@ codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp 
     in C≡ c12 x12 y12 --x12 y12
 codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂} reflp) reflp reflp reflp reflp =
   Cμ tyCtor
-    (c1 ⊓ c2 By hide )
+    (c1 ⊓ c2
+      By hide {arg = omax<-∞ omax-<Ls}  )
     (λ d → descMeet {I1 = c1} {I2 = c2} {cB = C𝟙} (D1 d) (D2 d) _)
     (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = omax-<Ls }))
   where
     descMeet : ∀ {I1 I2 cB skel}
       → ℂDesc I1 cB skel
       → ℂDesc I2 cB skel
-      → (ltI : omax ((codeSize I1) ) (codeSize I2) <o cSize)
-      → ℂDesc (I1 ⊓ I2 By hide {arg = ltI}) cB skel
-    descMeet (CodeModule.CEnd i) (CodeModule.CEnd i₁) lt = CEnd {!!}
-    descMeet (CodeModule.CArg c D1) (CodeModule.CArg c₁ D2) lt = {!!}
-    descMeet (CodeModule.CRec j D1) (CodeModule.CRec j₁ D2) lt = {!!}
-    descMeet (CodeModule.CHRec c j D1) (CodeModule.CHRec c₁ j₁ D2) lt = {!!}
-codeMeet (CodeModule.CCumul ⦃ suc< ⦄ c1) (CodeModule.CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (ℓself {{inst = inst}}) c1 c2 reflp reflp)
-codeMeet CodeModule.C⁇ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet CodeModule.C℧ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet CodeModule.C𝟘 (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet CodeModule.C𝟙 (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet CodeModule.CType (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet (CodeModule.CΠ c1 cod) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet (CodeModule.CΣ c1 cod) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet (CodeModule.C≡ c1 x y) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
-codeMeet (CodeModule.Cμ tyCtor c1 D x) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+      → (ltI : omax (omax∞ (codeSize I1) ) (omax∞ (codeSize I2)) <o cSize)
+      → ℂDesc (I1 ⊓ I2 By hide {arg = omax<-∞ ltI}) cB skel
+    descMeet {I1 = I1} {I2} (CEnd i) (CEnd i₁) lt =
+      CEnd (fromL ([ Approx ] I1 ,, I2 ∋ i ⊓ i₁ By hide {arg = lt}))
+    descMeet (CArg c D1) (CArg c₁ D2) lt =
+      CArg (λ cB → c cB ⊓ c₁ cB By {!lt!}) {!!}
+    descMeet (CRec j D1) (CRec j₁ D2) lt =
+      {!!}
+    descMeet (CHRec c j D1) (CHRec c₁ j₁ D2) lt =
+      {!!}
+codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (ℓself {{inst = inst}}) c1 c2 reflp reflp)
+codeMeet C⁇ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet C℧ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet C𝟘 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet C𝟙 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet CType (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CΠ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CΣ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (C≡ c1 x y) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (Cμ tyCtor c1 D x) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
 
 
 
