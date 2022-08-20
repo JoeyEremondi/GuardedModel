@@ -68,10 +68,7 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp reflp = 
 -- after casting the argument to the appropriate type
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp reflp
         = let
-          lt12 = omax-strictMono {o1 = codeSize dom1} {o2 = codeSize dom2} {o1' = O↑ (omax (omax∞ (codeSize dom1)) _)}
-                 (≤o-sucMono (omax∞-self (codeSize dom1) ≤⨟ omax-≤L))
-                   (≤o-sucMono (omax∞-self (codeSize dom2) ≤⨟ omax-≤L ))
-          dom12 = dom1 ⊓ dom2 By hide {arg = lt12}
+          dom12 = dom1 ⊓ dom2 By hide {arg = omax∞-<Ls}
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
             let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} ⟩ {!!})
