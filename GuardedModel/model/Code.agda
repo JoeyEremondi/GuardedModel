@@ -79,6 +79,7 @@ record CodeModule
     -- ℂSelf : ▹ Set
 
   interleaved mutual
+
     ------------------ Declarations ------------------------------
     -- Codes describing types
     data ℂ : Set
@@ -153,8 +154,8 @@ record CodeModule
     --
     --For lower universes, we can lift codes to this universe without needing guardedness
     data _ where
-      CCumul :  ℂ-1 → ℂ
-      ⁇Cumul :  ℂ-1 → F⁇ Self
+      CCumul :  {{ inst : 0< ℓ }} → ℂ-1 → ℂ
+      ⁇Cumul :  {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
       -- ⁇Cumul : ⁇-1 → F⁇ Self
     El (CCumul c) = El-1 c
     --
@@ -318,6 +319,11 @@ CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
     -- ; ℧-1 = CodeModule.ℂ.C℧
     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
     }
+
+
+-- If we have smaller codes, ℓ > 0
+ℓsuc : ∀ {ℓ} → CodeModule.ℂ-1 (CodeModuleAt ℓ) → Σ[ ℓ' ∈ ℕ ](ℓ ≡p suc ℓ')
+ℓsuc {suc ℓ} x = _ , reflp
 
 -- Expose each value in the Code module with implicit level ℓ
 -- Except for ℂ and ⁇, which each need an explicit level

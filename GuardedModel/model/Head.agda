@@ -47,7 +47,7 @@ valueHeadType ( H𝟙) = Unit
 valueHeadType ( H𝟘) = Unit
 valueHeadType ( HType) = GHead
 valueHeadType ( (HCtor tyCtor)) = DName tyCtor
-valueHeadType HCumul = Unit
+valueHeadType HCumul = GHead
 
 valueGHeadType : GHead → Set
 valueGHeadType H⁇ = Σ[ h ∈ TyHead ] ValHead (HStatic h)
@@ -205,7 +205,7 @@ valHeadTypeDecEq { H𝟙} x y = yes reflp
 valHeadTypeDecEq { H𝟘} x y = yes reflp
 valHeadTypeDecEq { HType} x y = gheadDecEq x y
 valHeadTypeDecEq { (HCtor x₁)} x y = decFin x y
-valHeadTypeDecEq {HCumul} x y = yes reflp
+valHeadTypeDecEq {HCumul} x y = gheadDecEq x y
 
 valHeadDecEq {h} VH⁇ VH⁇ = yes reflp
 valHeadDecEq {h} VH⁇ VH℧ = no λ ()
@@ -241,12 +241,12 @@ codeHead (CΠ c cod) = HStatic HΠ
 codeHead (CΣ c cod) = HStatic HΣ
 codeHead (C≡ c x y) = HStatic H≅
 codeHead (Cμ tyCtor c D x) = HStatic (HCtor tyCtor)
-codeHead {ℓ = suc ℓ} (CCumul x) = codeHead x
+codeHead {ℓ = suc ℓ} (CCumul x) = HStatic HCumul
 -- codeHead {suc ℓ} (CCumul t) = codeHead t
 
 valueHead : ∀ {{_ : Æ}} {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
 valueHead C℧ _ x = VH℧
-valueHead {ℓ = suc ℓ} (CCumul c) pf x = valueHead c pf x
+valueHead {ℓ = suc ℓ} (CCumul c) reflp x = HVal (HStatic HCumul)
 valueHead C𝟘 _ tt = VH℧
 valueHead C𝟙 _ false = VH℧
 valueHead C𝟙 reflp true = HVal tt

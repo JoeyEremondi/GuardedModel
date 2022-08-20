@@ -178,7 +178,33 @@ codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp 
       y12 = fromL ([ Approx ] c12 ∋ y1-12 ⊓ y2-12 By hide {arg = lt12})
 
     in C≡ c12 x12 y12
-codeMeet (Cμ tyCtor c1 D x) (Cμ tyCtor₁ c2 D₁ x₁)  (HEq {h1 = HCtor x₂} reflp) eq1 eq2 reflp reflp = {!!}
+codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂} reflp) reflp reflp reflp reflp =
+  Cμ tyCtor
+    c12
+    (λ d → descMeet {I1 = c1} {I2 = c2} {cB = C𝟙} (D1 d) (D2 d) lt12)
+    ixs12
+  where
+    lt12 = {!!}
+    ltix12 = {!!}
+    c12 = (c1 ⊓ c2 By hide {arg = lt12})
+    ixs1-12 = fromL ([ Approx  ]⟨ c12 ⇐ c1 ⟩ ixs1 By {!!})
+    ixs2-12 = fromL ([ Approx ]⟨ c12 ⇐ c2 ⟩ ixs2 By {!ℂDesc!})
+    ixs12 = fromL ([ Approx ] c12 ∋ ixs1-12 ⊓ ixs2-12 By hide {arg = ltix12})
+    descMeet : ∀ {I1 I2 cB skel}
+      → ℂDesc I1 cB skel
+      → ℂDesc I2 cB skel
+      → (ltI : omax ((codeSize I1) ) (codeSize I2) <o cSize)
+      → ℂDesc (I1 ⊓ I2 By hide {arg = ltI}) cB skel
+codeMeet (CodeModule.CCumul ⦃ suc< ⦄ c1) (CodeModule.CCumul c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul (ℓself .oCodeMeet c1 c2 reflp reflp)
+codeMeet CodeModule.C⁇ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet CodeModule.C℧ (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet CodeModule.C𝟘 (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet CodeModule.C𝟙 (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet CodeModule.CType (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CodeModule.CΠ c1 cod) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CodeModule.CΣ c1 cod) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CodeModule.C≡ c1 x y) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
+codeMeet (CodeModule.Cμ tyCtor c1 D x) (CodeModule.CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
 
 
 
