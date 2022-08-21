@@ -45,7 +45,7 @@ open import Util
 -- Also, Cubical Agda recognizes these as strictly decreasing, which is nice
 data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cI cB sig → ApproxEl cI → ApproxEl cB → Set where
   ElEnd : ∀ {cB b i} j → i ≅ j →  ℂDescEl' cI X cB (CEnd j) i b
-  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : Approxed (El (cA b)) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D) i b
+  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : Approxed (El (cA b)) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D _ reflp) i b
   ElRec : ∀ {cB b i sig} {j : ApproxEl cI} {D : ℂDesc cI cB sig} →
     X j → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CRec j D) i b
   ElHRec : ∀ {cB b i sig} {c : ApproxEl cB → ℂ ℓ} {j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl cI} {D : ℂDesc cI cB sig} →
@@ -97,7 +97,7 @@ fromCElCommand : ∀ {ℓ sig} {cI cB : ℂ ℓ} (D : ℂDesc cI cB sig) {i : Ap
   → ℂDescEl  D X i b
   → CommandD D i b
 fromCElCommand .(CEnd j) (ElEnd j x) = x
-fromCElCommand (CArg _ D) (ElArg a x) = a , fromCElCommand D x
+fromCElCommand (CArg _ D _ _) (ElArg a x) = a , fromCElCommand D x
 fromCElCommand (CRec _ D) (ElRec x x₁) = fromCElCommand D x₁
 fromCElCommand (CHRec c j D) (ElHRec f x) = fromCElCommand D x
 
@@ -107,7 +107,7 @@ fromCElF : ∀ {ℓ sig} {cI cB : ℂ ℓ} (D : ℂDesc cI cB sig) {X : ApproxEl
   → (x : ℂDescEl  D X i b)
   → (r : ResponseD D b (fromCElCommand D x ) )
       → X (inextD D b (fromCElCommand D x ) r)
-fromCElF (CArg c D) (ElArg a x) r = fromCElF D x r
+fromCElF (CArg c D _ _) (ElArg a x) r = fromCElF D x r
 fromCElF (CRec j D) (ElRec x x₁) (Rec _) = x
 fromCElF (CRec i D) (ElRec x x₁) (Rest x₂) = fromCElF D x₁ x₂
 fromCElF (CHRec c i D) (ElHRec f1 f2) (Rec a) = f1 a
@@ -128,7 +128,7 @@ fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D 
 fromCμ Cμ⁇ = W⁇
 fromCμ Cμ℧ = W℧
 
-fromCEl (CArg c D) E (ElArg a x) r = fromCEl D E x r
+fromCEl (CArg c D _ _) E (ElArg a x) r = fromCEl D E x r
 fromCEl (CRec i D) E (ElRec x x₁) (Rec _) = fromCμ x
 fromCEl (CRec i D) E (ElRec x x₁) (Rest x₂) = fromCEl D E x₁ x₂
 fromCEl (CHRec c i D) E (ElHRec f1 f2) (Rec a) = fromCμ (f1 a)
@@ -155,7 +155,7 @@ toCμ D = wInd (λ (i , _) → ℂμ _ D i) (λ {i} (FC (d , com) k _) φ → Ci
 
 
 toCEl (CEnd i) E wit k φ = ElEnd i wit
-toCEl (CArg c D) E (a , com) k φ = ElArg a (toCEl D E com k φ)
+toCEl (CArg c D _ reflp) E (a , com) k φ = ElArg a (toCEl D E com k φ)
 toCEl (CRec j D) E com k φ = ElRec (φ (Rec tt)) (toCEl D E com (λ r → k (Rest r)) λ r → φ (Rest r))
 toCEl (CHRec c j D) E com k φ = ElHRec (λ a → φ (Rec a)) (toCEl D E com (λ r → k (Rest r)) λ r → φ (Rest r))
 
@@ -166,7 +166,7 @@ toCElF :
   (k : (r : ResponseD D b com ) → X (inextD D b com r))
   → (ℂDescEl D X ix b)
 toCElF (CEnd i) wit k = ElEnd i wit
-toCElF (CArg c D) (a , com) k = ElArg a (toCElF D com k)
+toCElF (CArg c D _ reflp) (a , com) k = ElArg a (toCElF D com k)
 toCElF (CRec j D) com k = ElRec (k (Rec tt)) (toCElF D com (λ r → k (Rest r)))
 toCElF (CHRec c j D) com k = ElHRec (λ a → k (Rec a)) (toCElF D com (λ r → k (Rest r)))
 -- toCElF (CHGuard c D D₁) (com1 , com2) k = ElHGuard (λ a → toCElF D (com1 a) (λ r → k (GuardedArg (a , r))) ) (toCElF D₁ com2 (λ r → k (GRest r)) )
@@ -179,7 +179,7 @@ fromToCElCommand :
                   WArg E (inextD D b com r))
   → fromCElCommand D (toCEl D E com k λ r → toCμ E (k r)) ≡ com
 fromToCElCommand (CEnd i) E com k   = refl
-fromToCElCommand (CArg c D) E (a , com) k   = ΣPathP (refl , fromToCElCommand D E com k  )
+fromToCElCommand (CArg c D _ reflp) E (a , com) k   = ΣPathP (refl , fromToCElCommand D E com k  )
 fromToCElCommand (CRec j D) E com k   = fromToCElCommand D E com (λ r → k (Rest r))
 fromToCElCommand (CHRec c j D) E com k   = fromToCElCommand D E com (λ r → k (Rest r))
 
@@ -211,7 +211,7 @@ fromToCEl :
   → PathP (λ 𝕚 → let com = fromToCElCommand D E com k  𝕚 in (r : ResponseD D b com) → WArg E (inextD D b com r))
   (fromCEl D E (toCEl D E com k λ r → toCμ E (k r))) k
 fromToCEl (CodeModule.CEnd i) E com k  φ = funExt (λ ())
-fromToCEl (CodeModule.CArg c D) E (a , com) k  φ  = fromToCEl D E com k φ
+fromToCEl (CodeModule.CArg c D _ reflp) E (a , com) k  φ  = fromToCEl D E com k φ
 fromToCEl (CodeModule.CRec j D) E com k  φ 𝕚 (Rec tt) = φ (Rec tt) 𝕚
 fromToCEl (CodeModule.CRec j D) E com k  φ 𝕚 (Rest r) = fromToCEl D E com (λ r → k (Rest r)) (λ r → φ (Rest r)) 𝕚 r
 fromToCEl (CodeModule.CHRec c j D) E com k φ 𝕚 (Rec a) = φ (Rec a) 𝕚
@@ -244,7 +244,7 @@ toFromCμ Cμ⁇ = refl
 toFromCμ Cμ℧ = refl
 
 toFromCEl .(CEnd j) E (ElEnd j x) = refl
-toFromCEl (CArg c D) E (ElArg a x) = cong (ElArg a) (toFromCEl D E x)
+toFromCEl (CArg c D _ reflp) E (ElArg a x) = cong (ElArg a) (toFromCEl D E x)
 toFromCEl (CRec j D) E (ElRec x x₁) = cong₂ ElRec (toFromCμ x) (toFromCEl D E x₁)
 toFromCEl (CHRec c j D) E (ElHRec x x₁) = cong₂ ElHRec (funExt (λ a → toFromCμ (x a))) (toFromCEl D E x₁)
 -- toFromCEl (CHGuard c D1 D2) E (ElHGuard x x₁) = cong₂ ElHGuard (funExt λ a → toFromCEl D1 E (x a)) (toFromCEl D2 E x₁)

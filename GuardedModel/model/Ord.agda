@@ -361,6 +361,8 @@ abstract
     (≤o-trans (omax-assocL o3 o2 o1) (≤o-trans (omax-commut (omax o3 o2) o1) (omax-monoR {o1 = o1} (omax-commut o3 o2)))))
 
 
+  -- omax-swap4 : ∀ {o1 o1' o2 o2'} → omax (omax o1 o1') (omax o2 o2') ≤o omax (omax o1 o2) (omax o1' o2')
+  -- omax-swap4 = {!!}
 
 
 --Attempt to have an idempotent version of max
@@ -429,6 +431,12 @@ abstract
       (≤o-sucMono (omax-monoL (omax∞-self o1)))
       (≤o-sucMono (omax-monoL (omax∞-self o2))))
 
+
+  omax∞-lub : ∀ {o1 o2 o} → o1 ≤o omax∞ o → o2 ≤o omax∞  o → omax o1 o2 ≤o (omax∞ o)
+  omax∞-lub {o1 = o1} {o2 = o2} lt1 lt2 = omax-mono {o1 = o1} {o2 = o2} lt1 lt2 ≤⨟ omax∞-idem _
+
+  omax∞-absorbL : ∀ {o1 o2 o} → o2 ≤o o1 → o1 ≤o omax∞ o → omax o1 o2 ≤o omax∞ o
+  omax∞-absorbL lt12 lt1 = omax∞-lub lt1 (lt12 ≤⨟ lt1)
 
 orec : ∀ {ℓ} (P : Ord → Set ℓ)
   → ((x : Ord) → (rec : (y : Ord) → (_ : ∥ y <o x ∥) → P y ) → P x)

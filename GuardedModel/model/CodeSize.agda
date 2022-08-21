@@ -168,7 +168,7 @@ codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (DLim tyCtor λ 
 codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
 
 descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
-descSize {cB = cB} (CArg c D) = O↑ (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D))
+descSize {cB = cB} (CArg c D cB' _) = O↑ (omax (codeSize cB') (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D)))
 descSize {cI = c} (CRec j D) = O↑ (omax (descSize D) (elSize {{Approx}} c j))
 descSize {cI = cI} {cB = cB} (CHRec c j D) =
   O↑
@@ -233,7 +233,7 @@ CμSize D Cμ⁇ = O1
 CμSize D Cμ℧ = O1
 
 CElSize {cI = cI} .(CEnd j) E {i} (ElEnd j (w ⊢ _ ≅ _)) = elSize {{Approx}} cI w
-CElSize {{æ}} (CArg c D) E {b = b} (ElArg a x) = O↑ (omax (elSize {{æ}} (c b) (exact a)) (CElSize D E x))
+CElSize {{æ}} (CArg c D _ _) E {b = b} (ElArg a x) = O↑ (omax (elSize {{æ}} (c b) (exact a)) (CElSize D E x))
 CElSize (CRec j D) E (ElRec x x₁) = O↑ (omax (CμSize E x) (CElSize D E x₁))
 CElSize (CHRec c j D) E {b = b} (ElHRec f x) = O↑ (OLim (c b) λ a → omax (CμSize E (f a)) (CElSize D E x))
 
