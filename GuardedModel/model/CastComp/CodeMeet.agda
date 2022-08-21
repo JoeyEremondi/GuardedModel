@@ -56,7 +56,7 @@ descMeet : ∀ {I1 I2 cB1 cB2 cBTarget skel oTop}
       → (D2 : ℂDesc I2 cB2 skel)
       → (lto : omax∞ oTop <o cSize )
       → (ltI : omax (omax∞ (codeSize I1) ) (omax∞ (codeSize I2)) ≤o omax∞ oTop)
-      → (ltB : (codeSize cBTarget ≤o omax (omax∞ (codeSize cB1)) (omax∞ (codeSize cB2))))
+      → (ltB : (codeSize cBTarget ≤o omax  (codeSize cB1)  (codeSize cB2)))
       → (lt : omax ( (descSize D1) ) ( (descSize D2)) ≤o omax∞ oTop)
       → ℂDesc (I1 ⊓ I2 By hide {arg = ≤∘<-in-< (omax-mono (omax∞-self _) (omax∞-self _) ≤⨟ ltI) lto}) cBTarget skel
 descMeet {I1 = I1} {I2} (CEnd i) (CEnd i₁)  lto ltI ltB lt  =
@@ -67,7 +67,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
         (descMeet D1 D2
           lto
           ltI
-          {!!}
+          (omax-sucMono {!!})
           (omax-mono (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) ≤⨟ lt)
           -- (≤∘<-in-< (omax-mono (≤↑ (descSize D1) ≤⨟ ≤o-sucMono omax-≤R) (≤↑ (descSize D2) ≤⨟ ≤o-sucMono omax-≤R))
           )
@@ -82,24 +82,22 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
               (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c2 b))) cb2 (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
               ≤⨟ lt) lto}
           where
-            ltB12 : omax (omax∞ (codeSize cB1)) (omax∞ (codeSize cB2)) ≤o omax∞ oTop
+            ltB12 : omax  (codeSize cB1)  (codeSize cB2) ≤o omax∞ oTop
             ltB12 = omax-mono
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono omax-≤L) ≤⨟ omax-≤L))
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono omax-≤L) ≤⨟ omax-≤L))
+              (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)) ≤⨟ omax-≤L))
+              (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)) ≤⨟ omax-≤L))
                ≤⨟ lt
             cb1 = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
                 (ltB
                 ≤⨟ ltB12)
-                (omax∞-self _
-                ≤⨟ omax-≤L
+                ( omax-≤L
                 ≤⨟ ltB12)) lto  })
             cb2 = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
                 (ltB
                 ≤⨟ ltB12)
-                (omax∞-self _
-                ≤⨟ omax-≤R
+                ( omax-≤R
                 ≤⨟ ltB12)) lto  })
 descMeet (CRec j D1) (CRec j₁ D2) lto ltI ltB lt  =
       {!!}
