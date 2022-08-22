@@ -361,8 +361,12 @@ abstract
     (≤o-trans (omax-assocL o3 o2 o1) (≤o-trans (omax-commut (omax o3 o2) o1) (omax-monoR {o1 = o1} (omax-commut o3 o2)))))
 
 
-  -- omax-swap4 : ∀ {o1 o1' o2 o2'} → omax (omax o1 o1') (omax o2 o2') ≤o omax (omax o1 o2) (omax o1' o2')
-  -- omax-swap4 = {!!}
+  omax-swap4 : ∀ {o1 o1' o2 o2'} → omax (omax o1 o1') (omax o2 o2') ≤o omax (omax o1 o2) (omax o1' o2')
+  omax-swap4 {o1}{o1'}{o2 }{o2'} =
+    omax-assocL (omax o1 o1') o2 o2'
+    ≤⨟ omax-monoL {o1 = omax (omax o1 o1') o2} {o2 = o2'}
+      (omax-assocR o1 o1' o2 ≤⨟ omax-monoR {o1 = o1} (omax-commut o1' o2) ≤⨟ omax-assocL o1 o2 o1')
+    ≤⨟ omax-assocR (omax o1 o2) o1' o2'
 
 
 --Attempt to have an idempotent version of max
@@ -437,6 +441,25 @@ abstract
 
   omax∞-absorbL : ∀ {o1 o2 o} → o2 ≤o o1 → o1 ≤o omax∞ o → omax o1 o2 ≤o omax∞ o
   omax∞-absorbL lt12 lt1 = omax∞-lub lt1 (lt12 ≤⨟ lt1)
+
+  omax∞-distL : ∀ {o1 o2} → omax (omax∞ o1) (omax∞ o2) ≤o omax∞ (omax o1 o2)
+  omax∞-distL {o1} {o2} =
+    omax∞-lub {o1 = omax∞ o1} {o2 = omax∞ o2} (omax∞-mono omax-≤L) (omax∞-mono (omax-≤R {o1 = o1}))
+
+
+  omax∞-distR : ∀ {o1 o2} → omax∞ (omax o1 o2) ≤o omax (omax∞ o1) (omax∞ o2)
+  omax∞-distR {o1} {o2} = ≤o-limiting {{æ = Approx}} _ λ k → helper {n = CℕtoNat k}
+    where
+     helper : ∀ {o1 o2 n} → nmax (omax o1 o2) n ≤o omax (omax∞ o1) (omax∞ o2)
+     helper {o1} {o2} {ℕ.zero} = ≤o-Z
+     helper {o1} {o2} {ℕ.suc n} =
+       omax-monoL {o1 = nmax (omax o1 o2) n} (helper {o1 = o1} {o2} {n})
+       ≤⨟ omax-swap4 {omax∞ o1} {omax∞ o2} {o1} {o2}
+       ≤⨟ omax-mono {o1 = omax (omax∞ o1) o1} {o2 = omax (omax∞ o2) o2} {o1' = omax∞ o1} {o2' = omax∞ o2}
+         (omax∞-lub {o1 = omax∞ o1} (≤o-refl _) (omax∞-self _))
+         (omax∞-lub {o1 = omax∞ o2} (≤o-refl _) (omax∞-self _))
+
+
 
 orec : ∀ {ℓ} (P : Ord → Set ℓ)
   → ((x : Ord) → (rec : (y : Ord) → (_ : ∥ y <o x ∥) → P y ) → P x)

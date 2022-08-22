@@ -67,7 +67,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
         (descMeet D1 D2
           lto
           ltI
-          (omax-sucMono {!!})
+          (omax-sucMono (omax-mono ? ? ≤⨟ omax-swap4 ))
           (omax-mono (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) ≤⨟ lt)
           -- (≤∘<-in-< (omax-mono (≤↑ (descSize D1) ≤⨟ ≤o-sucMono omax-≤R) (≤↑ (descSize D2) ≤⨟ ≤o-sucMono omax-≤R))
           )
