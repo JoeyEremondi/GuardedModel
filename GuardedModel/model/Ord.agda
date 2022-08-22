@@ -325,6 +325,7 @@ abstract
   omax-limR f (O↑ o) = extLim _ _ λ k → ≤o-refl _
   omax-limR f (OLim c f₁) = ≤o-limiting _ λ k → ≤o-trans (omax-limR f (f₁ k)) (extLim _ _ (λ k2 → omax-monoL {o1 = f₁ k} {o1' = OLim c f₁} {o2 = f k2}  (≤o-cocone _ k (≤o-refl _))))
 
+
   omax-commut : ∀ o1 o2 → omax o1 o2 ≤o omax o2 o1
   omax-commut o1 o2 with maxView o1 o2
   ... | MaxZ-L = omax-≤L
@@ -368,6 +369,25 @@ abstract
       (omax-assocR o1 o1' o2 ≤⨟ omax-monoR {o1 = o1} (omax-commut o1' o2) ≤⨟ omax-assocL o1 o2 o1')
     ≤⨟ omax-assocR (omax o1 o2) o1' o2'
 
+  omax-lim2L :
+    ∀ {æ1 æ2 : Æ}
+    {ℓ1 ℓ2}
+    {c1 : ℂ ℓ1}
+    (f1 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c1) {{æ = æ1}} → Ord)
+    {c2 : ℂ ℓ2}
+    (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Ord)
+    → OLim {{æ = æ1}} c1 (λ k1 → OLim {{æ = æ2}} c2 (λ k2 → omax (f1 k1) (f2 k2))) ≤o omax (OLim {{æ = æ1}} c1 f1) (OLim {{æ = æ2}} c2 f2)
+  omax-lim2L {æ1} {æ2} f1 f2 = ≤o-limiting {{æ = æ1}} _ (λ k1 → ≤o-limiting {{æ = æ2}} _ λ k2 → omax-mono (≤o-cocone {{æ = æ1}} f1 k1 (≤o-refl _)) (≤o-cocone {{æ = æ2}} f2 k2 (≤o-refl _)))
+
+  omax-lim2R :
+    ∀ {æ1 æ2 : Æ}
+    {ℓ1 ℓ2}
+    {c1 : ℂ ℓ1}
+    (f1 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c1) {{æ = æ1}} → Ord)
+    {c2 : ℂ ℓ2}
+    (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Ord)
+    →  omax (OLim {{æ = æ1}} c1 f1) (OLim {{æ = æ2}} c2 f2) ≤o OLim {{æ = æ1}} c1 (λ k1 → OLim {{æ = æ2}} c2 (λ k2 → omax (f1 k1) (f2 k2)))
+  omax-lim2R {æ1} {æ2} f1 f2 = extLim ⦃ æ = æ1 ⦄ _ _ (λ k1 → omax-limR ⦃ æ = æ2 ⦄ _ (f1 k1))
 
 --Attempt to have an idempotent version of max
 
