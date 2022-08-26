@@ -69,38 +69,40 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
           ltI
           (omax-sucMono (omax-mono
             (omax∞-mono ltB ≤⨟ omax∞-distR)
-            {!!} ≤⨟ omax-swap4 ))
+            ((≤o-limiting {{æ = Approx}} _ λ cb → ≤o-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤o-cocone ⦃ æ = Approx ⦄ _ (cb2 cb)
+              (omax∞-mono (c1 (cb1 cb) ⊓Size c2 (cb2 cb) By hide) ≤⨟ omax∞-distR))) ≤⨟ omax-lim2L _ _) ≤⨟ omax-swap4 ))
           (omax-mono (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) (≤↑ _ ≤⨟ ≤o-sucMono (omax-≤R ≤⨟ omax-≤R)) ≤⨟ lt)
           -- (≤∘<-in-< (omax-mono (≤↑ (descSize D1) ≤⨟ ≤o-sucMono omax-≤R) (≤↑ (descSize D2) ≤⨟ ≤o-sucMono omax-≤R))
           )
         _
         reflp
       where
-        cRet : ApproxEl cB → ℂ ℓ
-        cRet cb = c1 cb1 ⊓ c2 cb2
-          By hide {arg = ≤∘<-in-<
-            (omax-mono
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c1 b))) cb1 (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c2 b))) cb2 (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
-              ≤⨟ lt) lto}
-          where
-            ltB12 : omax  (codeSize cB1)  (codeSize cB2) ≤o omax∞ oTop
-            ltB12 = omax-mono
+        ltB12 :  omax  (codeSize cB1)  (codeSize cB2) ≤o omax∞ oTop
+        ltB12 = omax-mono
               (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)) ≤⨟ omax-≤L))
               (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)) ≤⨟ omax-≤L))
                ≤⨟ lt
-            cb1 = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
+        cb1 : _ → _
+        cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
                 (ltB
                 ≤⨟ ltB12)
                 ( omax-≤L
                 ≤⨟ ltB12)) lto  })
-            cb2 = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
+        cb2 : _ → _
+        cb2 cb = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
                 (ltB
                 ≤⨟ ltB12)
                 ( omax-≤R
                 ≤⨟ ltB12)) lto  })
+        cRet : ApproxEl cB → ℂ ℓ
+        cRet cb = c1 (cb1 cb) ⊓ c2 (cb2 cb)
+          By hide {arg = ≤∘<-in-<
+            (omax-mono
+              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c1 b))) (cb1 cb) (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
+              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c2 b))) (cb2 cb) (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
+              ≤⨟ lt) lto}
 descMeet (CRec j D1) (CRec j₁ D2) lto ltI ltB lt  =
       {!!}
 descMeet (CHRec c j D1) (CHRec c₁ j₁ D2) lto ltI ltB lt  =
