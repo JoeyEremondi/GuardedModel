@@ -100,10 +100,10 @@ codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp r
 codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp
   = let
       c12 = c1 ⊓ c2
-        By hide {arg = omax∞-<Ls}
-      x12 = fromL ([ Approx ] c1 ,, c2 ∋ x1 ⊓ x2 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)})
+        By hide {arg = omax-strictMono (≤o-sucMono (omax∞-self _)) (≤o-sucMono (omax∞-self _))}
+      x12 = fromL ([ Approx ] c1 ,, c2 ∋ x1 ⊓ x2 By hide {arg = omax-strictMono (≤o-sucMono (≤o-refl _)) (≤o-sucMono (≤o-refl _))})
 
-      y12 = fromL ([ Approx ] c1 ,, c2 ∋ y1 ⊓ y2 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)})
+      y12 = fromL ([ Approx ] c1 ,, c2 ∋ y1 ⊓ y2 By hide {arg = omax-strictMono (≤o-sucMono (≤o-refl _)) (≤o-sucMono (≤o-refl _))})
 
     in C≡ c12 x12 y12 --x12 y12
 codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂} reflp) reflp reflp reflp reflp =

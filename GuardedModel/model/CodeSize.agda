@@ -111,28 +111,6 @@ germIndSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFIndSize tyCtor (dat
 
 
 
-
-
-codeSize : ∀ {ℓ} → ℂ ℓ → Ord
-descSize : ∀  {ℓ sig} →  {cI cB : ℂ ℓ} → ℂDesc cI cB sig → Ord
-elSize : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → El c → Ord
--- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
-⁇Size : ∀ {{ _ : Æ}} {ℓ} → ⁇Ty ℓ → Ord
-CμSize : ∀ {{_ : Æ}} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i} → ℂμ tyCtor D i → Ord
-CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Ord
--- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
---   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
---   → □ _ (λ _ → Ord) (tt , cs)
---   → Ord
-
--- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
--- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
-germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
-  → (DataGermIsCode ℓ D)
-  → B
-  → Ord
-
-
 DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Ord) → Ord
 DLim tyCtor f with numCtors tyCtor
 ... | ℕ.zero = OZ
@@ -149,6 +127,37 @@ extDLim tyCtor f1 f2 lt with numCtors tyCtor
 ... | ℕ.suc n = extLim ⦃ æ = Approx ⦄ (λ x → f1 (fromCFin x)) (λ x → f2 (fromCFin x)) (λ k → lt (fromCFin k))
 
 
+-- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
+-- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
+germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
+  → (DataGermIsCode ℓ D)
+  → B
+  → Ord
+codeSize : ∀ {ℓ} → ℂ ℓ → Ord
+descSize : ∀  {ℓ sig} →  {cI cB : ℂ ℓ} → ℂDesc cI cB sig → Ord
+
+
+codeSize C⁇ = O1
+codeSize C℧ = O1
+codeSize C𝟘 = O1
+codeSize C𝟙 = O1
+codeSize CType = O1
+codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
+codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
+codeSize  (C≡ c x y) = O↑ (omax∞ (codeSize c))
+codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (omax∞ (DLim tyCtor λ d → descSize (D d))))
+codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
+
+--TODO: need ElSizes here?
+descSize {cI = c} (CEnd i) = O1 -- O↑ (elSize {{Approx}} c i )
+descSize {cB = cB} (CArg c D cB' _) = O↑ (omax (codeSize cB') (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D)))
+descSize {cI = c} (CRec j D) = O↑  (descSize D)
+descSize {cI = cI} {cB = cB} (CHRec c j D cB' _) =
+  O↑ (omax (codeSize cB') (omax
+     (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b)))
+      (descSize D) ))
+
+
 germDescSize  GEnd GEndCode b = O1
 germDescSize  (GArg A D) (GArgCode c isom pf) b = O↑ (omax (codeSize (c b)) (OLim (c b) (λ a → germDescSize D pf (b , Iso.inv (isom b) (exact a) ))))
 germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) b = O1
@@ -157,6 +166,22 @@ germDescSize  (GHRec A D) (GHRecCode c isom pf) b = O↑ (OLim (c b) (λ a → o
 germDescSize  (GHRec A D) (GGuardedHRecCode c x₁ x₂) b = O1
 germDescSize  (GUnk A D) (GUnkCode c x pf) b =  O↑ (OLim (c b) λ a → omax (codeSize (c b)) (germDescSize D pf b))
 germDescSize  (GUnk A D) (GGuardedUnkCode c x pf) b = O1
+
+
+
+
+elSize : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → El c → Ord
+-- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Ord
+⁇Size : ∀ {{ _ : Æ}} {ℓ} → ⁇Ty ℓ → Ord
+CμSize : ∀ {{_ : Æ}} {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i} → ℂμ tyCtor D i → Ord
+CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Ord
+-- germFArgSize : ∀ {ℓ} (tyCtor : CName) → (D : GermDesc) → (DataGermIsCode ℓ D)
+--   → (cs : FContainer (interpGerm D) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+--   → □ _ (λ _ → Ord) (tt , cs)
+--   → Ord
+
+
+
 
 
 -- germFArgSize tyCtor GEnd GEndCode (FC com k unk) φ = O1
@@ -169,26 +194,6 @@ germDescSize  (GUnk A D) (GGuardedUnkCode c x pf) b = O1
 
 -- germArgSize {ℓ} tyCtor = wRecArg tyCtor Ord (λ d → germFArgSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d)) O1 O1
 
-codeSize C⁇ = O1
-codeSize C℧ = O1
-codeSize C𝟘 = O1
-codeSize C𝟙 = O1
-codeSize CType = O1
-codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
-codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
-codeSize  (C≡ c x y) = O↑ (omax (omax∞ (codeSize c)) (omax (elSize {{Approx}} c x) (elSize {{Approx}}  c y)) )
-codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (omax∞ (DLim tyCtor λ d → descSize (D d))))
-codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
-
-descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
-descSize {cB = cB} (CArg c D cB' _) = O↑ (omax (codeSize cB') (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D)))
-descSize {cI = c} (CRec j D) = O↑ (omax (descSize D) (elSize {{Approx}} c j))
-descSize {cI = cI} {cB = cB} (CHRec c j D cB' _) =
-  O↑ (omax (omax (codeSize cB')
-     (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))))
-    (omax
-      (OLim {{æ = Approx}} cB λ b → OLim {{æ = Approx}} (c b) λ a →  (elSize {{Approx}} cI (j b a)))
-      (descSize D) ))
 
 
 -- There are no codes of size zero
@@ -322,6 +327,9 @@ codeMaxR (CodeModule.CΣ c cod) = omax-oneR
 codeMaxR (CodeModule.C≡ c x y) = omax-oneR
 codeMaxR (CodeModule.Cμ tyCtor c D x) = omax-oneR
 codeMaxR {ℓ = suc ℓ} (CCumul c) = omax-oneR
+
+codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → O1 ≤o omax (codeSize c1) (codeSize c2)
+codeMaxSuc = ≤o-sucMono ≤o-Z ≤⨟ omax-strictMono (codeSuc _) (codeSuc _)
 
 
 ⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → O1 ≤o ⁇Size x

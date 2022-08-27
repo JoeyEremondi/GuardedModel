@@ -369,6 +369,11 @@ abstract
       (omax-assocR o1 o1' o2 ≤⨟ omax-monoR {o1 = o1} (omax-commut o1' o2) ≤⨟ omax-assocL o1 o2 o1')
     ≤⨟ omax-assocR (omax o1 o2) o1' o2'
 
+  omax-swap6 : ∀ {o1 o2 o3 o1' o2' o3'} → omax (omax o1 o1') (omax (omax o2 o2') (omax o3 o3')) ≤o omax (omax o1 (omax o2 o3)) (omax o1' (omax o2' o3'))
+  omax-swap6 {o1} {o2} {o3} {o1'} {o2'} {o3'} =
+    omax-monoR {o1 = omax o1 o1'} (omax-swap4 {o1 = o2} {o1' = o2'} {o2 = o3} {o2' = o3'})
+    ≤⨟ omax-swap4 {o1 = o1} {o1' = o1'}
+
   omax-lim2L :
     ∀ {æ1 æ2 : Æ}
     {ℓ1 ℓ2}
