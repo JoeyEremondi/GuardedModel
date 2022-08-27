@@ -64,7 +64,15 @@ fromCFin {ℕ.suc n} (false , rest) = Fin.zero
 fromCFin {ℕ.suc n} (true , rest) = Fin.suc (fromCFin rest)
 
 
+toCFin : ∀ {n} → Fin (ℕ.suc n) → El {{æ = Approx}} (CFin n)
+toCFin {n = ℕ.zero} x = tt
+toCFin {n = ℕ.suc n} Fin.zero = false , tt
+toCFin {n = ℕ.suc n} (Fin.suc x) = true , toCFin x
 
+fromToCFin : ∀ {n} (x : Fin (ℕ.suc n)) → fromCFin (toCFin x) ≡p x
+fromToCFin {ℕ.zero} Fin.zero = reflp
+fromToCFin {ℕ.suc n} Fin.zero = reflp
+fromToCFin {ℕ.suc n} (Fin.suc x) rewrite fromToCFin x = reflp
 
 
 germFIndSize : ∀ {{æ : Æ}} {ℓ} {B} (tyCtor : CName) → (D : GermCtor B)
@@ -130,6 +138,11 @@ DLim tyCtor f with numCtors tyCtor
 ... | ℕ.zero = OZ
 ... | ℕ.suc n = OLim ⦃ æ = Approx ⦄ (CFin n) (λ x → f (fromCFin x))
 
+DLim-cocone : ∀ (tyCtor : CName) → (f : ( DName tyCtor) → Ord) → (d : DName tyCtor) → f d ≤o DLim tyCtor f
+DLim-cocone tyCtor f d with numCtors tyCtor
+DLim-cocone tyCtor f () | ℕ.zero
+... | ℕ.suc n  = ≤o-cocone ⦃ æ = Approx ⦄ _ ( toCFin d) (pSubst (λ x → f d ≤o f x) (pSym (fromToCFin d)) (≤o-refl _))
+
 extDLim : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Ord) → (∀ d → f1 d ≤o f2 d) → (DLim tyCtor f1) ≤o (DLim tyCtor f2)
 extDLim tyCtor f1 f2 lt with numCtors tyCtor
 ... | ℕ.zero = ≤o-Z
@@ -164,7 +177,7 @@ codeSize CType = O1
 codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
 codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
 codeSize  (C≡ c x y) = O↑ (omax (omax∞ (codeSize c)) (omax (elSize {{Approx}} c x) (elSize {{Approx}}  c y)) )
-codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (DLim tyCtor λ d → descSize (D d)))
+codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (omax∞ (DLim tyCtor λ d → descSize (D d))))
 codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
 
 descSize {cI = c} (CEnd i) = O↑ (elSize {{Approx}} c i )
