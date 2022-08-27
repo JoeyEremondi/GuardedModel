@@ -110,40 +110,32 @@ descMeet {I1 = I1} {I2 = I2} (CRec j1 D1) (CRec j2 D2) lto ltI ltB lt  =
         (descMeet D1 D2 lto ltI ltB (omax-mono (omax-≤L ≤⨟ ≤↑ _) (omax-≤L ≤⨟ ≤↑ _) ≤⨟ lt))
 descMeet {I1 = I1} {I2} {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (CHRec c1 j1 D1) (CHRec c2 j2 D2) lto ltI ltB lt  =
       CHRec
-        (λ cb → cRet cb)
-        (λ cb k → fromL ([ Approx ] I1 ,, I2 ∋ j1 (cb1 cb) k ⊓ j2 (cb2 cb) k By {!!}))
+        (λ cb → c1 (cb1 cb) ⊓ c2 (cb2 cb) By {!!})
+        (λ cb k → fromL ([ Approx ] I1 ,, I2 ∋ j1 (cb1 cb) k ⊓ j2 (cb2 cb) k By hide {arg = ≤∘<-in-< ({!omax-mono!} ≤⨟ lt) lto }))
         (descMeet D1 D2 lto ltI ltB (omax-mono (omax-≤R ≤⨟ ≤↑ _) (omax-≤R ≤⨟ ≤↑ _) ≤⨟ lt))
       where
-        -- ltB12 :  omax  (codeSize cB1)  (codeSize cB2) ≤o omax∞ oTop
-        -- ltB12 = omax-mono
+        --TODO need to add copy of cB to desc
+        ltB12 :  omax  (codeSize cB1)  (codeSize cB2) ≤o omax∞ oTop
+        ltB12 = omax-mono
+          (≤↑ _ ≤⨟ ≤o-sucMono {!!})
+          {!!} ≤⨟ lt
         --       (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ {!!})) ≤⨟ omax-≤L))
         --       (≤↑ _ ≤⨟ ≤o-sucMono ((≤↑ _ ≤⨟ ≤o-sucMono (omax∞-self _ ≤⨟ {!!})) ≤⨟ omax-≤L))
         --        ≤⨟ {!!}
         cb1 : _ → _
         cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
-                (ltB
-                ≤⨟ {!!})
-                ( omax-≤L
-                ≤⨟ {!!})) lto  })
+                (ltB ≤⨟ ltB12)
+                (omax-≤L ≤⨟ ltB12 )) lto  })
         cb2 : _ → _
         cb2 cb = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
               By hide {arg = ≤∘<-in-< (omax∞-lub
-                (ltB
-                ≤⨟ {!!})
-                ( omax-≤R
-                ≤⨟ {!!})) lto  })
-        ltcB = (omax-sucMono (omax-mono
-            (omax∞-mono ltB ≤⨟ omax∞-distR)
-            ((≤o-limiting {{æ = Approx}} _ λ cb → ≤o-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤o-cocone ⦃ æ = Approx ⦄ _ (cb2 cb)
-              (omax∞-mono (c1 (cb1 cb) ⊓Size c2 (cb2 cb) By hide) ≤⨟ omax∞-distR))) ≤⨟ omax-lim2L _ _) ≤⨟ omax-swap4 ))
-        cRet : ApproxEl cB → ℂ ℓ
-        cRet cb = c1 (cb1 cb) ⊓ c2 (cb2 cb)
-          By hide {arg = ≤∘<-in-<
-            (omax-mono
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c1 b))) (cb1 cb) (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
-              (≤↑ _ ≤⨟ ≤o-sucMono ((≤o-cocone ⦃ æ = Approx ⦄ (λ b → omax∞ (codeSize (c2 b))) (cb2 cb) (omax∞-self _) ≤⨟ omax-≤L) ≤⨟ omax-≤R))
-              ≤⨟ {!!}) lto}
+                (ltB ≤⨟ ltB12)
+                (omax-≤R ≤⨟ ltB12 )) lto  })
+        -- ltcB = (omax-sucMono (omax-mono
+        --     (omax∞-mono ltB ≤⨟ omax∞-distR)
+        --     ((≤o-limiting {{æ = Approx}} _ λ cb → ≤o-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤o-cocone ⦃ æ = Approx ⦄ _ (cb2 cb)
+        --       (omax∞-mono (c1 (cb1 cb) ⊓Size c2 (cb2 cb) By hide) ≤⨟ omax∞-distR))) ≤⨟ omax-lim2L _ _) ≤⨟ omax-swap4 ))
 
 
 
