@@ -251,7 +251,9 @@ record CodeModule
       CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB SigE
       CArg : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc  I cB (SigA rest)
       CRec : ∀ {cB} {rest} (j :  ApproxEl I) → (D :  ℂDesc I cB rest) → ℂDesc I cB (SigR rest)
-      CHRec : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB rest) → ℂDesc I cB (SigHR rest)
+      CHRec : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB rest)
+        → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
+        → ℂDesc I cB (SigHR rest)
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
     interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b ◃ (λ _ → 𝟘) / inextD D b
@@ -260,13 +262,13 @@ record CodeModule
     CommandD (CEnd j) i b = i ≅ j
     CommandD (CArg c D _ _) i b = Σ[ a ∈ Approxed (El (c b)) ] CommandD D i (b , approx a)
     CommandD (CRec j D) i b = CommandD D i b
-    CommandD (CHRec c j D) i b = CommandD D i b
+    CommandD (CHRec c j D _ _) i b = CommandD D i b
 --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) b com = 𝟘
     ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , approx a) com
     ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
-    ResponseD (CHRec c j D) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (ResponseD D b com)
+    ResponseD (CHRec c j D _ _) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (ResponseD D b com)
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
@@ -275,8 +277,8 @@ record CodeModule
     inextD (CArg c D _ _) {i} b (a , com) res = inextD D (b , approx a) com res
     inextD (CRec j D) {i} b com (Rec x) = j
     inextD (CRec j D) {i} b com (Rest x) = inextD D b com x
-    inextD (CHRec c j D) {i} b com (Rec res) = j b (approx res)
-    inextD (CHRec c j D) {i} b com (Rest res) = inextD D b com res
+    inextD (CHRec c j D _ _) {i} b com (Rec res) = j b (approx res)
+    inextD (CHRec c j D _ _) {i} b com (Rest res) = inextD D b com res
     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
