@@ -126,6 +126,10 @@ extDLim tyCtor f1 f2 lt with numCtors tyCtor
 ... | ℕ.zero = ≤o-Z
 ... | ℕ.suc n = extLim ⦃ æ = Approx ⦄ (λ x → f1 (fromCFin x)) (λ x → f2 (fromCFin x)) (λ k → lt (fromCFin k))
 
+omax-DLim2 : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Ord) →  DLim tyCtor (λ d1 → DLim tyCtor (λ d2 → omax (f1 d1) (f2 d2))) ≤o omax (DLim tyCtor f1) (DLim tyCtor f2)
+omax-DLim2 tyCtor f1 f2 with numCtors tyCtor
+... | ℕ.zero = ≤o-Z
+... | ℕ.suc n = omax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
 
 -- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
 -- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Ord
