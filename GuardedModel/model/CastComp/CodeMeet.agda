@@ -78,9 +78,9 @@ codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp r
             let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} )
             in  (cod1 x1 ) ⊓ cod2 x2
                       By hide {arg = omax-sucMono (omax-mono
-                        ( ≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
+                        ( omax∞-self _ ≤⨟ omax∞-cocone _ _
                           ≤⨟ omax-≤R)
-                        (≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
+                        ((omax∞-self _ ≤⨟ omax∞-cocone _ _)
                          ≤⨟ omax-≤R))}
         in CΠ dom12 cod12
 codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp
@@ -92,9 +92,9 @@ codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp r
             let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By hide {arg = omax-sucMono (omax-mono omax-≤L omax-≤L)} )
             in  (cod1 x1 ) ⊓ cod2 x2
                       By hide {arg = omax-sucMono (omax-mono
-                        ( ≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
+                        ( omax∞-self _ ≤⨟ omax∞-cocone _ _
                           ≤⨟ omax-≤R)
-                        (≤o-cocone {{æ = Approx}} _ _ (omax∞-self _)
+                        (omax∞-self _ ≤⨟ omax∞-cocone _ _
                          ≤⨟ omax-≤R))}
         in CΣ dom12 cod12
 codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp reflp

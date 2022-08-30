@@ -7,6 +7,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Vec
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
 open import Cubical.Data.Equality
@@ -485,6 +486,31 @@ abstract
          (omax∞-lub {o1 = omax∞ o2} (≤o-refl _) (omax∞-self _))
 
 
+  omax∞-cocone : ∀ {ℓ} {c : ℂ ℓ} (f : ApproxEl c → Ord) k →
+    f k ≤o omax∞ (OLim {{æ = Approx}} c f)
+  omax∞-cocone f k =  omax∞-self _ ≤⨟ omax∞-mono (≤o-cocone ⦃ æ = Approx ⦄ _ k (≤o-refl _))
+
+  omax* : ∀ {n} → Vec Ord n → Ord
+  omax* [] = OZ
+  omax* (x ∷ os) = omax x (omax* os)
+
+  omax*-≤L : ∀ {n o} {os : Vec Ord n} → o ≤o omax* (o ∷ os)
+  omax*-≤L = omax-≤L
+
+  omax*-≤R : ∀ {n o} {os : Vec Ord n} → omax* os ≤o omax* (o ∷ os)
+  omax*-≤R {o = o} = omax-≤R {o1 = o}
+
+  omax*-≤-n : ∀ {n} {os : Vec Ord n} (f : Fin n) → lookup f os ≤o omax* os
+  omax*-≤-n {os = o ∷ os} Fin.zero = omax*-≤L {o = o} {os = os}
+  omax*-≤-n {os = o ∷ os} (Fin.suc f) = omax*-≤-n f ≤⨟ (omax*-≤R {o = o} {os = os})
+
+  omax*-swap : ∀ {n} {os1 os2 : Vec Ord n} → omax* (zipWith omax os1 os2) ≤o omax (omax* os1) (omax* os2)
+  omax*-swap {n = ℕ.zero} {[]} {[]} = ≤o-Z
+  omax*-swap {n = ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} = omax-monoR {o1 = omax o1 o2} (omax*-swap {n = n}) ≤⨟ omax-swap4 {o1 = o1} {o1' = o2} {o2 = omax* os1} {o2' = omax* os2}
+
+  omax*-mono : ∀ {n} {os1 os2 : Vec Ord n} → foldr (λ (o1 , o2) rest → (o1 ≤o o2) × rest) Unit (zipWith _,_ os1 os2) → omax* os1 ≤o omax* os2
+  omax*-mono {ℕ.zero} {[]} {[]} lt = ≤o-Z
+  omax*-mono {ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} (lt , rest) = omax-mono {o1 = o1} {o1' = o2} lt (omax*-mono {os1 = os1} {os2 = os2} rest)
 
 orec : ∀ {ℓ} (P : Ord → Set ℓ)
   → ((x : Ord) → (rec : (y : Ord) → (_ : ∥ y <o x ∥) → P y ) → P x)

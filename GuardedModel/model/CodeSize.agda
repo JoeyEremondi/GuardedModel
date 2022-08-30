@@ -9,6 +9,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Vec
 open import Cubical.Data.Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.Equality
@@ -146,20 +147,35 @@ codeSize C℧ = O1
 codeSize C𝟘 = O1
 codeSize C𝟙 = O1
 codeSize CType = O1
-codeSize (CΠ dom cod) = O↑ (omax (omax∞ (codeSize dom)) (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
-codeSize (CΣ dom cod) = O↑ (omax (omax∞ (codeSize dom)) ( OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x))))
+codeSize (CΠ dom cod) =
+  O↑ (omax
+    (omax∞ (codeSize dom))
+    (omax∞ (OLim {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x)))))
+codeSize (CΣ dom cod) =
+  O↑ (omax
+    (omax∞ (codeSize dom))
+    ( omax∞ (OLim  {{æ = Approx}} dom λ x → omax∞ (codeSize (cod x)))))
 codeSize  (C≡ c x y) = O↑ (omax∞ (codeSize c))
-codeSize (Cμ tyCtor c D x) = O↑ (omax (omax∞ (codeSize c)) (omax∞ (DLim tyCtor λ d → descSize (D d))))
+codeSize (Cμ tyCtor c D x) =
+  O↑ (omax
+    (omax∞ (codeSize c))
+    (omax∞ (DLim tyCtor λ d → descSize (D d))))
 codeSize {ℓ = suc ℓ} (CCumul c) = O↑ (codeSize c)
 
 --TODO: need ElSizes here?
 descSize {cI = c} (CEnd i) = O1 -- O↑ (elSize {{Approx}} c i )
-descSize {cB = cB} (CArg c D cB' _) = O↑ (omax (codeSize cB') (omax (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b))) (descSize D)))
+descSize {cB = cB} (CArg c D cB' _) = O↑
+  (omax* (
+    (codeSize cB')
+    ∷ (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b)))
+    ∷ (descSize D) ∷ [])
+    )
 descSize {cI = c} (CRec j D) = O↑  (descSize D)
 descSize {cI = cI} {cB = cB} (CHRec c j D cB' _) =
-  O↑ (omax (codeSize cB') (omax
-     (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b)))
-      (descSize D) ))
+  O↑ (omax* (
+    (codeSize cB')
+    ∷ (OLim {{æ = Approx}} cB λ b → omax∞ (codeSize (c b)))
+    ∷  (descSize D) ∷ [] ))
 
 
 germDescSize  GEnd GEndCode b = O1
