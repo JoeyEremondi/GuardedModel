@@ -56,17 +56,23 @@ meet (CCumul {{suc<}} c) x y pfc pfv = oMeet ℓself c x y reflp reflp
 meet (CΠ dom cod) f g reflp reflp
   = liftFunDep λ x →
     cod (approx x) ∋ f x ⊓ g x
-      By hide {arg =  ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R)}
+      By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
 meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp reflp = do
   -- Awful stuff to deal with the lifting monad
   x⊓yfst ← withApproxL' λ æ conv → [ æ ] dom ∋ exact {{æ = æ}} (conv xfst) ⊓ exact {{æ = æ}} (conv yfst)
     By hide {arg = ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)}
   xsnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx xfst) ⟩ xsnd
-    By hide {arg = ≤o-sucMono ({!!} ≤⨟ omax-≤R)}
+    By hide {arg = ≤o-sucMono (omax∞-lub
+      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
+      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
+       ≤⨟ omax-≤R)}
   ysnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx yfst) ⟩ ysnd
-    By hide {arg = {!!}}
+    By hide {arg = ≤o-sucMono (omax∞-lub
+      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
+      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
+       ≤⨟ omax-≤R)}
   x⊓ysnd ← cod (approx x⊓yfst) ∋ xsnd-cast ⊓ ysnd-cast
-    By hide {arg = {!!}}
+    By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
   pure (x⊓yfst , x⊓ysnd)
 meet (C≡ c x₁ y₁) x y pfc pfv = {!!}
 meet (Cμ tyCtor c D x₁) x y pfc pfv = {!!}

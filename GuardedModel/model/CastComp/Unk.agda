@@ -52,12 +52,12 @@ open SmallerCastMeet scm
 ⁇ (CType {{suc<}}) reflp reflp = C⁇
 ⁇ (CCumul {{suc<}} x) reflp reflp = o⁇ ℓself x reflp reflp
 ⁇ (CΠ dom cod) reflp reflp x = ⁇ cod (approx x)
-  By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R)}
+  By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
 ⁇ (CΣ dom cod) reflp reflp =
   withApprox (λ æ' → [ æ' ]⁇ dom
     By hide {arg = ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)}) ,
   ⁇ cod _
-    By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R)}
+    By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
 ⁇ (C≡ c x y) reflp reflp =
   wit ⊢ x ≅ y
    where
