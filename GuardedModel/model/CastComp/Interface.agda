@@ -122,6 +122,15 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Ord) : Set where
   _⊓_By_  c1 c2 (hide {lt}) =
       oCodeMeet (self (<oPairL ∣ lt ∣)) c1 c2 reflp reflp
 
+  infix 20 _⊓⁇_By_
+  _⊓⁇_By_ :
+      {{_ : Æ}}
+      (x1 x2 : ⁇Ty ℓ)
+      → (cpf : O1 ≡p cSize)
+      → (lt : Hide (omax (elSize C⁇ x1) (elSize C⁇ x2 ) <o vSize))
+      → LÆ (⁇Ty ℓ)
+  _⊓⁇_By_  x1 x2 cpf (hide {lt}) =
+      oMeet (self (<oPairR cpf ∣ lt ∣)) C⁇ x1 x2 reflp reflp
 
   codeMeetEq : ∀
       (c1 c2 : ℂ ℓ)

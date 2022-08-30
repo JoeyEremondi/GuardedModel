@@ -62,7 +62,8 @@ data ValHead where
   HVal : ∀ {h} → valueHeadType h → ValHead (HStatic h)
   HVIn⁇ : (h : TyHead) → ValHead (HStatic h) → ValHead H⁇
 
-
+HVIn⁇-inj : ∀ {h1 h2 : TyHead} → {x : ValHead (HStatic h1)} {y : ValHead (HStatic h2)} → HVIn⁇ h1 x ≡p HVIn⁇ h2 y → h1 ≡p h2
+HVIn⁇-inj reflp = reflp
 
 
 
@@ -260,14 +261,14 @@ valueHead (CodeModule.Cμ tyCtor c D x₁) reflp W⁇ = VH⁇
 valueHead C⁇ reflp ⁇⁇ = VH⁇⁇
 valueHead C⁇ reflp ⁇℧ = VH℧
 valueHead C⁇ reflp ⁇𝟙 = HVIn⁇ H𝟙 (HVal tt)
-valueHead {suc ℓ} C⁇ reflp (⁇Type x) = HVIn⁇ HType (HVal (codeHead x))
+valueHead {suc ℓ} C⁇ reflp (⁇Type x) = HVIn⁇ HType (HVal (HStatic HType))
 valueHead C⁇ reflp (⁇Π x) = HVIn⁇ HΠ (HVal tt)
 valueHead C⁇ reflp (⁇Σ x) = HVIn⁇ HΣ (HVal tt)
 valueHead C⁇ reflp (⁇≡ x) = HVIn⁇ H≅ (HVal tt)
 valueHead C⁇ reflp (⁇μ tyCtor (Wsup (FC (d , _) _ _ ))) = HVIn⁇ (HCtor tyCtor) (HVal d)
 valueHead C⁇ reflp (⁇μ tyCtor W℧) = VH℧
 valueHead C⁇ reflp (⁇μ tyCtor W⁇) = HVIn⁇ (HCtor tyCtor) VH⁇
-valueHead {ℓ = suc ℓ} CodeModule.C⁇ reflp (CodeModule.⁇Cumul x) = HVIn⁇ HType (HVal (codeHead x))
+valueHead  CodeModule.C⁇ reflp (CodeModule.⁇Cumul x) = HVIn⁇ HCumul (HVal {!!})
 
 
 data HeadMatchView : GHead → GHead → Set where
