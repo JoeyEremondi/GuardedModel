@@ -8,6 +8,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
 open import Cubical.Data.Equality
@@ -18,6 +19,7 @@ open import GuardedAlgebra
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Equality using (ptoc)
+open import Cubical.HITs.PropositionalTruncation as Prop
 
 open import ApproxExact
 
@@ -179,3 +181,32 @@ smax-lim2L :
     (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Size)
     → SLim {{æ = æ1}} c1 (λ k1 → SLim {{æ = æ2}} c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim {{æ = æ1}} c1 f1) (SLim {{æ = æ2}} c2 f2)
 smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k1 → ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k2 → smax-mono (≤ₛ-cocone ⦃ æ = _ ⦄ k1) (≤ₛ-cocone {{æ = _}} k2)))
+
+
+data _<ₛPair_ : (Size × Size) → (Size × Size) → Set where
+  <ₛPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <ₛ o2c ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
+  <ₛPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <ₛ o2v ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
+
+abstract
+  sizeWF : WellFounded _<ₛ_
+  sizeWF s = sizeAcc (ordWF (sOrd s))
+    where
+      sizeAcc : ∀ {s} → Acc _<o_ (sOrd s) → Acc _<ₛ_ s
+      sizeAcc {s} (acc x) = acc (λ y lt → sizeAcc (x (sOrd y) lt))
+
+  sizeWFAcc : ∀ x → Acc _<ₛ_ x → Acc (λ x y → ∥ x <ₛ y ∥) x
+  sizeWFAcc x (acc f) = acc λ y → Prop.elim (λ _ → isPropAcc _) λ lt' → sizeWFAcc y (f y lt')
+
+  sizeWFProp : WellFounded (λ x y → ∥ x <ₛ y ∥)
+  sizeWFProp x = sizeWFAcc x (sizeWF x)
+
+  sizeSquash : ∀ {x y} (p1 p2 : ∥ x <ₛ y ∥) → p1 ≡ p2
+  sizeSquash = Prop.squash
+
+
+  <ₛPairWF : WellFounded _<ₛPair_
+  <ₛPairWF (x1 , x2) = acc (helper (sizeWFProp x1) (sizeWFProp x2))
+    where
+      helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥) x1 → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥) x2 → WFRec _<ₛPair_ (Acc _<ₛPair_) (x1 , x2)
+      helper (acc rec₁) acc₂ (y1 , y2) (<ₛPairL lt) = acc (helper (rec₁ y1 lt ) (sizeWFProp y2))
+      helper acc₁ (acc rec₂) (y1 , y2) (<ₛPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
