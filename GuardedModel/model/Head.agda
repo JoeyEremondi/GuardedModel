@@ -37,33 +37,47 @@ data GHead : Set where
   H℧ : GHead
   HStatic : TyHead → GHead
 
-valueHeadType : TyHead → Set
-data ValHead : (h : GHead) → Set
+HStatic-inj : ∀ {h1 h2} → HStatic h1 ≡p HStatic h2 → h1 ≡p h2
+HStatic-inj reflp = reflp
 
-valueHeadType ( HΠ) = Unit
-valueHeadType ( HΣ) = Unit
-valueHeadType ( H≅) = Unit
-valueHeadType ( H𝟙) = Unit
-valueHeadType ( H𝟘) = Unit
-valueHeadType ( HType) = GHead
-valueHeadType ( (HCtor tyCtor)) = DName tyCtor
-valueHeadType HCumul = GHead
+unkHead : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ → GHead
+unkHead  ⁇⁇ = H⁇
+unkHead  ⁇℧ = H℧
+unkHead  ⁇𝟙 = HStatic H𝟙
+unkHead  (⁇Type x) = HStatic HType
+unkHead  (⁇Π x) = HStatic HΠ
+unkHead  (⁇Σ x) = HStatic HΣ
+unkHead  (⁇≡ x) = HStatic H≅
+unkHead  (⁇μ tyCtor _) = HStatic (HCtor tyCtor)
+unkHead  (CodeModule.⁇Cumul x) = HStatic HCumul
 
-valueGHeadType : GHead → Set
-valueGHeadType H⁇ = Σ[ h ∈ TyHead ] ValHead (HStatic h)
-valueGHeadType H℧ = ⊥
-valueGHeadType (HStatic h) = valueHeadType h
+-- valueHeadType : TyHead → Set
+-- data ValHead : (h : GHead) → Set
+
+-- valueHeadType ( HΠ) = Unit
+-- valueHeadType ( HΣ) = Unit
+-- valueHeadType ( H≅) = Unit
+-- valueHeadType ( H𝟙) = Unit
+-- valueHeadType ( H𝟘) = Unit
+-- valueHeadType ( HType) = GHead
+-- valueHeadType ( (HCtor tyCtor)) = DName tyCtor
+-- valueHeadType HCumul = GHead
+
+-- valueGHeadType : GHead → Set
+-- valueGHeadType H⁇ = Σ[ h ∈ TyHead ] ValHead (HStatic h)
+-- valueGHeadType H℧ = ⊥
+-- valueGHeadType (HStatic h) = valueHeadType h
 
 
-data ValHead where
-  VH℧ : ∀ {h} → ValHead h
-  VH⁇⁇ : ValHead H⁇
-  VH⁇ : ∀ {h} → ValHead (HStatic h)
-  HVal : ∀ {h} → valueHeadType h → ValHead (HStatic h)
-  HVIn⁇ : (h : TyHead) → ValHead (HStatic h) → ValHead H⁇
+-- data ValHead where
+--   VH℧ : ∀ {h} → ValHead h
+--   VH⁇⁇ : ValHead H⁇
+--   VH⁇ : ∀ {h} → ValHead (HStatic h)
+--   HVal : ∀ {h} → valueHeadType h → ValHead (HStatic h)
+--   HVIn⁇ : (h : TyHead) → ValHead (HStatic h) → ValHead H⁇
 
-HVIn⁇-inj : ∀ {h1 h2 : TyHead} → {x : ValHead (HStatic h1)} {y : ValHead (HStatic h2)} → HVIn⁇ h1 x ≡p HVIn⁇ h2 y → h1 ≡p h2
-HVIn⁇-inj reflp = reflp
+-- HVIn⁇-inj : ∀ {h1 h2 : TyHead} → {x : ValHead (HStatic h1)} {y : ValHead (HStatic h2)} → HVIn⁇ h1 x ≡p HVIn⁇ h2 y → h1 ≡p h2
+-- HVIn⁇-inj reflp = reflp
 
 
 
@@ -180,57 +194,57 @@ gheadDecEq (HStatic x) (HStatic x₁) with headDecEq x x₁
 ... | yes reflp = yes reflp
 ... | no npf = no (λ {reflp → npf reflp})
 
-injSigmaGenP : ∀  (x y : Σ TyHead (λ x → ValHead (HStatic x))) → (ppr : y ≡p x) → snd x ≡p pSubst (λ x → x) (pCong (λ x → ValHead (HStatic x)) (pCong fst ppr)) (snd y)
-injSigmaGenP (x1 , x2) (y1 , y2) reflp = reflp
+-- injSigmaGenP : ∀  (x y : Σ TyHead (λ x → ValHead (HStatic x))) → (ppr : y ≡p x) → snd x ≡p pSubst (λ x → x) (pCong (λ x → ValHead (HStatic x)) (pCong fst ppr)) (snd y)
+-- injSigmaGenP (x1 , x2) (y1 , y2) reflp = reflp
 
 
-injSigmaP : (x : TyHead) → (y z : ValHead (HStatic x)) → _,_ {B = λ x → ValHead (HStatic x)} x y ≡p (x , z) → y ≡p z
-injSigmaP x y z ppr with pgen ← injSigmaGenP (x , y) (x , z) (pSym ppr)
-  rewrite Decidable⇒UIP.≡-irrelevant headDecEq (pCong fst (pSym ppr)) reflp = pgen
+-- injSigmaP : (x : TyHead) → (y z : ValHead (HStatic x)) → _,_ {B = λ x → ValHead (HStatic x)} x y ≡p (x , z) → y ≡p z
+-- injSigmaP x y z ppr with pgen ← injSigmaGenP (x , y) (x , z) (pSym ppr)
+--   rewrite Decidable⇒UIP.≡-irrelevant headDecEq (pCong fst (pSym ppr)) reflp = pgen
 
-in⁇ToSigma : ∀ {ty1 ty2 : TyHead} → (x : ValHead (HStatic ty1)) → (y : ValHead (HStatic ty2)) → HVIn⁇ ty1 x ≡p HVIn⁇ ty2 y → _,_ {B = λ x → ValHead (HStatic x)} ty1 x ≡p (ty2 , y)
-in⁇ToSigma x y reflp = reflp
+-- in⁇ToSigma : ∀ {ty1 ty2 : TyHead} → (x : ValHead (HStatic ty1)) → (y : ValHead (HStatic ty2)) → HVIn⁇ ty1 x ≡p HVIn⁇ ty2 y → _,_ {B = λ x → ValHead (HStatic x)} ty1 x ≡p (ty2 , y)
+-- in⁇ToSigma x y reflp = reflp
 
-valHeadDecEq : ∀ {h} (h1 h2 : ValHead h) → Dec (h1 ≡p h2)
-valHeadTypeDecEq : ∀ {h} (h1 h2 : valueHeadType h) → Dec (h1 ≡p h2)
+-- valHeadDecEq : ∀ {h} (h1 h2 : ValHead h) → Dec (h1 ≡p h2)
+-- valHeadTypeDecEq : ∀ {h} (h1 h2 : valueHeadType h) → Dec (h1 ≡p h2)
 
--- valHeadTypeDecEq {H⁇} (t1 , h1) (t2 , h2) with headDecEq t1 t2
--- ... | no npf = no (λ {reflp → npf reflp})
--- ... | yes reflp with valHeadDecEq h1 h2
+-- -- valHeadTypeDecEq {H⁇} (t1 , h1) (t2 , h2) with headDecEq t1 t2
+-- -- ... | no npf = no (λ {reflp → npf reflp})
+-- -- ... | yes reflp with valHeadDecEq h1 h2
+-- -- ... | yes reflp = yes reflp
+-- -- ... | no npf = no λ pf → npf (injSigmaP t1 h1 h2 pf)
+-- valHeadTypeDecEq { HΠ} x y = yes reflp
+-- valHeadTypeDecEq { HΣ} x y = yes reflp
+-- valHeadTypeDecEq { H≅} x y = yes reflp
+-- valHeadTypeDecEq { H𝟙} x y = yes reflp
+-- valHeadTypeDecEq { H𝟘} x y = yes reflp
+-- valHeadTypeDecEq { HType} x y = gheadDecEq x y
+-- valHeadTypeDecEq { (HCtor x₁)} x y = decFin x y
+-- valHeadTypeDecEq {HCumul} x y = gheadDecEq x y
+
+-- valHeadDecEq {h} VH⁇ VH⁇ = yes reflp
+-- valHeadDecEq {h} VH⁇ VH℧ = no λ ()
+-- valHeadDecEq {h} VH⁇ (HVal x) = no λ ()
+-- valHeadDecEq {h} VH℧ VH⁇ = no λ ()
+-- valHeadDecEq {h} VH℧ VH℧ = yes reflp
+-- valHeadDecEq {h} VH℧ (HVal x) = no λ ()
+-- valHeadDecEq {h} (HVal x) VH⁇ = no λ ()
+-- valHeadDecEq {h} (HVal x) VH℧ = no λ ()
+-- valHeadDecEq {h} (HVal x) (HVal x₁) with valHeadTypeDecEq x x₁
 -- ... | yes reflp = yes reflp
--- ... | no npf = no λ pf → npf (injSigmaP t1 h1 h2 pf)
-valHeadTypeDecEq { HΠ} x y = yes reflp
-valHeadTypeDecEq { HΣ} x y = yes reflp
-valHeadTypeDecEq { H≅} x y = yes reflp
-valHeadTypeDecEq { H𝟙} x y = yes reflp
-valHeadTypeDecEq { H𝟘} x y = yes reflp
-valHeadTypeDecEq { HType} x y = gheadDecEq x y
-valHeadTypeDecEq { (HCtor x₁)} x y = decFin x y
-valHeadTypeDecEq {HCumul} x y = gheadDecEq x y
-
-valHeadDecEq {h} VH⁇ VH⁇ = yes reflp
-valHeadDecEq {h} VH⁇ VH℧ = no λ ()
-valHeadDecEq {h} VH⁇ (HVal x) = no λ ()
-valHeadDecEq {h} VH℧ VH⁇ = no λ ()
-valHeadDecEq {h} VH℧ VH℧ = yes reflp
-valHeadDecEq {h} VH℧ (HVal x) = no λ ()
-valHeadDecEq {h} (HVal x) VH⁇ = no λ ()
-valHeadDecEq {h} (HVal x) VH℧ = no λ ()
-valHeadDecEq {h} (HVal x) (HVal x₁) with valHeadTypeDecEq x x₁
-... | yes reflp = yes reflp
-... | no npf = no λ { reflp → npf reflp}
-valHeadDecEq {H⁇} VH℧ (HVIn⁇ h y) = no λ ()
-valHeadDecEq {H⁇} (HVIn⁇ h x) VH℧ = no λ ()
-valHeadDecEq {H⁇} (HVIn⁇ h x) (HVIn⁇ h₁ y) with headDecEq h h₁
-... | no npf = no (λ { reflp → npf reflp})
-... | yes reflp with valHeadDecEq x y
-... | no npf = no (λ {pf → npf (injSigmaP h x y (in⁇ToSigma x y pf))})
-... | yes reflp = yes reflp
-valHeadDecEq {.H⁇} VH℧ VH⁇⁇ = no λ ()
-valHeadDecEq {.H⁇} VH⁇⁇ VH℧ = no λ ()
-valHeadDecEq {.H⁇} VH⁇⁇ VH⁇⁇ = yes reflp
-valHeadDecEq {.H⁇} VH⁇⁇ (HVIn⁇ h y) = no λ ()
-valHeadDecEq {.H⁇} (HVIn⁇ h x) VH⁇⁇ = no λ ()
+-- ... | no npf = no λ { reflp → npf reflp}
+-- valHeadDecEq {H⁇} VH℧ (HVIn⁇ h y) = no λ ()
+-- valHeadDecEq {H⁇} (HVIn⁇ h x) VH℧ = no λ ()
+-- valHeadDecEq {H⁇} (HVIn⁇ h x) (HVIn⁇ h₁ y) with headDecEq h h₁
+-- ... | no npf = no (λ { reflp → npf reflp})
+-- ... | yes reflp with valHeadDecEq x y
+-- ... | no npf = no (λ {pf → npf (injSigmaP h x y (in⁇ToSigma x y pf))})
+-- ... | yes reflp = yes reflp
+-- valHeadDecEq {.H⁇} VH℧ VH⁇⁇ = no λ ()
+-- valHeadDecEq {.H⁇} VH⁇⁇ VH℧ = no λ ()
+-- valHeadDecEq {.H⁇} VH⁇⁇ VH⁇⁇ = yes reflp
+-- valHeadDecEq {.H⁇} VH⁇⁇ (HVIn⁇ h y) = no λ ()
+-- valHeadDecEq {.H⁇} (HVIn⁇ h x) VH⁇⁇ = no λ ()
 
 codeHead : ∀ {ℓ} → (c : ℂ ℓ) → GHead
 codeHead C⁇ = H⁇
@@ -245,30 +259,30 @@ codeHead (Cμ tyCtor c D x) = HStatic (HCtor tyCtor)
 codeHead {ℓ = suc ℓ} (CCumul x) = HStatic HCumul
 -- codeHead {suc ℓ} (CCumul t) = codeHead t
 
-valueHead : ∀ {{_ : Æ}} {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
-valueHead C℧ _ x = VH℧
-valueHead {ℓ = suc ℓ} (CCumul c) reflp x = HVal (HStatic HCumul)
-valueHead C𝟘 _ tt = VH℧
-valueHead C𝟙 _ false = VH℧
-valueHead C𝟙 reflp true = HVal tt
-valueHead {suc ℓ} CType reflp x = HVal (codeHead x)
-valueHead (CΠ c cod) reflp x = HVal tt
-valueHead (CΣ c cod) reflp x = HVal tt
-valueHead (C≡ c x₁ y) reflp x = HVal tt
-valueHead (CodeModule.Cμ tyCtor c D x₁) reflp (Wsup (FC (d , _) _ _)) = HVal d
-valueHead (CodeModule.Cμ tyCtor c D x₁) reflp W℧ = VH℧
-valueHead (CodeModule.Cμ tyCtor c D x₁) reflp W⁇ = VH⁇
-valueHead C⁇ reflp ⁇⁇ = VH⁇⁇
-valueHead C⁇ reflp ⁇℧ = VH℧
-valueHead C⁇ reflp ⁇𝟙 = HVIn⁇ H𝟙 (HVal tt)
-valueHead {suc ℓ} C⁇ reflp (⁇Type x) = HVIn⁇ HType (HVal (HStatic HType))
-valueHead C⁇ reflp (⁇Π x) = HVIn⁇ HΠ (HVal tt)
-valueHead C⁇ reflp (⁇Σ x) = HVIn⁇ HΣ (HVal tt)
-valueHead C⁇ reflp (⁇≡ x) = HVIn⁇ H≅ (HVal tt)
-valueHead C⁇ reflp (⁇μ tyCtor (Wsup (FC (d , _) _ _ ))) = HVIn⁇ (HCtor tyCtor) (HVal d)
-valueHead C⁇ reflp (⁇μ tyCtor W℧) = VH℧
-valueHead C⁇ reflp (⁇μ tyCtor W⁇) = HVIn⁇ (HCtor tyCtor) VH⁇
-valueHead  CodeModule.C⁇ reflp (CodeModule.⁇Cumul x) = HVIn⁇ HCumul (HVal {!!})
+-- valueHead : ∀ {{_ : Æ}} {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
+-- valueHead C℧ _ x = VH℧
+-- valueHead {ℓ = suc ℓ} (CCumul c) reflp x = HVal (HStatic HCumul)
+-- valueHead C𝟘 _ tt = VH℧
+-- valueHead C𝟙 _ false = VH℧
+-- valueHead C𝟙 reflp true = HVal tt
+-- valueHead {suc ℓ} CType reflp x = HVal (codeHead x)
+-- valueHead (CΠ c cod) reflp x = HVal tt
+-- valueHead (CΣ c cod) reflp x = HVal tt
+-- valueHead (C≡ c x₁ y) reflp x = HVal tt
+-- valueHead (CodeModule.Cμ tyCtor c D x₁) reflp (Wsup (FC (d , _) _ _)) = HVal d
+-- valueHead (CodeModule.Cμ tyCtor c D x₁) reflp W℧ = VH℧
+-- valueHead (CodeModule.Cμ tyCtor c D x₁) reflp W⁇ = VH⁇
+-- valueHead C⁇ reflp ⁇⁇ = VH⁇⁇
+-- valueHead C⁇ reflp ⁇℧ = VH℧
+-- valueHead C⁇ reflp ⁇𝟙 = HVIn⁇ H𝟙 (HVal tt)
+-- valueHead C⁇ reflp (⁇Type x) = HVIn⁇ HType (HVal (HStatic HType))
+-- valueHead C⁇ reflp (⁇Π x) = HVIn⁇ HΠ (HVal tt)
+-- valueHead C⁇ reflp (⁇Σ x) = HVIn⁇ HΣ (HVal tt)
+-- valueHead C⁇ reflp (⁇≡ x) = HVIn⁇ H≅ (HVal tt)
+-- valueHead C⁇ reflp (⁇μ tyCtor (Wsup (FC (d , _) _ _ ))) = HVIn⁇ (HCtor tyCtor) (HVal d)
+-- valueHead C⁇ reflp (⁇μ tyCtor W℧) = VH℧
+-- valueHead C⁇ reflp (⁇μ tyCtor W⁇) = HVIn⁇ (HCtor tyCtor) VH⁇
+-- valueHead  CodeModule.C⁇ reflp (CodeModule.⁇Cumul x) = HVIn⁇ HCumul (HVal (HStatic HType )) --TODO: this weems wrong
 
 
 data HeadMatchView : GHead → GHead → Set where
@@ -302,32 +316,32 @@ headMatchView (HStatic h1) (HStatic h2) with headDecEq h1 h2
 
 
 
-data ValHeadMatchView  : {h : GHead} →  ValHead h → ValHead h → Set where
-  VH℧L : ∀ {h} {h1 h2 : ValHead h} → h1 ≡p VH℧ → ValHeadMatchView h1 h2
-  VH℧R : ∀ {h} {h1 h2 : ValHead h} → h2 ≡p VH℧ → ValHeadMatchView h1 h2
-  VH⁇L : ∀ {h} {h1 h2 : ValHead (HStatic h)} → h1 ≡p VH⁇ → ¬ (h2 ≡p VH℧) → ValHeadMatchView h1 h2
-  VH⁇R : ∀ {h} {x : valueHeadType h} {h2 : ValHead (HStatic h)} → h2 ≡p VH⁇ → ValHeadMatchView (HVal x) h2
-  VHEq : ∀ {h} {x y : valueHeadType h} → x ≡p y → ValHeadMatchView (HVal x) (HVal y)
-  VHNeq : ∀ {h} {x y : valueHeadType h} → ¬ (x ≡p y) → ValHeadMatchView (HVal x) (HVal y)
-  VHIn⁇L : ∀  {h1 h2 : ValHead H⁇} → h1 ≡p VH⁇⁇ → ¬ (h2 ≡p VH℧) → ValHeadMatchView h1 h2
-  VHIn⁇R : ∀ {h } {h1 : ValHead (HStatic h)} {h2 : ValHead H⁇} → h2 ≡p VH⁇⁇ → ValHeadMatchView (HVIn⁇ h h1) h2
-  VHEq⁇ : ∀ {h} {h1 h2 : ValHead (HStatic h)} → h1 ≡p h2 → ValHeadMatchView (HVIn⁇ h h1) (HVIn⁇ h h2)
-  VHNeq⁇ : ∀ {ty1 ty2} {h1 : ValHead (HStatic ty1)} {h2 : ValHead (HStatic ty2)} → ¬ ((HVIn⁇ ty1 h1) ≡p (HVIn⁇ ty2 h2 )) → ValHeadMatchView (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2)
+-- data ValHeadMatchView  : {h : GHead} →  ValHead h → ValHead h → Set where
+--   VH℧L : ∀ {h} {h1 h2 : ValHead h} → h1 ≡p VH℧ → ValHeadMatchView h1 h2
+--   VH℧R : ∀ {h} {h1 h2 : ValHead h} → h2 ≡p VH℧ → ValHeadMatchView h1 h2
+--   VH⁇L : ∀ {h} {h1 h2 : ValHead (HStatic h)} → h1 ≡p VH⁇ → ¬ (h2 ≡p VH℧) → ValHeadMatchView h1 h2
+--   VH⁇R : ∀ {h} {x : valueHeadType h} {h2 : ValHead (HStatic h)} → h2 ≡p VH⁇ → ValHeadMatchView (HVal x) h2
+--   VHEq : ∀ {h} {x y : valueHeadType h} → x ≡p y → ValHeadMatchView (HVal x) (HVal y)
+--   VHNeq : ∀ {h} {x y : valueHeadType h} → ¬ (x ≡p y) → ValHeadMatchView (HVal x) (HVal y)
+--   VHIn⁇L : ∀  {h1 h2 : ValHead H⁇} → h1 ≡p VH⁇⁇ → ¬ (h2 ≡p VH℧) → ValHeadMatchView h1 h2
+--   VHIn⁇R : ∀ {h } {h1 : ValHead (HStatic h)} {h2 : ValHead H⁇} → h2 ≡p VH⁇⁇ → ValHeadMatchView (HVIn⁇ h h1) h2
+--   VHEq⁇ : ∀ {h} {h1 h2 : ValHead (HStatic h)} → h1 ≡p h2 → ValHeadMatchView (HVIn⁇ h h1) (HVIn⁇ h h2)
+--   VHNeq⁇ : ∀ {ty1 ty2} {h1 : ValHead (HStatic ty1)} {h2 : ValHead (HStatic ty2)} → ¬ ((HVIn⁇ ty1 h1) ≡p (HVIn⁇ ty2 h2 )) → ValHeadMatchView (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2)
 
 
 
-valHeadMatchView : ∀ {h} (h1 h2 : ValHead h) → ValHeadMatchView h1 h2
-valHeadMatchView VH℧ h2 = VH℧L reflp
-valHeadMatchView h1 VH℧ = VH℧R reflp
-valHeadMatchView VH⁇⁇ VH⁇⁇ = VHIn⁇L reflp (λ ())
-valHeadMatchView (HVIn⁇ h h1) VH⁇⁇ = VHIn⁇R reflp
-valHeadMatchView VH⁇ VH⁇ = VH⁇L reflp (λ ())
-valHeadMatchView (HVal x) VH⁇ = VH⁇R reflp
-valHeadMatchView VH⁇ (HVal x) = VH⁇L reflp (λ ())
-valHeadMatchView (HVal x) (HVal y) with valHeadTypeDecEq x y
-... | yes pf = VHEq pf
-... | no npf = VHNeq npf
-valHeadMatchView VH⁇⁇ (HVIn⁇ h h2) = VHIn⁇L reflp (λ ())
-valHeadMatchView (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2) with valHeadDecEq (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2)
-... | yes reflp = VHEq⁇ reflp
-... | no npf = VHNeq⁇ npf
+-- valHeadMatchView : ∀ {h} (h1 h2 : ValHead h) → ValHeadMatchView h1 h2
+-- valHeadMatchView VH℧ h2 = VH℧L reflp
+-- valHeadMatchView h1 VH℧ = VH℧R reflp
+-- valHeadMatchView VH⁇⁇ VH⁇⁇ = VHIn⁇L reflp (λ ())
+-- valHeadMatchView (HVIn⁇ h h1) VH⁇⁇ = VHIn⁇R reflp
+-- valHeadMatchView VH⁇ VH⁇ = VH⁇L reflp (λ ())
+-- valHeadMatchView (HVal x) VH⁇ = VH⁇R reflp
+-- valHeadMatchView VH⁇ (HVal x) = VH⁇L reflp (λ ())
+-- valHeadMatchView (HVal x) (HVal y) with valHeadTypeDecEq x y
+-- ... | yes pf = VHEq pf
+-- ... | no npf = VHNeq npf
+-- valHeadMatchView VH⁇⁇ (HVIn⁇ h h2) = VHIn⁇L reflp (λ ())
+-- valHeadMatchView (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2) with valHeadDecEq (HVIn⁇ ty1 h1) (HVIn⁇ ty2 h2)
+-- ... | yes reflp = VHEq⁇ reflp
+-- ... | no npf = VHNeq⁇ npf

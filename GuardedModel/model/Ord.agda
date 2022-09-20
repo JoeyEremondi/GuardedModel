@@ -307,6 +307,9 @@ abstract
   omax-Z (O↑ o) = reflc
   omax-Z (OLim c f) = cong (OLim c) (funExt (λ x → omax-Z (f x)))
 
+  omax-↑ : ∀ {o1 o2} → omax (O↑ o1) (O↑ o2) ≡c O↑ (omax o1 o2)
+  omax-↑ = reflc
+
   omax-≤Z : ∀ o → omax o OZ ≤o o
   omax-≤Z OZ = ≤o-refl _
   omax-≤Z (O↑ o) = ≤o-refl _

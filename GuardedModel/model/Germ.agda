@@ -51,7 +51,7 @@ germ HCumul ℕ.zero = ⊥
 germ HCumul (ℕ.suc ℓ) = ℂ ℓ
 
 germTo⁇ : ∀ {{_ : Æ}} {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
-germFrom⁇ : ∀ {{_ : Æ}} {ℓ h hv} → (x : ⁇Ty ℓ) → (valueHead {ℓ} C⁇ reflp x ≡p HVIn⁇ h hv) → (germ h ℓ)
+germFrom⁇ : ∀ {{_ : Æ}} {ℓ h} → (x : ⁇Ty ℓ) → (unkHead x ≡p HStatic h) → (germ h ℓ)
 
 
 germTo⁇ {h = HΠ} f = ⦇ ⁇Π (liftFun (λ ▹x → θL ⁇⁇ (map▹ Now (transport hollowEq ▹x)))) ⦈
@@ -71,6 +71,5 @@ germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = true
 germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp =  x
 germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
 germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
-germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor (Wsup x)) reflp = (Wsup x)
-germFrom⁇ {h = .(HCtor tyCtor)} (CodeModule.⁇μ tyCtor W⁇) reflp =  W⁇
-germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Cumul x) reflp = x
+germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor x) reflp = x --TODO handle err specially?
+germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (CodeModule.⁇Cumul x) reflp = x

@@ -48,20 +48,25 @@ open SmallerCastMeet scm
       (x y : ⁇Ty ℓ)
       → (cpf : O1 ≡p cSize)
       → ( cpf : omax (elSize C⁇ x) (elSize C⁇ y)  ≡p vSize )
-      → (ceq : codeHead C⁇ ≡p H⁇)
-      → (veq1 : valueHead C⁇ ceq x ≡p vh1)
-      → (veq2 : valueHead C⁇ ceq y ≡p vh2)
-      → ValHeadMatchView vh1 vh2
+      → (veq1 : unkHead x ≡p vh1)
+      → (veq2 : unkHead y ≡p vh2)
+      → HeadMatchView vh1 vh2
       → LÆ (⁇Ty ℓ)
-⁇meet x y reflp reflp reflp veq1 veq2 (VH℧L pf) = pure ⁇℧
-⁇meet x y reflp reflp ceq veq1 veq2 (VH℧R x₁) = pure ⁇℧
-⁇meet x y reflp reflp ceq veq1 veq2 (VHNeq⁇ x₁) = pure ⁇℧
-⁇meet x y reflp reflp ceq veq1 veq2 (VHIn⁇L x₁ x₂) = pure y
-⁇meet x y reflp reflp ceq veq1 veq2 (VHIn⁇R x₁) = pure x
-⁇meet (⁇Cumul x) y reflp reflp reflp veq1 veq2 (VHEq⁇ reflp) = {!!}
-⁇meet x (⁇Cumul y)  reflp reflp reflp veq1 veq2 (VHEq⁇ reflp) = {!!}
-⁇meet x y reflp reflp reflp veq1 veq2 (VHEq⁇ reflp) with (pTrans veq1 (pSym veq2))
-... | eq = {!x y !}
+⁇meet x y reflp reflp eqx eqy (H℧L x₁) = pure ⁇℧
+⁇meet x y reflp reflp eqx eqy (H℧R x₁) = pure ⁇℧
+⁇meet x y reflp reflp eqx eqy (HNeq x₁) = pure ⁇℧
+⁇meet x y reflp reflp eqx eqy (H⁇L x₁ x₂) = pure y
+⁇meet x y reflp reflp eqx eqy (H⁇R x₁) = pure x
+⁇meet x y reflp reflp eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
+⁇meet CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp reflp eqx eqy (HEq reflp) | eq = pure ⁇𝟙
+⁇meet (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp reflp eqx eqy (HEq reflp) | eq
+  = pure (⁇Type (oCodeMeet ℓself c1 c2 reflp reflp))
+⁇meet (CodeModule.⁇Cumul {{suc<}} x) (CodeModule.⁇Cumul x₁) reflp reflp eqx eqy (HEq reflp) | eq
+  = oMeet ℓself {!C⁇!} {!!} {!!} {!!} {!!}
+⁇meet (CodeModule.⁇Π x) (CodeModule.⁇Π x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
+⁇meet (CodeModule.⁇Σ x) (CodeModule.⁇Σ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
+⁇meet (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
+⁇meet (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
 
 meet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
