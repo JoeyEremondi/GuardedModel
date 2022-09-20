@@ -125,12 +125,12 @@ DLim-cocone tyCtor f () | ℕ.zero
 extDLim : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Size) → (∀ d → f1 d ≤ₛ f2 d) → (DLim tyCtor f1) ≤ₛ (DLim tyCtor f2)
 extDLim tyCtor f1 f2 lt with numCtors tyCtor
 ... | ℕ.zero = ≤ₛ-Z
-... | ℕ.suc n = {!!} -- extLim ⦃ æ = Approx ⦄ (λ x → f1 (fromCFin x)) (λ x → f2 (fromCFin x)) (λ k → lt (fromCFin k))
+... | ℕ.suc n = ≤ₛ-extLim ⦃ æ = Approx ⦄ (λ k → lt (fromCFin k))
 
 smax-DLim2 : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Size) →  DLim tyCtor (λ d1 → DLim tyCtor (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (DLim tyCtor f1) (DLim tyCtor f2)
 smax-DLim2 tyCtor f1 f2 with numCtors tyCtor
 ... | ℕ.zero = ≤ₛ-Z
-... | ℕ.suc n = {!!} --smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
+... | ℕ.suc n = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
 
 -- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
 -- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
@@ -349,7 +349,7 @@ codeMaxR (CodeModule.Cμ tyCtor c D x) = smax-oneR
 codeMaxR {ℓ = suc ℓ} (CCumul c) = smax-oneR
 
 codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax (codeSize c1) (codeSize c2)
-codeMaxSuc = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc _) (codeSuc _)
+codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc c1) (codeSuc c2)
 
 
 ⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → S1 ≤ₛ ⁇Size x

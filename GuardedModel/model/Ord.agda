@@ -421,6 +421,12 @@ abstract
     --   {!!})
     --
 
+  -- nmax-idem-absorb : ∀ o n → omax o o ≤o o → nmax o n ≤o o
+  -- nmax-idem-absorb o ℕ.zero lt = ≤o-Z
+  -- nmax-idem-absorb o (ℕ.suc n) lt = omax-monoL (nmax-idem-absorb o n lt) ≤⨟o lt
+  -- omax∞-idem-absorb : ∀ {o} → omax o o ≤o o → omax∞ o ≤o o
+  -- omax∞-idem-absorb lt = ≤o-limiting ⦃ æ = Approx ⦄ (λ x → nmax _ (CℕtoNat x)) (λ k → nmax-idem-absorb _ (CℕtoNat k) lt)
+
   omax-∞ltn : ∀ n o → omax (omax∞ o) (nmax o n) ≤o omax∞ o
   omax-∞ltn ℕ.zero o = omax-≤Z (omax∞ o)
   omax-∞ltn (ℕ.suc n) o =

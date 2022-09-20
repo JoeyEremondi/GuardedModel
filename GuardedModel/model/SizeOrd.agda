@@ -28,7 +28,7 @@ module SizeOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Ord
 open import Code
 
-open import Cubical.HITs.PropositionalTruncation as P
+-- open import Cubical.HITs.PropositionalTruncation as P
 -- open import Cubical.HITs.SetQuotients as Q
 -- open import Cubical.Foundations.Isomorphism
 
@@ -40,69 +40,74 @@ record Size : Set where
   constructor OS
   field
     sOrd : Ord
-    sIdem : ∥ omax sOrd sOrd ≤o sOrd ∥
+    sIdem : omax sOrd sOrd ≤o sOrd
 open Size
 
 abstract
   smax : Size → Size → Size
-  smax s1 s2 = OS (omax (sOrd s1) (sOrd s2)) (P.rec2 squash (λ lt1 lt2 → ∣ omax-swap4 ≤⨟o omax-mono lt1 lt2 ∣) (sIdem s1) (sIdem s2))
+  smax s1 s2 = OS (omax (sOrd s1) (sOrd s2)) (omax-swap4 ≤⨟o omax-mono (sIdem s1) (sIdem s2))
 
   _≤ₛ_ : Size → Size → Set
-  _≤ₛ_ s1 s2 = ∥ sOrd s1 ≤o sOrd s2 ∥
+  _≤ₛ_ s1 s2 = sOrd s1 ≤o sOrd s2
 
 
   SZ : Size
-  SZ = OS OZ ∣ subst (λ x → x ≤o OZ) (sym (omax-Z OZ)) ≤o-Z ∣
+  SZ = OS OZ (subst (λ x → x ≤o OZ) (sym (omax-Z OZ)) ≤o-Z)
 
 
   S↑ : Size → Size
-  S↑ (OS o pf) = OS (O↑ o) (P.rec squash (λ lt → ∣ subst (λ x → x ≤o O↑ o) (sym omax-↑) (≤o-sucMono lt) ∣) pf)
+  S↑ (OS o pf) = OS (O↑ o) ( subst (λ x → x ≤o O↑ o) (sym omax-↑) (≤o-sucMono pf) )
 
 _<ₛ_ : Size → Size → Set
 _<ₛ_ s1 s2 = (S↑ s1) ≤ₛ s2
 
 abstract
   ≤↑ : ∀ s → s ≤ₛ S↑ s
-  ≤↑ s = ∣ ≤↑o _ ∣
+  ≤↑ s =  ≤↑o _
 
 
 
   SLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size) → Size
-  SLim c f = OS (omax∞ (OLim c (λ x → sOrd (f x)))) ∣ omax∞-idem (OLim c (λ x → sOrd (f x))) ∣
+  SLim c f = OS (omax∞ (OLim c (λ x → sOrd (f x)))) ( omax∞-idem (OLim c (λ x → sOrd (f x))) )
 
 
   ≤ₛ-Z : ∀ {s} → SZ ≤ₛ s
-  ≤ₛ-Z = ∣ ≤o-Z ∣
+  ≤ₛ-Z =  ≤o-Z
 
   ≤ₛ-sucMono : ∀ {s1 s2} → s1 ≤ₛ s2 → S↑ s1 ≤ₛ S↑ s2
-  ≤ₛ-sucMono lt = P.rec squash (λ lt → ∣ ≤o-sucMono lt ∣) lt
+  ≤ₛ-sucMono lt = ≤o-sucMono lt
 
   infixr 10 _≤⨟_
   _≤⨟_ : ∀ {s1 s2 s3} → s1 ≤ₛ s2 → s2 ≤ₛ s3 → s1 ≤ₛ s3
-  _≤⨟_ lt1 lt2 = P.rec2 squash (λ lt1 lt2 → ∣ ≤o-trans lt1 lt2 ∣) lt1 lt2
+  _≤⨟_  =  ≤o-trans
 
   ≤ₛ-refl : ∀ {s} → s ≤ₛ s
-  ≤ₛ-refl = ∣ ≤o-refl _ ∣
+  ≤ₛ-refl =  ≤o-refl _
 
   ≤ₛ-cocone : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size}
     → ∀ k → f k ≤ₛ SLim c f
-  ≤ₛ-cocone {c = c} {f = f} k = ∣ ≤o-cocone (λ x → sOrd (f x)) k (≤o-refl _) ≤⨟o omax∞-self (OLim c (λ x → sOrd (f x))) ∣
+  ≤ₛ-cocone {c = c} {f = f} k =  ≤o-cocone (λ x → sOrd (f x)) k (≤o-refl _) ≤⨟o omax∞-self (OLim c (λ x → sOrd (f x)))
+
+  ≤ₛ-limiting : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size}
+    → (s : Size)
+    → (∀ k → f k ≤ₛ s) → SLim c f ≤ₛ s
+  ≤ₛ-limiting {f = f} (OS o idem) lt = ≤o-trans (omax∞-mono (≤o-limiting (λ x → sOrd (f x)) λ k → lt k))  (omax∞-≤ idem)
 
   ≤ₛ-extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f1 f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size}
     → (∀ k → f1 k ≤ₛ f2 k)
     → SLim c f1 ≤ₛ SLim c f2
-  ≤ₛ-extLim {f1 = f1} {f2} lt = ∣ omax∞-mono (extLim (λ x → sOrd (f1 x)) (λ x → sOrd (f2 x)) {!!}) ∣
+  ≤ₛ-extLim {f1 = f1} {f2} lt =  omax∞-mono (extLim (λ x → sOrd (f1 x)) (λ x → sOrd (f2 x)) lt)
 
 
   smax-≤L : ∀ {s1 s2} → s1 ≤ₛ smax s1 s2
-  smax-≤L = ∣ omax-≤L ∣
+  smax-≤L =  omax-≤L
 
   smax-≤R : ∀ {s1 s2} → s2 ≤ₛ smax s1 s2
-  smax-≤R = ∣ omax-≤R ∣
+  smax-≤R =  omax-≤R
 
   smax-mono : ∀ {s1 s1' s2 s2'} → s1 ≤ₛ s1' → s2 ≤ₛ s2' →
     smax s1 s2 ≤ₛ smax s1' s2'
-  smax-mono lt1 lt2 = rec2 squash (λ lt1 lt2 → ∣ omax-mono lt1 lt2 ∣) lt1 lt2
+  smax-mono lt1 lt2 =  omax-mono lt1 lt2
 
   smax-monoR : ∀ {s1 s2 s2'} → s2 ≤ₛ s2' → smax s1 s2 ≤ₛ smax s1 s2'
   smax-monoR {s1} {s2} {s2'} lt = smax-mono {s1 = s1} {s1' = s1} {s2 = s2} {s2' = s2'} (≤ₛ-refl {s1}) lt
@@ -111,20 +116,22 @@ abstract
   smax-monoL {s1} {s1'} {s2} lt = smax-mono {s1} {s1'} {s2} {s2} lt (≤ₛ-refl {s2})
 
   smax-idem : ∀ {s} → smax s s ≤ₛ s
-  smax-idem {s = OS o pf} = P.rec squash (λ lt → ∣ lt ∣) pf
+  smax-idem {s = OS o pf} = pf
 
   smax-commut : ∀ {s1 s2} → smax s1 s2 ≤ₛ smax s2 s1
-  smax-commut {s1 = s1} {s2 = s2} = ∣ omax-commut (sOrd s1) (sOrd s2) ∣
+  smax-commut {s1 = s1} {s2 = s2} =  omax-commut (sOrd s1) (sOrd s2)
 
 
   smax-swap4 : ∀ {s1 s1' s2 s2'} → smax (smax s1 s1') (smax s2 s2') ≤ₛ smax (smax s1 s2) (smax s1' s2')
-  smax-swap4 = ∣ omax-swap4 ∣
+  smax-swap4 =  omax-swap4
 
   smax-strictMono : ∀ {s1 s1' s2 s2'} → s1 <ₛ s1' → s2 <ₛ s2' → smax s1 s2 <ₛ smax s1' s2'
-  smax-strictMono lt1 lt2 = P.rec2 squash (λ lt1 lt2 → ∣ omax-strictMono lt1 lt2 ∣) lt1 lt2
+  smax-strictMono lt1 lt2 =  omax-strictMono lt1 lt2
 
   smax-sucMono : ∀ {s1 s2 s1' s2'} → smax s1 s2 ≤ₛ smax s1' s2' → smax s1 s2 <ₛ smax (S↑ s1') (S↑ s2')
-  smax-sucMono lt = P.rec squash (λ lt → ∣ omax-sucMono lt ∣) lt
+  smax-sucMono lt =  omax-sucMono lt
+
+
 
 smax* : ∀ {n} → Vec Size n → Size
 smax* [] = SZ
@@ -156,7 +163,19 @@ S1 = S↑ SZ
 
 abstract
   smax-oneL : ∀ {s} → smax S1 (S↑ s) ≤ₛ S↑ s
-  smax-oneL {s = OS o _} = ∣ omax-oneL ∣
+  smax-oneL {s = OS o _} =  omax-oneL
 
   smax-oneR : ∀ {s} → smax (S↑ s) S1 ≤ₛ S↑ s
-  smax-oneR {s = OS o _} = ∣ omax-oneR ∣
+  smax-oneR {s = OS o _} =  omax-oneR
+
+
+
+smax-lim2L :
+    ∀ {æ1 æ2 : Æ}
+    {ℓ1 ℓ2}
+    {c1 : ℂ ℓ1}
+    (f1 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c1) {{æ = æ1}} → Size)
+    {c2 : ℂ ℓ2}
+    (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Size)
+    → SLim {{æ = æ1}} c1 (λ k1 → SLim {{æ = æ2}} c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim {{æ = æ1}} c1 f1) (SLim {{æ = æ2}} c2 f2)
+smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k1 → ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k2 → smax-mono (≤ₛ-cocone ⦃ æ = _ ⦄ k1) (≤ₛ-cocone {{æ = _}} k2)))
