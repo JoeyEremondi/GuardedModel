@@ -88,10 +88,10 @@ data _≤o_ : Ord → Ord → Set where
 ≤o-trans (≤o-limiting f x) p23 = ≤o-limiting f (λ k → ≤o-trans (x k) p23)
 ≤o-trans (≤o-cocone f k p12) (≤o-limiting .f x) = ≤o-trans p12 (x k)
 
-infixr 10 _≤⨟_
+infixr 10 _≤⨟o_
 
-_≤⨟_ :  ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
-lt1 ≤⨟ lt2 = ≤o-trans lt1 lt2
+_≤⨟o_ :  ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
+lt1 ≤⨟o lt2 = ≤o-trans lt1 lt2
 
 ≤o-℧ :  ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} {f : Approxed (El c) {{æ}} → Ord} → o ≤o f (℧Approxed c) → o ≤o OLim c f
 ≤o-℧ {c = c} lt = ≤o-cocone _ (℧Approxed c) lt
@@ -99,14 +99,14 @@ lt1 ≤⨟ lt2 = ≤o-trans lt1 lt2
 _<o_ : Ord → Ord → Set
 o1 <o o2 = O↑ o1 ≤o o2
 
-≤↑ : ∀ o → o ≤o O↑ o
-≤↑ OZ = ≤o-Z
-≤↑ (O↑ o) = ≤o-sucMono (≤↑ o)
-≤↑ (OLim c f) = ≤o-limiting f λ k → ≤o-trans (≤↑ (f k)) (≤o-sucMono (≤o-cocone f k (≤o-refl (f k))))
+≤↑o : ∀ o → o ≤o O↑ o
+≤↑o OZ = ≤o-Z
+≤↑o (O↑ o) = ≤o-sucMono (≤↑o o)
+≤↑o (OLim c f) = ≤o-limiting f λ k → ≤o-trans (≤↑o (f k)) (≤o-sucMono (≤o-cocone f k (≤o-refl (f k))))
 
 
 <-in-≤ : ∀ {x y} → x <o y → x ≤o y
-<-in-≤ pf = ≤o-trans (≤↑ _) pf
+<-in-≤ pf = ≤o-trans (≤↑o _) pf
 
 
 -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
@@ -369,14 +369,14 @@ abstract
   omax-swap4 : ∀ {o1 o1' o2 o2'} → omax (omax o1 o1') (omax o2 o2') ≤o omax (omax o1 o2) (omax o1' o2')
   omax-swap4 {o1}{o1'}{o2 }{o2'} =
     omax-assocL (omax o1 o1') o2 o2'
-    ≤⨟ omax-monoL {o1 = omax (omax o1 o1') o2} {o2 = o2'}
-      (omax-assocR o1 o1' o2 ≤⨟ omax-monoR {o1 = o1} (omax-commut o1' o2) ≤⨟ omax-assocL o1 o2 o1')
-    ≤⨟ omax-assocR (omax o1 o2) o1' o2'
+    ≤⨟o omax-monoL {o1 = omax (omax o1 o1') o2} {o2 = o2'}
+      (omax-assocR o1 o1' o2 ≤⨟o omax-monoR {o1 = o1} (omax-commut o1' o2) ≤⨟o omax-assocL o1 o2 o1')
+    ≤⨟o omax-assocR (omax o1 o2) o1' o2'
 
   omax-swap6 : ∀ {o1 o2 o3 o1' o2' o3'} → omax (omax o1 o1') (omax (omax o2 o2') (omax o3 o3')) ≤o omax (omax o1 (omax o2 o3)) (omax o1' (omax o2' o3'))
   omax-swap6 {o1} {o2} {o3} {o1'} {o2'} {o3'} =
     omax-monoR {o1 = omax o1 o1'} (omax-swap4 {o1 = o2} {o1' = o2'} {o2 = o3} {o2' = o3'})
-    ≤⨟ omax-swap4 {o1 = o1} {o1' = o1'}
+    ≤⨟o omax-swap4 {o1 = o1} {o1' = o1'}
 
   omax-lim2L :
     ∀ {æ1 æ2 : Æ}
@@ -466,10 +466,10 @@ abstract
 
 
   omax∞-lub : ∀ {o1 o2 o} → o1 ≤o omax∞ o → o2 ≤o omax∞  o → omax o1 o2 ≤o (omax∞ o)
-  omax∞-lub {o1 = o1} {o2 = o2} lt1 lt2 = omax-mono {o1 = o1} {o2 = o2} lt1 lt2 ≤⨟ omax∞-idem _
+  omax∞-lub {o1 = o1} {o2 = o2} lt1 lt2 = omax-mono {o1 = o1} {o2 = o2} lt1 lt2 ≤⨟o omax∞-idem _
 
   omax∞-absorbL : ∀ {o1 o2 o} → o2 ≤o o1 → o1 ≤o omax∞ o → omax o1 o2 ≤o omax∞ o
-  omax∞-absorbL lt12 lt1 = omax∞-lub lt1 (lt12 ≤⨟ lt1)
+  omax∞-absorbL lt12 lt1 = omax∞-lub lt1 (lt12 ≤⨟o lt1)
 
   omax∞-distL : ∀ {o1 o2} → omax (omax∞ o1) (omax∞ o2) ≤o omax∞ (omax o1 o2)
   omax∞-distL {o1} {o2} =
@@ -483,15 +483,15 @@ abstract
      helper {o1} {o2} {ℕ.zero} = ≤o-Z
      helper {o1} {o2} {ℕ.suc n} =
        omax-monoL {o1 = nmax (omax o1 o2) n} (helper {o1 = o1} {o2} {n})
-       ≤⨟ omax-swap4 {omax∞ o1} {omax∞ o2} {o1} {o2}
-       ≤⨟ omax-mono {o1 = omax (omax∞ o1) o1} {o2 = omax (omax∞ o2) o2} {o1' = omax∞ o1} {o2' = omax∞ o2}
+       ≤⨟o omax-swap4 {omax∞ o1} {omax∞ o2} {o1} {o2}
+       ≤⨟o omax-mono {o1 = omax (omax∞ o1) o1} {o2 = omax (omax∞ o2) o2} {o1' = omax∞ o1} {o2' = omax∞ o2}
          (omax∞-lub {o1 = omax∞ o1} (≤o-refl _) (omax∞-self _))
          (omax∞-lub {o1 = omax∞ o2} (≤o-refl _) (omax∞-self _))
 
 
   omax∞-cocone : ∀ {ℓ} {c : ℂ ℓ} (f : ApproxEl c → Ord) k →
     f k ≤o omax∞ (OLim {{æ = Approx}} c f)
-  omax∞-cocone f k =  omax∞-self _ ≤⨟ omax∞-mono (≤o-cocone ⦃ æ = Approx ⦄ _ k (≤o-refl _))
+  omax∞-cocone f k =  omax∞-self _ ≤⨟o omax∞-mono (≤o-cocone ⦃ æ = Approx ⦄ _ k (≤o-refl _))
 
   omax* : ∀ {n} → Vec Ord n → Ord
   omax* [] = OZ
@@ -505,11 +505,11 @@ abstract
 
   omax*-≤-n : ∀ {n} {os : Vec Ord n} (f : Fin n) → lookup f os ≤o omax* os
   omax*-≤-n {os = o ∷ os} Fin.zero = omax*-≤L {o = o} {os = os}
-  omax*-≤-n {os = o ∷ os} (Fin.suc f) = omax*-≤-n f ≤⨟ (omax*-≤R {o = o} {os = os})
+  omax*-≤-n {os = o ∷ os} (Fin.suc f) = omax*-≤-n f ≤⨟o (omax*-≤R {o = o} {os = os})
 
   omax*-swap : ∀ {n} {os1 os2 : Vec Ord n} → omax* (zipWith omax os1 os2) ≤o omax (omax* os1) (omax* os2)
   omax*-swap {n = ℕ.zero} {[]} {[]} = ≤o-Z
-  omax*-swap {n = ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} = omax-monoR {o1 = omax o1 o2} (omax*-swap {n = n}) ≤⨟ omax-swap4 {o1 = o1} {o1' = o2} {o2 = omax* os1} {o2' = omax* os2}
+  omax*-swap {n = ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} = omax-monoR {o1 = omax o1 o2} (omax*-swap {n = n}) ≤⨟o omax-swap4 {o1 = o1} {o1' = o2} {o2 = omax* os1} {o2' = omax* os2}
 
   omax*-mono : ∀ {n} {os1 os2 : Vec Ord n} → foldr (λ (o1 , o2) rest → (o1 ≤o o2) × rest) Unit (zipWith _,_ os1 os2) → omax* os1 ≤o omax* os2
   omax*-mono {ℕ.zero} {[]} {[]} lt = ≤o-Z
