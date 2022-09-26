@@ -120,9 +120,14 @@ abstract
   smax-idem : ∀ {s} → smax s s ≤ₛ s
   smax-idem {s = OS o pf} = pf
 
-  smax-commut : ∀ {s1 s2} → smax s1 s2 ≤ₛ smax s2 s1
-  smax-commut {s1 = s1} {s2 = s2} =  omax-commut (sOrd s1) (sOrd s2)
+  smax-commut : ∀ s1 s2 → smax s1 s2 ≤ₛ smax s2 s1
+  smax-commut s1 s2 =  omax-commut (sOrd s1) (sOrd s2)
 
+  smax-assocL : ∀ s1 s2 s3 → smax s1 (smax s2 s3) ≤ₛ smax (smax s1 s2) s3
+  smax-assocL s1 s2 s3 = omax-assocL _ _ _
+
+  smax-assocR : ∀ s1 s2 s3 →  smax (smax s1 s2) s3 ≤ₛ smax s1 (smax s2 s3)
+  smax-assocR s1 s2 s3 = omax-assocR _ _ _
 
   smax-swap4 : ∀ {s1 s1' s2 s2'} → smax (smax s1 s1') (smax s2 s2') ≤ₛ smax (smax s1 s2) (smax s1' s2')
   smax-swap4 =  omax-swap4
