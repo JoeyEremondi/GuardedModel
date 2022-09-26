@@ -33,59 +33,7 @@ open import Cubical.Data.Fin.Properties as Fin
 import Cubical.Data.Nat.Order as Nat
 open import Cubical.Data.Bool as Bool
 
-open import Germ
-record SizedCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
-  field
-    o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
-      → (pfc1 : codeSize c ≡p cSize )
-      → ( pfv2 : SZ ≡p vSize )
-      → (El c)
-    oMeet : ∀ {{æ : Æ}}
-      → (c : ℂ ℓ)
-      → (x y : El c)
-      → ( pfc1 : (codeSize c)  ≡p cSize )
-      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
-      → LÆ (El c)
-
-
-
-    oCodeMeet :
-      (c1 c2 : ℂ ℓ)
-      → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p cSize )
-      → ( pfv1 : SZ  ≡p vSize )
-      → (ℂ ℓ)
-
-    oCodeMeetSize :
-      (c1 c2 : ℂ ℓ)
-      → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p cSize )
-      → ( pfv1 : SZ  ≡p vSize )
-      → codeSize (oCodeMeet c1 c2 pfc1 pfv1) ≤ₛ smax (codeSize c1) (codeSize c2)
-
-    oCast : ∀ {{æ : Æ}}
-      → (csource cdest : ℂ ℓ)
-      → ( pfc1 : smax (codeSize csource) (codeSize cdest)  ≡p cSize)
-      →  (x : El csource)
-      → ( pfv1 : elSize csource x ≡p vSize)
-      -> LÆ ( El cdest)
-
-    -- Take a code and approximate it until it is as small as the other code
-    -- Used to convert to and from the germ of an inductive type
-    -- Eventually we'll prove as a meta-theorem that this is the identity for well-formed inductive types
-    -- TODO: is this the wrong approach?
-    truncateCode : ∀ {ℓ} → (c1 c2 : ℂ ℓ)
-      → (codeSize c1 ≡p cSize)
-      → (SZ ≡p vSize)
-      → Σ[ c ∈ ℂ ℓ ](codeSize c ≤ₛ codeSize c1)
-
-open SizedCastMeet public
-
-data Hide (a : Set) : Set where
-  hide : ∀ {arg : a} → Hide a
-
-reveal : ∀ {a} → Hide a → a
-reveal (hide {arg = x}) = x
-
-
+import GuardedModality as ▹Mod
 
 
 -- The tuple of things that are decreasing in our recursive calls
@@ -107,12 +55,75 @@ _<CastComp_ = _<Lex_ {_<a_ = BoolOrder} {_<b_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = 
 CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥)
 CastCompWellFounded = ∥LexWellFounded∥ BoolWellFounded (LexWellFounded Nat.<-wellfounded (LexWellFounded sizeWF sizeWF))
 
+open import Germ
+record SizedCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
+  field
+    o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
+      → (pfc1 : codeSize c ≡p cSize )
+      → ( pfv2 : SZ ≡p vSize )
+      → (El c)
+    oMeet : ∀ {{æ : Æ}}
+      → (c : ℂ ℓ)
+      → (x y : El c)
+      → ( pfc1 : (codeSize c)  ≡p cSize )
+      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
+      → LÆ (El c)
+
+
+    oCodeMeet :
+      (c1 c2 : ℂ ℓ)
+      → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p cSize )
+      → ( pfv1 : SZ  ≡p vSize )
+      → (ℂ ℓ)
+
+    oCodeMeetSize :
+      (c1 c2 : ℂ ℓ)
+      → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p cSize )
+      → ( pfv1 : SZ  ≡p vSize )
+      → codeSize (oCodeMeet c1 c2 pfc1 pfv1) ≤ₛ smax (codeSize c1) (codeSize c2)
+
+    oCast : ∀ {{æ : Æ}}
+      → (csource cdest : ℂ ℓ)
+      → ( pfc1 : smax (codeSize csource) (codeSize cdest)  ≡p cSize)
+      →  (x : El csource)
+      → ( pfv1 : elSize csource x ≡p vSize)
+      -> LÆ ( El cdest)
+
+    --Version of cast that only works with strictly-positive occurrences of ?
+    --but doesn't have any restrictions on the code size
+    oCast+ : ∀ {{æ : Æ}}
+      → (csource cdest : ℂ ℓ)
+      → ( pfc1 : S1  ≡p cSize)
+      →  (x : El csource)
+      → ( pfv1 : elSize csource x ≡p vSize)
+      -> LÆ ( El cdest)
+
+    -- Take a code and approximate it until it is as small as the other code
+    -- Used to convert to and from the germ of an inductive type
+    -- Eventually we'll prove as a meta-theorem that this is the identity for well-formed inductive types
+    -- TODO: is this the wrong approach?
+    truncateCode : ∀ {ℓ} → (c1 c2 : ℂ ℓ) → (codeSize c1 ≡p cSize) → (SZ ≡p vSize)
+      → Σ[ c ∈ ℂ ℓ ](codeSize c ≤ₛ codeSize c1)
+
+open SizedCastMeet public
+
+data Hide (a : Set) : Set where
+  hide : ∀ {arg : a} → Hide a
+
+reveal : ∀ {a} → Hide a → a
+reveal (hide {arg = x}) = x
+
+
+
+
+
 
 
 record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
+  constructor smallerCastMeet
   field
     self : ∀ {allowed ℓ' cs vs} → ∥ (allowed , ℓ' , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
-    -- ▹self : ∀ {cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
+    ▹self : ∀ {⁇Allowed ℓ' cs vs} → ▹Mod.▹ (SizedCastMeet ⁇Allowed ℓ' cs vs)
   --useful helper
   <CSize : ∀ {cs vs} → (cs <ₛ cSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
   <CSize lt = ∣ <LexR reflc (<LexR reflc (<LexL lt)) ∣
@@ -188,6 +199,15 @@ record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Se
       → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {lt}) =
       oCast (self ((<CSize lt))) csource cdest reflp x reflp
+
+  +⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
+      → (cdest csource : ℂ ℓ)
+      → (x : El csource)
+      → (lt : Hide (elSize csource x <ₛ vSize))
+      → {@(tactic default (reflp {x = S1})) pf : cSize ≡p S1}
+      → LÆ (El cdest)
+  +⟨_⇐_⟩_By_ cdest csource x (hide {lt}) {pf = pf} =
+      oCast+ (self ((<VSize (sym (ptoc pf)) lt))) csource cdest reflp x reflp
 
   infix 20 [_]⟨_⇐_⟩_By_
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
@@ -283,3 +303,12 @@ record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Se
     → (lt∞ : Hide (smax ( (codeSize c1)) ( (codeSize c2)) <ₛ cSize))
     → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
+
+FixCastMeet :
+  (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
+  → ∀ ⁇Allowed  ℓ  cSize  vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize
+FixCastMeet f  =
+  ▹Mod.fix λ ▹self →
+    λ _ _ _ _ →
+    WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
+      (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
