@@ -4,11 +4,12 @@
 module WellFounded where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Induction.WellFounded
+open import Cubical.Induction.WellFounded public
 open import Cubical.HITs.PropositionalTruncation
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 open import Agda.Primitive using (_⊔_)
-
+open import Cubical.Data.Bool
 
 
 
@@ -35,3 +36,13 @@ module _ {ℓa ℓ'a} {A : Type ℓa} {_<a_ : A → A → Type ℓ'a}
 
   ∥LexWellFounded∥ : WellFounded _<a_ → WellFounded _<b_ → WellFounded (λ x y → ∥ x <Lex y ∥)
   ∥LexWellFounded∥ wfa wfb = ∥WellFounded∥ (LexWellFounded wfa wfb)
+
+-- order on booleans
+
+
+data BoolOrder : Bool → Bool → Set where
+  false<true : BoolOrder false true
+
+BoolWellFounded : WellFounded BoolOrder
+BoolWellFounded false = acc (λ {y ()})
+BoolWellFounded true = acc (λ {false false<true → acc λ {_ ()}})

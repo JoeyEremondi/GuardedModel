@@ -27,11 +27,14 @@ open import Code
 open import Head
 open import Util
 open import SizeOrd
+open import WellFounded
 -- open Ord ℂ El ℧ C𝟙 refl
-
+open import Cubical.Data.Fin.Properties as Fin
+import Cubical.Data.Nat.Order as Nat
+open import Cubical.Data.Bool as Bool
 
 open import Germ
-record SizedCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
+record SizedCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
   field
     o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
       → (pfc1 : codeSize c ≡p cSize )
@@ -82,14 +85,45 @@ data Hide (a : Set) : Set where
 reveal : ∀ {a} → Hide a → a
 reveal (hide {arg = x}) = x
 
-record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
+
+
+
+-- The tuple of things that are decreasing in our recursive calls
+-- (A) Bool: flag for whether we're allowed to see ⁇ as a type
+--  this is there for strict positivity: we get an extra recursive call when computing meet or cast of terms in the germ of an inductive type
+--  because we're guaranteed that, within an inductive type, we never see unguarded ⁇ to the left of an arrow (because of strict positivity).
+--  This lets us do induction on the size of the value for everything but functions, where we know we're not seeing ⁇
+-- (B) ℕ: the universe level we're currently in. We need this so that, when (c  = CType) and (v1 v2 : El c), for the meet of v1 and v2, we can call codeMeet
+--    at the smalelr universe, letting us move the size of the value into the code value
+-- (C) Code size: the size of the code, either being combined with code meet, or the code of the values being cast/composed
+-- (D) Value size: the size of the value currently being operated on. Set to S0 for codeMeet.
+CastCompMeasure : Set
+CastCompMeasure = Bool × ℕ × Size × Size
+
+-- We can define the lexicographic-ordering on this measure
+_<CastComp_ : (m1 m2 : CastCompMeasure) → Set
+_<CastComp_ = _<Lex_ {_<a_ = BoolOrder} {_<b_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<ₛ_} {_<b_ = _<ₛ_}}}
+
+CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥)
+CastCompWellFounded = ∥LexWellFounded∥ BoolWellFounded (LexWellFounded Nat.<-wellfounded (LexWellFounded sizeWF sizeWF))
+
+
+
+record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
   field
-    self : ∀ {cs vs : Size} → ((cs , vs) <ₛPair (cSize , vSize)) → SizedCastMeet ℓ cs vs
-    ℓself : ∀ {cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
+    self : ∀ {allowed ℓ' cs vs} → ∥ (allowed , ℓ' , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
+    -- ▹self : ∀ {cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) cs vs
+  --useful helper
+  <CSize : ∀ {cs vs} → (cs <ₛ cSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
+  <CSize lt = ∣ <LexR reflc (<LexR reflc (<LexL lt)) ∣
+
+  <VSize : ∀ {cs vs} → cs ≡ cSize → (vs <ₛ vSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
+  <VSize ceq lt = ∣ <LexR reflc (<LexR reflc (<LexR ceq lt)) ∣
+    --
   infix 20 ⁇_By_
   ⁇_By_ : ∀ {{_ : Æ}}
       → (c : ℂ ℓ) → (lt : Hide (codeSize c <ₛ cSize)) → (El c)
-  ⁇_By_ c (hide {lt}) = o⁇ (self (<ₛPairL ∣ lt ∣)) c reflp reflp
+  ⁇_By_ c (hide {lt}) = o⁇ (self (<CSize lt)) c reflp reflp
 
   infix 20 [_]⁇_By_
   [_]⁇_By_ : ∀ (æ : Æ)
@@ -103,7 +137,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
       → (lt : Hide (codeSize c <ₛ cSize))
       → LÆ (El c)
   _∋_⊓_By_   c x y (hide {lt}) =
-      oMeet (self ( (<ₛPairL ∣ lt ∣))) c x y reflp reflp
+      oMeet (self  (<CSize lt)) c x y reflp reflp
 
   infix 20 [_]_∋_⊓_By_
   [_]_∋_⊓_By_ : ∀ (æ : Æ)
@@ -120,7 +154,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
       → (lt : Hide (smax (codeSize c1) (codeSize c2) <ₛ cSize))
       → (ℂ ℓ)
   _⊓_By_  c1 c2 (hide {lt}) =
-      oCodeMeet (self (<ₛPairL ∣ lt ∣)) c1 c2 reflp reflp
+      oCodeMeet (self (<CSize lt)) c1 c2 reflp reflp
 
   infix 20 _⊓⁇_By_
   _⊓⁇_By_ :
@@ -130,13 +164,13 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
       → (lt : Hide (smax (elSize C⁇ x1) (elSize C⁇ x2 ) <ₛ vSize))
       → LÆ (⁇Ty ℓ)
   _⊓⁇_By_  x1 x2 cpf (hide {lt}) =
-      oMeet (self (<ₛPairR cpf ∣ lt ∣)) C⁇ x1 x2 reflp reflp
+      oMeet (self (<VSize (ptoc cpf) lt)) C⁇ x1 x2 reflp reflp
 
   codeMeetEq : ∀
       (c1 c2 : ℂ ℓ)
       → {lt1 lt2 : Hide (smax (codeSize c1) (codeSize c2) <ₛ cSize)}
       → ApproxEl (c1 ⊓ c2 By lt1) ≡ ApproxEl (c1 ⊓ c2 By lt2)
-  codeMeetEq c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self (<ₛPairL lt)) c1 c2 reflp reflp))) (sizeSquash ∣ lt1 ∣ ∣ lt2 ∣)
+  codeMeetEq c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self lt) c1 c2 reflp reflp))) (∥_∥.squash (<CSize lt1) (<CSize lt2))
 
   infix 20 _⊓Size_By_
   _⊓Size_By_ :
@@ -144,7 +178,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
       → (lt : Hide (smax (codeSize c1) (codeSize c2) <ₛ cSize))
       →  codeSize (c1 ⊓ c2 By lt ) ≤ₛ smax (codeSize c1) (codeSize c2)
   _⊓Size_By_  c1 c2 (hide {lt}) =
-      oCodeMeetSize (self (<ₛPairL ∣ lt ∣)) c1 c2 reflp reflp
+      oCodeMeetSize (self (<CSize lt)) c1 c2 reflp reflp
 
   infix 20 ⟨_⇐_⟩_By_
   ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
@@ -153,7 +187,7 @@ record SmallerCastMeet (ℓ : ℕ) (cSize vSize : Size) : Set where
       → (lt : Hide (smax (codeSize csource)  (codeSize cdest) <ₛ cSize))
       → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {lt}) =
-      oCast (self ((<ₛPairL ∣ lt ∣))) csource cdest reflp x reflp
+      oCast (self ((<CSize lt))) csource cdest reflp x reflp
 
   infix 20 [_]⟨_⇐_⟩_By_
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
