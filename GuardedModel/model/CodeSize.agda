@@ -24,6 +24,7 @@ open import Cubical.Data.Equality using (ptoc)
 
 open import ApproxExact
 
+
 -- open import InductiveCodes
 open import Cubical.Foundations.Transport
 
@@ -38,6 +39,7 @@ open import InductiveCodes
 module CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes }} where
 
 
+open import SizeOrdMultiMax public
 
 
 

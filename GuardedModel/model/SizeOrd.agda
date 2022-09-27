@@ -2,17 +2,14 @@
 {-# OPTIONS --cubical --guarded #-}
 -- open import Guarded
 open import Cubical.Data.Maybe
-open import Cubical.Data.Vec
 open import Level
 open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
-open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
 open import Cubical.Data.Equality
-open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Inductives
 open import GuardedAlgebra
@@ -138,32 +135,9 @@ abstract
   smax-sucMono : ∀ {s1 s2 s1' s2'} → smax s1 s2 ≤ₛ smax s1' s2' → smax s1 s2 <ₛ smax (S↑ s1') (S↑ s2')
   smax-sucMono lt =  omax-sucMono lt
 
+smax-lub : ∀ {s1 s2 s} → s1 ≤ₛ s → s2 ≤ₛ s → smax s1 s2 ≤ₛ s
+smax-lub lt1 lt2 = smax-mono lt1 lt2 ≤⨟ smax-idem
 
-
-smax* : ∀ {n} → Vec Size n → Size
-smax* [] = SZ
-smax* (x ∷ os) = smax x (smax* os)
-
-smax*-≤L : ∀ {n o} {os : Vec Size n} → o ≤ₛ smax* (o ∷ os)
-smax*-≤L {o = o} {os = os} = smax-≤L {s1 = o} {s2 = smax* os}
-
-smax*-≤R : ∀ {n o} {os : Vec Size n} → smax* os ≤ₛ smax* (o ∷ os)
-smax*-≤R {o = o} {os = os} = smax-≤R {s1 = o} {s2 = smax* os}
-
-smax*-≤-n : ∀ {n} {os : Vec Size n} (f : Fin n) → lookup f os ≤ₛ smax* os
-smax*-≤-n {os = o ∷ os} Fin.zero = smax*-≤L {o = o} {os = os}
-smax*-≤-n {os = o ∷ os} (Fin.suc f) = smax*-≤-n f ≤⨟ (smax*-≤R {o = o} {os = os})
-  -- smax*-≤-n f ≤⨟ (smax*-≤R {o = o} {os = os})
-
-smax*-swap : ∀ {n} {os1 os2 : Vec Size n} → smax* (zipWith smax os1 os2) ≤ₛ smax (smax* os1) (smax* os2)
-smax*-swap {n = ℕ.zero} {[]} {[]} = ≤ₛ-Z
-smax*-swap {n = ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} =
-  smax-monoR (smax*-swap {n = n}) ≤⨟ smax-swap4
-  -- smax-monoR {s1 = smax o1 o2} (smax*-swap {n = n}) ≤⨟ smax-swap4 {o1 = o1} {o1' = o2} {o2 = smax* os1} {o2' = smax* os2}
-
-smax*-mono : ∀ {n} {os1 os2 : Vec Size n} → foldr (λ (o1 , o2) rest → (o1 ≤ₛ o2) × rest) Unit (zipWith _,_ os1 os2) → smax* os1 ≤ₛ smax* os2
-smax*-mono {ℕ.zero} {[]} {[]} lt = ≤ₛ-Z
-smax*-mono {ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} (lt , rest) = smax-mono {s1 = o1} {s1' = o2} lt (smax*-mono {os1 = os1} {os2 = os2} rest)
 
 S1 : Size
 S1 = S↑ SZ
@@ -176,6 +150,14 @@ abstract
   smax-oneR {s = OS o _} =  omax-oneR
 
 
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+≤< : ∀ {x y z} → x ≤ₛ y → y <ₛ z → x <ₛ z
+≤< {x} {y} {z} x≤y y<z =  (≤ₛ-sucMono x≤y) ≤⨟ y<z
+
+
+<≤ : ∀ {x y z} → x <ₛ y → y ≤ₛ z → x <ₛ z
+<≤ x<y y≤z = x<y ≤⨟  y≤z
 
 smax-lim2L :
     ∀ {æ1 æ2 : Æ}
