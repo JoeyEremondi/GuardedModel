@@ -37,6 +37,7 @@ module _ {ℓa ℓ'a} {A : Type ℓa} {_<a_ : A → A → Type ℓ'a}
   ∥LexWellFounded∥ : WellFounded _<a_ → WellFounded _<b_ → WellFounded (λ x y → ∥ x <Lex y ∥)
   ∥LexWellFounded∥ wfa wfb = ∥WellFounded∥ (LexWellFounded wfa wfb)
 
+
 -- order on booleans
 
 
