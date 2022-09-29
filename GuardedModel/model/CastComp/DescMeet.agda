@@ -98,15 +98,6 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
                 ≤⨟ ltB12)
                 ( smax-≤R
                 ≤⨟ ltB12)) lto  })
-        ltcB = smax-sucMono (smax-mono
-          ltB
-          (≤ₛ-limiting ⦃ æ = Approx ⦄ {c = cB} _ λ cb → {!!} ≤⨟ {!cb2!} ≤⨟ _ ⊓Size _ By hide  )
-          -- (-mono ((≤ₛ-limiting {{æ = Approx}} _ λ cb → ≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb2 cb) (-mono (_ ⊓Size _ By hide) ≤⨟ -distR))) ≤⨟ smax-lim2L _ _ ) ≤⨟ -distR)
-          ≤⨟ smax-swap4)
-        -- ltcB = (smax-sucMono (smax-mono
-        --     (-mono ltB ≤⨟ -distR)
-        --     ((≤ₛ-limiting {{æ = Approx}} _ λ cb → ≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb2 cb)
-        --       (-mono (c1 (cb1 cb) ⊓Size c2 (cb2 cb) By hide) ≤⨟ -distR))) ≤⨟ smax-lim2L _ _) ≤⨟ smax-swap4 ))
         cRet : ApproxEl cB → ℂ ℓ
         cRet cb = c1 (cb1 cb) ⊓ c2 (cb2 cb)
           By hide {arg = ≤<
@@ -115,6 +106,15 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
               (≤↑ (codeSize (c2 (cb2 cb))) ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
             ≤⨟ lt)
             lto}
+        ltcB = smax-sucMono (smax-mono
+          ltB
+          ((≤ₛ-limiting {{æ = Approx}} _ λ cb → (_ ⊓Size _ By hide ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb2 cb)) ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb1 cb) )  ≤⨟ smax-lim2L (λ x → codeSize (c1 x)) (λ x → codeSize (c2 x))) -- (≤ₛ-limiting ⦃ æ = Approx ⦄ {c = cB} _ λ cb → {!!} ≤⨟  _ ⊓Size _ By hide  )
+          -- (-mono ((≤ₛ-limiting {{æ = Approx}} _ λ cb → ≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb2 cb) (-mono (_ ⊓Size _ By hide) ≤⨟ -distR))) ≤⨟ smax-lim2L _ _ ) ≤⨟ -distR)
+          ≤⨟ smax-swap4)
+        -- ltcB = (smax-sucMono (smax-mono
+        --     (-mono ltB ≤⨟ -distR)
+        --     ((≤ₛ-limiting {{æ = Approx}} _ λ cb → ≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb1 cb) (≤ₛ-cocone ⦃ æ = Approx ⦄ _ (cb2 cb)
+        --       (-mono (c1 (cb1 cb) ⊓Size c2 (cb2 cb) By hide) ≤⨟ -distR))) ≤⨟ smax-lim2L _ _) ≤⨟ smax-swap4 ))
 descMeet {I1 = I1} {I2 = I2} (CRec j1 D1) (CRec j2 D2) lto ltI ltB lt  =
       CRec
         (fromL ([ Approx ] I1 ,, I2 ∋ j1 ⊓ j2 By hide {arg = ≤< ltI lto }))
