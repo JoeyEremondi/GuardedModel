@@ -83,11 +83,6 @@ codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp r
                         smax-strictMono
                           (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R))
                           (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R)) }
-                      -- smax-sucMono (smax-mono
-                      --   (  ?
-                      --     ≤⨟ smax-≤R)
-                      --   (( smax∞-cocone _ _)
-                      --    ≤⨟ smax-≤R))}
         in CΠ dom12 cod12
 codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp reflp
         = let
@@ -128,9 +123,7 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
     )
     (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}))
 
-codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet self-1 c1 c2 reflp reflp)
-  where
-    self-1 = (self ∣ <LexR refl (<LexL ≤ℕ-refl) ∣)
+codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (self-1 {{inst = inst}}) c1 c2 reflp reflp)
 codeMeet C⁇ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
 codeMeet C℧ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp
 codeMeet C𝟘 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp reflp

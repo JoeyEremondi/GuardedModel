@@ -24,12 +24,12 @@ open import InductiveCodes
 open import CodeSize
 -- open import CodePair
 open import WMuEq
-open import Ord
+open import SizeOrd
 
 open import CastComp.Interface
 
 module CastComp.Meet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}} {{dgs : DataGermsSmaller}}
-    {ℓ} (cSize : Ord) (vSize : Ord) (scm : SmallerCastMeet ℓ cSize vSize)
+    (⁇Allowed : Bool){ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
 
   where
 
@@ -46,8 +46,8 @@ open SmallerCastMeet scm
       {{_ : Æ}}
       {vh1 vh2}
       (x y : ⁇Ty ℓ)
-      → (cpf : O1 ≡p cSize)
-      → ( cpf : omax (elSize C⁇ x) (elSize C⁇ y)  ≡p vSize )
+      → (cpf : S1 ≡p cSize)
+      → ( cpf : smax (elSize C⁇ x) (elSize C⁇ y)  ≡p vSize )
       → (veq1 : unkHead x ≡p vh1)
       → (veq2 : unkHead y ≡p vh2)
       → HeadMatchView vh1 vh2
@@ -60,9 +60,9 @@ open SmallerCastMeet scm
 ⁇meet x y reflp reflp eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
 ⁇meet CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp reflp eqx eqy (HEq reflp) | eq = pure ⁇𝟙
 ⁇meet (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp reflp eqx eqy (HEq reflp) | eq
-  = pure (⁇Type (oCodeMeet ℓself c1 c2 reflp reflp))
+  = pure (⁇Type (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp))
 ⁇meet (CodeModule.⁇Cumul {{suc<}} x) (CodeModule.⁇Cumul x₁) reflp reflp eqx eqy (HEq reflp) | eq
-  = oMeet ℓself {!C⁇!} {!!} {!!} {!!} {!!}
+  = oMeet (self-1 {{suc<}}) {!!} {!!} {!!} reflp reflp
 ⁇meet (CodeModule.⁇Π x) (CodeModule.⁇Π x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet (CodeModule.⁇Σ x) (CodeModule.⁇Σ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
@@ -72,38 +72,38 @@ meet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
       → ( pfc1 : (codeSize c)  ≡p cSize )
-      → ( pfv1 : omax (elSize c x) (elSize c y)  ≡p vSize )
+      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
 meet C⁇ x y pfc pfv = {!!}
 meet C℧ x y pfc pfv = pure tt
 meet C𝟘 x y pfc pfv = pure tt
 meet C𝟙 x y pfc pfv = pure (x and y)
-meet (CType {{suc<}}) c1 c2 pfc pfv = pure (oCodeMeet ℓself c1 c2 reflp reflp)
-meet (CCumul {{suc<}} c) x y pfc pfv = oMeet ℓself c x y reflp reflp
+meet (CType {{suc<}}) c1 c2 pfc pfv = pure (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp)
+meet (CCumul {{suc<}} c) x y pfc pfv = oMeet (self-1 {{suc<}}) c x y reflp reflp
 meet (CΠ dom cod) f g reflp reflp
   = liftFunDep λ x →
     cod (approx x) ∋ f x ⊓ g x
-      By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
+      By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ _  ≤⨟ smax-≤R  )}
 meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp reflp = do
   -- Awful stuff to deal with the lifting monad
   x⊓yfst ← withApproxL' λ æ conv → [ æ ] dom ∋ exact {{æ = æ}} (conv xfst) ⊓ exact {{æ = æ}} (conv yfst)
-    By hide {arg = ≤o-sucMono (omax∞-self _ ≤⨟ omax-≤L)}
+    By hide {arg = ≤ₛ-sucMono  smax-≤L}
   xsnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx xfst) ⟩ xsnd
-    By hide {arg = ≤o-sucMono (omax∞-lub
-      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
-      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
-       ≤⨟ omax-≤R)}
+    By hide {arg = ≤ₛ-sucMono (smax-lub
+      (≤ₛ-cocone ⦃ æ = Approx ⦄ _)
+      (≤ₛ-cocone ⦃ æ = Approx ⦄  _)
+       ≤⨟ smax-≤R)}
   ysnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx yfst) ⟩ ysnd
-    By hide {arg = ≤o-sucMono (omax∞-lub
-      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
-      (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax∞-self _)
-       ≤⨟ omax-≤R)}
+    By hide {arg = ≤ₛ-sucMono (smax-lub
+      (≤ₛ-cocone ⦃ æ = Approx ⦄  _)
+      (≤ₛ-cocone ⦃ æ = Approx ⦄  _)
+       ≤⨟ smax-≤R)}
   x⊓ysnd ← cod (approx x⊓yfst) ∋ xsnd-cast ⊓ ysnd-cast
-    By hide {arg = ≤o-sucMono (≤o-cocone ⦃ æ = Approx ⦄ _ _ (omax∞-self _) ≤⨟ omax-≤R ≤⨟ omax∞-self _ ≤⨟ omax∞-distR)}
+    By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ _  ≤⨟ smax-≤R )}
   pure (x⊓yfst , x⊓ysnd)
 meet (C≡ c x y) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) reflp reflp = do
   w ←  [ Approx ] c ∋ w1 ⊓ w2
-    By hide {arg = ≤o-sucMono (omax∞-self _)}
+    By hide {arg = ≤ₛ-refl}
   pure (w ⊢ x ≅ y)
 
 meet (Cμ tyCtor c D x₁) x y pfc pfv = {!!}

@@ -304,6 +304,9 @@ record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Se
     → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
+  self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇Allowed (predℕ ℓ) cs vs
+  self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexR refl (<LexL Nat.≤-refl) ∣
+
 FixCastMeet :
   (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
   → ∀ ⁇Allowed  ℓ  cSize  vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize
@@ -312,3 +315,4 @@ FixCastMeet f  =
     λ _ _ _ _ →
     WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
       (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
+
