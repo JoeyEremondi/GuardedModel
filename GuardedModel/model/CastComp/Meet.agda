@@ -87,8 +87,8 @@ open SmallerCastMeet scm
 ⁇meet' {{æ = Exact}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) reflp lt eqx eqy (HEq reflp) | eq
   = do
     fRet ← liftFun {{Exact}} λ x → do
-      gSelf ← Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self tic)
-      oMeet gSelf {{æ = Exact}} {!!} {!!} {!!} {!!} {!!}
+      gSelf ← Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self {⁇Allowed = ⁇Allowed} {ℓ' = ℓ} tic)
+      oMeet gSelf {{æ = Exact}} C⁇ (f1 x) (f2 x) reflp reflp
     pure {{Exact}} (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Exact ⦄ fRet)
 ⁇meet' (CodeModule.⁇Σ (fst1 , snd1)) (CodeModule.⁇Σ (fst2 , snd2)) reflp lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
