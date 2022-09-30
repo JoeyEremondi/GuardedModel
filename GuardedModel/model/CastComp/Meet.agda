@@ -36,32 +36,41 @@ module CastComp.Meet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes
 open import Code
 open import Head
 open import Util
+open import WellFounded
 
 
 open SmallerCastMeet scm
 
 
-
 ⁇meet : ∀
-      {{_ : Æ}}
+      {{æ : Æ}}
+      (x y : ⁇Ty ℓ)
+      → (cpf : S1 ≡p cSize)
+      → ( vpf : smax (elSize C⁇ x) (elSize C⁇ y)  ≤ₛ vSize )
+      → LÆ (⁇Ty ℓ)
+⁇meet' : ∀
+      {{æ : Æ}}
       {vh1 vh2}
       (x y : ⁇Ty ℓ)
       → (cpf : S1 ≡p cSize)
-      → ( cpf : smax (elSize C⁇ x) (elSize C⁇ y)  ≡p vSize )
+      → ( vpf : smax (elSize C⁇ x) (elSize C⁇ y)  ≤ₛ vSize )
       → (veq1 : unkHead x ≡p vh1)
       → (veq2 : unkHead y ≡p vh2)
       → HeadMatchView vh1 vh2
       → LÆ (⁇Ty ℓ)
-⁇meet x y reflp reflp eqx eqy (H℧L x₁) = pure ⁇℧
-⁇meet x y reflp reflp eqx eqy (H℧R x₁) = pure ⁇℧
-⁇meet x y reflp reflp eqx eqy (HNeq x₁) = pure ⁇℧
-⁇meet x y reflp reflp eqx eqy (H⁇L x₁ x₂) = pure y
-⁇meet x y reflp reflp eqx eqy (H⁇R x₁) = pure x
-⁇meet x y reflp reflp eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
-⁇meet CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp reflp eqx eqy (HEq reflp) | eq = pure ⁇𝟙
-⁇meet (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp reflp eqx eqy (HEq reflp) | eq
+
+⁇meet x y cpf vpf = ⁇meet' x y cpf vpf reflp reflp (headMatchView (unkHead x) (unkHead y))
+
+⁇meet' x y reflp lt eqx eqy (H℧L x₁) = pure ⁇℧
+⁇meet' x y reflp lt eqx eqy (H℧R x₁) = pure ⁇℧
+⁇meet' x y reflp lt eqx eqy (HNeq x₁) = pure ⁇℧
+⁇meet' x y reflp lt eqx eqy (H⁇L x₁ x₂) = pure y
+⁇meet' x y reflp lt eqx eqy (H⁇R x₁) = pure x
+⁇meet' x y reflp lt eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
+⁇meet' CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp lt eqx eqy (HEq reflp) | eq = pure ⁇𝟙
+⁇meet' (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp lt eqx eqy (HEq reflp) | eq
   = pure (⁇Type (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp))
-⁇meet (CodeModule.⁇Cumul {{suc<}} c1 x1) (CodeModule.⁇Cumul c2 x2) reflp reflp eqx eqy (HEq reflp) | eq
+⁇meet' (CodeModule.⁇Cumul {{suc<}} c1 x1) (CodeModule.⁇Cumul c2 x2) reflp lt eqx eqy (HEq reflp) | eq
   -- Cast to a common code type, then meet
   = do
   let c1⊓c2 = oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp
@@ -69,10 +78,21 @@ open SmallerCastMeet scm
   x2' ← oCast (self-1 {{suc<}}) c2 c1⊓c2 reflp x2 reflp
   x1⊓x2 ← oMeet (self-1 {{suc<}}) c1⊓c2 x1' x2' reflp reflp
   pure (⁇Cumul c1⊓c2 x1⊓x2)
-⁇meet (CodeModule.⁇Π x) (CodeModule.⁇Π x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
-⁇meet (CodeModule.⁇Σ x) (CodeModule.⁇Σ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
-⁇meet (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
-⁇meet (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
+⁇meet' {{æ = Approx}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) reflp lt eqx eqy (HEq reflp) | eq
+  = pure ⦃ Approx ⦄ (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Approx ⦄ (λ _ → fromL (⁇meet ⦃ Approx ⦄ (f1 U⁇) (f2 U⁇) reflp
+    (smax-mono
+      (≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ (f1 U⁇))))
+      (≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ (f1 U⁇))))
+    ≤⨟ lt))))
+⁇meet' {{æ = Exact}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) reflp lt eqx eqy (HEq reflp) | eq
+  = do
+    fRet ← liftFun {{Exact}} λ x → do
+      gSelf ← Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self tic)
+      oMeet gSelf {{æ = Exact}} {!!} {!!} {!!} {!!} {!!}
+    pure {{Exact}} (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Exact ⦄ fRet)
+⁇meet' (CodeModule.⁇Σ (fst1 , snd1)) (CodeModule.⁇Σ (fst2 , snd2)) reflp lt eqx eqy (HEq reflp) | eq = {!!}
+⁇meet' (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
+⁇meet' (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
 
 meet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
@@ -80,7 +100,7 @@ meet : ∀ {{æ : Æ}}
       → ( pfc1 : (codeSize c)  ≡p cSize )
       → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
-meet C⁇ x y pfc pfv = {!!}
+meet C⁇ x y pfc pfv = ⁇meet x y pfc (pSubst (λ x → _ ≤ₛ x) pfv ≤ₛ-refl)
 meet C℧ x y pfc pfv = pure tt
 meet C𝟘 x y pfc pfv = pure tt
 meet C𝟙 x y pfc pfv = pure (x and y)

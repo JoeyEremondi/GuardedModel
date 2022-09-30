@@ -22,6 +22,7 @@ data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Later : {{_ : IsExact æ}} → G.▹ (LÆ A) → LÆ A
   Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
 
+
 pure : ∀ {ℓ} {A : Set ℓ} {{_ : Æ}} → A → LÆ A
 pure = Now
 
@@ -159,6 +160,9 @@ Terminates : ∀ {ℓ} {A : Set ℓ} → LÆ {{Exact}} A → Set ℓ
 Terminates {A = A} xL = Σ[ x ∈ A ](xL ≡ Now x)
 
 
+fromGuarded▹ : ∀ {{æ : Æ}} {ℓ} {A : Set ℓ} → G.▹ A → LÆ (▹ A)
+fromGuarded▹ ⦃ Approx ⦄ x = pure ⦃ Approx ⦄ U⁇
+fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 
 -- pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
 -- pairWithApprox ⦃ æ = Approx ⦄ a e = a
