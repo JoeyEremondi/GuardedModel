@@ -61,8 +61,14 @@ open SmallerCastMeet scm
 ⁇meet CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp reflp eqx eqy (HEq reflp) | eq = pure ⁇𝟙
 ⁇meet (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp reflp eqx eqy (HEq reflp) | eq
   = pure (⁇Type (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp))
-⁇meet (CodeModule.⁇Cumul {{suc<}} x) (CodeModule.⁇Cumul x₁) reflp reflp eqx eqy (HEq reflp) | eq
-  = oMeet (self-1 {{suc<}}) {!!} {!!} {!!} reflp reflp
+⁇meet (CodeModule.⁇Cumul {{suc<}} c1 x1) (CodeModule.⁇Cumul c2 x2) reflp reflp eqx eqy (HEq reflp) | eq
+  -- Cast to a common code type, then meet
+  = do
+  let c1⊓c2 = oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp
+  x1' ← oCast (self-1 {{suc<}}) c1 c1⊓c2 reflp x1 reflp
+  x2' ← oCast (self-1 {{suc<}}) c2 c1⊓c2 reflp x2 reflp
+  x1⊓x2 ← oMeet (self-1 {{suc<}}) c1⊓c2 x1' x2' reflp reflp
+  pure (⁇Cumul c1⊓c2 x1⊓x2)
 ⁇meet (CodeModule.⁇Π x) (CodeModule.⁇Π x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet (CodeModule.⁇Σ x) (CodeModule.⁇Σ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp reflp eqx eqy (HEq reflp) | eq = {!!}

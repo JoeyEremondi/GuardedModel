@@ -155,7 +155,7 @@ record CodeModule
     --For lower universes, we can lift codes to this universe without needing guardedness
     data _ where
       CCumul :  {{ inst : 0< ℓ }} → ℂ-1 → ℂ
-      ⁇Cumul :  {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
+      ⁇Cumul :  {{ inst : 0< ℓ }} → (c : ℂ-1) → El-1 c → F⁇ Self
       -- ⁇Cumul : ⁇-1 → F⁇ Self
     El (CCumul c) = El-1 c
     --

@@ -250,7 +250,7 @@ CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂ
 ⁇Size (⁇Σ (x , y)) = S↑ (smax (⁇Size x) (⁇Size y))
 ⁇Size (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = S↑ (⁇Size x)
 ⁇Size {ℓ = ℓ} (⁇μ tyCtor x) = S↑ ((germIndSize tyCtor x))
-⁇Size {ℓ = suc ℓ} (⁇Cumul x) = S↑ (codeSize x)
+⁇Size {ℓ = suc ℓ} (⁇Cumul c x) = S↑ (codeSize c) --TODO: is this okay? Should be, since going one universe lower
 -- S1 --TODO does this cause problems?
 -- CμSize (dataGermCode ℓ tyCtor) (transport⁻ (dataGermCodeEq ℓ tyCtor) x)
   -- where
@@ -363,7 +363,7 @@ codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono 
 ⁇suc (⁇Σ x) = ≤ₛ-sucMono ≤ₛ-Z
 ⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤ₛ-sucMono ≤ₛ-Z
 ⁇suc (⁇μ tyCtor x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc {ℓ = suc ℓ} (⁇Cumul c) = ≤ₛ-sucMono ≤ₛ-Z
+⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ≤ₛ-sucMono ≤ₛ-Z
 
 open import Cubical.Data.Maybe
 

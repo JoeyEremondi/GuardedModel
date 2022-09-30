@@ -48,7 +48,7 @@ germ HType zero = Unit
 germ HType (suc ℓ) = ℂ ℓ
 germ (HCtor tyCtor) ℓ  = W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
 germ HCumul ℕ.zero = ⊥
-germ HCumul (ℕ.suc ℓ) = ℂ ℓ
+germ HCumul (ℕ.suc ℓ) = Σ[ c ∈ ℂ ℓ ]( El c )
 
 germTo⁇ : ∀ {{_ : Æ}} {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
 germFrom⁇ : ∀ {{_ : Æ}} {ℓ h} → (x : ⁇Ty ℓ) → (unkHead x ≡p HStatic h) → (germ h ℓ)
@@ -63,7 +63,7 @@ germTo⁇ {h = H𝟘} tt = pure ⁇℧
 germTo⁇ {h = HType} {zero} x = pure ⁇℧
 germTo⁇ {h = HType} {suc ℓ} x = pure (⁇Type x)
 germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
-germTo⁇ {h = HCumul} {ℓ = ℕ.suc ℓ} x = pure (⁇Cumul x)
+germTo⁇ {h = HCumul} {ℓ = ℕ.suc ℓ} (c , x) = pure (⁇Cumul c x)
 
 
 germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq x = f (transport⁻ hollowEq (next x))
@@ -72,4 +72,4 @@ germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp =  x
 germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
 germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
 germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor x) reflp = x --TODO handle err specially?
-germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (CodeModule.⁇Cumul x) reflp = x
+germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (CodeModule.⁇Cumul c x) reflp = c , x
