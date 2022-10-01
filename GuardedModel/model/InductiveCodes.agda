@@ -57,30 +57,32 @@ open import Ord -- ℂ El ℧ C𝟙 refl
 
 -- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
 --TODO: do we still need this with the more strict code requirements?
-data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : {B : Set} → GermCtor B → Set2  where
- GEndCode : ∀ {B} → DataGermIsCode ℓ {B} GEnd
- GRecCode : ∀ {B} {D : GermCtor B} (c : B → ℂ ℓ)
+data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ → Set} → GermCtor B+ B- sig → Set2  where
+ GEndCode : ∀ {B+ B- } → DataGermIsCode ℓ {B+ = B+} {B- } GEnd
+ GRecCode : ∀ {B+ B- sig} {D : GermCtor B+ B- sig}
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GRec D)
- GArgCode : ∀ {B} {A : B → Set} {D : GermCtor (Σ B A)} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
+ GArgCode : ∀ {B+ B- sig}  {(A+ , A-) : +-Set B+ B- } {D : GermCtor _ _ sig}
+   → (c+ : B+ → ℂ ℓ)
+   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
+   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GArg A D)
- GHRecCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
+   → DataGermIsCode ℓ (GArg (A+ , A-) D)
+ GHRecCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
+   → (c+ : B+ → ℂ ℓ)
+   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
+   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GHRec A D)
- GUnkCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (El (c b)))
+   → DataGermIsCode ℓ (GHRec (A+ , A-) D)
+ GUnkCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
+   → (c+ : B+ → ℂ ℓ)
+   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
+   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GUnk A D)
- GGuardedArgCode : ∀ {B} {A : B → Set} {D : GermCtor (Σ B A)} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ (El (c b))))
-   → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GArg A D)
- GGuardedHRecCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ El (c b)))
-   → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GHRec A D)
- GGuardedUnkCode : ∀ {B} {A : B → Set} {D : GermCtor B} (c : B → ℂ ℓ) → (∀ b → Iso (A b) (G.▹ El (c b)))
-   → DataGermIsCode ℓ D
-   → DataGermIsCode ℓ (GUnk A D)
-
+   → DataGermIsCode ℓ (GUnk (A+ , A-) D)
 
 
 
