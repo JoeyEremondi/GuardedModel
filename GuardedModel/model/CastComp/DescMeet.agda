@@ -72,7 +72,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
           )
         _
         reflp
-      where
+      module DescMeetArg where
         ltB12 :  smax (codeSize cB1) (codeSize cB2) ≤ₛ  oTop
         ltB12 = smax-mono
               (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
@@ -102,7 +102,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
             lto}
         ltcB = smax-sucMono (smax-mono
           ltB
-          ((≤ₛ-limiting {{æ = Approx}} _ λ cb → (_ ⊓Size _ By hide ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb2 cb)) ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb1 cb) )  ≤⨟ smax-lim2L (λ x → codeSize (c1 x)) (λ x → codeSize (c2 x))) -- (≤ₛ-limiting ⦃ æ = Approx ⦄ {c = cB} _ λ cb → {!!} ≤⨟  _ ⊓Size _ By hide  )
+          ((≤ₛ-limiting {{æ = Approx}} λ cb → (_ ⊓Size _ By hide ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb2 cb)) ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb1 cb) )  ≤⨟ smax-lim2L (λ x → codeSize (c1 x)) (λ x → codeSize (c2 x))) -- (≤ₛ-limiting ⦃ æ = Approx ⦄ {c = cB} _ λ cb → {!!} ≤⨟  _ ⊓Size _ By hide  )
           ≤⨟ smax-swap4)
 descMeet {I1 = I1} {I2 = I2} (CRec j1 D1) (CRec j2 D2) lto ltI ltB lt  =
       CRec
@@ -114,7 +114,7 @@ descMeet {I1 = I1} {I2} {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (C
         (λ cb k → fromL ([ Approx ] I1 ,, I2 ∋ j1 (cb1 cb) (fst (k12 cb k)) ⊓ j2 (cb2 cb) (snd (k12 cb k)) By hide {arg = ≤< ltI lto }))
         (descMeet D1 D2 lto ltI ltB ltcB)
         _ reflp
-      where
+      module DescMeetHRec where
         ltB12 :  smax  (codeSize cB1)  (codeSize cB2) ≤ₛ  oTop
         ltB12 = smax-mono
           (≤↑ _ ≤⨟ ≤ₛ-sucMono ((≤↑ _ ≤⨟ ≤ₛ-sucMono ( smax-≤L)) ≤⨟ smax*-≤L))

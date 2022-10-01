@@ -88,9 +88,9 @@ abstract
   ≤ₛ-cocone {c = c} {f = f} k =  ≤o-cocone (λ x → sOrd (f x)) k (≤o-refl _) ≤⨟o omax∞-self (OLim c (λ x → sOrd (f x)))
 
   ≤ₛ-limiting : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size}
-    → (s : Size)
+    → {s : Size}
     → (∀ k → f k ≤ₛ s) → SLim c f ≤ₛ s
-  ≤ₛ-limiting {f = f} (OS o idem) lt = ≤o-trans (omax∞-mono (≤o-limiting (λ x → sOrd (f x)) λ k → lt k))  (omax∞-≤ idem)
+  ≤ₛ-limiting {f = f} {s = OS o idem} lt = ≤o-trans (omax∞-mono (≤o-limiting (λ x → sOrd (f x)) λ k → lt k))  (omax∞-≤ idem)
 
   ≤ₛ-extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f1 f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size}
     → (∀ k → f1 k ≤ₛ f2 k)
@@ -167,7 +167,7 @@ smax-lim2L :
     {c2 : ℂ ℓ2}
     (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Size)
     → SLim {{æ = æ1}} c1 (λ k1 → SLim {{æ = æ2}} c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim {{æ = æ1}} c1 f1) (SLim {{æ = æ2}} c2 f2)
-smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k1 → ≤ₛ-limiting ⦃ æ = _ ⦄ _ (λ k2 → smax-mono (≤ₛ-cocone ⦃ æ = _ ⦄ k1) (≤ₛ-cocone {{æ = _}} k2)))
+smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ (λ k1 → ≤ₛ-limiting ⦃ æ = _ ⦄ (λ k2 → smax-mono (≤ₛ-cocone ⦃ æ = _ ⦄ k1) (≤ₛ-cocone {{æ = _}} k2)))
 
 
 data _<ₛPair_ : (Size × Size) → (Size × Size) → Set where
