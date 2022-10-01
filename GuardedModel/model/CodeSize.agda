@@ -378,11 +378,6 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
   in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt
 
 
-record DataGermsSmaller : Set2 where
-  field
-    dataGermSmaller : ∀ {{_ : Æ}} (ℓ) tyCtor {pars : ApproxEl (Params ℓ tyCtor)} {indices} → dataGermDescSize ℓ tyCtor ≤ₛ descSize (descFor ℓ tyCtor pars indices)
-
-open DataGermsSmaller {{...}} public
 
 
 -- Used for well-founded 2-argument induction

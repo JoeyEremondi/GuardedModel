@@ -28,7 +28,7 @@ open import SizeOrd
 
 open import CastComp.Interface
 
-module CastComp.DescMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}} {{dgs : DataGermsSmaller}}
+module CastComp.DescMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
     (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
 
   where

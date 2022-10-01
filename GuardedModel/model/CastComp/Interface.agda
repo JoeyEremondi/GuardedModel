@@ -21,7 +21,7 @@ open import CodeSize
 -- open import CodePair
 open import WMuEq
 
-module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} {{_ : DataGermsSmaller}}  where
+module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}}   where
 
 open import Code
 open import Head

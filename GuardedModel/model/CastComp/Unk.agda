@@ -28,7 +28,7 @@ open import Ord
 
 open import CastComp.Interface
 
-module CastComp.Unk {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}} {{dgs : DataGermsSmaller}}
+module CastComp.Unk {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
     {ℓ} (cSize : Ord) (vSize : Ord) (scm : SmallerCastMeet ℓ cSize vSize)
 
   where

@@ -25,7 +25,7 @@ open import InductiveCodes
 open import CodeSize
 open import WMuEq
 
-module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} {{_ : DataGermsSmaller}} where
+module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} where
 
 open import Code
 open import Head

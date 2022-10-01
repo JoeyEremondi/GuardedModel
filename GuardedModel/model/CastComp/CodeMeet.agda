@@ -28,8 +28,8 @@ open import WellFounded
 
 open import CastComp.Interface
 
-module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}} {{dgs : DataGermsSmaller}}
-    (⁇Allowed : Bool){ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
+module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
+    (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
 
   where
 
@@ -39,12 +39,12 @@ open import Util
 
 
 open SmallerCastMeet scm
-open import CastComp.DescMeet {{dt}} {{dg}} {{ic}} {{dgs}} ⁇Allowed {ℓ} cSize vSize scm
+open import CastComp.DescMeet {{dt}} {{dg}} {{ic}} ⁇Allowed {ℓ} cSize vSize scm
 
 {-# DISPLAY SmallerCastMeet._⊓_By_  = _⊓_By_  #-}
 {-# DISPLAY SmallerCastMeet._∋_⊓_By_  = _∋_⊓_By_  #-}
 
-codeMeet : ∀ {{_ : Æ}} {h1 h2}
+codeMeet : ∀ {h1 h2}
   → (c1 c2 : ℂ ℓ )
   → (view : HeadMatchView h1 h2)
   → (eq1 : h1 ≡p codeHead c1)
