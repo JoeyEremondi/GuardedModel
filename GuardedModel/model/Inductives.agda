@@ -158,46 +158,62 @@ data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
   GuardedArg : A → GuardedArg⇒ A Rest⇒ B
   GRest : B → GuardedArg⇒ A Rest⇒ B
 
--- "Flattened" descriptions. We index by the type that that fields are parameterized over
--- So the shape is never dependent on previous values, only the types
-data GermCtor : Set → Set1 where
-  GEnd : ∀ {B} → GermCtor B
-  GArg : ∀ {B} → (A : B → Set) → (D : GermCtor (Σ[ b ∈ B ] A b)) → GermCtor B
-  GHRec : ∀ {B} → (A : B → Set) → (D : GermCtor B) → GermCtor B
-  GRec : ∀ {B} → (D : GermCtor B) → GermCtor B
-  GUnk : ∀ {B} → (A : B → Set) → (D : GermCtor B) → GermCtor B
-
-GermCommand : ∀ {B} → GermCtor B → (B → Set)
-GermCommand {B} GEnd _ = Unit
-GermCommand {B} (GArg A D) b = Σ[ a ∈ A b ] (GermCommand D (b , a))
-GermCommand {B} (GHRec A D) b = GermCommand D b
-GermCommand {B} (GRec D) b = GermCommand D b
-GermCommand {B} (GUnk A D) b = GermCommand D b
-
-GermResponse : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
-GermResponse {B} GEnd b com = 𝟘
-GermResponse {B} (GArg A D) b (a , com) = GermResponse D (b , a) com
-GermResponse {B} (GHRec A D) b com =  Rec⇒ A b   Rest⇒ (Σ[ a ∈ A b ] GermResponse D b com)
-GermResponse {B} (GRec D) b com = Rec⇒ 𝟙   Rest⇒ GermResponse D b com
-GermResponse {B} (GUnk A D) b com = GermResponse D b com
-
-
-GermResponseUnk : ∀ {B} → (D : GermCtor B) → (b : B) → GermCommand D b → Set
-GermResponseUnk (GUnk A D) b com = Rec⇒ A b  Rest⇒ (A b × GermResponseUnk D b com)
-GermResponseUnk GEnd b x = 𝟘
-GermResponseUnk (GArg A D) b (a , com) = GermResponseUnk D (b , a) com
-GermResponseUnk (GHRec A D) b com = GermResponseUnk D b com
-GermResponseUnk (GRec D) b com = GermResponseUnk D b com
-
-interpGermCtor : ∀ {B} → GermCtor B → B → Container 𝟙
-interpGermCtor D b = (λ _ → GermCommand D b) ◃ (GermResponse D b) ◃ (GermResponseUnk D b) / (λ _ _ → tt)
 
 -- Used to classify the "skeleton" of inductive types before we've defined codes
 data IndSig : Set where
   SigE : IndSig
   SigA SigR SigHR : IndSig → IndSig
--- data IndSig : Set where
---   SigE SigA SigR SigHR SigU : IndSig
+
++-Set : (B+ : Set) → (B+ → Set) → Set1
++-Set B+ B- = Σ[ A+ ∈ (B+ → Set) ] ((b : B+) → A+ b → B- b → Set)
+
+-- -- "Flattened" descriptions. We index by the type that that fields are parameterized over
+-- -- So the shape is never dependent on previous values, only the types
+-- -- We have separate positive and negative "previous" parameters, since
+-- -- the positive ones can't depend on anything behind the guarded modality
+data GermCtor : (B : Set) → (B → Set) → IndSig → Set1 where
+  GEnd : ∀ { B+ B- } → GermCtor B+ B- SigE
+  -- Future arguments can only depend on the strictly positive part of the germ
+  GArg : ∀ {B+ B- sig} → ((A+ , A-) : +-Set B+ B-) → (D : GermCtor (Σ B+ A+) (λ (b , a) → Σ (B- b) (A- b a)) sig) → GermCtor B+ B- (SigA sig)
+  GHRec : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigHR sig)
+  GRec : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigR sig)
+  -- -- Since we don't have Unk in non-germ descriptions specially, it doesn't affect the signature
+  -- -- TODO: is this right?
+  GUnk : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- sig
+
+GermCommand : ∀ {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
+GermCommand GEnd b+ b- = Unit
+GermCommand (GArg (A+ , A-) D) b+ b- = Σ[ a+- ∈  (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) ] GermCommand D (b+ , fst a+-) (b- , snd a+-)
+GermCommand (GHRec (A+ , A-) D) b+ b- = GermCommand D b+ b-
+GermCommand (GRec D) b+ b- = GermCommand D b+ b-
+GermCommand (GUnk (A+ , A-) D) b+ b- = GermCommand D b+ b-
+
+GermResponse : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
+GermResponse {B+}{ B- } GEnd b+ b- com = 𝟘
+GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , a+) (b- , a-) com
+GermResponse {B+ }{B- } (GHRec (A+ , A-) D) b+ b- com =
+  Rec⇒  (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-)
+  Rest⇒ (Σ[ a+- ∈ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) ] GermResponse D b+ b- com)
+GermResponse {B+ }{B- } (GRec D) b+ b- com = Rec⇒ 𝟙   Rest⇒ GermResponse D b+ b- com
+GermResponse {B+ }{B- } (GUnk A D) b+ b- com = GermResponse D b+ b- com
+
+
+GermResponseUnk : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
+GermResponseUnk (GUnk (A+ , A-) D) b+ b- com =
+  Rec⇒ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-)
+  Rest⇒ ((Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) × GermResponseUnk D b+ b- com)
+GermResponseUnk GEnd b+ b- x = 𝟘
+GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , a+) (b- , a-) com
+GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com
+GermResponseUnk (GRec D) b+ b- com = GermResponseUnk D b+ b- com
+
+interpGermCtor' : ∀ {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container 𝟙
+interpGermCtor' D b+ b- = (λ _ → GermCommand D b+ b-) ◃ (GermResponse D b+ b-) ◃ (GermResponseUnk D b+ b-) / (λ _ _ → tt)
+
+interpGermCtor : ∀ {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container 𝟙
+interpGermCtor D = interpGermCtor' D tt tt
+-- -- data IndSig : Set where
+-- --   SigE SigA SigR SigHR SigU : IndSig
 
 -- open import Cubical.Data.List
 
@@ -234,10 +250,10 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
   germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
-  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d) tt
+  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d)
   FGerm : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set → Set → Set
   FGerm ℓ c Self Unk = W (germContainer ℓ c Self) Unk tt
 
