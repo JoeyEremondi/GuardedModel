@@ -65,22 +65,22 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ →
  GArgCode : ∀ {B+ B- sig}  {(A+ , A-) : +-Set B+ B- } {D : GermCtor _ _ sig}
    → (c+ : B+ → ℂ ℓ)
    → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
-   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
+   → (iso+ : ∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GArg (A+ , A-) D)
  GHRecCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
    → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
-   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
+   → (iso+ : ∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GHRec (A+ , A-) D)
  GUnkCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
    → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (∀ b+ → Iso (A+ b+) (El (c+ b+)))
-   → (∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
+   → (iso+ : ∀ b+ → Iso (A+ b+) (El (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk (A+ , A-) D)
 
@@ -97,6 +97,11 @@ record InductiveCodes : Set2 where
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
+
+
+
+
+
 
   -- Predicate that determines if a code is well formed
   -- with respect to the inductive types it refers to

@@ -78,39 +78,38 @@ fromToCFin {ℕ.suc n} Fin.zero = reflp
 fromToCFin {ℕ.suc n} (Fin.suc x) rewrite fromToCFin x = reflp
 
 
-germFIndSize : ∀ {{æ : Æ}} {ℓ} {B} (tyCtor : CName) → (D : GermCtor B)
+germFIndSize : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName) → (D : GermCtor B+ B- sig)
   → (DataGermIsCode ℓ D)
-  → (b : B)
-  → (cs : FContainer (interpGermCtor D b) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → (b+ : B+)
+  → (b- : B- b+)
+  → (cs : FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
   → □ _ (λ _ → Size) (tt , cs)
   → Size
 germIndSize : ∀ {{ _ : Æ }} {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
 
-
-germFIndSize tyCtor GEnd GEndCode b (FC com k unk) φ = S1
-germFIndSize tyCtor (GRec D) (GRecCode c pf) b (FC com k unk) φ =
-  S↑ (smax (φ (Rec tt)) (germFIndSize tyCtor D pf b (FC com (λ r → k (Rest r)) unk) (λ r → φ (Rest r))))
-germFIndSize tyCtor (GArg A D) (GArgCode c isom pf) b (FC (a , com) k unk) φ = S↑ (germFIndSize tyCtor D pf (b , a) (FC com k unk) φ)
-germFIndSize tyCtor (GArg A D) (GGuardedArgCode c x pf) b (FC com k unk) φ = S1
-germFIndSize {{æ}} tyCtor (GHRec A D) (GHRecCode c isom pf) b (FC com k unk) φ = S↑ (SLim (c b) helper)
-  where
-    helper : Approxed (λ {{æ}} → El {{æ = æ}} (c b))  → Size
-    helper a = smax (φ (Rec ac)) (germFIndSize tyCtor D pf b (FC com (λ r → k (Rest (ac , r))) unk) λ r → φ (Rest (ac , r)))
+germFIndSize tyCtor GEnd GEndCode b+ b- (FC com k unk) φ = S1
+germFIndSize tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) k unk) φ
+  = S↑ (germFIndSize tyCtor D isCode (b+ , a+) (b- , a-) (FC com k unk) φ)
+germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ
+  = S↑ (SLim (c+ b+) (λ a+ → SLim (c- b+ _ b-) (λ a- → helper a+ a-)))
+    where
+    helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Approxed (λ {{æ}} → El {{æ = æ}} (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-))  → Size
+    helper a+ a- = smax
+      (φ (Rec (ac+ , ac-)))
+      (germFIndSize tyCtor D isCode b+ b- (FC com (λ r → k (Rest ((ac+ , ac-) , r))) unk) λ r → φ ((Rest ((ac+ , ac-) , r))))
       where
-        ac : A b
-        ac = Iso.inv (isom b) (exact a)
-germFIndSize tyCtor (GHRec A D) (GGuardedHRecCode c x pf) b (FC com k unk) φ = S1
-germFIndSize tyCtor (GUnk A D) (GUnkCode c isom pf) b (FC com k unk) φ = S↑ (SLim (c b) helper)
-  where
-    helper : Approxed (λ {{æ}} → El {{æ = æ}} (c b))  → Size
-    helper a =  germFIndSize tyCtor D pf b (FC com k λ r → unk (Rest ((ac , r)))) φ
-      where
-        ac : A b
-        ac = Iso.inv (isom b) (exact a)
-germFIndSize tyCtor (GUnk A D) (GGuardedUnkCode c x pf) b (FC com k unk) φ = S1
+        ac+ : A+ b+
+        ac+ = Iso.inv (iso+ b+) (exact a+)
+        ac- : A- b+ ac+ b-
+        ac- = Iso.inv (iso- b+ ac+ b-) (next (exact a-))
+germFIndSize tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com k unk) φ
+  = S↑ (smax
+    (φ (Rec tt))
+    (germFIndSize tyCtor D isCode b+ b- (FC com (λ r → k (Rest r)) unk) (λ r → φ (Rest r))))
+germFIndSize tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ = S1 --TODO: make more precise?
 
 
-germIndSize {ℓ} tyCtor = wRecArg tyCtor Size (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt) S1 S1
+germIndSize {ℓ} tyCtor = wRecArg tyCtor Size (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt tt) S1 S1
 
 
 
@@ -136,9 +135,10 @@ smax-DLim2 tyCtor f1 f2 with numCtors tyCtor
 
 -- Marks each Unk thing as having size 1, so we'll have to always handle them with normal recursion
 -- germArgSize : ∀ {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
-germDescSize : ∀ {{_ : Æ}} {ℓ} {B} →  (D : GermCtor B)
+germDescSize : ∀ {{_ : Æ}} {ℓ} { B+ B- sig} →  (D : GermCtor B+ B- sig)
   → (DataGermIsCode ℓ D)
-  → B
+  → (b+ : B+)
+  → B- b+
   → Size
 codeSize : ∀ {ℓ} → ℂ ℓ → Size
 descSize : ∀  {ℓ sig} →  {cI cB : ℂ ℓ} → ℂDesc cI cB sig → Size
@@ -180,14 +180,21 @@ descSize {cI = cI} {cB = cB} (CHRec c j D cB' _) =
     ∷  (descSize D) ∷ [] ))
 
 
-germDescSize  GEnd GEndCode b = S1
-germDescSize  (GArg A D) (GArgCode c isom pf) b = S↑ (smax (codeSize (c b)) (SLim (c b) (λ a → germDescSize D pf (b , Iso.inv (isom b) (exact a) ))))
-germDescSize  (GArg A D) (GGuardedArgCode c x₁ x₂) b = S1
-germDescSize  (GRec D) (GRecCode isom pf) b = S↑ (germDescSize D pf b)
-germDescSize  (GHRec A D) (GHRecCode c isom pf) b = S↑ (SLim (c b) (λ a → smax (codeSize (c b))( germDescSize  D pf b)))
-germDescSize  (GHRec A D) (GGuardedHRecCode c x₁ x₂) b = S1
-germDescSize  (GUnk A D) (GUnkCode c x pf) b =  S↑ (SLim (c b) λ a → smax (codeSize (c b)) (germDescSize D pf b))
-germDescSize  (GUnk A D) (GGuardedUnkCode c x pf) b = S1
+
+germDescSize GEnd GEndCode b+ b- = S1
+germDescSize (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b-
+  = S↑ (smax
+       (codeSize (c+ b+))
+       (SLim (c+ b+) λ a+ → codeSize (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-)))
+germDescSize (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- =
+  S↑ (smax
+       (codeSize (c+ b+))
+       (SLim (c+ b+) λ a+ → codeSize (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-)))
+germDescSize (GRec D) (GRecCode isCode) b+ b- = S↑ (germDescSize D isCode b+ b-)
+germDescSize (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b-
+  = S↑ (smax
+       (codeSize (c+ b+))
+       (SLim (c+ b+) λ a+ → codeSize (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-)))
 
 
 
@@ -375,7 +382,7 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
   let
     d : DName tyCtor
     d = pSubst Fin (pSym deq) (fromCFin x)
-  in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt
+  in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt tt
 
 
 
