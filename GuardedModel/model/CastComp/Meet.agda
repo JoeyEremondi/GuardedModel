@@ -59,6 +59,21 @@ open SmallerCastMeet scm
       → HeadMatchView vh1 vh2
       → LÆ (⁇Ty ℓ)
 
+
+germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+1 B-1 B+2 B-2 sig} (tyCtor : CName)
+  → (D1 : GermCtor B+1 B-2 sig)
+  → (D2 : GermCtor B+2 B-2 sig)
+  → (DataGermIsCode ℓ D1)
+  → (DataGermIsCode ℓ D2)
+  → (b+1 : B+1)
+  → (b-1 : B-1 b+1)
+  → (b+2 : B+1)
+  → (b-2 : B-1 b+1)
+  → (cs1 : FContainer (interpGermCtor' D1 b+1 b-1 ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → (cs2 : FContainer (interpGermCtor' D2 b+2 b-2 ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → ?
+
+
 ⁇meet x y cpf vpf = ⁇meet' x y cpf vpf reflp reflp (headMatchView (unkHead x) (unkHead y))
 
 ⁇meet' x y reflp lt eqx eqy (H℧L x₁) = pure ⁇℧
@@ -93,6 +108,8 @@ open SmallerCastMeet scm
 ⁇meet' (CodeModule.⁇Σ (fst1 , snd1)) (CodeModule.⁇Σ (fst2 , snd2)) reflp lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
+
+
 
 meet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
