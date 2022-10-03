@@ -265,7 +265,7 @@ CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂ
   --   cx =  transport⁻ (dataGermCodeEq ℓ tyCtor) x
 
 
-elSize C⁇ x = (⁇Size x)
+elSize C⁇ x = S↑ (⁇Size x)
 elSize C℧ x = S1
 elSize C𝟘 x = S1
 elSize C𝟙 x = S1
@@ -299,6 +299,26 @@ CElSize (CHRec c j D _ _) E {b = b} (ElHRec f x) = S↑ (SLim (c b) λ a → sma
 
 
 
+-- ℧size : ∀ {{_ : Æ}} {ℓ} (c : ℂ ℓ) → elSize c (℧ c) ≤ₛ S1
+-- ℧size C⁇ = {!!}
+-- ℧size C℧ = {!!}
+-- ℧size C𝟘 = {!!}
+-- ℧size C𝟙 = {!!}
+-- ℧size CType = {!!}
+-- ℧size (CΠ c cod) = {!!}
+-- ℧size (CΣ c cod) = {!!}
+-- ℧size (C≡ c x y) = {!!}
+-- ℧size (Cμ tyCtor c D x) = {!!}
+-- ℧size C⁇ = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size C℧ = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size C𝟘 = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size C𝟙 = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size {suc ℓ} CType = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size (CΠ c cod) = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size ⦃ Approx ⦄ (CΣ c cod) = ≤ₛ-sucMono (≤ₛ-Z)
+-- ℧size ⦃ Exact ⦄ (CΣ c cod) =  ≤ₛ-limiting (λ x → elSize (cod (approx x)) (℧ (CΠ c cod) x)) λ k → ℧size (cod (approx k))
+-- ℧size (C≡ c x y) = ℧size {{Approx}} c
+-- ℧size (Cμ tyCtor c D x) = ≤ₛ-refl _
 
 codeSuc : ∀ {ℓ} (c : ℂ ℓ) → SZ <ₛ codeSize c
 codeSuc C⁇ = ≤ₛ-refl
@@ -363,6 +383,8 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
     d : DName tyCtor
     d = pSubst Fin (pSym deq) (fromCFin x)
   in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt tt
+
+
 
 
 -- Used for well-founded 2-argument induction
