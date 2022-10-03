@@ -250,12 +250,12 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    dataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
+    preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
   germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟙
-  germContainer ℓ c Self  = Arg λ d → interpGermCtor (dataGerm ℓ c Self d)
-  FGerm : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set → Set → Set
-  FGerm ℓ c Self Unk = W (germContainer ℓ c Self) Unk tt
+  germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
+  FPreGerm : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set → Set → Set
+  FPreGerm ℓ c Self Unk = W (germContainer ℓ c Self) Unk tt
 
 
 open DataGerms {{...}} public

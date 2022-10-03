@@ -12,6 +12,7 @@ open import DecPEq hiding (_∎)
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
+open import Cubical.Data.Unit renaming (Unit to 𝟙)
 -- open import Cubical.Data.Prod
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
@@ -96,10 +97,14 @@ record InductiveCodes : Set2 where
       → (DCtors tyCtor (Indices ℓ tyCtor pars))
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
-      → DataGermIsCode ℓ (dataGerm ℓ tyCtor (▹⁇ ℓ) d)
-
-
-
+      → DataGermIsCode ℓ (preDataGerm ℓ tyCtor (▹⁇ ℓ) d)
+  -- Now that ⁇ is defined we can tie the knot
+  dataGerm : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton tyCtor d)
+  dataGerm  ℓ tyCtor d = preDataGerm ℓ tyCtor (▹⁇ ℓ) d
+  FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
+  FGerm ℓ c Unk = W (germContainer ℓ c (▹⁇ ℓ)) Unk tt
+  Germ : {{ _ : Æ }} → ℕ → (c : CName) → Set
+  Germ ℓ c = FGerm ℓ c (⁇Ty ℓ)
 
 
 

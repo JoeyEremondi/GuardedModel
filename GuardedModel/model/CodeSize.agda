@@ -109,7 +109,7 @@ germFIndSize tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com k unk) φ
 germFIndSize tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ = S1 --TODO: make more precise?
 
 
-germIndSize {ℓ} tyCtor = wRecArg tyCtor Size (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt tt) S1 S1
+germIndSize {ℓ} tyCtor = wRecArg tyCtor Size (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt) S1 S1
 
 
 
@@ -265,7 +265,7 @@ CElSize : ∀ {{ _ : Æ }} {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂ
   --   cx =  transport⁻ (dataGermCodeEq ℓ tyCtor) x
 
 
-elSize C⁇ x = S↑ (⁇Size x)
+elSize C⁇ x = (⁇Size x)
 elSize C℧ x = S1
 elSize C𝟘 x = S1
 elSize C𝟙 x = S1
@@ -382,7 +382,7 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
   let
     d : DName tyCtor
     d = pSubst Fin (pSym deq) (fromCFin x)
-  in germDescSize (dataGerm ℓ tyCtor (▹⁇ ℓ) d) (dataGermIsCode ℓ tyCtor d) tt tt
+  in germDescSize (dataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt
 
 
 

@@ -60,19 +60,36 @@ open SmallerCastMeet scm
       → LÆ (⁇Ty ℓ)
 
 
-germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+1 B-1 B+2 B-2 sig} (tyCtor : CName)
-  → (D1 : GermCtor B+1 B-2 sig)
-  → (D2 : GermCtor B+2 B-2 sig)
-  → (DataGermIsCode ℓ D1)
-  → (DataGermIsCode ℓ D2)
-  → (b+1 : B+1)
-  → (b-1 : B-1 b+1)
-  → (b+2 : B+1)
-  → (b-2 : B-1 b+1)
-  → (cs1 : FContainer (interpGermCtor' D1 b+1 b-1 ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-  → (cs2 : FContainer (interpGermCtor' D2 b+2 b-2 ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-  → ?
 
+
+  -- → (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+
+germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName)
+  → (D : GermCtor B+ B- sig)
+  → (isCode1 : DataGermIsCode ℓ D)
+  → (isCode2 : DataGermIsCode ℓ D)
+  → (b+ : B+)
+  → (b- : B- b+)
+  → (cs1 cs2 : FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → (vSize ≡p smax
+    (germFIndSize tyCtor D isCode1 b+ b- cs1 λ r → germIndSize tyCtor (FContainer.responseNow cs1 r))
+    (germFIndSize tyCtor D isCode1 b+ b- cs2 λ r → germIndSize tyCtor (FContainer.responseNow cs2 r))
+    )
+  → LÆ (FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+
+
+germIndMeet : ∀ {{æ : Æ}} {ℓ} {tyCtor}
+  → (x y : Germ ℓ tyCtor)
+  →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
+  → LÆ (Germ ℓ tyCtor)
+germIndMeet W℧ y eq = pure W℧
+germIndMeet W⁇ y eq =  pure y
+germIndMeet x W℧ eq = pure W℧
+germIndMeet x W⁇ eq = pure x
+germIndMeet {ℓ} {tyCtor} (Wsup x) (Wsup y) lt = do
+  fcRet ← germFIndMeet tyCtor (dataGerm ℓ tyCtor {!d!}) {!!} {!!} tt tt {!!} {!!} {!!}
+  pure (Wsup {!!})
+-- germIndMeet {tyCtor = tyCtor} x y eq = wInd {!!} {!!} {!!} {!!} x
 
 ⁇meet x y cpf vpf = ⁇meet' x y cpf vpf reflp reflp (headMatchView (unkHead x) (unkHead y))
 
@@ -84,7 +101,7 @@ germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+1 B-1 B+2 B-2 sig} (tyCtor : CName)
 ⁇meet' x y reflp lt eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
 ⁇meet' CodeModule.⁇𝟙 CodeModule.⁇𝟙 reflp lt eqx eqy (HEq reflp) | eq = pure ⁇𝟙
 ⁇meet' (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) reflp lt eqx eqy (HEq reflp) | eq
-  = pure (⁇Type (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp))
+  = pure (⁇Type {{inst = suc<}} (oCodeMeet (self-1 {{suc<}}) c1 c2 reflp reflp))
 ⁇meet' (CodeModule.⁇Cumul {{suc<}} c1 x1) (CodeModule.⁇Cumul c2 x2) reflp lt eqx eqy (HEq reflp) | eq
   -- Cast to a common code type, then meet
   = do
@@ -92,12 +109,12 @@ germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+1 B-1 B+2 B-2 sig} (tyCtor : CName)
   x1' ← oCast (self-1 {{suc<}}) c1 c1⊓c2 reflp x1 reflp
   x2' ← oCast (self-1 {{suc<}}) c2 c1⊓c2 reflp x2 reflp
   x1⊓x2 ← oMeet (self-1 {{suc<}}) c1⊓c2 x1' x2' reflp reflp
-  pure (⁇Cumul c1⊓c2 x1⊓x2)
+  pure (⁇Cumul {{inst = suc<}} c1⊓c2 x1⊓x2)
 ⁇meet' {{æ = Approx}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) reflp lt eqx eqy (HEq reflp) | eq
   = pure ⦃ Approx ⦄ (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Approx ⦄ (λ _ → fromL (⁇meet ⦃ Approx ⦄ (f1 U⁇) (f2 U⁇) reflp
     (smax-mono
-      (≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ (f1 U⁇))))
-      (≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ (f1 U⁇))))
+      (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
+      (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
     ≤⨟ lt))))
 ⁇meet' {{æ = Exact}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) reflp lt eqx eqy (HEq reflp) | eq
   = do
@@ -107,7 +124,9 @@ germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+1 B-1 B+2 B-2 sig} (tyCtor : CName)
     pure {{Exact}} (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Exact ⦄ fRet)
 ⁇meet' (CodeModule.⁇Σ (fst1 , snd1)) (CodeModule.⁇Σ (fst2 , snd2)) reflp lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
-⁇meet' (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ x₁) reflp lt eqx eqy (HEq reflp) | eq = {!!}
+⁇meet' (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ y) reflp lt eqx eqy (HEq reflp) | reflp = do
+  x⊓y ← germIndMeet x y (<≤ (smax-strictMono ≤ₛ-refl ≤ₛ-refl) lt)
+  pure (⁇μ tyCtor x⊓y)
 
 
 

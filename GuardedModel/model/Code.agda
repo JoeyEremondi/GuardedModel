@@ -223,7 +223,7 @@ record CodeModule
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
-      ⁇μ : (tyCtor : CName) → (x : FGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
+      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
     El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d) true)) 𝟙 i
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 

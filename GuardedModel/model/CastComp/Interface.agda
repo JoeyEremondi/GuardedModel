@@ -69,6 +69,12 @@ record SizedCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set 
       → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
 
+    oMeet+ : ∀ {{æ : Æ}}
+      → (c : ℂ ℓ)
+      → (x y : El c)
+      → ( pfc1 : (codeSize c)  ≡p SZ )
+      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
+      → LÆ (El c)
 
     oCodeMeet :
       (c1 c2 : ℂ ℓ)
