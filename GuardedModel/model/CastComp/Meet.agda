@@ -18,6 +18,7 @@ open import Inductives
 open import GuardedAlgebra
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Isomorphism
 
 open import ApproxExact
 open import InductiveCodes
@@ -64,7 +65,7 @@ open SmallerCastMeet scm
 
   -- → (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
 
-germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName)
+germFIndMeet : ∀ {{æ : Æ}} {B+ B- sig} (tyCtor : CName)
   → (D : GermCtor B+ B- sig)
   → (isCode : DataGermIsCode ℓ D)
   → (b+ : B+)
@@ -72,7 +73,7 @@ germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName)
   → (cs1 cs2 : FCGerm ℓ tyCtor D b+ b-)
   → (smax (germFCSize isCode cs1) (germFCSize isCode cs2) <ₛ vSize)
   → LÆ (FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-germIndMeet : ∀ {{æ : Æ}} {ℓ} {tyCtor}
+germIndMeet : ∀ {{æ : Æ}} {tyCtor}
   → (x y : DataGerm ℓ tyCtor)
   →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
   → LÆ (DataGerm ℓ tyCtor)
@@ -89,15 +90,16 @@ germFIndMeet tyCtor (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- cs1 cs2
 germFIndMeet tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
 germFIndMeet tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
   (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do
-  a+ ← {!c+ !} ∋ {!!} ⊓ {!!} By {!!}
-  pure {!c1!}
+  a+ ← c+ b+ ∋ Iso.fun (iso+ b+) a+1 ⊓ Iso.fun (iso+ b+) a+2 By {!!}
+  xrec ← germFIndMeet tyCtor D isCode (b+ , Iso.inv (iso+ b+) a+) {!!} (FC {!c1!} {!!} {!!}) {!!} {!!}
+  pure {!!}
 
 
 germIndMeet W℧ y eq = pure W℧
 germIndMeet W⁇ y eq =  pure y
 germIndMeet x W℧ eq = pure W℧
 germIndMeet x W⁇ eq = pure x
-germIndMeet {ℓ} {tyCtor} (Wsup x) (Wsup y) lt
+germIndMeet {tyCtor} (Wsup x) (Wsup y) lt
   with (d , x' , xlt) ← germMatch x
   with (dy , y' , ylt) ← germMatch y
   with decFin d dy
