@@ -66,29 +66,48 @@ open SmallerCastMeet scm
 
 germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName)
   → (D : GermCtor B+ B- sig)
-  → (isCode1 : DataGermIsCode ℓ D)
-  → (isCode2 : DataGermIsCode ℓ D)
+  → (isCode : DataGermIsCode ℓ D)
   → (b+ : B+)
   → (b- : B- b+)
   → (cs1 cs2 : FCGerm ℓ tyCtor D b+ b-)
-  → (vSize ≡p smax
-    (germFCSize isCode1 cs1)
-    (germFCSize isCode2 cs2)
-    )
+  → (smax (germFCSize isCode cs1) (germFCSize isCode cs2) <ₛ vSize)
   → LÆ (FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-
-
 germIndMeet : ∀ {{æ : Æ}} {ℓ} {tyCtor}
   → (x y : DataGerm ℓ tyCtor)
   →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
   → LÆ (DataGerm ℓ tyCtor)
+germFIndMeet tyCtor GEnd GEndCode b+ b- cs1 cs2 lt = pure (FC tt (λ ()) λ ())
+-- We've got two parts, the recursive value and the "rest"
+-- Take the meet of both recursively then put them back together
+germFIndMeet tyCtor (GRec D) (GRecCode isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt
+  = do
+    (FC crec rrec urec) ← germFIndMeet tyCtor D isCode  b+ b- (FC c1 (λ r → r1 (Rest r)) u1) (FC c2 (λ r → r2 (Rest r)) u2)
+      (<ₛ-trans (smax-strictMono (≤ₛ-sucMono smax-≤R) (≤ₛ-sucMono smax-≤R)) lt)
+    xrec ← germIndMeet (r1 (Rec tt)) (r2 (Rec tt))  (<ₛ-trans (smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)) lt)
+    pure (FC crec (λ { (Rec x) → xrec ; (Rest x) → rrec x}) urec)
+germFIndMeet tyCtor (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- cs1 cs2 lt = {!!}
+germFIndMeet tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
+germFIndMeet tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
+  (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do
+  a+ ← {!c+ !} ∋ {!!} ⊓ {!!} By {!!}
+  pure {!c1!}
+
+
 germIndMeet W℧ y eq = pure W℧
 germIndMeet W⁇ y eq =  pure y
 germIndMeet x W℧ eq = pure W℧
 germIndMeet x W⁇ eq = pure x
-germIndMeet {ℓ} {tyCtor} (Wsup x) (Wsup y) lt = do
-  fcRet ← germFIndMeet tyCtor (germForCtor ℓ tyCtor {!d!}) {!!} {!!} tt tt {!!} {!!} {!!}
-  pure (Wsup {!!})
+germIndMeet {ℓ} {tyCtor} (Wsup x) (Wsup y) lt
+  with (d , x' , xlt) ← germMatch x
+  with (dy , y' , ylt) ← germMatch y
+  with decFin d dy
+... | yes reflp = do
+  fcRet ← germFIndMeet tyCtor (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt x' y'
+    (<ₛ-trans (smax-strictMono xlt ylt) lt)
+  pure (dataGermInj fcRet)
+-- Meet is error if they have different data constructors
+... | no npf = pure W℧
+  -- ... | no npf = ?
 -- germIndMeet {tyCtor = tyCtor} x y eq = wInd {!!} {!!} {!!} {!!} x
 
 ⁇meet x y cpf vpf = ⁇meet' x y cpf vpf reflp reflp (headMatchView (unkHead x) (unkHead y))

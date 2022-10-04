@@ -105,8 +105,8 @@ o1 <o o2 = O↑ o1 ≤o o2
 ≤↑o (OLim c f) = ≤o-limiting f λ k → ≤o-trans (≤↑o (f k)) (≤o-sucMono (≤o-cocone f k (≤o-refl (f k))))
 
 
-<-in-≤ : ∀ {x y} → x <o y → x ≤o y
-<-in-≤ pf = ≤o-trans (≤↑o _) pf
+<-in-≤o : ∀ {x y} → x <o y → x ≤o y
+<-in-≤o pf = ≤o-trans (≤↑o _) pf
 
 
 -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
@@ -146,7 +146,7 @@ ordWF (O↑ x) = acc (λ { y (≤o-sucMono y≤x) → smaller-accessible x (ordW
 ordWF (OLim c f) = acc helper
   where
     helper : (y : Ord) → (y <o OLim c f) → Acc _<o_ y
-    helper y (≤o-cocone .f k y<fk) = smaller-accessible (f k) (ordWF (f k)) y (<-in-≤ y<fk)
+    helper y (≤o-cocone .f k y<fk) = smaller-accessible (f k) (ordWF (f k)) y (<-in-≤o y<fk)
 
 open import Cubical.HITs.PropositionalTruncation as Prop
 

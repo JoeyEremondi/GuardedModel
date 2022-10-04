@@ -407,6 +407,11 @@ germMatch (FC (d , com) rn ru) =
   , FC com rn ru
   , ≤ₛ-refl
 
+dataGermInj : {{ _ : Æ }} → {ℓ : ℕ} → {tyCtor : CName} {d : DName tyCtor}
+    → FCGerm ℓ tyCtor (germForCtor ℓ tyCtor d) tt tt
+    → DataGerm ℓ tyCtor
+dataGermInj {d = d} (FC com now unk) = Wsup (FC (d , com) now unk)
+
 -- Used for well-founded 2-argument induction
 -- descPairSize : ∀ {{_ : Æ}} {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Size
 

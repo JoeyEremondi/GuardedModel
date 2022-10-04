@@ -80,6 +80,7 @@ abstract
   _≤⨟_ : ∀ {s1 s2 s3} → s1 ≤ₛ s2 → s2 ≤ₛ s3 → s1 ≤ₛ s3
   _≤⨟_  =  ≤o-trans
 
+
   ≤ₛ-refl : ∀ {s} → s ≤ₛ s
   ≤ₛ-refl =  ≤o-refl _
 
@@ -135,6 +136,7 @@ abstract
   smax-sucMono : ∀ {s1 s2 s1' s2'} → smax s1 s2 ≤ₛ smax s1' s2' → smax s1 s2 <ₛ smax (S↑ s1') (S↑ s2')
   smax-sucMono lt =  omax-sucMono lt
 
+
 smax-lub : ∀ {s1 s2 s} → s1 ≤ₛ s → s2 ≤ₛ s → smax s1 s2 ≤ₛ s
 smax-lub lt1 lt2 = smax-mono lt1 lt2 ≤⨟ smax-idem
 
@@ -158,6 +160,13 @@ abstract
 
 <≤ : ∀ {x y z} → x <ₛ y → y ≤ₛ z → x <ₛ z
 <≤ x<y y≤z = x<y ≤⨟  y≤z
+
+<-in-≤ : ∀ {s1 s2} → s1 <ₛ s2 → s1 ≤ₛ s2
+<-in-≤ lt = ≤↑ _ ≤⨟ lt
+
+<ₛ-trans : ∀ {s1 s2 s3} → s1 <ₛ s2 → s2 <ₛ s3 → s1 <ₛ s3
+<ₛ-trans lt1 lt2 = <≤ lt1 (<-in-≤ lt2)
+
 
 smax-lim2L :
     ∀ {æ1 æ2 : Æ}
