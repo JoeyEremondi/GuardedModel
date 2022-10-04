@@ -109,7 +109,7 @@ germFIndSize tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com k unk) φ
 germFIndSize tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ = S1 --TODO: make more precise?
 
 
-germIndSize {ℓ} tyCtor = wRecArg tyCtor Size (λ d → germFIndSize tyCtor (dataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt) S1 S1
+germIndSize {ℓ} tyCtor x = (wRecArg tyCtor Size (λ d cd φ → S↑ (germFIndSize tyCtor (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt cd φ)) S1 S1 x)
 
 
 
@@ -382,10 +382,30 @@ dataGermDescSize ℓ tyCtor with numCtors tyCtor in deq
   let
     d : DName tyCtor
     d = pSubst Fin (pSym deq) (fromCFin x)
-  in germDescSize (dataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt
+  in germDescSize (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt
+
+germFCSize :  ∀ {{æ : Æ}} {ℓ} {B+ B- sig} {tyCtor : CName}
+    → {D : GermCtor B+ B- sig}
+    → {b+ : B+}
+    → {b- : B- b+}
+    → (isCode : DataGermIsCode ℓ D)
+    → FCGerm ℓ tyCtor D b+ b-
+    → Size
+germFCSize {tyCtor = tyCtor} {D} {b+} {b- } isCode x = germFIndSize tyCtor D isCode b+ b- x λ r → germIndSize tyCtor (FContainer.responseNow x r)
 
 
-
+-- Match on the constructor of an element of the data germ
+-- and get back a proof that the match gives something smaller
+germMatch : {{ _ : Æ }} → {ℓ : ℕ} → {tyCtor : CName}
+    → (dg : FContainer (germContainer ℓ tyCtor (▹⁇ ℓ))
+      (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+    → Σ[ d ∈ DName tyCtor ]
+      Σ[ x ∈ FCGerm ℓ tyCtor (germForCtor ℓ tyCtor d) tt tt ]
+      germFCSize (dataGermIsCode ℓ tyCtor d) x <ₛ germIndSize {ℓ = ℓ} tyCtor (Wsup dg)
+germMatch (FC (d , com) rn ru) =
+  d
+  , FC com rn ru
+  , ≤ₛ-refl
 
 -- Used for well-founded 2-argument induction
 -- descPairSize : ∀ {{_ : Æ}} {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Size

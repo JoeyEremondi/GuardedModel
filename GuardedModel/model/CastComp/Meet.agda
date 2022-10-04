@@ -70,24 +70,24 @@ germFIndMeet : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName)
   → (isCode2 : DataGermIsCode ℓ D)
   → (b+ : B+)
   → (b- : B- b+)
-  → (cs1 cs2 : FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+  → (cs1 cs2 : FCGerm ℓ tyCtor D b+ b-)
   → (vSize ≡p smax
-    (germFIndSize tyCtor D isCode1 b+ b- cs1 λ r → germIndSize tyCtor (FContainer.responseNow cs1 r))
-    (germFIndSize tyCtor D isCode1 b+ b- cs2 λ r → germIndSize tyCtor (FContainer.responseNow cs2 r))
+    (germFCSize isCode1 cs1)
+    (germFCSize isCode2 cs2)
     )
   → LÆ (FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
 
 
 germIndMeet : ∀ {{æ : Æ}} {ℓ} {tyCtor}
-  → (x y : Germ ℓ tyCtor)
+  → (x y : DataGerm ℓ tyCtor)
   →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
-  → LÆ (Germ ℓ tyCtor)
+  → LÆ (DataGerm ℓ tyCtor)
 germIndMeet W℧ y eq = pure W℧
 germIndMeet W⁇ y eq =  pure y
 germIndMeet x W℧ eq = pure W℧
 germIndMeet x W⁇ eq = pure x
 germIndMeet {ℓ} {tyCtor} (Wsup x) (Wsup y) lt = do
-  fcRet ← germFIndMeet tyCtor (dataGerm ℓ tyCtor {!d!}) {!!} {!!} tt tt {!!} {!!} {!!}
+  fcRet ← germFIndMeet tyCtor (germForCtor ℓ tyCtor {!d!}) {!!} {!!} tt tt {!!} {!!} {!!}
   pure (Wsup {!!})
 -- germIndMeet {tyCtor = tyCtor} x y eq = wInd {!!} {!!} {!!} {!!} x
 

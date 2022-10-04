@@ -99,12 +99,18 @@ record InductiveCodes : Set2 where
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (preDataGerm ℓ tyCtor (▹⁇ ℓ) d)
   -- Now that ⁇ is defined we can tie the knot
-  dataGerm : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton tyCtor d)
-  dataGerm  ℓ tyCtor d = preDataGerm ℓ tyCtor (▹⁇ ℓ) d
+  germForCtor : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton tyCtor d)
+  germForCtor  ℓ tyCtor d = preDataGerm ℓ tyCtor (▹⁇ ℓ) d
   FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
   FGerm ℓ c Unk = W (germContainer ℓ c (▹⁇ ℓ)) Unk tt
-  Germ : {{ _ : Æ }} → ℕ → (c : CName) → Set
-  Germ ℓ c = FGerm ℓ c (⁇Ty ℓ)
+  DataGerm : {{ _ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
+  DataGerm ℓ c = FGerm ℓ c (⁇Ty ℓ)
+  FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
+    → (D : GermCtor B+ B- sig)
+    → (b+ : B+)
+    → (b- : B- b+)
+    → Set
+  FCGerm ℓ tyCtor D b+ b- =  FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
 
 
 
