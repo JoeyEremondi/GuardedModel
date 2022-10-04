@@ -6,7 +6,7 @@ open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
-open import Cubical.Data.Bool
+-- open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Cubical.Data.Equality
@@ -31,10 +31,40 @@ open import WellFounded
 -- open Ord ℂ El ℧ C𝟙 refl
 open import Cubical.Data.Fin.Properties as Fin
 import Cubical.Data.Nat.Order as Nat
-open import Cubical.Data.Bool as Bool
 
 import GuardedModality as ▹Mod
+open import Cubical.Data.Sum
 
+abstract
+  ⁇Flag : Set
+  ⁇Flag = Fin 3
+
+  ⁇any : ⁇Flag
+  ⁇any = Fin.suc (Fin.suc Fin.zero)
+
+  ⁇pos : ⁇Flag
+  ⁇pos = (Fin.suc Fin.zero)
+
+  ⁇none : ⁇Flag
+  ⁇none = Fin.zero
+
+  _<Flag_ : ⁇Flag → ⁇Flag → Set
+  _<Flag_ = <Fin _
+
+  ⁇FlagWellFounded : WellFounded _<Flag_
+  ⁇FlagWellFounded = FinWellFounded
+
+  ⁇match : (x : ⁇Flag) → (x ≡p ⁇any) ⊎ ((x ≡p ⁇pos) ⊎ (x ≡p ⁇none))
+  ⁇match Fin.zero = inr (inr reflp)
+  ⁇match (Fin.suc Fin.zero) = inr (inl reflp)
+  ⁇match (Fin.suc (Fin.suc Fin.zero)) = inl reflp
+
+  pos<any : ⁇pos <Flag ⁇any
+  pos<any = 0 , reflc
+  none<any : ⁇none <Flag ⁇any
+  none<any = 1 , reflc
+  none<pos : ⁇none <Flag ⁇pos
+  none<pos = 0 , reflc
 
 -- The tuple of things that are decreasing in our recursive calls
 -- (A) Bool: flag for whether we're allowed to see ⁇ as a type
@@ -46,22 +76,23 @@ import GuardedModality as ▹Mod
 -- (C) Code size: the size of the code, either being combined with code meet, or the code of the values being cast/composed
 -- (D) Value size: the size of the value currently being operated on. Set to S0 for codeMeet.
 CastCompMeasure : Set
-CastCompMeasure = Bool × ℕ × Size × Size
+CastCompMeasure = ⁇Flag × ℕ × Size × Size
 
 -- We can define the lexicographic-ordering on this measure
 _<CastComp_ : (m1 m2 : CastCompMeasure) → Set
-_<CastComp_ = _<Lex_ {_<a_ = BoolOrder} {_<b_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<ₛ_} {_<b_ = _<ₛ_}}}
+_<CastComp_ = _<Lex_ {_<a_ = _<Flag_} {_<b_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<ₛ_} {_<b_ = _<ₛ_}}}
 
 CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥)
-CastCompWellFounded = ∥LexWellFounded∥ BoolWellFounded (LexWellFounded Nat.<-wellfounded (LexWellFounded sizeWF sizeWF))
+CastCompWellFounded = ∥LexWellFounded∥ ⁇FlagWellFounded (LexWellFounded Nat.<-wellfounded (LexWellFounded sizeWF sizeWF))
 
 open import Germ
-record SizedCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
+record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
   field
     o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
       → (pfc1 : codeSize c ≡p cSize )
       → ( pfv2 : SZ ≡p vSize )
       → (El c)
+
     oMeet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
@@ -125,7 +156,7 @@ reveal (hide {arg = x}) = x
 
 
 
-record SmallerCastMeet (⁇Allowed : Bool) (ℓ : ℕ) (cSize vSize : Size) : Set where
+record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
   constructor smallerCastMeet
   field
     self : ∀ {allowed ℓ' cs vs} → ∥ (allowed , ℓ' , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
@@ -321,4 +352,3 @@ FixCastMeet f  =
     λ _ _ _ _ →
     WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
       (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
-

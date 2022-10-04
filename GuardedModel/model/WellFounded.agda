@@ -47,3 +47,20 @@ data BoolOrder : Bool → Bool → Set where
 BoolWellFounded : WellFounded BoolOrder
 BoolWellFounded false = acc (λ {y ()})
 BoolWellFounded true = acc (λ {false false<true → acc λ {_ ()}})
+
+
+import Cubical.Data.Nat as Nat
+import Cubical.Data.Nat.Order as Nat
+import Cubical.Data.FinData as Fin
+
+<Fin : ∀ n → (x y : Fin.Fin n) → Type
+<Fin n x y = Fin.toℕ x Nat.< Fin.toℕ y
+
+FinAcc : ∀ {n} (x : Fin.Fin n) → Acc (Nat._<_) (Fin.toℕ x) → Acc (<Fin n ) x
+FinAcc {n} x (acc accLt) = acc helper
+  where
+    helper : WFRec (<Fin n) (Acc (<Fin n)) x
+    helper y lt = FinAcc y (accLt (Fin.toℕ y) lt)
+
+FinWellFounded : ∀ {n} → WellFounded (<Fin n)
+FinWellFounded x = FinAcc x (Nat.<-wellfounded (Fin.toℕ x))
