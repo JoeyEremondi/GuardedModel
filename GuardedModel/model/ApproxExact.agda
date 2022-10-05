@@ -89,6 +89,21 @@ unliftFunDep mf a = do
 uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
 uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
 
+
+uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
+uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
+
+
+-- withTerminationProof : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (mx : LÆ A) → LÆ (Σ[ x ∈ A ] ( mx ≡ Now x ))
+-- withTerminationProof (Now x) = pure (x , refl)
+-- withTerminationProof {A = A} (Later x) = do
+--   rec ← Later (λ tic → helper tic)
+--   pure ?
+--   where
+--     helper : ∀ tic → LÆ (Σ[ x' ∈ A ] x tic ≡ Now x')
+--     helper tic = withTerminationProof (x tic)
+-- withTerminationProof (Extract mx i) = {!!}
+
 data GUnit {ℓ} : Set ℓ where
   U⁇ U℧ : GUnit
 

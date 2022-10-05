@@ -412,6 +412,7 @@ dataGermInj : {{ _ : Æ }} → {ℓ : ℕ} → {tyCtor : CName} {d : DName tyCto
     → DataGerm ℓ tyCtor
 dataGermInj {d = d} (FC com now unk) = Wsup (FC (d , com) now unk)
 
+
 -- Used for well-founded 2-argument induction
 -- descPairSize : ∀ {{_ : Æ}} {ℓ sig} →  {cI cB cI' cB' : ℂ ℓ} → (D1 : ℂDesc cI cB sig) (D2 : ℂDesc cI' cB' sig) → Size
 
