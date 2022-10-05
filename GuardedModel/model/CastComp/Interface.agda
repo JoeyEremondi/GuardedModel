@@ -125,7 +125,8 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
         ((codeSize c)  ≡p cSize)
         (SZ  ≡p cSize) )
       → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
-      → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ vSize))
+      → LÆ (El c)
+      -- → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ vSize))
 
 
 
@@ -209,7 +210,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       → (x y : El c)
       → (ltc : Hide (notPos ⁇Allowed → codeSize c <ₛ cSize))
       → (ltv : Hide (  ⁇Allowed ≡p ⁇pos → smax (elSize c x) (elSize c y) <ₛ vSize))
-      → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ smax (elSize c x) (elSize c y)))
+      → LÆ (El c)
   _∋_⊓_cBy_vBy_  c {posNoCode} x y (hide {ltc}) (hide {ltv}) with ⁇match ⁇Allowed
   ... | inl reflp = oMeet (self (<CSize (ltc (inr reflp)))) c x y reflp reflp
   ... | inr (inl reflp) = oMeet (self (<VSize reflc (ltv reflp))) c x y (posNoCode reflp) reflp
@@ -223,7 +224,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       → (x y : El {{æ = æ}} c)
       → (lt : Hide (notPos ⁇Allowed → codeSize c <ₛ cSize))
       → (ltv : Hide ( ⁇Allowed ≡p ⁇pos → smax (elSize {{æ = æ}} c x) (elSize {{æ = æ}} c y) <ₛ vSize))
-      → LÆ {{æ = æ}} (Σ[ x⊓y ∈ El {{æ = æ}} c ] (elSize {{æ = æ}} c x⊓y ≤ₛ smax (elSize {{æ = æ}} c x) (elSize {{æ = æ}} c y)))
+      → LÆ {{æ = æ}} (El {{æ = æ}} c)
   [_]_∋_⊓_cBy_vBy_ æ = _∋_⊓_cBy_vBy_ {{æ}}
 
 
@@ -300,8 +301,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       (clt : Hide (smax (codeSize c1) (codeSize c2) <ₛ cSize)) →
       -- (vlt : Hide (⁇Allowed ≡p ⁇pos → smax (elSize c1 x) (elSize c2 y) <ₛ vSize)) →
       {lt : _} →
-      let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
-      in LÆ (Σ[ x⊓y ∈ El c1⊓c2 ] (elSize c1⊓c2 x⊓y ≤ₛ smax (elSize c1 x) (elSize c2 y)))
+      LÆ (El (c1 ⊓ c2 By (hide {arg = lt }) ))
   _,,_∋_⊓_By_ {np = np} {posNoCode = pnc} c1 c2 x1 x2 clt  {lt = lt} = do
    -- let lt = smax<-∞ (reveal lt∞)
    let c12 = (c1 ⊓ c2 By hide {arg = lt})
@@ -339,12 +339,10 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
      cBy hide {arg = λ _ → lt2} --lt2
      vBy hide {arg = λ pf → Empty.elim (¬Z<↑ _ (lt12 ≤⨟  pSubst (λ x → x ≤ₛ SZ) (pnc pf) ≤ₛ-Z)) }
      )
-   (x1⊓x2 , vlt12 ) ← c12 ∋ x1-12 ⊓ x2-12
+   c12 ∋ x1-12 ⊓ x2-12
      cBy
        hide {arg = λ _ → lt12 }  -- lt12
      vBy hide {arg = λ pf → Empty.elim (¬Z<↑ _ (lt12 ≤⨟  pSubst (λ x → x ≤ₛ SZ) (pnc pf) ≤ₛ-Z)) }
-       -- hide {arg = λ pf → ≤< (smax-mono vlt1 vlt2) (reveal vlt pf)}
-   pure (x1⊓x2 , vlt12 ≤⨟ smax-mono vlt1 vlt2)
 
 
   [_]_,,_∋_⊓_By_ :
@@ -356,8 +354,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       (y : El {{æ = æ}} c2) →
       (clt : Hide (smax ( codeSize c1) ( codeSize c2) <ₛ cSize)) →
       {lt : _} →
-      let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
-      in LÆ {{æ = æ}} (Σ[ x⊓y ∈ El {{æ = æ}} c1⊓c2 ] (elSize {{æ = æ}} c1⊓c2 x⊓y ≤ₛ smax (elSize {{æ =  æ}} c1 x) (elSize {{æ = æ}} c2 y)))
+      LÆ {{æ = æ}} (El {{æ = æ}} (c1 ⊓ c2 By (hide {arg = lt }) ))
   [_]_,,_∋_⊓_By_ æ = _,,_∋_⊓_By_ {{æ = æ}}
 
 
