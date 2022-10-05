@@ -98,6 +98,8 @@ abstract
     → SLim c f1 ≤ₛ SLim c f2
   ≤ₛ-extLim {f1 = f1} {f2} lt =  omax∞-mono (extLim (λ x → sOrd (f1 x)) (λ x → sOrd (f2 x)) lt)
 
+  ¬Z<↑ : ∀  s → ¬ ((S↑ s) ≤ₛ SZ)
+  ¬Z<↑ s = ¬Z<↑o (sOrd s)
 
   smax-≤L : ∀ {s1 s2} → s1 ≤ₛ smax s1 s2
   smax-≤L =  omax-≤L
@@ -166,6 +168,8 @@ abstract
 
 <ₛ-trans : ∀ {s1 s2 s3} → s1 <ₛ s2 → s2 <ₛ s3 → s1 <ₛ s3
 <ₛ-trans lt1 lt2 = <≤ lt1 (<-in-≤ lt2)
+
+
 
 
 smax-lim2L :

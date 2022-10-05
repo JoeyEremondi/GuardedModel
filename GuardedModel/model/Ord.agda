@@ -130,8 +130,8 @@ existsLim : ∀ {æ1 æ2 : Æ} {ℓ1 ℓ2} {c1 : ℂ ℓ1} {c2 : ℂ ℓ2} →  
 existsLim {æ1} {æ2} f1 f2 allex = ≤o-limiting {{æ = æ1}} f1 (λ k → ≤o-cocone {{æ = æ2}} f2 (fst (allex k)) (snd (allex k)))
 
 
-¬Z<↑ : ∀  o → ¬ ((O↑ o) ≤o OZ)
-¬Z<↑ o ()
+¬Z<↑o : ∀  o → ¬ ((O↑ o) ≤o OZ)
+¬Z<↑o o ()
 
 -- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
 -- TODO: proper credit

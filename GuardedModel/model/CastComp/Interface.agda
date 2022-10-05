@@ -6,6 +6,7 @@ open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
+import Cubical.Data.Empty as Empty
 -- open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
@@ -83,6 +84,7 @@ mutual
 
 
 
+
 -- The tuple of things that are decreasing in our recursive calls
 -- (A) Bool: flag for whether we're allowed to see ⁇ as a type
 --  this is there for strict positivity: we get an extra recursive call when computing meet or cast of terms in the germ of an inductive type
@@ -154,8 +156,16 @@ reveal (hide {arg = x}) = x
 
 
 
+--If cSize is a codeSize, then cSize is not zero and we must not be in ⁇pos mode
+codeNotZero : ∀ {ℓ} {c : ℂ ℓ} {⁇Allowed} {A : Set}
+  → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p codeSize c}
+  → Hide (⁇Allowed ≡p ⁇pos → A)
+codeNotZero {c = c} {posNoCode = posNoCode} = hide {arg = λ pf → Empty.elim (¬Z<↑ SZ (codeSuc c ≤⨟ pSubst (λ x → x ≤ₛ SZ) (posNoCode pf) ≤ₛ-refl))}
 
-
+maxNotZero : ∀ {ℓ} {c1 c2 : ℂ ℓ} {⁇Allowed} {A : Set}
+  → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p smax (codeSize c1) (codeSize c2)}
+  → Hide (⁇Allowed ≡p ⁇pos → A)
+maxNotZero {c1 = c1} {c2 = c2} {posNoCode = posNoCode} = hide {arg = λ pf → Empty.elim (¬Z<↑ SZ (codeSuc c1 ≤⨟ smax-≤L ≤⨟ pSubst (λ x → x ≤ₛ SZ) (posNoCode pf) ≤ₛ-refl ))}
 
 
 record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
@@ -170,7 +180,6 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
   <VSize : ∀ {cs vs} → cs ≡ cSize → (vs <ₛ vSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
   <VSize ceq lt = ∣ <LexR reflc (<LexR reflc (<LexR ceq lt)) ∣
 
-  --If cSize is a codeSize, then cSize is not zero and we must not be in ⁇pos mode
 
 
     --
