@@ -35,6 +35,8 @@ import Cubical.Data.Nat.Order as Nat
 import GuardedModality as ▹Mod
 open import Cubical.Data.Sum
 
+open import Assumption
+
 mutual
   ⁇Flag : Set
   ⁇Flag = Fin 3
@@ -103,6 +105,7 @@ CastCompWellFounded = ∥LexWellFounded∥ ⁇FlagWellFounded (LexWellFounded Na
 open import Germ
 record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
   field
+
     o⁇ : ∀ {{æ : Æ}}  → (c : ℂ ℓ)
       → (pfc1 : codeSize c ≡p cSize )
       → ( pfv2 : SZ ≡p vSize )
@@ -115,16 +118,8 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
         ((codeSize c)  ≡p cSize)
         (SZ  ≡p cSize) )
       → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
-      → LÆ (El c)
+      → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ vSize))
 
-    oMeetSize : ∀ {{æ : Æ}}
-      → (c : ℂ ℓ)
-      → (x y : El c)
-      → ( pfc1 : ifPos ⁇Allowed
-        ((codeSize c)  ≡p cSize)
-        (SZ  ≡p cSize) )
-      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
-      → {!!}
 
 
     oCodeMeet :
@@ -146,7 +141,7 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
         (SZ  ≡p cSize))
       →  (x : El csource)
       → ( pfv1 : elSize csource x ≡p vSize)
-      -> LÆ ( El cdest)
+      -> LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
 
 
 open SizedCastMeet public
@@ -166,7 +161,6 @@ reveal (hide {arg = x}) = x
 record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
   constructor smallerCastMeet
   field
-    ⁇posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize
     self : ∀ {allowed ℓ' cs vs} → ∥ (allowed , ℓ' , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
     ▹self : ∀ {⁇Allowed ℓ' cs vs} → ▹Mod.▹ (SizedCastMeet ⁇Allowed ℓ' cs vs)
   --useful helper
@@ -189,23 +183,25 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
   infix 20 _∋_⊓_cBy_vBy_
   _∋_⊓_cBy_vBy_ : ∀ {{_ : Æ}}
       → (c : ℂ ℓ)
+      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
       → (x y : El c)
       → (ltc : Hide (notPos ⁇Allowed → codeSize c <ₛ cSize))
       → (ltv : Hide ( smax (elSize c x) (elSize c y) <ₛ vSize))
-      → LÆ (El c)
-  _∋_⊓_cBy_vBy_   c x y (hide {ltc}) (hide {ltv}) with ⁇match ⁇Allowed
+      → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ smax (elSize c x) (elSize c y)))
+  _∋_⊓_cBy_vBy_  c {posNoCode} x y (hide {ltc}) (hide {ltv}) with ⁇match ⁇Allowed
   ... | inl reflp = oMeet (self (<CSize (ltc (inr reflp)))) c x y reflp reflp
-  ... | inr (inl reflp) = oMeet (self (<VSize reflc ltv)) c x y (⁇posNoCode reflp) reflp
+  ... | inr (inl reflp) = oMeet (self (<VSize reflc ltv)) c x y (posNoCode reflp) reflp
   ... | inr (inr reflp) = oMeet (self (<CSize (ltc (inl reflp)))) c x y reflp reflp
       -- oMeet (self  (<CSize lt)) c x y reflp reflp
 
   infix 20 [_]_∋_⊓_cBy_vBy_
   [_]_∋_⊓_cBy_vBy_ : ∀ (æ : Æ)
       → (c : ℂ ℓ)
+      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
       → (x y : El {{æ = æ}} c)
       → (lt : Hide (notPos ⁇Allowed → codeSize c <ₛ cSize))
       → (ltv : Hide (smax (elSize {{æ = æ}} c x) (elSize {{æ = æ}} c y) <ₛ vSize))
-      → LÆ {{æ = æ}} (El {{æ = æ}} c)
+      → LÆ {{æ = æ}} (Σ[ x⊓y ∈ El {{æ = æ}} c ] (elSize {{æ = æ}} c x⊓y ≤ₛ smax (elSize {{æ = æ}} c x) (elSize {{æ = æ}} c y)))
   [_]_∋_⊓_cBy_vBy_ æ = _∋_⊓_cBy_vBy_ {{æ}}
 
 
@@ -242,40 +238,44 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
 
   infix 20 ⟨_⇐_⟩_cBy_vBy_
   ⟨_⇐_⟩_cBy_vBy_ : ∀ {{_ : Æ}}
+      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
       → (cdest csource : ℂ ℓ)
       → (x : El csource)
       → (ltc : Hide (notPos ⁇Allowed → smax (codeSize csource)  (codeSize cdest) <ₛ cSize))
       → (ltv : Hide ( elSize csource x <ₛ vSize))
-      → LÆ (El cdest)
-  ⟨_⇐_⟩_cBy_vBy_ cdest csource x (hide {clt}) (hide {vlt}) with ⁇match ⁇Allowed
+      → LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
+  ⟨_⇐_⟩_cBy_vBy_ {posNoCode} cdest csource x (hide {clt}) (hide {vlt}) with ⁇match ⁇Allowed
   ... | inl reflp = oCast (self (<CSize (clt (inr reflp)))) csource cdest reflp x reflp
-  ... | inr (inl reflp) = oCast (self (<VSize reflc vlt)) csource cdest (⁇posNoCode reflp) x reflp
+  ... | inr (inl reflp) = oCast (self (<VSize reflc vlt)) csource cdest (posNoCode reflp) x reflp
   ... | inr (inr reflp) = oCast (self (<CSize (clt (inl reflp)))) csource cdest reflp x reflp
       -- oCast (self ((<CSize lt))) csource cdest reflp x reflp
 
 
   infix 20 [_]⟨_⇐_⟩_cBy_vBy_
   [_]⟨_⇐_⟩_cBy_vBy_ : ∀ (æ : Æ)
+      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
       → (cdest csource : ℂ ℓ)
       → (x : El {{æ = æ}} csource)
       → (ltc : Hide (notPos ⁇Allowed → smax (codeSize csource)  (codeSize cdest) <ₛ cSize))
       → (ltv : Hide ( elSize {{æ = æ}} csource x <ₛ vSize))
-      → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
+      → LÆ {{æ = æ}} ( Σ[ xdest ∈ El {{æ = æ}} cdest ]( elSize {{æ = æ}} cdest xdest ≤ₛ elSize {{æ = æ}} csource x ) )
   [_]⟨_⇐_⟩_cBy_vBy_ æ = ⟨_⇐_⟩_cBy_vBy_ {{æ}}
 
 
   -- Helper to manage the common case of having two elements of different codes' types,
   -- casting them to the meet code, then taking the meet of those two elements
   infix 20 _,,_∋_⊓_cBy_vBy_
-  _,,_∋_⊓_By_ :
+  _,,_∋_⊓_cBy_vBy_ :
     ∀ {{æ : Æ}} c1 c2 →
+      {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize} →
       (x : El c1) →
       (y : El c2) →
       (clt : Hide (notPos ⁇Allowed → smax (codeSize c1) (codeSize c2) <ₛ cSize)) →
       (vlt : Hide (smax (elSize c1 x) (elSize c2 y) <ₛ vSize)) →
       {lt : _} →
-      LÆ (El (c1 ⊓ c2 By (hide {arg = lt }) ) )
-  _,,_∋_⊓_By_ c1 c2 x1 x2 clt vlt {lt = lt} = do
+      let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
+      in LÆ (Σ[ x⊓y ∈ El c1⊓c2 ] (elSize c1⊓c2 x⊓y ≤ₛ smax (elSize c1 x) (elSize c2 y)))
+  _,,_∋_⊓_cBy_vBy_ c1 c2 x1 x2 clt vlt {lt = lt} = do
    -- let lt = smax<-∞ (reveal lt∞)
    let c12 = (c1 ⊓ c2 By hide {arg = lt})
    let
@@ -302,72 +302,89 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
          -- ≤⨟ smax-mono (smax∞-self _) (smax∞-self _)
          )
        ≤⨟ reveal clt pf
-   x1-12 ←  (⟨ c12 ⇐ c1 ⟩ x1
+   (x1-12 , vlt1) ←  (⟨ c12 ⇐ c1 ⟩ x1
         cBy
           hide {arg = λ pf → lt1 pf } --lt1
         vBy
           hide {arg = ≤< smax-≤L (reveal vlt)})
-   x2-12 ←  (⟨ c12 ⇐ c2 ⟩ x2 cBy hide {arg = lt2} --lt2
+   (x2-12 , vlt2) ←  (⟨ c12 ⇐ c2 ⟩ x2 cBy hide {arg = lt2} --lt2
      vBy hide {arg = ≤< smax-≤R (reveal vlt)})
-   c12 ∋ x1-12 ⊓ x2-12
+   (x1⊓x2 , vlt12 ) ← c12 ∋ x1-12 ⊓ x2-12
      cBy
        hide {arg = lt12 }  -- lt12
      vBy
-       hide {arg = ≤< {!!} (reveal vlt)}
+       hide {arg = ≤< (smax-mono vlt1 vlt2) (reveal vlt)}
+   pure (x1⊓x2 , vlt12 ≤⨟ smax-mono vlt1 vlt2)
+
+
+  [_]_,,_∋_⊓_cBy_vBy_ :
+    ∀ (æ : Æ) c1 c2 →
+      {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize} →
+      (x : El {{æ = æ}} c1) →
+      (y : El {{æ = æ}} c2) →
+      (clt : Hide (notPos ⁇Allowed → smax ( codeSize c1) ( codeSize c2) <ₛ cSize)) →
+      (vlt : Hide (smax (elSize {{æ = æ}} c1 x) (elSize {{æ = æ}} c2 y) <ₛ vSize)) →
+      {lt : _} →
+      let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
+      in LÆ {{æ = æ}} (Σ[ x⊓y ∈ El {{æ = æ}} c1⊓c2 ] (elSize {{æ = æ}} c1⊓c2 x⊓y ≤ₛ smax (elSize {{æ =  æ}} c1 x) (elSize {{æ = æ}} c2 y)))
+  [_]_,,_∋_⊓_cBy_vBy_ æ = _,,_∋_⊓_cBy_vBy_ {{æ = æ}}
 
 
 
---   [_]_,,_∋_⊓_By_ :
---     ∀ (æ : Æ) c1 c2 →
---       (El {{æ = æ}} c1) →
---       (El {{æ = æ}} c2) →
---       (lt∞ : Hide (notPos ⁇Allowed → smax ( codeSize c1) ( codeSize c2) <ₛ cSize)) →
---       {lt : _} →
---       LÆ {{æ = æ}} (El {{æ = æ}} (c1 ⊓ c2 By hide {arg = lt}))
---   [_]_,,_∋_⊓_By_ æ = _,,_∋_⊓_By_ {{æ = æ}}
+  ⟨_,_⇐⊓⟩_cBy_vBy_ : ∀ {{æ : Æ}} c1 c2
+    → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
+      {lt : _}
+    → let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
+    in (x12 : El c1⊓c2)
+    → (clt : Hide (notPos ⁇Allowed → smax (codeSize c1)  (codeSize c2) <ₛ cSize))
+    → (vlt : Hide (elSize c1⊓c2 x12 <ₛ vSize))
+    → LÆ ((Σ[ x1 ∈ El c1 ] (elSize c1 x1 ≤ₛ elSize c1⊓c2 x12))
+       × (Σ[ x2 ∈ El c2 ] (elSize c2 x2 ≤ₛ elSize c1⊓c2 x12)) )
+  ⟨_,_⇐⊓⟩_cBy_vBy_ c1 c2 {posNoCode = posNoCode} {lt = lt} x clt vlt  = do
+    let c12 = c1 ⊓ c2 By hide {arg = lt}
+    let
+      lt1 = λ (pf : notPos ⁇Allowed) →
+        ≤ₛ-sucMono (
+          smax-monoL (c1 ⊓Size c2 By hide )
+          ≤⨟ smax-commut _ _
+          ≤⨟ smax-assocL _ _ _
+          ≤⨟ smax-monoL smax-idem
+          )
+        ≤⨟ reveal clt pf
+    let
+      lt2 = λ (pf : notPos ⁇Allowed) →
+        ≤ₛ-sucMono (
+          smax-monoL (c1 ⊓Size c2 By hide )
+          ≤⨟ smax-assocR _ _ _
+          ≤⨟ smax-monoR smax-idem)
+        ≤⨟ reveal clt pf
+    x1 ← ⟨ c1 ⇐ c12 ⟩ x
+      cBy hide {arg = lt1}
+      vBy vlt
+    x2 ←  ⟨ c2 ⇐ c12 ⟩ x
+      cBy hide {arg = lt2}
+      vBy vlt
+    pure (x1 , x2)
 
---   ⟨_,_⇐⊓⟩_By_ : ∀ {{æ : Æ}} c1 c2
---       {lt : _}
---     → El (c1 ⊓ c2 By (hide {arg = lt }) )
---     → (lt∞ : Hide (smax (codeSize c1)  (codeSize c2) <ₛ cSize))
---     → LÆ (El c1 × El c2)
---   ⟨_,_⇐⊓⟩_By_ c1 c2 {lt = lt} x lt∞  = do
---     let c12 = c1 ⊓ c2 By hide {arg = lt}
---     let
---       lt1 =
---         ≤ₛ-sucMono (
---           smax-monoL (c1 ⊓Size c2 By hide )
---           ≤⨟ smax-commut _ _
---           ≤⨟ smax-assocL _ _ _
---           ≤⨟ smax-monoL smax-idem
---           )
---         ≤⨟ reveal lt∞
---     let
---       lt2 =
---         ≤ₛ-sucMono (
---           smax-monoL (c1 ⊓Size c2 By hide )
---           ≤⨟ smax-assocR _ _ _
---           ≤⨟ smax-monoR smax-idem)
---         ≤⨟ reveal lt∞
---     x1 ← ⟨ c1 ⇐ c12 ⟩ x By hide {arg = lt1}
---     x2 ←  ⟨ c2 ⇐ c12 ⟩ x By hide {arg = lt2}
---     pure (x1 , x2)
+  [_]⟨_,_⇐⊓⟩_cBy_vBy_ : ∀ (æ : Æ) c1 c2
+    → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
+    → {lt : _}
+    → let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
+    in (x12 : El {{æ = æ}} c1⊓c2)
+    → (clt : Hide (notPos ⁇Allowed → smax (codeSize c1)  (codeSize c2) <ₛ cSize))
+    → (vlt : Hide (elSize {{æ = æ}} c1⊓c2 x12 <ₛ vSize))
+    → LÆ {{æ = æ}} ((Σ[ x1 ∈ El {{æ = æ}} c1 ] (elSize {{æ = æ}} c1 x1 ≤ₛ elSize {{æ = æ}} c1⊓c2 x12))
+       × (Σ[ x2 ∈ El {{æ = æ}} c2 ] (elSize {{æ = æ}} c2 x2 ≤ₛ elSize {{æ = æ}} c1⊓c2 x12)) )
+  [_]⟨_,_⇐⊓⟩_cBy_vBy_ æ =  ⟨_,_⇐⊓⟩_cBy_vBy_ {{æ = æ}}
 
---   [_]⟨_,_⇐⊓⟩_By_ : ∀ (æ : Æ) c1 c2
---       {lt : _}
---     → El {{æ = æ}} (c1 ⊓ c2 By (hide {arg = lt }) )
---     → (lt∞ : Hide (smax ( (codeSize c1)) ( (codeSize c2)) <ₛ cSize))
---     → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
---   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
+  self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇Allowed (predℕ ℓ) cs vs
+  self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexR refl (<LexL Nat.≤-refl) ∣
 
---   self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇Allowed (predℕ ℓ) cs vs
---   self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexR refl (<LexL Nat.≤-refl) ∣
-
--- FixCastMeet :
---   (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
---   → ∀ ⁇Allowed  ℓ  cSize  vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize
--- FixCastMeet f  =
---   ▹Mod.fix λ ▹self →
---     λ _ _ _ _ →
---     WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
---       (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
+FixCastMeet :
+  (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
+  → ∀ ⁇Allowed  ℓ  cSize  vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize
+FixCastMeet f  =
+  ▹Mod.fix λ ▹self →
+    λ _ _ _ _ →
+    WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
+      (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
