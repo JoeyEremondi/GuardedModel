@@ -7,6 +7,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Bool renaming (Bool to 𝟚)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Equality hiding (_≡⟨_⟩_ ;  _∎ )
+import Cubical.Data.Equality as PEq
 open import Cubical.Relation.Nullary
 
 open import Cubical.Foundations.Univalence
@@ -192,3 +193,11 @@ uipFin p1 p2 = Decidable⇒UIP.≡-irrelevant decFin p1 p2
 
 axKFin : ∀ {n} {x : Fin n} → (p1  : x ≡p x) → p1 ≡p reflp
 axKFin p1 = Decidable⇒UIP.≡-irrelevant decFin p1 reflp
+
+
+
+isPropP : ∀ {ℓ} {A : Set ℓ} → isSet A → ∀ {x y : A} → {p1 p2 : x ≡p y} → p1 ≡c p2
+isPropP prp {p1 = p1} {p2} =  sym (Iso.rightInv p≅c p1) ∙ cong (Iso.fun p≅c) p12 ∙ Iso.rightInv p≅c p2
+  where
+    p12 : Iso.inv p≅c p1 ≡ Iso.inv p≅c p2
+    p12 = prp _ _ (Iso.inv p≅c p1) (Iso.inv p≅c p2)
