@@ -69,23 +69,28 @@ mutual
   none<pos : ⁇none <Flag ⁇pos
   none<pos = 0 , reflc
 
-  ifPos : ⁇Flag → Set → Set → Set
-  ifPos Fin.zero A B = A
-  ifPos (Fin.suc Fin.zero) A B = B
-  ifPos (Fin.suc (Fin.suc Fin.zero)) A B = A
+  open import Cubical.Data.Bool
+
+  isPos𝔹 : ⁇Flag → Bool
+  isPos𝔹 Fin.zero = false
+  isPos𝔹 (Fin.suc Fin.zero)  = true
+  isPos𝔹 (Fin.suc (Fin.suc Fin.zero)) = false
+
+  if¬Pos : ⁇Flag → Set → Set → Set
+  if¬Pos x A B = if isPos𝔹 x then B else A
 
   notPos : ⁇Flag → Set
-  notPos x = (x ≡p ⁇none) ⊎ (x ≡p ⁇any)
+  notPos x = isPos𝔹 x ≡p false
 
-  depIfPos : ∀ {A B : Set} → (x : ⁇Flag) → (notPos x → A) → (x ≡p ⁇pos → B) → ifPos x A B
-  depIfPos Fin.zero a b = a (inl reflp)
+
+  depIfPos : ∀ {A B : Set} → (x : ⁇Flag) → (notPos x → A) → (x ≡p ⁇pos → B) → if¬Pos x A B
+  depIfPos Fin.zero a b = a reflp
   depIfPos (Fin.suc Fin.zero) a b = b reflp
-  depIfPos (Fin.suc (Fin.suc Fin.zero)) a b = a (inr reflp)
+  depIfPos (Fin.suc (Fin.suc Fin.zero)) a b = a reflp
 
 
   isPropNotPos : ∀ {x} → isProp (notPos x)
-  isPropNotPos {Fin.zero} (inl x) (inl x₁) = cong inl (isPropP Fin.isSetFin)
-  isPropNotPos {Fin.suc x} (inr x₁) (inr x₂) = cong inr (isPropP Fin.isSetFin)
+  isPropNotPos  x y =  (isPropP isSetBool)
 
 
 -- The tuple of things that are decreasing in our recursive calls
@@ -98,14 +103,14 @@ mutual
 -- (C) Code size: the size of the code, either being combined with code meet, or the code of the values being cast/composed
 -- (D) Value size: the size of the value currently being operated on. Set to S0 for codeMeet.
 CastCompMeasure : Set
-CastCompMeasure = ⁇Flag × ℕ × Size × Size
+CastCompMeasure = ℕ × ⁇Flag × Size × Size
 
 -- We can define the lexicographic-ordering on this measure
 _<CastComp_ : (m1 m2 : CastCompMeasure) → Set
-_<CastComp_ = _<Lex_ {_<a_ = _<Flag_} {_<b_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<ₛ_} {_<b_ = _<ₛ_}}}
+_<CastComp_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<Flag_} {_<b_ = _<Lex_ {_<a_ = _<ₛ_} {_<b_ = _<ₛ_}}}
 
 CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥)
-CastCompWellFounded = ∥LexWellFounded∥ ⁇FlagWellFounded (LexWellFounded Nat.<-wellfounded (LexWellFounded sizeWF sizeWF))
+CastCompWellFounded = ∥LexWellFounded∥ Nat.<-wellfounded (LexWellFounded ⁇FlagWellFounded (LexWellFounded sizeWF sizeWF))
 
 open import Germ
 record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
@@ -121,13 +126,19 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
     oMeet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
-      → ( pfc1 : ifPos ⁇Allowed
+      → ( pfc1 : if¬Pos ⁇Allowed
         ((codeSize c)  ≡p cSize)
         (SZ  ≡p cSize) )
       → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
       -- → LÆ (Σ[ x⊓y ∈ El c ] (elSize c x⊓y ≤ₛ vSize))
 
+    oDataGermMeet : ∀ {{æ : Æ}} {tyCtor}
+      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
+      → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
+      → (x y : DataGerm ℓ tyCtor)
+      → smax (germIndSize tyCtor x) (germIndSize tyCtor y) ≡p vSize
+      → LÆ (DataGerm ℓ tyCtor)
 
 
     oCodeMeet :
@@ -146,7 +157,7 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
 
     oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
-      → ( pfc1 : ifPos ⁇Allowed
+      → ( pfc1 : if¬Pos ⁇Allowed
         (smax (codeSize csource) (codeSize cdest)  ≡p cSize)
         (SZ  ≡p cSize))
       →  (x : El csource)
@@ -179,13 +190,13 @@ maxNotZero {c1 = c1} {c2 = c2} {posNoCode = posNoCode} = hide {arg = λ pf → E
 record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : Set where
   constructor smallerCastMeet
   field
-    self : ∀ {allowed ℓ' cs vs} → ∥ (allowed , ℓ' , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
+    self : ∀ {allowed ℓ' cs vs} → ∥ ( ℓ' , allowed , cs , vs) <CastComp ( ℓ , ⁇Allowed , cSize , vSize) ∥ → SizedCastMeet allowed ℓ' cs vs
     ▹self : ∀ {⁇Allowed ℓ' cs vs} → ▹Mod.▹ (SizedCastMeet ⁇Allowed ℓ' cs vs)
   --useful helper
-  <CSize : ∀ {cs vs} → (cs <ₛ cSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
+  <CSize : ∀ {cs vs} → (cs <ₛ cSize) → ∥ ( ℓ , ⁇Allowed , cs , vs) <CastComp ( ℓ , ⁇Allowed , cSize , vSize) ∥
   <CSize lt = ∣ <LexR reflc (<LexR reflc (<LexL lt)) ∣
 
-  <VSize : ∀ {cs vs} → cs ≡ cSize → (vs <ₛ vSize) → ∥ (⁇Allowed , ℓ , cs , vs) <CastComp (⁇Allowed , ℓ , cSize , vSize) ∥
+  <VSize : ∀ {cs vs} → cs ≡ cSize → (vs <ₛ vSize) → ∥ ( ℓ , ⁇Allowed , cs , vs) <CastComp ( ℓ , ⁇Allowed , cSize , vSize) ∥
   <VSize ceq lt = ∣ <LexR reflc (<LexR reflc (<LexR ceq lt)) ∣
 
 
@@ -212,9 +223,9 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       → (ltv : Hide (  ⁇Allowed ≡p ⁇pos → smax (elSize c x) (elSize c y) <ₛ vSize))
       → LÆ (El c)
   _∋_⊓_cBy_vBy_  c {posNoCode} x y (hide {ltc}) (hide {ltv}) with ⁇match ⁇Allowed
-  ... | inl reflp = oMeet (self (<CSize (ltc (inr reflp)))) c x y reflp reflp
+  ... | inl reflp = oMeet (self (<CSize (ltc reflp))) c x y reflp reflp
   ... | inr (inl reflp) = oMeet (self (<VSize reflc (ltv reflp))) c x y (posNoCode reflp) reflp
-  ... | inr (inr reflp) = oMeet (self (<CSize (ltc (inl reflp)))) c x y reflp reflp
+  ... | inr (inr reflp) = oMeet (self (<CSize (ltc reflp))) c x y reflp reflp
       -- oMeet (self  (<CSize lt)) c x y reflp reflp
 
   infix 20 [_]_∋_⊓_cBy_vBy_
@@ -271,9 +282,9 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
       → (ltv : Hide (  ⁇Allowed ≡p ⁇pos → elSize csource x <ₛ vSize))
       → LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
   ⟨_⇐_⟩_cBy_vBy_ {posNoCode} cdest csource x (hide {clt}) (hide {vlt}) with ⁇match ⁇Allowed
-  ... | inl reflp = oCast (self (<CSize (clt (inr reflp)))) csource cdest reflp x reflp
+  ... | inl reflp = oCast (self (<CSize (clt reflp))) csource cdest reflp x reflp
   ... | inr (inl reflp) = oCast (self (<VSize reflc (vlt reflp))) csource cdest (posNoCode reflp) x reflp
-  ... | inr (inr reflp) = oCast (self (<CSize (clt (inl reflp)))) csource cdest reflp x reflp
+  ... | inr (inr reflp) = oCast (self (<CSize (clt reflp))) csource cdest reflp x reflp
       -- oCast (self ((<CSize lt))) csource cdest reflp x reflp
 
 
@@ -406,7 +417,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
   self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇Allowed (predℕ ℓ) cs vs
-  self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexR refl (<LexL Nat.≤-refl) ∣
+  self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣
 
 FixCastMeet :
   (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
@@ -414,5 +425,5 @@ FixCastMeet :
 FixCastMeet f  =
   ▹Mod.fix λ ▹self →
     λ _ _ _ _ →
-    WFI.induction CastCompWellFounded {P = λ {(a , ℓ' , cs , vs) → SizedCastMeet a ℓ' cs vs}}
+    WFI.induction CastCompWellFounded {P = λ {(ℓ' , a , cs , vs) → SizedCastMeet a ℓ' cs vs}}
       (λ {(a , ℓ' , cs , vs) → λ self → f (smallerCastMeet (self (_ , _ , _ , _)) λ {a} {ℓ'} {cs} {vs} → λ tic → ▹self tic a ℓ' cs vs)}) _
