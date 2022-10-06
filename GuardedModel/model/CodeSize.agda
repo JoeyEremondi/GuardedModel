@@ -93,15 +93,15 @@ germFIndSize tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (
 germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ
   = S↑ (SLim (c+ b+) (λ a+ → SLim (c- b+ _ b-) (λ a- → helper a+ a-)))
     where
-    helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Approxed (λ {{æ}} → El {{æ = æ}} (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-))  → Size
+    helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Approxed (λ {{æ}} → El {{æ = æ}} (c- b+ (Iso.inv (iso+ b+) a+) b-))  → Size
     helper a+ a- = smax
       (φ (Rec (ac+ , ac-)))
       (germFIndSize tyCtor D isCode b+ b- (FC com (λ r → k (Rest ((ac+ , ac-) , r))) unk) λ r → φ ((Rest ((ac+ , ac-) , r))))
       where
         ac+ : A+ b+
-        ac+ = Iso.inv (iso+ b+) (exact a+)
+        ac+ = Iso.inv (iso+ b+) a+
         ac- : A- b+ ac+ b-
-        ac- = Iso.inv (iso- b+ ac+ b-) (next (exact a-))
+        ac- = Iso.inv (iso- b+ ac+ b-) (next a-)
 germFIndSize tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com k unk) φ
   = S↑ (smax
     (φ (Rec tt))
@@ -189,7 +189,7 @@ germDescSize (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b-
 germDescSize (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- =
   S↑ (smax
        (codeSize (c+ b+))
-       (SLim (c+ b+) λ a+ → codeSize (c- b+ (Iso.inv (iso+ b+) (exact a+)) b-)))
+       (SLim (c+ b+) λ a+ → codeSize (c- b+ (Iso.inv (iso+ b+) a+) b-)))
 germDescSize (GRec D) (GRecCode isCode) b+ b- = S↑ (germDescSize D isCode b+ b-)
 germDescSize (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b-
   = S↑ (smax

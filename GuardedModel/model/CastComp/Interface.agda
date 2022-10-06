@@ -416,7 +416,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
        × (Σ[ x2 ∈ El {{æ = æ}} c2 ] (elSize {{æ = æ}} c2 x2 ≤ₛ elSize {{æ = æ}} c1⊓c2 x12)) )
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
-  self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇Allowed (predℕ ℓ) cs vs
+  self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇any (predℕ ℓ) cs vs
   self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣
 
 FixCastMeet :

@@ -48,65 +48,6 @@ open SmallerCastMeet scm
 
 
 
-  -- → (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-
-germFIndMeet : ∀ {{æ : Æ}} {B+ B- sig} {tyCtor : CName}
-  → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
-  → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
-  → (D : GermCtor B+ B- sig)
-  → (isCode : DataGermIsCode ℓ D)
-  → (b+ : B+)
-  → (b- : B- b+)
-  → (cs1 cs2 : FCGerm ℓ tyCtor D b+ b-)
-  → (smax (germFCSize isCode cs1) (germFCSize isCode cs2) <ₛ vSize)
-  → LÆ (FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
-germFIndMeet GEnd GEndCode b+ b- cs1 cs2 lt = pure (FC tt (λ ()) λ ())
--- We've got two parts, the recursive value and the "rest"
--- Take the meet of both recursively then put them back together
-germFIndMeet {tyCtor = tyCtor} {cpf = cpf} (GRec D) (GRecCode isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt
-  = do
-    (FC crec rrec urec) ← germFIndMeet D isCode  b+ b- (FC c1 (λ r → r1 (Rest r)) u1) (FC c2 (λ r → r2 (Rest r)) u2)
-      (<ₛ-trans (smax-strictMono (≤ₛ-sucMono smax-≤R) (≤ₛ-sucMono smax-≤R)) lt)
-    xrec ← oDataGermMeet (self (<VSize reflc (≤< (smax-mono (<-in-≤ (≤ₛ-sucMono smax-≤L)) (<-in-≤ (≤ₛ-sucMono smax-≤L))) lt)))
-      (r1 (Rec tt)) (r2 (Rec tt)) reflp
-    pure (FC crec (λ { (Rec x) → xrec ; (Rest x) → rrec x}) urec)
-germFIndMeet (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- cs1 cs2 lt = {!!}
-germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
-germFIndMeet (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
-  (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do
-  a+ ← c+ b+ ∋ Iso.fun (iso+ b+) a+1 ⊓ Iso.fun (iso+ b+) a+2
-    cBy {!!}
-    vBy {!!}
-  xrec ← germFIndMeet D isCode (b+ , Iso.inv (iso+ b+) a+) {!!} (FC {!c1!} {!!} {!!}) {!!} {!!}
-  pure {!!}
-
-
-
-germIndMeet : ∀ {{æ : Æ}} {tyCtor}
-  →  {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
-  → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
-  → (x y : DataGerm ℓ tyCtor)
-  →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
-  → LÆ (DataGerm ℓ tyCtor)
-germIndMeet W℧ y eq = pure W℧
-germIndMeet W⁇ y eq =  pure y
-germIndMeet x W℧ eq = pure W℧
-germIndMeet x W⁇ eq = pure x
-germIndMeet {tyCtor} {posNoCode = posNoCode} {cpf} (Wsup x) (Wsup y) lt
-  with (d , x' , xlt) ← germMatch x
-  with (dy , y' , ylt) ← germMatch y
-  with decFin d dy
-... | yes reflp = do
-  fcRet ← germFIndMeet {posNoCode = posNoCode} {cpf} (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt x' y'
-    (<ₛ-trans (smax-strictMono xlt ylt) lt)
-  pure (dataGermInj fcRet)
--- Meet is error if they have different data constructors
-... | no npf = pure W℧
-  -- ... | no npf = ?
--- germIndMeet {tyCtor = tyCtor} x y eq = wInd {!!} {!!} {!!} {!!} x
-
-
-
 
 ⁇meet : ∀
       {{æ : Æ}}
@@ -135,14 +76,14 @@ germIndMeet {tyCtor} {posNoCode = posNoCode} {cpf} (Wsup x) (Wsup y) lt
 ⁇meet' x y cpf lt eqx eqy (HEq reflp) with pTrans eqx (pSym eqy)
 ⁇meet' CodeModule.⁇𝟙 CodeModule.⁇𝟙 cpf lt eqx eqy (HEq reflp) | eq = pure ⁇𝟙
 ⁇meet' (CodeModule.⁇Type {{suc<}} c1) (CodeModule.⁇Type c2) cpf lt eqx eqy (HEq reflp) | eq
-  = pure (⁇Type {{inst = suc<}} (oCodeMeet (self-1 {{suc<}}) {!!} c1 c2 reflp reflp))
+  = pure (⁇Type {{inst = suc<}} (oCodeMeet (self-1 {{suc<}}) reflp c1 c2 reflp reflp))
 ⁇meet' (CodeModule.⁇Cumul {{suc<}} c1 x1) (CodeModule.⁇Cumul c2 x2) cpf lt eqx eqy (HEq reflp) | eq
   -- Cast to a common code type, then meet
   = do
-  let c1⊓c2 = oCodeMeet (self-1 {{suc<}}) {!!} c1 c2 reflp reflp
-  (x1' , lt1) ← oCast (self-1 {{suc<}}) c1 c1⊓c2 {!!} x1 reflp
-  (x2' , lt2) ← oCast (self-1 {{suc<}}) c2 c1⊓c2 {!!} x2 reflp
-  x1⊓x2 ← oMeet (self-1 {{suc<}}) c1⊓c2 x1' x2' {!!} reflp
+  let c1⊓c2 = oCodeMeet (self-1 {{suc<}}) reflp c1 c2 reflp reflp
+  (x1' , lt1) ← oCast (self-1 {{suc<}}) c1 c1⊓c2 reflp x1 reflp
+  (x2' , lt2) ← oCast (self-1 {{suc<}}) c2 c1⊓c2 reflp x2 reflp
+  x1⊓x2 ← oMeet (self-1 {{suc<}}) c1⊓c2 x1' x2' reflp reflp
   pure (⁇Cumul {{inst = suc<}} c1⊓c2 x1⊓x2)
 ⁇meet' {{æ = Approx}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) cpf lt eqx eqy (HEq reflp) | eq
   = pure ⦃ Approx ⦄ (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Approx ⦄ (λ _ → fromL (⁇meet ⦃ Approx ⦄ (f1 U⁇) (f2 U⁇) cpf
@@ -154,12 +95,12 @@ germIndMeet {tyCtor} {posNoCode = posNoCode} {cpf} (Wsup x) (Wsup y) lt
   = do
     fRet ← liftFun {{Exact}} λ x → do
       gSelf ← Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self {⁇Allowed = ⁇Allowed} {ℓ' = ℓ} tic)
-      oMeet gSelf {{æ = Exact}} C⁇ (f1 x) (f2 x) {!!} reflp
+      oMeet gSelf {{æ = Exact}} C⁇ (f1 x) (f2 x) cpf reflp
     pure {{Exact}} (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Exact ⦄ fRet)
 ⁇meet' (CodeModule.⁇Σ (fst1 , snd1)) (CodeModule.⁇Σ (fst2 , snd2)) cpf lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇≡ x) (CodeModule.⁇≡ x₁) cpf lt eqx eqy (HEq reflp) | eq = {!!}
 ⁇meet' (CodeModule.⁇μ tyCtor x) (CodeModule.⁇μ tyCtor₁ y) cpf lt eqx eqy (HEq reflp) | reflp = do
-  x⊓y ← germIndMeet {posNoCode = {!!}} {{!!}} x y (<≤ (smax-strictMono ≤ₛ-refl ≤ₛ-refl) lt)
+  x⊓y ← germIndMeet {posNoCode = λ {reflp → cpf}} {cpf} x y (<≤ (smax-strictMono ≤ₛ-refl ≤ₛ-refl) lt)
   pure (⁇μ tyCtor x⊓y)
 
 
