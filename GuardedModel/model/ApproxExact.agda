@@ -23,7 +23,7 @@ data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
 
 
-pure : ∀ {ℓ} {A : Set ℓ} {{_ : Æ}} → A → LÆ A
+pure : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → A → LÆ A
 pure = Now
 
 data _≤Æ_ : Æ → Æ → Set where
@@ -92,6 +92,7 @@ uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
 
 uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
 uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
+
 
 
 -- withTerminationProof : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (mx : LÆ A) → LÆ (Σ[ x ∈ A ] ( mx ≡ Now x ))

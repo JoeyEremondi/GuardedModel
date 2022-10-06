@@ -103,7 +103,7 @@ record InductiveCodes : Set2 where
   germForCtor  ℓ tyCtor d = preDataGerm ℓ tyCtor (▹⁇ ℓ) d
   FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
   FGerm ℓ c Unk = W (germContainer ℓ c (▹⁇ ℓ)) Unk tt
-  DataGerm : {{ _ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
+  DataGerm : {{ æ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
   DataGerm ℓ c = FGerm ℓ c (⁇Ty ℓ)
   FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
     → (D : GermCtor B+ B- sig)

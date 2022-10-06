@@ -90,6 +90,17 @@ germIndSize : ∀ {{ _ : Æ }} {ℓ} (tyCtor : CName) →  W (germContainer ℓ 
 germFIndSize tyCtor GEnd GEndCode b+ b- (FC com k unk) φ = S1
 germFIndSize tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) k unk) φ
   = S↑ (germFIndSize tyCtor D isCode (b+ , a+) (b- , a-) (FC com k unk) φ)
+germFIndSize {{æ = Approx}} tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ
+  = S↑ (SLim {{æ = Approx}} (c+ b+) helper)
+    where
+    helper : (a+ : ApproxEl (c+ b+))   → Size
+    helper a+ = smax
+      (φ (Rec (ac+ , ac-)))
+      (germFIndSize {{æ = Approx}} tyCtor D isCode b+ b- (FC com (λ r → k (Rest ((ac+ , ac-) , r))) unk) λ r → φ ((Rest ((ac+ , ac-) , r))))
+      where
+        ac+ : A+ b+
+        ac+ = Iso.inv (iso+ b+) a+
+        ac- = Iso.inv (iso-  b+ ac+ b-) U⁇
 germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k unk) φ
   = S↑ (SLim (c+ b+) (λ a+ → SLim (c- b+ _ b-) (λ a- → helper a+ a-)))
     where

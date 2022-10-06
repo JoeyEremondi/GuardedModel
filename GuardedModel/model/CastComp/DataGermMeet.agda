@@ -70,14 +70,38 @@ germFIndMeet {tyCtor = tyCtor} {cpf = cpf} (GRec D) (GRecCode isCode) b+ b- (FC 
     xrec ← oDataGermMeet (self (<VSize reflc lt'))
       (r1 (Rec tt)) (r2 (Rec tt)) reflp
     pure (FC crec (λ { (Rec x) → xrec ; (Rest x) → rrec x}) urec)
-germFIndMeet (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
-    (FC crec rrec urec) ← germFIndMeet D isCode  b+ b- (FC c1 (λ r → r1 (Rest {!!})) u1) (FC c2 (λ r → r2 (Rest {!!})) u2)
+germFIndMeet {{æ = Approx}}  {tyCtor = tyCtor} {posNoCode = pnc} {cpf} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt =
+  let
+    (FC crec rrec urec) = fromL (germFIndMeet ⦃ æ = Approx ⦄ D isCode b+ b- (FC c1 {!!} {!!}) (FC c2 {!!} {!!}) {!!})
+    xrec : Σ[ a+ ∈ A+ b+ ]( A- b+ a+ b- ) → DataGerm {{æ = Approx}} ℓ tyCtor
+    xrec = λ {(a+ , a-) →
+      let
+        lt' = ≤< (smax-mono
+          (<-in-≤ (≤ₛ-sucMono
+          (smax-≤L
+            ≤⨟ {!!}
+            ≤⨟ ≤ₛ-cocone ⦃ æ = Approx ⦄ {!!}
+            ≤⨟ ≤ₛ-cocone ⦃ æ = Approx ⦄ (Iso.fun (iso+ b+) a+))))
+          {!!}) lt
+      in
+        fromL (oDataGermMeet (self (<VSize reflc lt')) {{æ = Approx}} {posNoCode = pnc} {cpf = cpf}
+          (r1 (Rec (a+ , a-))) (r2 (Rec (a+ , a-))) reflp) }
+  in {!!}
+
+germFIndMeet {{æ = Exact}} {tyCtor = tyCtor} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
+    (FC crec rrec urec) ← germFIndMeet {{æ = Exact}} D isCode  b+ b- (FC c1 (λ r → r1 (Rest {!!})) u1) (FC c2 (λ r → r2 (Rest {!!})) u2)
       {!!}
-    xrec ← liftFun λ a → do
-      let lt' = ≤< (smax-mono (<-in-≤ (≤ₛ-sucMono ({!!} ≤⨟ ≤ₛ-cocone {!Iso.fun (iso- b-)!} ≤⨟ ≤ₛ-cocone (Iso.fun (iso+ b+) (fst a))))) {!!}) lt
-      oDataGermMeet (self (<VSize reflc lt'))
-        (r1 (Rec a)) (r2 (Rec a)) reflp
-    pure (FC crec (λ { (Rec x) → xrec x ; (Rest (a , resp)) → rrec resp}) urec)
+    xrec ← liftFun {{æ = Exact}} λ {(a+ , a-) → do
+      let
+        lt' =
+          ≤< (smax-mono (<-in-≤ (≤ₛ-sucMono (
+             smax-≤L
+             ≤⨟ (smax-monoL {!!} ≤⨟ ≤ₛ-cocone {{æ = Exact}} {!!})
+             ≤⨟ ≤ₛ-cocone {{æ = Exact}} (Iso.fun (iso+ b+) (a+))))) {!!})
+          lt
+      oDataGermMeet (self (<VSize reflc lt')) {{æ = Exact}}
+        (r1 (Rec (a+ , {!!}))) (r2 (Rec (a+ , {!!}))) reflp }
+    pure {{æ = Exact}} (FC crec (λ { (Rec x) → xrec x ; (Rest (a , resp)) → rrec resp}) urec)
 germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
 germFIndMeet (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
   (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do
