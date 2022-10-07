@@ -62,46 +62,39 @@ germFIndMeet : ∀ {{æ : Æ}} {B+ B- sig} {tyCtor : CName}
 germFIndMeet GEnd GEndCode b+ b- cs1 cs2 lt = pure (FC tt (λ ()) λ ())
 -- We've got two parts, the recursive value and the "rest"
 -- Take the meet of both recursively then put them back together
-germFIndMeet {tyCtor = tyCtor} {cpf = cpf} (GRec D) (GRecCode isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt
+germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {cpf = cpf} (GRec D) (GRecCode isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt
   = do
     (FC crec rrec urec) ← germFIndMeet D isCode  b+ b- (FC c1 (λ r → r1 (Rest r)) u1) (FC c2 (λ r → r2 (Rest r)) u2)
       (<ₛ-trans (smax-strictMono (≤ₛ-sucMono smax-≤R) (≤ₛ-sucMono smax-≤R)) lt)
     let lt' = (≤< (smax-mono (<-in-≤ (≤ₛ-sucMono smax-≤L)) (<-in-≤ (≤ₛ-sucMono smax-≤L))) lt)
     xrec ← oDataGermMeet (self (<VSize reflc lt'))
       (r1 (Rec tt)) (r2 (Rec tt)) reflp
-    pure (FC crec (λ { (Rec x) → xrec ; (Rest x) → rrec x}) urec)
-germFIndMeet {{æ = Approx}}  {tyCtor = tyCtor} {posNoCode = pnc} {cpf} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt =
-  let
-    (FC crec rrec urec) = fromL (germFIndMeet ⦃ æ = Approx ⦄ D isCode b+ b- (FC c1 {!!} {!!}) (FC c2 {!!} {!!}) {!!})
-    xrec : Σ[ a+ ∈ A+ b+ ]( A- b+ a+ b- ) → DataGerm {{æ = Approx}} ℓ tyCtor
-    xrec = λ {(a+ , a-) →
-      let
-        lt' = ≤< (smax-mono
-          (<-in-≤ (≤ₛ-sucMono
-          (smax-≤L
-            ≤⨟ {!!}
-            ≤⨟ ≤ₛ-cocone ⦃ æ = Approx ⦄ {!!}
-            ≤⨟ ≤ₛ-cocone ⦃ æ = Approx ⦄ (Iso.fun (iso+ b+) a+))))
-          {!!}) lt
-      in
-        fromL (oDataGermMeet (self (<VSize reflc lt')) {{æ = Approx}} {posNoCode = pnc} {cpf = cpf}
-          (r1 (Rec (a+ , a-))) (r2 (Rec (a+ , a-))) reflp) }
-  in {!!}
-
-germFIndMeet {{æ = Exact}} {tyCtor = tyCtor} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
-    (FC crec rrec urec) ← germFIndMeet {{æ = Exact}} D isCode  b+ b- (FC c1 (λ r → r1 (Rest {!!})) u1) (FC c2 (λ r → r2 (Rest {!!})) u2)
+    pure (FC crec (λ { (Rec tt) → xrec ; (Rest x) → rrec x}) urec)
+germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {posNoCode = pnc} {cpf = cpf} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
+    (FC crec rrec urec) ← germFIndMeet  D isCode  b+ b- (FC c1 (λ r → r1 (Rest {!!})) u1) (FC c2 (λ r → r2 (Rest {!!})) u2)
       {!!}
-    xrec ← liftFun {{æ = Exact}} λ {(a+ , a-) → do
-      let
-        lt' =
-          ≤< (smax-mono (<-in-≤ (≤ₛ-sucMono (
-             smax-≤L
-             ≤⨟ (smax-monoL {!!} ≤⨟ ≤ₛ-cocone {{æ = Exact}} {!!})
-             ≤⨟ ≤ₛ-cocone {{æ = Exact}} (Iso.fun (iso+ b+) (a+))))) {!!})
-          lt
-      oDataGermMeet (self (<VSize reflc lt')) {{æ = Exact}}
-        (r1 (Rec (a+ , {!!}))) (r2 (Rec (a+ , {!!}))) reflp }
-    pure {{æ = Exact}} (FC crec (λ { (Rec x) → xrec x ; (Rest (a , resp)) → rrec resp}) urec)
+    -- New function computes the meet of the old functions
+    f+ ← liftFun λ (a+ : A+ b+) → do
+      oDataGermMeet (self {!!}) {posNoCode = pnc} {cpf = cpf} (r1 (Rec (inl a+))) (r2 (Rec (inl a+))) reflp
+    let rest+ = λ (a+ : A+ b+) → (rrec {!a+!})
+    (f- , rest-) ← (λ {
+      Approx → {!!}
+      ; Exact → {!!}
+      }) æ
+      -- oDataGermMeet (self (<VSize reflc lt'))
+      --   (r1 (Rec (a+ , {!!}))) (r2 (Rec (a+ , {!!}))) reflp }
+    let
+      retResponse : Response (interpGermCtor' (GHRec (A+ , A-) D) b+ b-) crec → DataGerm ℓ tyCtor
+      retResponse = λ {
+        -- Strictly positive higher order recursive reference (i.e. function returning self)
+        (Rec (inl x)) → f+ x
+        -- Guarded part of function
+        ; (Rec (inr x)) → f- x
+        -- Positive part of the rest of the tree
+        ; (Rest (inl x)) → rest+ x
+        -- Guarded part of the rest
+        ; (Rest (inr x)) → rest- x}
+    pure (FC crec retResponse urec)
 germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
 germFIndMeet (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
   (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do

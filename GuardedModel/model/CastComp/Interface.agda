@@ -418,6 +418,8 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) :
 
   self-1 : ∀ {cs} {vs} {{ inst : 0< ℓ }} → SizedCastMeet ⁇any (predℕ ℓ) cs vs
   self-1 {vs = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣
+  Lself :  ∀  {al ℓ' cs vs} → LÆ {{æ = Exact}} (SizedCastMeet al ℓ' cs vs)
+  Lself = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 
 FixCastMeet :
   (∀ {⁇Allowed  ℓ  cSize vSize} → SmallerCastMeet ⁇Allowed ℓ cSize vSize → SizedCastMeet ⁇Allowed ℓ cSize vSize)
