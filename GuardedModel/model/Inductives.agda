@@ -193,10 +193,9 @@ GermResponse : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b
 GermResponse {B+}{ B- } GEnd b+ b- com = 𝟘
 GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , a+) (b- , a-) com
 GermResponse {B+ }{B- } (GHRec (A+ , A-) D) b+ b- com =
-  Rec⇒  ((A+ b+) ⊎ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-))
   -- We have two functions, one for just the positive part, and one for the negative part
-  Rest⇒ ((A+ b+ × GermResponse D b+ b- com)
-    ⊎ (Σ[ a+- ∈ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) ] GermResponse D b+ b- com))
+  Rec⇒  ((A+ b+) ⊎ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-))
+  Rest⇒  (GermResponse D b+ b- com) --TODO: need response to be parameterized by A+ and A- ?
 GermResponse {B+ }{B- } (GRec D) b+ b- com = Rec⇒ 𝟙   Rest⇒ GermResponse D b+ b- com
 GermResponse {B+ }{B- } (GUnk A D) b+ b- com = GermResponse D b+ b- com
 

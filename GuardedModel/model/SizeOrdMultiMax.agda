@@ -36,6 +36,12 @@ abstract
   smax*-mono {ℕ.zero} {[]} {[]} lt = ≤ₛ-Z
   smax*-mono {ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} (lt , rest) = smax-mono {s1 = o1} {s1' = o2} lt (smax*-mono {os1 = os1} {os2 = os2} rest)
 
+  smax*-monoR :  ∀ {n o} {os1 os2 : Vec Size n} → smax* os1 ≤ₛ smax* os2 → smax* (o ∷ os1) ≤ₛ smax* (o ∷ os2)
+  smax*-monoL :  ∀ {n o1 o2} {os : Vec Size n} → o1 ≤ₛ o2 → smax* (o1 ∷ os) ≤ₛ smax* (o2 ∷ os)
+
+  smax*-monoR lt = smax-monoR lt
+  smax*-monoL lt = smax-monoL lt
+
   smax*-consL :  ∀ {n o} {os : Vec Size n} → smax* (o ∷ os) ≤ₛ smax o (smax* os)
   smax*-consL = smax-lub smax-≤L smax-≤R
 

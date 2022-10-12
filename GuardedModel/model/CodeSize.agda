@@ -17,6 +17,7 @@ open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Inductives
 open import GuardedAlgebra
+import GuardedModality as G
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
@@ -85,7 +86,7 @@ germFIndSize : ∀ {{æ : Æ}} {ℓ} {B+ B- sig} (tyCtor : CName) → (D : GermC
   → (cs : FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
   → □ _ (λ _ → Size) (tt , cs)
   → Size
-germIndSize : ∀ {{ _ : Æ }} {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
+germIndSize : ∀ {{ æ : Æ }} {ℓ} (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
 
 germFIndSize tyCtor GEnd GEndCode b+ b- (FC com k unk) φ = S1
 germFIndSize tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) k unk) φ
@@ -94,10 +95,15 @@ germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b-
   = S↑ (SLim (c+ b+) helper)
     where
     helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Size
-    helper a+  = smax
+    helper a+  = smax*
       -- We only do sizes on the part that isn't hidden behind guardedness
-      (φ (Rec (inl ac+)))
-      (germFIndSize tyCtor D isCode b+ b- (FC com (λ r → k (Rest (inl (ac+ , r)))) unk) λ r → φ (Rest (inl (ac+ , r))))
+      -- For the guarded part, we take the size at ℧, for the approx case this is the only argument
+      ((φ (Rec (inl ac+)))
+      -- In approx case, only one value to give
+      -- In exact case, we use ℧ trivially (but we don't actually need this, we just use fix to recur in these cases)
+      ∷ φ (Rec (inr (ac+ , Iso.inv (iso- b+ ac+ b-) (caseÆ (λ {reflp → tt*}) (λ {reflp → G.next (℧Approxed ⦃ æ = Exact ⦄ (c- b+ ac+ b-))})))))
+      ∷ (germFIndSize tyCtor D isCode b+ b- (FC com (λ r → k (Rest r)) unk) λ r → φ (Rest r))
+      ∷ [])
       where
         ac+ : A+ b+
         ac+ = Iso.inv (iso+ b+) a+

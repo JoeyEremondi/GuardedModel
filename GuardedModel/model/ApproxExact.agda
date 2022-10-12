@@ -110,15 +110,15 @@ data GUnit {ℓ} : Set ℓ where
 
 
 instance
-  approxExact : {{_ : Æ}} → GuardedAlgebra
-  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → GUnit
-  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → GUnit
-  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ x → U⁇
-  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ { f U⁇ → U⁇ ; f U℧ → U℧}
-  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ x → U⁇
+  approxExact : {{æ : Æ}} → GuardedAlgebra
+  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → Unit*
+  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → Unit*
+  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ x → tt*
+  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
+  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ x → tt*
   GuardedAlgebra.pfix (approxExact ⦃ Approx ⦄) = λ x → refl
   GuardedAlgebra.hollowEq (approxExact ⦃ Approx ⦄) = refl
-  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ { f U⁇ → U⁇ ; f U℧ → U℧}
+  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
   GuardedAlgebra.▹ approxExact ⦃ Exact ⦄ = λ A → G.▹ A
   GuardedAlgebra.▸ approxExact ⦃ Exact ⦄ = λ ▹A → G.▸ ▹A
   GuardedAlgebra.next (approxExact ⦃ Exact ⦄) = G.next
@@ -171,14 +171,21 @@ withApproxL' {{Exact}} {T = T} f  = do
   pure {{Exact}} (a , e)
 
 
+caseÆ : ∀ {{æ : Æ}} {ℓ } {A : Set ℓ} → (æ ≡p Approx → A) → (æ ≡p Exact → A) → A
+caseÆ ⦃ Approx ⦄ fa fe = fa reflp
+caseÆ ⦃ Exact ⦄ fa fe = fe reflp
+
 --Termination and divergence for LÆ
 Terminates : ∀ {ℓ} {A : Set ℓ} → LÆ {{Exact}} A → Set ℓ
 Terminates {A = A} xL = Σ[ x ∈ A ](xL ≡ Now x)
 
 
 fromGuarded▹ : ∀ {{æ : Æ}} {ℓ} {A : Set ℓ} → G.▹ A → LÆ (▹ A)
-fromGuarded▹ ⦃ Approx ⦄ x = pure ⦃ Approx ⦄ U⁇
+fromGuarded▹ ⦃ Approx ⦄ x = pure ⦃ Approx ⦄ tt*
 fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
+
+▹ApproxUnique : ∀ {ℓ} {A : Set ℓ} → (x y : ▹_ {{approxExact {{æ = Approx}}}} A) → x ≡p y
+▹ApproxUnique tt* tt* = reflp
 
 -- pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
 -- pairWithApprox ⦃ æ = Approx ⦄ a e = a

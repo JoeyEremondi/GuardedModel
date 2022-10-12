@@ -10,6 +10,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
+open import Cubical.Data.Vec
 open import Cubical.Data.Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.FinData
@@ -71,16 +72,42 @@ germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {cpf = cpf} (GRec D) (GRecCode isCode
       (r1 (Rec tt)) (r2 (Rec tt)) reflp
     pure (FC crec (λ { (Rec tt) → xrec ; (Rest x) → rrec x}) urec)
 germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {posNoCode = pnc} {cpf = cpf} (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
-    (FC crec rrec urec) ← germFIndMeet  D isCode  b+ b- (FC c1 (λ r → r1 (Rest {!!})) u1) (FC c2 (λ r → r2 (Rest {!!})) u2)
+    (FC crec rrec urec) ← germFIndMeet  D isCode  b+ b- (FC c1 (λ r → r1 (Rest r)) u1) (FC c2 (λ r → r2 (Rest r)) u2)
       {!!}
     -- New function computes the meet of the old functions
     f+ ← liftFun λ (a+ : A+ b+) → do
-      oDataGermMeet (self {!!}) {posNoCode = pnc} {cpf = cpf} (r1 (Rec (inl a+))) (r2 (Rec (inl a+))) reflp
-    let rest+ = λ (a+ : A+ b+) → (rrec {!a+!})
-    (f- , rest-) ← (λ {
-      Approx → {!!}
-      ; Exact → {!!}
-      }) æ
+      let lt' = {!!}
+      oDataGermMeet (self (<VSize reflc lt')) {posNoCode = pnc} {cpf = cpf} (r1 (Rec (inl a+))) (r2 (Rec (inl a+))) reflp
+    let
+      lf- : LÆ (Σ[ a+ ∈ A+ b+ ](A- b+ a+ b-) → DataGerm ℓ tyCtor)
+      lf- = liftFun λ {(a+ , a-) → caseÆ
+        -- Approx case
+        (λ {reflp → do
+          let
+            lt' = ≤< (smax-mono
+              -- Left side
+              (≤↑ _ ≤⨟ ≤ₛ-sucMono ( smax*-≤-n (Fin.suc Fin.zero)
+              ≤⨟ smax*-monoR (smax*-monoL
+              (subst (λ x → germIndSize ⦃ æ = Approx ⦄ tyCtor (r1 (Rec (inr x))) ≤ₛ _)
+                      (ΣnegUnique ⦃ æ = Approx ⦄ {X = λ a → ApproxEl (c- b+ a b-)} reflp (iso- b+ _ b-) (Iso.inv (iso+ b+) (Iso.fun (iso+ b+) a+) , Iso.inv (iso- b+ _ b-) tt*) (a+ , a-) (Iso.leftInv (iso+ b+) a+)) ≤ₛ-refl)
+                      )
+              ≤⨟  ≤ₛ-cocone {{æ = Approx}} (Iso.fun (iso+ b+) a+) ))
+              --right side
+              (≤↑ _ ≤⨟ ≤ₛ-sucMono ( smax*-≤-n (Fin.suc Fin.zero)
+              ≤⨟ smax*-monoR (smax*-monoL
+              (subst (λ x → germIndSize ⦃ æ = Approx ⦄ tyCtor (r2 (Rec (inr x))) ≤ₛ _)
+                      (ΣnegUnique ⦃ æ = Approx ⦄ {X = λ a → ApproxEl (c- b+ a b-)} reflp (iso- b+ _ b-) (Iso.inv (iso+ b+) (Iso.fun (iso+ b+) a+) , Iso.inv (iso- b+ _ b-) tt*) (a+ , a-) (Iso.leftInv (iso+ b+) a+)) ≤ₛ-refl)
+                      )
+              ≤⨟  ≤ₛ-cocone {{æ = Approx}} (Iso.fun (iso+ b+) a+) ))
+              ) lt
+          oDataGermMeet (self (<VSize reflc lt')) {{æ = Approx}} {posNoCode = pnc} {cpf = cpf} (r1 (Rec (inr (a+ , a-)))) (r2 (Rec (inr (a+ , a-)))) reflp
+        })
+        -- Exact case: for the negative function, we can just use guarded recursion, since we're under the modality anyways
+        (λ {reflp → do
+          gSelf ← Lself
+          oDataGermMeet gSelf {{æ = Exact}} {posNoCode = pnc} {cpf = cpf} (r1 (Rec (inr (a+ , a-)))) (r2 (Rec (inr (a+ , a-)))) reflp
+          })}
+    f- ← lf-
       -- oDataGermMeet (self (<VSize reflc lt'))
       --   (r1 (Rec (a+ , {!!}))) (r2 (Rec (a+ , {!!}))) reflp }
     let
@@ -90,10 +117,7 @@ germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {posNoCode = pnc} {cpf = cpf} (GHRec 
         (Rec (inl x)) → f+ x
         -- Guarded part of function
         ; (Rec (inr x)) → f- x
-        -- Positive part of the rest of the tree
-        ; (Rest (inl x)) → rest+ x
-        -- Guarded part of the rest
-        ; (Rest (inr x)) → rest- x}
+        ; (Rest x) → rrec x}
     pure (FC crec retResponse urec)
 germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
 germFIndMeet (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-

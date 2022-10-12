@@ -85,7 +85,25 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ →
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk (A+ , A-) D)
 
+-- Helpful function for showing that, in approx mode, any two of our "negative" values are equal
+negUnique : ∀ {{æ : Æ}} {ℓ} {A- X : Set ℓ}
+   → æ ≡p Approx
+   → (iso- :  Iso  A- (▹ X))
+   → (x y : A-)
+   → x ≡ y
+negUnique reflp iso- x y =
+  sym (Iso.leftInv iso- x)
+  ∙ cong (Iso.inv iso-) refl
+  ∙ Iso.leftInv iso- y
 
+
+ΣnegUnique : ∀ {{æ : Æ}} {ℓ} {A+ : Set ℓ} {A- X : A+ → Set ℓ}
+   → æ ≡p Approx
+   → (iso- : ∀ {a+} →  Iso  (A- a+) (▹ (X a+)))
+   → (x y : Σ A+ A-)
+   → fst x ≡ fst y
+   → x ≡ y
+ΣnegUnique æeq iso- x y pf = ΣPathP (pf , toPathP (negUnique  æeq iso- _ (snd y)) )
 
 record InductiveCodes : Set2 where
   field
