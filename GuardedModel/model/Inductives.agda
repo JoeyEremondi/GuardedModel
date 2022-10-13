@@ -201,9 +201,11 @@ GermResponse {B+ }{B- } (GUnk A D) b+ b- com = GermResponse D b+ b- com
 
 
 GermResponseUnk : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
+-- Like before, we separate the positive from the negative parts
+-- In the "Rest" case, we also need to paramterize by A+ and A- values,
 GermResponseUnk (GUnk (A+ , A-) D) b+ b- com =
-  Rec⇒ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-)
-  Rest⇒ ((Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) × GermResponseUnk D b+ b- com)
+  Rec⇒ ((A+ b+) ⊎ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-))
+  Rest⇒ ( GermResponseUnk D b+ b- com) --TODO need more here?
 GermResponseUnk GEnd b+ b- x = 𝟘
 GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , a+) (b- , a-) com
 GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com

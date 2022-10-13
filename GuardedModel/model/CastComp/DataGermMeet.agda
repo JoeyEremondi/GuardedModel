@@ -119,7 +119,10 @@ germFIndMeet {{æ = æ}} {tyCtor = tyCtor} {posNoCode = pnc} {cpf = cpf} (GHRec 
         ; (Rec (inr x)) → f- x
         ; (Rest x) → rrec x}
     pure (FC crec retResponse urec)
-germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- cs1 cs2 lt = {!!}
+germFIndMeet (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)  b+ b- (FC c1 r1 u1) (FC c2 r2 u2) lt = do
+  -- Take the meet of the ⁇ values and the rest, then combine them
+  recMeet ← germFIndMeet D isCode b+ b- (FC c1 r1 (λ u → u1 (Rest {!!}))) (FC c2 r2 {!!}) {!!}
+  pure (FC {!!} {!!} {!!})
 germFIndMeet (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)  b+ b-
   (FC ((a+1 , a-1) , c1) r1 u1) (FC ((a+2 , a-2) , c2) r2 u2) lt = do
   a+ ← c+ b+ ∋ Iso.fun (iso+ b+) a+1 ⊓ Iso.fun (iso+ b+) a+2
