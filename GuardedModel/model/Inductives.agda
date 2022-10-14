@@ -109,7 +109,7 @@ record FContainer {I} (C : Container I) (X : I → Set) (i : I) : Set where
   constructor FC
   field
     command : Command C i
-    responseNow :
+    response :
       (r : Response C command)
       → X (inext C command r)
     -- responseLater :
@@ -249,25 +249,25 @@ GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , a+)
 GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com
 GermResponseUnk (GRec D) b+ b- com = GermResponseUnk D b+ b- com
 
-interpGermCtor' : ∀ {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container Bool
+interpGermCtor' : ∀ {A} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container (Maybe A)
 interpGermCtor' D b+ b- =
   -- Command encodes any non-recursive parts of datatype
   -- We're only describing uses of ⁇, not defining it, so we don't have commands for when i is false
-  (λ i → if i then GermCommand D b+ b- else 𝟘)
+  (λ i → caseMaybe 𝟘 (GermCommand D b+ b-) i)
   -- The response is either a GermResponse or a GermResponseUnk
   -- Since the functor looks like Σ[ c ∈ Command ]((r : Response com) -> X (inext c r)), the sum is saying
   -- that we have two fields, one with type GermResponse -> X and one with type GermResponseUnk to X
   -- The function below encodes that in the first case, X should have index true (self reference)
   -- and in the second case, it should have index False (⁇ reference)
-  ◃ (λ { {true} com → GermResponse D b+ b- com ⊎ GermResponseUnk D b+ b- com })
+  ◃ (λ { {just _} com → GermResponse D b+ b- com ⊎ GermResponseUnk D b+ b- com })
   / λ {
       -- Left case: index shoudl be true (self reference)
-      {true} com (inl x) → SelfRef
+      {just tyCtor} com (inl x) → just tyCtor
       -- Right case: index should be false  (⁇ reference)
-      ; {true} com (inr x) → ⁇Ref
+      ; {just _} com (inr x) → nothing
       }
 
-interpGermCtor : ∀ {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container 𝟚
+interpGermCtor : ∀ {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
 interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
 -- -- data IndSig : Set where
 -- --   SigE SigA SigR SigHR SigU : IndSig
@@ -403,14 +403,16 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- We ensure positivity by writing the datatype using a description
     preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
-  allDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
-  allDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
+  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
+  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
+  preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
+  preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
   FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
-  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = allDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
+  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
   Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
-  Pre⁇ ℓ ℂ-1 El-1 ▹Self  = allDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+  Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
 
 
 open DataGerms {{...}} public
