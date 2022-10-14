@@ -22,23 +22,7 @@ module Head {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 
-data TyHead : Set where
-  HΠ : TyHead
-  HΣ : TyHead
-  H≅ : TyHead
-  H𝟙 : TyHead
-  H𝟘 : TyHead
-  HType : TyHead
-  HCumul : TyHead
-  HCtor : CName → TyHead
-
-data GHead : Set where
-  H⁇ : GHead
-  H℧ : GHead
-  HStatic : TyHead → GHead
-
-HStatic-inj : ∀ {h1 h2} → HStatic h1 ≡p HStatic h2 → h1 ≡p h2
-HStatic-inj reflp = reflp
+open import HeadDefs numCtors public
 
 unkHead : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ → GHead
 unkHead  ⁇⁇ = H⁇

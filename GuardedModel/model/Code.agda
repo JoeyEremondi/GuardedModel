@@ -98,7 +98,7 @@ record CodeModule
     ⁇ : {{_ : Æ}} → Set
     -- Code-based Descriptions of inductive data types
     data ℂDesc (I : ℂ) : ℂ → IndSig → Set
-    -- Interpretation of description codes into descriptions
+    -- Interpretation of description codes into W-types
     interpDesc : ∀ {{_ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
     CommandD : ∀ {{_ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
     ResponseD : ∀ {{_ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
