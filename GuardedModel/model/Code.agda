@@ -453,7 +453,11 @@ Wsup-cong {com = com} {x = x} {y = y} pf = cong {x = x} {y = y} (λ x → Wsup (
 ⁇IsoWR W℧ = reflc
 ⁇IsoWR W⁇ = reflc
 
--- ⁇DescIso : ∀ {{_ : Æ}} {ℓ} {X : A.▹ Set} → Iso (⁇Ty ℓ) (FWUnk (A.next (⁇Ty ℓ)))
+⁇DescIso' : ∀ {{_ : Æ}} {ℓ} → Iso (F⁇ {ℓ} (A.next (⁇Ty ℓ))) (FWUnk (A.next (⁇Ty ℓ)))
+⁇DescIso' = iso ⁇ToW ⁇FromW ⁇IsoWR ⁇IsoWL
+
+⁇DescIso : ∀ {{_ : Æ}} {ℓ} → Iso (⁇Ty ℓ) (FWUnk (A.next (⁇Ty ℓ)))
+⁇DescIso {ℓ = ℓ} = subst (λ x → Iso x (FWUnk (A.next (⁇Ty ℓ)))) (sym ⁇lob) ⁇DescIso'
 -- Iso.fun (⁇DescIso {X = X}) = ⁇ToW
 -- Iso.inv (⁇DescIso {X = X}) x = {!!}
 -- Iso.rightInv (⁇DescIso {X = X}) = {!!}

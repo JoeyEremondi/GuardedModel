@@ -69,7 +69,7 @@ data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : App
 -- ℂμ1 tyCtor D i = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
 WArg : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) → ApproxEl cI →  Set
-WArg D  = W (Arg λ d → interpDesc (D d) true) Unit
+WArg D  = W̃ (Arg λ d → interpDesc (D d) true)
 
 
 -- ℂElFContainer : ∀ {ℓ} {cI : ℂ ℓ} {i : ApproxEl cI} {X : ApproxEl cI → Set} → {D : ℂDesc cI} → ℂDescEl D X i ≡ FContainer (interpDesc D) X Unit i
@@ -124,7 +124,7 @@ fromCEl : ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB si
       → WArg E (inextD D b (fromCElCommand D x ) r )
 
 
-fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D d) D x) (λ ()))
+fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D d) D x))
 fromCμ Cμ⁇ = W⁇
 fromCμ Cμ℧ = W℧
 
@@ -143,7 +143,7 @@ toCEl :
                   WArg E (inextD D b com r))
   → □ {X = WArg E} (interpDesc D b)
       (λ (i , x) → ℂμ tyCtor E i)
-      (ix , FC com k (λ _ → tt))
+      (ix , FC com k)
   -- FContainer (interpDesc D) (λ i → W (interpDesc E) Unit i × ℂμ E i) Unit ix
   → (ℂDescEl  D (ℂμ tyCtor E) ix b)
 
@@ -151,7 +151,7 @@ toCEl :
 toCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {ix : ApproxEl cI}
   → (x : WArg D ix)
   → ℂμ tyCtor D ix
-toCμ D = wInd (λ (i , _) → ℂμ _ D i) (λ {i} (FC (d , com) k _) φ → Cinit d (toCEl (D d) D com k φ)) Cμ℧ Cμ⁇
+toCμ D = wInd (λ (i , _) → ℂμ _ D i) (λ {i} (FC (d , com) k) φ → Cinit d (toCEl (D d) D com k φ)) Cμ℧ Cμ⁇
 
 
 toCEl (CEnd i) E wit k φ = ElEnd i wit
@@ -207,7 +207,7 @@ fromToCEl :
   → (φ₂ : □ {X = WArg E} (interpDesc D b)
       (λ (i , x) →
          fromCμ (toCμ E x) ≡ x)
-      (ix , FC com k (λ _ → tt)))
+      (ix , FC com k))
   → PathP (λ 𝕚 → let com = fromToCElCommand D E com k  𝕚 in (r : ResponseD D b com) → WArg E (inextD D b com r))
   (fromCEl D E (toCEl D E com k λ r → toCμ E (k r))) k
 fromToCEl (CodeModule.CEnd i) E com k  φ = funExt (λ ())
@@ -224,12 +224,11 @@ fromToCμ :  ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i
 fromToCμ {cI = cI} D = wInd
   (λ(ix , x) → fromCμ (toCμ D x) ≡ x) helper refl refl
   where
-    helper : ∀ {i : ApproxEl cI} (cs : FContainer (Arg (λ d → interpDesc (D d) true)) (WArg D) Unit i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
-    helper {i} (FC (d , com) k _) φ 𝕚 =
+    helper : ∀ {i : ApproxEl cI} (cs : FContainer (Arg (λ d → interpDesc (D d) true)) (WArg D) i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
+    helper {i} (FC (d , com) k) φ 𝕚 =
       Wsup (FC
         (d , fromToCElCommand (D d) D com k 𝕚)
-        (fromToCEl (D d) D com k φ 𝕚)
-        λ _ → tt)
+        (fromToCEl (D d) D com k φ 𝕚) )
 
 
 toFromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}

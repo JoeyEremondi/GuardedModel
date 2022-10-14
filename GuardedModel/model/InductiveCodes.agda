@@ -119,16 +119,17 @@ record InductiveCodes : Set2 where
   -- Now that ⁇ is defined we can tie the knot
   germForCtor : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton tyCtor d)
   germForCtor  ℓ tyCtor d = preDataGerm ℓ tyCtor (▹⁇ ℓ) d
-  FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
-  FGerm ℓ c Unk = W (germContainer ℓ c (▹⁇ ℓ)) Unk tt
+  -- FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
+  -- FGerm ℓ c Unk = W̃ {!!} {!!} --W̃ (germContainer ℓ c (▹⁇ ℓ)) Unk tt
   DataGerm : {{ æ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
-  DataGerm ℓ c = FGerm ℓ c (⁇Ty ℓ)
-  FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
-    → (D : GermCtor B+ B- sig)
-    → (b+ : B+)
-    → (b- : B- b+)
-    → Set
-  FCGerm ℓ tyCtor D b+ b- =  FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
+  DataGerm ℓ c = allDataTypes ℓ (ℂ-1 {ℓ = ℓ}) (El-1 {ℓ = ℓ}) (▹⁇ ℓ) (just c)
+  -- FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
+  --   → (D : GermCtor B+ B- sig)
+  --   → (b+ : B+)
+  --   → (b- : B- b+)
+  --   → Set
+  -- FCGerm ℓ tyCtor D b+ b- = {!!} --TODO put back
+  -- FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
 
 
 

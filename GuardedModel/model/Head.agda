@@ -22,7 +22,7 @@ module Head {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 
-open import HeadDefs numCtors public
+open import HeadDefs numTypes public
 
 unkHead : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ → GHead
 unkHead  ⁇⁇ = H⁇

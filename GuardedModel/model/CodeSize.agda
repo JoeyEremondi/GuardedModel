@@ -90,7 +90,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
     → (DataGermIsCode ℓ D)
     → (b+ : B+)
     → (b- : B- b+)
-    → (cs : FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
+    → (cs : FContainer (interpGermCtor' D b+ b- ) (W̃ (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
     → □ _ (λ _ → Size) (tt , cs)
     → Size
   germIndSize : ∀ {{ æ : Æ }}  (tyCtor : CName) →  W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt → Size
