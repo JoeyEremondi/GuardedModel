@@ -30,6 +30,7 @@ module Code
   where
 
 
+open import HeadDefs (numTypes)
 
 data 0<  : ℕ → Set where
   instance suc< : ∀ {ℓ} → 0< (suc ℓ)
@@ -103,6 +104,7 @@ record CodeModule
     CommandD : ∀ {{_ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
     ResponseD : ∀ {{_ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
     inextD : ∀ {{_ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
+    FWUnk : {{_ : Æ}} → A.▹ Set → Set
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
@@ -223,8 +225,9 @@ record CodeModule
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
-      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
-    El (Cμ tyCtor cI D i) = W (Arg (λ d → interpDesc (D d) true)) 𝟙 i
+      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ ℂ-1 El-1 Self tyCtor) →  F⁇ Self
+      -- ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
+    El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
 
@@ -256,7 +259,7 @@ record CodeModule
         → ℂDesc I cB (SigHR rest)
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b ◃ (λ _ → 𝟘) / inextD D b
+    interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b / inextD D b
     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
     CommandD (CEnd j) i b = i ≅ j
@@ -295,6 +298,10 @@ record CodeModule
     -- ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
     -- ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
     -- ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
+    --
+    --
+    --
+    FWUnk Self = Pre⁇ ℓ ℂ-1 El-1 Self
 -----------------------------------------------------------------------
 
 
@@ -397,6 +404,60 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
 DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d)
+
+⁇ToW : ∀ {{æ : Æ}} {ℓ} → F⁇ {ℓ} (A.next (⁇Ty ℓ)) → FWUnk {ℓ = ℓ} (A.next (⁇Ty ℓ))
+⁇ToW ⁇⁇ = W⁇
+⁇ToW ⁇℧ = W℧
+⁇ToW ⁇𝟙 = Wsup (FC ( H𝟙 , tt) λ ())
+⁇ToW {ℓ = suc ℓ} (⁇Type ty) = Wsup (FC ( HType , ty) λ ())
+⁇ToW {ℓ = suc ℓ} (⁇Cumul c x) = Wsup (FC ( HCumul , (c , x)) λ ())
+⁇ToW (⁇Π f) = Wsup (FC ( HΠ , tt) λ x → ⁇ToW (f x))
+⁇ToW (⁇Σ (x , y)) = Wsup (FC ( HΣ , tt) λ r → if r then ⁇ToW x else ⁇ToW y)
+⁇ToW (⁇≡ (x ⊢ _ ≅ _)) = Wsup (FC ( H≅ , tt) λ _ → ⁇ToW x)
+⁇ToW (⁇μ tyCtor x) = Wsup (FC ( (HCtor tyCtor) , tt) λ _ → x)
+
+
+⁇FromW : ∀ {{æ : Æ}} {ℓ} → FWUnk {ℓ = ℓ} (A.next (⁇Ty ℓ)) → F⁇ {ℓ} (A.next (⁇Ty ℓ))
+⁇FromW (Wsup (FC (HΠ , arg) res)) = ⁇Π (λ x → ⁇FromW (res x))
+⁇FromW (Wsup (FC (HΣ , arg) res)) = ⁇Σ ((⁇FromW (res true)) , (⁇FromW (res false)))
+⁇FromW (Wsup (FC (H≅ , arg) res)) = ⁇≡ ((⁇FromW (res tt)) ⊢ _ ≅ _)
+⁇FromW (Wsup (FC (H𝟙 , arg) res)) = ⁇𝟙
+⁇FromW {ℓ = suc ℓ} (Wsup (FC (HType , c) res)) = ⁇Type {{inst = suc<}} c
+⁇FromW {ℓ = suc ℓ} (Wsup (FC (HCumul , (c , x)) res)) = ⁇Cumul {{inst = suc<}} c x
+⁇FromW (Wsup (FC (HCtor tyCtor , arg) res)) = ⁇μ tyCtor (res tt)
+⁇FromW W⁇ = ⁇⁇
+⁇FromW W℧ = ⁇℧
+
+⁇IsoWL : ∀ {{æ : Æ}} {ℓ} → (x : F⁇ {ℓ} (A.next (⁇Ty ℓ))) → ⁇FromW (⁇ToW x) ≡ x
+⁇IsoWL ⁇⁇ = reflc
+⁇IsoWL ⁇℧ = reflc
+⁇IsoWL ⁇𝟙 = reflc
+⁇IsoWL {ℓ = suc ℓ} (⁇Type ⦃ inst = suc< {ℓ = .ℓ} ⦄ x) = reflc
+⁇IsoWL {ℓ = suc ℓ} (⁇Cumul ⦃ inst = suc< {ℓ = .ℓ} ⦄ c x) = reflc
+⁇IsoWL (⁇Π f) = cong ⁇Π (funExt λ x → ⁇IsoWL (f x))
+⁇IsoWL (⁇Σ (x , y)) = cong₂ (λ x y → ⁇Σ (x , y)) (⁇IsoWL x) (⁇IsoWL y)
+⁇IsoWL (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = cong (λ x → ⁇≡ (x ⊢ _ ≅ _)) (⁇IsoWL x)
+⁇IsoWL (⁇μ tyCtor x) = reflc
+
+Wsup-cong : ∀ {I} {C : Container I} {i : I} → {com : Command C i} → {x y : (res : Response C com) → W̃ C (inext C com res)} → x ≡ y → Wsup (FC com x) ≡c Wsup (FC com y)
+Wsup-cong {com = com} {x = x} {y = y} pf = cong {x = x} {y = y} (λ x → Wsup (FC _ x)) pf
+
+⁇IsoWR : ∀ {{æ : Æ}} {ℓ} (x : FWUnk {ℓ = ℓ} (A.next (⁇Ty ℓ)))  → ⁇ToW (⁇FromW x) ≡ x
+⁇IsoWR (Wsup (FC (HΠ , tt) f)) = Wsup-cong (funExt λ x → ⁇IsoWR (f x))
+⁇IsoWR (Wsup (FC (HΣ , tt) res)) = Wsup-cong (funExt (λ {true → ⁇IsoWR (res true) ; false → ⁇IsoWR (res false)}))
+⁇IsoWR (Wsup (FC (H≅ , arg) res)) = Wsup-cong (funExt (λ (tt) → ⁇IsoWR (res tt)))
+⁇IsoWR (Wsup (FC (H𝟙 , arg) res)) = Wsup-cong (funExt (λ ()))
+⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HType , arg) res)) = Wsup-cong (funExt λ ())
+⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HCumul , arg) res)) = Wsup-cong (funExt λ ())
+⁇IsoWR (Wsup (FC (HCtor x , arg) res)) = Wsup-cong (funExt (λ x → reflc))
+⁇IsoWR W℧ = reflc
+⁇IsoWR W⁇ = reflc
+
+-- ⁇DescIso : ∀ {{_ : Æ}} {ℓ} {X : A.▹ Set} → Iso (⁇Ty ℓ) (FWUnk (A.next (⁇Ty ℓ)))
+-- Iso.fun (⁇DescIso {X = X}) = ⁇ToW
+-- Iso.inv (⁇DescIso {X = X}) x = {!!}
+-- Iso.rightInv (⁇DescIso {X = X}) = {!!}
+-- Iso.leftInv (⁇DescIso {X = X}) = {!!}
 
 
 -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
