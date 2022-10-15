@@ -97,7 +97,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   germUnkFSize : ∀ {{æ : Æ}} → (x : GermUnkFunctor ℓ) → □ _ (λ _ → Size) (nothing , x) → Size
 
 
-  germUnkFSize (FC (HΠ , arg) f) φ = S↑ (SLim C⁇ λ x → φ (transport ( (sym hollowEq) ∙ cong ▸_ ▹⁇≡) (next (exact x))))
+  germUnkFSize (FC (HΠ , arg) f) φ = S↑ (SLim C⁇ λ x → φ (transport (sym hollowEq) (next (exact x))))
   germUnkFSize (FC (HΣ , arg) resp) φ = S↑ (smax (φ true ) (φ false))
   germUnkFSize (FC (H≅ , arg) resp) φ = S↑ (φ tt)
   germUnkFSize (FC (H𝟙 , arg) resp) φ = S1
@@ -272,7 +272,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   --   → Size
 
 
-  ⁇Size x = ? (⁇ToW x)
+  ⁇Size x = germUnkSize (⁇ToW x)
 
   -- germFArgSize tyCtor GEnd GEndCode (FC com k unk) φ = S1
   -- germFArgSize tyCtor (GArg A D) (GArgCode c x₁ x₂) (FC (a , com) k unk) φ = (codeSize c)
