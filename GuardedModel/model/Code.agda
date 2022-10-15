@@ -362,6 +362,9 @@ fold⁇ : ∀ {{_ : Æ}} {ℓ} →  F⁇ (A.next (⁇Ty ℓ))  → ⁇Ty ℓ
 fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
+ℂ-1>0 : ∀ {ℓ} → ℂ-1 {ℓ = ℓ} → 0< ℓ
+ℂ-1>0 {suc ℓ} x = suc<
+
 -- The least precise argument to a guarded function from ⁇ to ⁇
 -- Used for checking if functions are errors
 -- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
@@ -485,7 +488,13 @@ Wsup-cong {com = com} {x = x} {y = y} pf = cong {x = x} {y = y} (λ x → Wsup (
 
 
 ▹⁇ : {{_ : Æ}} →  ℕ → A.▹ Set
-▹⁇ ℓ = A.dfix (F⁇ {ℓ})
+▹⁇ ℓ = A.next (⁇Ty ℓ)
+
+▹⁇≡ : ∀ {{_ : Æ}} {ℓ} → A.dfix (F⁇ {ℓ}) ≡ ▹⁇ ℓ
+▹⁇≡ = A.pfix F⁇
+
+apply▸ : ∀ {{_ : Æ}} {ℓ} (f : (A.▸ (A.dfix (F⁇ {ℓ = ℓ}))) → ⁇Ty ℓ) → (x : A.▹ (⁇Ty ℓ)) →  ⁇Ty ℓ
+apply▸ f x = f (transport (cong A.▹_ (⁇lob ∙ cong F⁇ (sym ▹⁇≡)) ∙ sym A.hollowEq ) x)
 
 -- -- -- Lift a code to a higher universe
 -- -- liftℂ : ∀ {j k} → j ≤ k → ℂ j → ℂ k

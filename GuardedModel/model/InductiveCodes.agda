@@ -133,11 +133,14 @@ record InductiveCodes : Set2 where
   AllDataTypes : {{_ : Æ}} → ℕ → Maybe CName → Set
   AllDataTypes ℓ = preAllDataTypes ℓ (ℂ-1 {ℓ = ℓ}) (El-1 {ℓ = ℓ})  (▹⁇ ℓ)
 
-  DescFunctor : ∀ {{æ : Æ}}  {ℓ} {B+ B- sig} (tyCtor : CName) → (D : GermCtor B+ B- sig)
+  DescFunctor : ∀ {{æ : Æ}}  ℓ {B+ B- sig} (tyCtor : CName) → (D : GermCtor B+ B- sig)
     → (b+ : B+)
     → (b- : B- b+)
     → Set
-  DescFunctor {ℓ = ℓ} tyCtor D b+ b- = FContainer (interpGermCtor' D b+ b- ) (AllDataTypes ℓ) (just tyCtor)
+  DescFunctor ℓ tyCtor D b+ b- = FContainer (interpGermCtor' D b+ b- ) (AllDataTypes ℓ) (just tyCtor)
+
+  GermUnkFunctor : {{_ : Æ}} →  ℕ → Set
+  GermUnkFunctor ℓ = FContainer (AllDataContainer ℓ) (AllDataTypes ℓ) nothing
 
   DataGerm : {{ æ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
   DataGerm ℓ c = AllDataTypes ℓ (just c)
@@ -150,7 +153,7 @@ record InductiveCodes : Set2 where
   -- FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
   DataGermRec : ∀ {{_ : Æ}} {ℓ} (P : Set)
     -- Unk case
-    → ((x : FContainer (AllDataContainer ℓ) (AllDataTypes ℓ) nothing) → □ (AllDataContainer ℓ) (λ _ → P) (nothing , x) → P)
+    → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ _ → P) (nothing , x) → P)
     -- DataGerm case
     → (∀ {tyCtor} (d : DName tyCtor) (x : FContainer (DataGermContainer ℓ tyCtor d) (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ _ → P) (_ , x) → P)
     → (Maybe CName → P × P)
