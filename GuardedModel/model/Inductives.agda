@@ -206,6 +206,14 @@ data IndSig : Set where
 ⁇Ref = false
 SelfRef = true
 
+maybeIrrefute : ∀ {A B : Set} {m : Maybe B} → caseMaybe 𝟘 A m → A
+maybeIrrefute {m = just x} a = a
+
+
+maybeIrrefuteUnwrap : ∀ {A B : Set} {m : Maybe B} → caseMaybe 𝟘 A m → B
+maybeIrrefuteUnwrap {m = just x} a = x
+
+
 -- -- "Flattened" descriptions. We index by the type that that fields are parameterized over
 -- -- So the shape is never dependent on previous values, only the types
 -- -- We have separate positive and negative "previous" parameters, since
@@ -259,172 +267,170 @@ interpGermCtor' D b+ b- =
   -- that we have two fields, one with type GermResponse -> X and one with type GermResponseUnk to X
   -- The function below encodes that in the first case, X should have index true (self reference)
   -- and in the second case, it should have index False (⁇ reference)
-  ◃ (λ { {just _} com → GermResponse D b+ b- com ⊎ GermResponseUnk D b+ b- com })
-  / λ {
-      -- Left case: index shoudl be true (self reference)
-      {just tyCtor} com (inl x) → just tyCtor
-      -- Right case: index should be false  (⁇ reference)
-      ; {just _} com (inr x) → nothing
-      }
+  ◃ (λ {i} com → GermResponse D b+ b- (maybeIrrefute {m = i} com) ⊎ GermResponseUnk D b+ b- (maybeIrrefute {m = i} com) )
+  / λ {mTyCtor} com res → Sum.rec
+      (λ _ → just (maybeIrrefuteUnwrap {A = GermCommand D b+ b- } com))
+      (λ _ → nothing)
+      res
 
-interpGermCtor : ∀ {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
-interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
--- -- data IndSig : Set where
--- --   SigE SigA SigR SigHR SigU : IndSig
+-- interpGermCtor : ∀ {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
+-- interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
+-- -- -- data IndSig : Set where
+-- -- --   SigE SigA SigR SigHR SigU : IndSig
 
--- open import Cubical.Data.List
+-- -- open import Cubical.Data.List
 
--- data GermDescSig : GermDesc → List IndSig → Set1 where
---   GDE : GermDescSig GEnd [ SigE ]
---   GDA : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → ((a : A) → GermDescSig (D a) sig) → GermDescSig (GArg A D) (SigA ∷ sig)
---   GDHR : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → GermDescSig {!!} {!!}
---   GDR : ∀ {sig} →  GermDesc → GermDescSig {!!} {!!}
---   GDU : ∀ {sig} →  (A : Set) → GermDesc → GermDescSig {!!} {!!}
+-- -- data GermDescSig : GermDesc → List IndSig → Set1 where
+-- --   GDE : GermDescSig GEnd [ SigE ]
+-- --   GDA : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → ((a : A) → GermDescSig (D a) sig) → GermDescSig (GArg A D) (SigA ∷ sig)
+-- --   GDHR : ∀ {sig} →  (A : Set) → (D : A → GermDesc) → GermDescSig {!!} {!!}
+-- --   GDR : ∀ {sig} →  GermDesc → GermDescSig {!!} {!!}
+-- --   GDU : ∀ {sig} →  (A : Set) → GermDesc → GermDescSig {!!} {!!}
 
 
 
-open import GuardedAlgebra
+-- open import GuardedAlgebra
 
-record DataTypes : Set1 where
-  field
-    numTypes : ℕ
-  CName : Set
-  CName = Fin numTypes
-  field
-    numCtors : CName → ℕ
-    -- indSig : CName → IndSig
-  DName : CName → Set
-  DName tyCtor = Fin (numCtors tyCtor)
-  field
-    indSkeleton : (c : CName) → (DName c) → IndSig
+-- record DataTypes : Set1 where
+--   field
+--     numTypes : ℕ
+--   CName : Set
+--   CName = Fin numTypes
+--   field
+--     numCtors : CName → ℕ
+--     -- indSig : CName → IndSig
+--   DName : CName → Set
+--   DName tyCtor = Fin (numCtors tyCtor)
+--   field
+--     indSkeleton : (c : CName) → (DName c) → IndSig
 
-open DataTypes {{...}} public
+-- open DataTypes {{...}} public
 
-open import HeadDefs
+-- open import HeadDefs
 
--- Non-recursive fields in ⁇ for each tag
-⁇Args :
-  (ℂ-1 : Set)
-  → (El-1 : ℂ-1 → Set)
-  → (numCtors : ℕ)
-  → TyHead numCtors
-  → Set
-⁇Args ℂ-1 El-1 numCtors ( HΠ) = 𝟙
-⁇Args ℂ-1 El-1 numCtors ( HΣ) = 𝟙
-⁇Args ℂ-1 El-1 numCtors ( H≅) = 𝟙
-⁇Args ℂ-1 El-1 numCtors ( H𝟙) = 𝟙
-⁇Args ℂ-1 El-1 numCtors ( H𝟘) = 𝟘
-⁇Args ℂ-1 El-1 numCtors ( HType) = ℂ-1
-⁇Args ℂ-1 El-1 numCtors ( HCumul) = Σ ℂ-1 El-1
-⁇Args ℂ-1 El-1 numCtors ( (HCtor x)) = 𝟙
+-- -- Non-recursive fields in ⁇ for each tag
+-- ⁇Args :
+--   (ℂ-1 : Set)
+--   → (El-1 : ℂ-1 → Set)
+--   → (numCtors : ℕ)
+--   → TyHead numCtors
+--   → Set
+-- ⁇Args ℂ-1 El-1 numCtors ( HΠ) = 𝟙
+-- ⁇Args ℂ-1 El-1 numCtors ( HΣ) = 𝟙
+-- ⁇Args ℂ-1 El-1 numCtors ( H≅) = 𝟙
+-- ⁇Args ℂ-1 El-1 numCtors ( H𝟙) = 𝟙
+-- ⁇Args ℂ-1 El-1 numCtors ( H𝟘) = 𝟘
+-- ⁇Args ℂ-1 El-1 numCtors ( HType) = ℂ-1
+-- ⁇Args ℂ-1 El-1 numCtors ( HCumul) = Σ ℂ-1 El-1
+-- ⁇Args ℂ-1 El-1 numCtors ( (HCtor x)) = 𝟙
 
--- The inductive structure of ⁇ as a type.
--- We use this to encode positive references to ⁇ inside DataGerm types
--- This should end up being isomorphic to ⁇Ty as defined in Code.agda
-⁇Container :
-  {{æ : Æ}}
-  → (ℂ-1 : Set)
-  → (El-1 : ℂ-1 → Set)
-  → (numTypes : ℕ)
-  → (numCtors : Fin numTypes → ℕ)
-  → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
-  → (▹Self : ▹ Set)
-  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (λ _ → 𝟙) (sigs tyCtor ctor))
-  -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
-  → Container (Maybe (Fin numTypes))
-⁇Container ℂ-1 El-1 numTypes numCtors sigs ▹Self DescFor =
-  -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
-  (λ { nothing → Σ[ h ∈ TyHead numTypes ] (⁇Args ℂ-1 El-1 numTypes h) ; (just tyCtor) → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt tt)})
--- -- Functor has form (r : Response c) -> X (inext c r )
--- so the response field produces the thing on the LHS of the arrow
--- No fields for ⁇⁇ or ⁇℧
-  ◃ (λ {
-    -- left of arrow is ▹Self in function case
-    {nothing} ( HΠ , _) → ▸ ▹Self
-    -- Two ⁇ fields in a pair
-    ; {nothing} ( HΣ , _) → 𝟚
-    -- One witness of ⁇ ≅ ⁇
-    ; {nothing} ( H≅ , _) → 𝟙
-    -- Don't use H𝟘 as a tag
-    ; {nothing} ( H𝟘 , ())
-    -- For ⁇μ, there is one field containing the type encoded by the given tyCtor's description
-    -- Below, in inext, we specify that it is just tyCtor
-    ; {nothing} ( (HCtor x) , _) → 𝟙
-    -- Others have no recursive references, so 0 fields
-    ; {nothing} ( H𝟙 , _) → 𝟘
-    ; {nothing} ( HType , _) → 𝟘
-    ; {nothing} ( HCumul , _) → 𝟘
-    -- In DataGerm mode, response is either the response for Self or the response for Unk
-    -- i.e. encoding that we have both references to Self and ⁇
-    ; {just tyCtor} (ctor , com) → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com })
-    -- All references in ⁇ are to ⁇, except for ⁇μ case
-  / λ { {nothing} ( (HCtor tyCtor) , _) resp → just tyCtor
-    ; {nothing} com resp → nothing
-    -- Index for inl case encodes that GermResponse describes when we see Self
-    ; {just tyCtor} com (inl resp) → just tyCtor
-    -- Otherwise, it encodes where we see ⁇
-    ; {just tyCtor} com (inr resp) → nothing}
-
-
--- Command (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) nothing = TyHead numCtors
--- Command (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) (just tyCtor) = GermCommand (DescFor tyCtor) tt tt
-
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HΠ = {!!}
--- -- Takes a pair of ⁇, 2 -> ⁇ isomorphic to ⁇ × ⁇
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HΣ = 𝟚
--- -- Takes a single witness of type ⁇, witnessing that ⁇ ≅ ⁇
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H≅ = 𝟙
--- -- No fields, head stores enough info
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H𝟙 = 𝟘
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H𝟘 = 𝟘
--- -- Encodes a types from one level smaller
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HType = ℂ-1
--- -- Encodes a value from a type one level smaller
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HCumul = Σ ℂ-1 El-1
--- -- Case corresponding to ⁇μ: encodes a member of the datagerm for the given tyCtor
--- -- So we have a single field, but we specify (below) that its index is just tyCtor
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} (HCtor tyCtor) = 𝟙
--- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {just tyCtor} com =
---   GermResponse (DescFor tyCtor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor) tt tt com
--- -- Index for HCtor is (just tyCtor), since the field is an element of that dataGerm
--- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} (HCtor tyCtor) _ = just tyCtor
--- -- Indices for all cases except for μ
--- -- If we're in DataGerm mode, then the response specifies both uses of Self and uses of ⁇
--- -- In ⁇ mode, all references except for μ are ⁇ references, not datatype references, so index is nothing
--- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} com resp = nothing
--- -- In DataGerm mode, reference depends on whether response is inl or inr
--- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {just x} com resp = {!resp!}
+-- -- The inductive structure of ⁇ as a type.
+-- -- We use this to encode positive references to ⁇ inside DataGerm types
+-- -- This should end up being isomorphic to ⁇Ty as defined in Code.agda
+-- ⁇Container :
+--   {{æ : Æ}}
+--   → (ℂ-1 : Set)
+--   → (El-1 : ℂ-1 → Set)
+--   → (numTypes : ℕ)
+--   → (numCtors : Fin numTypes → ℕ)
+--   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
+--   → (▹Self : ▹ Set)
+--   → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (λ _ → 𝟙) (sigs tyCtor ctor))
+--   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
+--   → Container (Maybe (Fin numTypes))
+-- ⁇Container ℂ-1 El-1 numTypes numCtors sigs ▹Self DescFor =
+--   -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
+--   (λ { nothing → Σ[ h ∈ TyHead numTypes ] (⁇Args ℂ-1 El-1 numTypes h) ; (just tyCtor) → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt tt)})
+-- -- -- Functor has form (r : Response c) -> X (inext c r )
+-- -- so the response field produces the thing on the LHS of the arrow
+-- -- No fields for ⁇⁇ or ⁇℧
+--   ◃ (λ {
+--     -- left of arrow is ▹Self in function case
+--     {nothing} ( HΠ , _) → ▸ ▹Self
+--     -- Two ⁇ fields in a pair
+--     ; {nothing} ( HΣ , _) → 𝟚
+--     -- One witness of ⁇ ≅ ⁇
+--     ; {nothing} ( H≅ , _) → 𝟙
+--     -- Don't use H𝟘 as a tag
+--     ; {nothing} ( H𝟘 , ())
+--     -- For ⁇μ, there is one field containing the type encoded by the given tyCtor's description
+--     -- Below, in inext, we specify that it is just tyCtor
+--     ; {nothing} ( (HCtor x) , _) → 𝟙
+--     -- Others have no recursive references, so 0 fields
+--     ; {nothing} ( H𝟙 , _) → 𝟘
+--     ; {nothing} ( HType , _) → 𝟘
+--     ; {nothing} ( HCumul , _) → 𝟘
+--     -- In DataGerm mode, response is either the response for Self or the response for Unk
+--     -- i.e. encoding that we have both references to Self and ⁇
+--     ; {just tyCtor} (ctor , com) → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com })
+--     -- All references in ⁇ are to ⁇, except for ⁇μ case
+--   / λ { {nothing} ( (HCtor tyCtor) , _) resp → just tyCtor
+--     ; {nothing} com resp → nothing
+--     -- Index for inl case encodes that GermResponse describes when we see Self
+--     ; {just tyCtor} com (inl resp) → just tyCtor
+--     -- Otherwise, it encodes where we see ⁇
+--     ; {just tyCtor} com (inr resp) → nothing}
 
 
-record DataGerms {{_ : DataTypes}} : Set1 where
-  field
-    -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
-    -- And guarded negative uses of ⁇
-    -- We ensure positivity by writing the datatype using a description
-    preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
-    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
-  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
-  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
-  preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
-  preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
-  -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
-  -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
-  FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
-  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
-  Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
-  Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+-- -- Command (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) nothing = TyHead numCtors
+-- -- Command (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) (just tyCtor) = GermCommand (DescFor tyCtor) tt tt
+
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HΠ = {!!}
+-- -- -- Takes a pair of ⁇, 2 -> ⁇ isomorphic to ⁇ × ⁇
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HΣ = 𝟚
+-- -- -- Takes a single witness of type ⁇, witnessing that ⁇ ≅ ⁇
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H≅ = 𝟙
+-- -- -- No fields, head stores enough info
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H𝟙 = 𝟘
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} H𝟘 = 𝟘
+-- -- -- Encodes a types from one level smaller
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HType = ℂ-1
+-- -- -- Encodes a value from a type one level smaller
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} HCumul = Σ ℂ-1 El-1
+-- -- -- Case corresponding to ⁇μ: encodes a member of the datagerm for the given tyCtor
+-- -- -- So we have a single field, but we specify (below) that its index is just tyCtor
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} (HCtor tyCtor) = 𝟙
+-- -- Response (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {just tyCtor} com =
+-- --   GermResponse (DescFor tyCtor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor) tt tt com
+-- -- -- Index for HCtor is (just tyCtor), since the field is an element of that dataGerm
+-- -- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} (HCtor tyCtor) _ = just tyCtor
+-- -- -- Indices for all cases except for μ
+-- -- -- If we're in DataGerm mode, then the response specifies both uses of Self and uses of ⁇
+-- -- -- In ⁇ mode, all references except for μ are ⁇ references, not datatype references, so index is nothing
+-- -- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {nothing} com resp = nothing
+-- -- -- In DataGerm mode, reference depends on whether response is inl or inr
+-- -- inext (⁇Container ℂ-1 El-1 numCtors sigs ▹Self DescFor) {just x} com resp = {!resp!}
 
 
-open DataGerms {{...}} public
+-- record DataGerms {{_ : DataTypes}} : Set1 where
+--   field
+--     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
+--     -- And guarded negative uses of ⁇
+--     -- We ensure positivity by writing the datatype using a description
+--     preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
+--     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+--   preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
+--   preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
+--   preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
+--   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
+--   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
+--   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
+--   FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
+--   FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
+--   Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
+--   Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+
+
+-- open DataGerms {{...}} public
 
 
 
-wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
-        (∀ {i} d (cs : FContainer (C d) (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
-        P →
-        P →
-        ∀ {i} (w : W̃ (Arg C) i) → P
+-- wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
+--         (∀ {i} d (cs : FContainer (C d) (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
+--         P →
+--         P →
+--         ∀ {i} (w : W̃ (Arg C) i) → P
 
-wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
-wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
-wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇
+-- wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
+-- wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
+-- wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇

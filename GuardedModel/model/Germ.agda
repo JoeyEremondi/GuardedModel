@@ -46,7 +46,7 @@ germ H𝟙 _ = Bool
 germ H𝟘 _ = Unit
 germ HType zero = Unit
 germ HType (suc ℓ) = ℂ ℓ
-germ (HCtor tyCtor) ℓ  = W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ) tt
+germ (HCtor tyCtor) ℓ  = DataGerm ℓ tyCtor
 germ HCumul ℕ.zero = ⊥
 germ HCumul (ℕ.suc ℓ) = Σ[ c ∈ ℂ ℓ ]( El c )
 

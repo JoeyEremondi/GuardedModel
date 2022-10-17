@@ -137,7 +137,7 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (cSize vSize : Size) : S
       → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
       → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
       → (x y : DataGerm ℓ tyCtor)
-      → smax (germIndSize tyCtor x) (germIndSize tyCtor y) ≡p vSize
+      → smax (dataGermSize tyCtor x) (dataGermSize tyCtor y) ≡p vSize
       → LÆ (DataGerm ℓ tyCtor)
 
 
