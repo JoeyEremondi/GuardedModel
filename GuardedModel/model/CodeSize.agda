@@ -12,7 +12,7 @@ open import Cubical.Data.Nat as Nat
 import Cubical.Data.Nat.Order as Nat
 import Cubical.Induction.WellFounded as Nat
 open import Cubical.Data.Vec
-open import Cubical.Data.Sum
+open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.Equality
 open import Cubical.Data.FinData
@@ -113,7 +113,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
   germFIndSize tyCtor GEnd GEndCode b+ b- (FC com k) φ = S1
   germFIndSize tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) k) φ
-    = S↑ (germFIndSize tyCtor D isCode (b+ , a+) (b- , a-) (FC com λ {(inl r) → k (inl r) ; (inr r) → k (inr r)}) φ)
+    = S↑ (germFIndSize tyCtor D isCode (b+ , a+) (b- , a-) (FC com (Sum.elim (λ r → k (inl r)) λ r → k (inr r)))  φ)
   germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k) φ
     = S↑ (SLim (c+ b+) helper)
       where
@@ -127,8 +127,8 @@ record CodeSizeF (ℓ : ℕ) : Set  where
         -- In exact case, we use ℧ trivially (but we don't actually need this, we just use fix to recur in these cases)
         ∷ φ (inl (Rec (inr (ac+ , Iso.inv (iso- b+ ac+ b-) (caseÆ (λ {reflp → tt*}) (λ {reflp → G.next (℧Approxed ⦃ æ = Exact ⦄ (c- b+ ac+ b-))}))))))
         ∷ (germFIndSize tyCtor D isCode b+ b-
-          (FC com (λ {(inl r) → k (inl (Rest r)) ; (inr r) → k (inr r)}))
-          λ {(inl r) → φ (inl (Rest r)) ; (inr r) → φ (inr r)})
+          (FC com (Sum.elim (λ r → k (inl (Rest r))) λ r → k (inr r)))
+          (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
         ∷ [])
         where
           ac+ : A+ b+
@@ -136,7 +136,9 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   germFIndSize tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com k) φ
     = S↑ (smax
       (φ (inl (Rec tt)))
-      (germFIndSize tyCtor D isCode b+ b- (FC com λ {(inl r) → k (inl (Rest r)) ; (inr r) → k (inr r)}) λ {(inl r) → φ (inl (Rest r)) ; (inr r) → φ (inr r)}))
+      (germFIndSize tyCtor D isCode b+ b-
+        (FC com (Sum.elim (λ r → k (inl (Rest r))) (λ r → k (inr r))) )
+        (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r)))))
   germFIndSize tyCtor (GUnk (A+ , A-) D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com k) φ
     = S↑ (SLim (c+ b+) helper)
       where
@@ -149,9 +151,9 @@ record CodeSizeF (ℓ : ℕ) : Set  where
         -- In approx case, only one value to give
         -- In exact case, we use ℧ trivially (but we don't actually need this, we just use fix to recur in these cases)
         ∷ φ (inr (Rec (inr (ac+ , Iso.inv (iso- b+ ac+ b-) (caseÆ (λ {reflp → tt*}) (λ {reflp → G.next (℧Approxed ⦃ æ = Exact ⦄ (c- b+ ac+ b-))}))))))
-        ∷ (germFIndSize tyCtor D isCode b+ b-
-          (FC com λ {(inr r) → k (inr (Rest r)) ; (inl r) → k (inl r)})
-          λ {(inr r) → φ (inr (Rest r)) ; (inl r) → φ (inl r)})
+        ∷  (germFIndSize tyCtor D isCode b+ b-
+             (FC com (Sum.elim (λ r → k (inl r)) (λ r → k (inr (Rest r)))) )
+             (Sum.elim (λ r → φ (inl r)) (λ r → φ (inr (Rest r)))))
         ∷ [])
         where
           ac+ : A+ b+
@@ -165,7 +167,8 @@ record CodeSizeF (ℓ : ℕ) : Set  where
     → (b- : B- b+)
     → (cs : DescFunctor ℓ tyCtor D b+ b-)
     → Size
-  germIndSize tyCtor D isCode b+ b- (FC c resp) = germFIndSize tyCtor D isCode b+ b- (FC c resp) (λ r → allDataSize (resp r))
+    -- We do an eta-expansion so it matches the form of germFIndSize
+  germIndSize tyCtor D isCode b+ b- x = germFIndSize tyCtor D isCode b+ b- x (Sum.elim (λ r → allDataSize (FContainer.response x (inl r))) (λ r → allDataSize (FContainer.response x (inr r))))
 
 
 
@@ -198,9 +201,12 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
 
   dataGermSize : ∀ {{æ : Æ}} (tyCtor : CName) → DataGerm ℓ tyCtor → Size
-  dataGermSize tyCtor (Wsup (FC (d , com) resp)) = germIndSize tyCtor (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt (FC com λ {(inl r) → resp (inl r) ; (inr r) → resp (inr r)})
-  dataGermSize tyCtor W⁇ = S1
-  dataGermSize tyCtor W℧ = S1
+  dataGermSize tyCtor x = allDataSize x
+  -- dataGermSize tyCtor (Wsup (FC (d , com) resp)) =
+  --   germIndSize tyCtor (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt
+  --     (FC com (Sum.elim (λ r → resp (inl r)) (λ r → resp (inr r))))
+  -- dataGermSize tyCtor W⁇ = S1
+  -- dataGermSize tyCtor W℧ = S1
 
   codeSize : ℂ ℓ → Size
   descSize : ∀  { sig} →  {cI cB : ℂ ℓ} → ℂDesc cI cB sig → Size

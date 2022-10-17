@@ -215,3 +215,6 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 --   unliftFunDep
 --     (LFix {{_}} {{record { default = λ a → Approxable.default appr  }}}
 --     λ self → liftFunDep (λ a → f (unliftFunDep self) a))
+
+θ : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡p Exact) → ▹  A → LÆ A
+θ reflp x = Later (λ tic → Now (x tic))

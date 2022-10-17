@@ -160,7 +160,10 @@ record InductiveCodes : Set2 where
     → ∀ {mc} → AllDataTypes ℓ mc → P
   DataGermRec P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec P unk rec base (resp r)
   DataGermRec P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
-    rec d (FC com (λ { (inl x) → resp (inl x) ; (inr y) → resp (inr y) }) ) (λ r → DataGermRec P unk rec base (resp r))
+    rec
+      d
+      (FC com resp)
+      (λ r → DataGermRec P unk rec base (resp r))
   DataGermRec  P unk rec base {i} W℧ = fst (base i)
   DataGermRec  P unk rec base {i} W⁇ = snd (base i)
 
