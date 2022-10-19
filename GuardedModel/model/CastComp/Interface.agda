@@ -173,10 +173,10 @@ reveal (hide {arg = x}) = x
 --   → Hide (⁇Allowed ≡p ⁇pos → A)
 -- codeNotZero {c = c} {posNoCode = posNoCode} = hide {arg = λ pf → Empty.elim (¬Z<↑ SZ (codeSuc c ≤⨟ pSubst (λ x → x ≤ₛ SZ) (posNoCode pf) ≤ₛ-refl))}
 
-maxNotZero : ∀ {ℓ} {c1 c2 : ℂ ℓ} {⁇Allowed} {A : Set}
-  → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p smax (codeSize c1) (codeSize c2)}
-  → Hide (⁇Allowed ≡p ⁇pos → A)
-maxNotZero {c1 = c1} {c2 = c2} {posNoCode = posNoCode} = hide {arg = λ pf → Empty.elim (¬Z<↑ SZ (codeSuc c1 ≤⨟ smax-≤L ≤⨟ pSubst (λ x → x ≤ₛ SZ) (posNoCode pf) ≤ₛ-refl ))}
+-- maxNotZero : ∀ {ℓ} {c1 c2 : ℂ ℓ} {⁇Allowed} {A : Set}
+--   → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p smax (codeSize c1) (codeSize c2)}
+--   → Hide (⁇Allowed ≡p ⁇pos → A)
+-- maxNotZero {c1 = c1} {c2 = c2} {posNoCode = posNoCode} = hide {arg = λ pf → Empty.elim (¬Z<↑ SZ (codeSuc c1 ≤⨟ smax-≤L ≤⨟ pSubst (λ x → x ≤ₛ SZ) (posNoCode pf) ≤ₛ-refl ))}
 
 
 record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set where
@@ -289,22 +289,21 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
       → (ltc : Hide (if¬Pos ⁇Allowed
              (smax (codeSize csource)  (codeSize cdest) <ₛ size)
              (elSize csource x <ₛ size)))
-      → LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
+      → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {clt}) with ⁇match ⁇Allowed
-  ... | inl reflp = oCast (self (<Size clt)) csource cdest x reflp
-  ... | inr (inl reflp) = oCast (self (<Size clt)) csource cdest x reflp
-  ... | inr (inr reflp) = oCast (self (<Size clt)) csource cdest x reflp
+  ... | inl reflp = fst <$> oCast (self (<Size clt)) csource cdest x reflp
+  ... | inr (inl reflp) = fst <$> oCast (self (<Size clt)) csource cdest x reflp
+  ... | inr (inr reflp) = fst <$> oCast (self (<Size clt)) csource cdest x reflp
 
 
   infix 20 [_]⟨_⇐_⟩_By_
   [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
-      → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p size}
       → (cdest csource : ℂ ℓ)
       → (x : El {{æ = æ}} csource)
       → (ltc : Hide (if¬Pos ⁇Allowed
              (smax (codeSize csource)  (codeSize cdest) <ₛ size)
              (elSize {{æ = æ}} csource x <ₛ size)))
-      → LÆ {{æ = æ}} ( Σ[ xdest ∈ El {{æ = æ}} cdest ]( elSize {{æ = æ}} cdest xdest ≤ₛ elSize {{æ = æ}} csource x ) )
+      → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
   [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
 
 
@@ -348,12 +347,12 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
          -- ≤⨟ smax-mono (smax∞-self _) (smax∞-self _)
          )
        ≤⨟ reveal clt
-   (x1-12 , vlt1) ←  (⟨ c12 ⇐ c1 ⟩ x1
+   x1-12 ←  (⟨ c12 ⇐ c1 ⟩ x1
         By
           argNotPos lt1 --lt1
           -- hide {arg = λ pf → ≤< smax-≤L (reveal vlt pf) }
           )
-   (x2-12 , vlt2) ←  (⟨ c12 ⇐ c2 ⟩ x2
+   x2-12 ←  (⟨ c12 ⇐ c2 ⟩ x2
      By argNotPos lt2
      )
    c12 ∋ x1-12 ⊓ x2-12
@@ -380,8 +379,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
     → let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
     in (x12 : El c1⊓c2)
     → (clt : Hide ( smax (codeSize c1)  (codeSize c2) <ₛ size))
-    → LÆ ((Σ[ x1 ∈ El c1 ] (elSize c1 x1 ≤ₛ elSize c1⊓c2 x12))
-       × (Σ[ x2 ∈ El c2 ] (elSize c2 x2 ≤ₛ elSize c1⊓c2 x12)) )
+    → LÆ (El c1 × El c2)
   ⟨_,_⇐⊓⟩_By_ c1 c2  {lt = lt} x clt  = do
     let c12 = c1 ⊓ c2 By hide {arg = lt}
     let
@@ -412,8 +410,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
     → let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
     in (x12 : El {{æ = æ}} c1⊓c2)
     → (clt : Hide (smax (codeSize c1)  (codeSize c2) <ₛ size))
-    → LÆ {{æ = æ}} ((Σ[ x1 ∈ El {{æ = æ}} c1 ] (elSize {{æ = æ}} c1 x1 ≤ₛ elSize {{æ = æ}} c1⊓c2 x12))
-       × (Σ[ x2 ∈ El {{æ = æ}} c2 ] (elSize {{æ = æ}} c2 x2 ≤ₛ elSize {{æ = æ}} c1⊓c2 x12)) )
+    → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
   self-1 : ∀ {s} {{ inst : 0< ℓ }} → SizedCastMeet ⁇any (predℕ ℓ) s

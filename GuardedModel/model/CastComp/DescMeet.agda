@@ -29,7 +29,7 @@ open import SizeOrd
 open import CastComp.Interface
 
 module CastComp.DescMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
-    (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
+    (⁇Allowed : ⁇Flag) {ℓ} (size : Size) (scm : SmallerCastMeet ⁇Allowed ℓ size)
 
   where
 
@@ -41,17 +41,18 @@ open SmallerCastMeet scm
 
 
 {-# DISPLAY SmallerCastMeet._⊓_By_  = _⊓_By_  #-}
-{-# DISPLAY SmallerCastMeet._∋_⊓_cBy_vBy_  = _∋_⊓_cBy_vBy_  #-}
+{-# DISPLAY SmallerCastMeet._∋_⊓_By_  = _∋_⊓_By_  #-}
 
 
 
-
+open import Assumption
 
 
 descMeet : ∀ {I1 I2 cB1 cB2 cBTarget skel oTop}
+      → {@(tactic assumption) np : notPos ⁇Allowed}
       → (D1 : ℂDesc I1 cB1 skel)
       → (D2 : ℂDesc I2 cB2 skel)
-      → (lto : oTop <ₛ cSize )
+      → (lto : oTop <ₛ size )
       → (ltI : smax ( (codeSize I1) ) ( (codeSize I2)) ≤ₛ  oTop)
       → (ltB : (codeSize cBTarget ≤ₛ smax  (codeSize cB1)  (codeSize cB2)))
       → (lt : smax ( (descSize D1) ) ( (descSize D2)) ≤ₛ  oTop)
@@ -78,28 +79,24 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
               (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
               (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
           ≤⨟ lt
-        cb1 : _ → _
+        cb1 : ApproxEl cB → ApproxEl cB1
         cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
-              By hide {arg = ≤< (smax-lub
-                (ltB
-                ≤⨟ ltB12)
-                ( smax-≤L
-                ≤⨟ ltB12)) lto  })
+              By (argNotPos (≤< (smax-lub (ltB ≤⨟ ltB12) (smax-≤L ≤⨟ ltB12)) lto)) )
         cb2 : _ → _
-        cb2 cb = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
-              By hide {arg = ≤< (smax-lub
+        cb2 cb =  fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
+              By (argNotPos (≤< (smax-lub
                 (ltB
                 ≤⨟ ltB12)
                 ( smax-≤R
-                ≤⨟ ltB12)) lto  })
+                ≤⨟ ltB12)) lto) ))
         cRet : ApproxEl cB → ℂ ℓ
-        cRet cb = c1 (cb1 cb) ⊓ c2 (cb2 cb)
-          By hide {arg = ≤<
+        cRet cb =  c1 (cb1 cb) ⊓ c2 (cb2 cb)
+          By (hide {arg =  ≤<
             (smax-mono
               (≤↑ (codeSize (c1 (cb1 cb))) ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone ⦃ æ = Approx ⦄ (cb1 cb)  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
               (≤↑ (codeSize (c2 (cb2 cb))) ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
             ≤⨟ lt)
-            lto}
+            lto} )
         ltcB = smax-sucMono (smax-mono
           ltB
           ((≤ₛ-limiting {{æ = Approx}} λ cb → (_ ⊓Size _ By hide ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb2 cb)) ≤⨟ ≤ₛ-cocone {{æ = Approx}} (cb1 cb) )  ≤⨟ smax-lim2L (λ x → codeSize (c1 x)) (λ x → codeSize (c2 x))) -- (≤ₛ-limiting ⦃ æ = Approx ⦄ {c = cB} _ λ cb → {!!} ≤⨟  _ ⊓Size _ By hide  )
@@ -122,14 +119,14 @@ descMeet {I1 = I1} {I2} {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (C
           ≤⨟ lt
         cb1 : _ → _
         cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
-              By hide {arg = ≤< (smax-lub
+              By (argNotPos ( ≤< (smax-lub
                 (ltB ≤⨟ ltB12)
-                (smax-≤L ≤⨟ ltB12 )) lto  })
+                (smax-≤L ≤⨟ ltB12 )) lto  )))
         cb2 : _ → _
         cb2 cb = fromL ([ Approx ]⟨ cB2 ⇐ cB ⟩ cb
-              By hide {arg = ≤< (smax-lub
+              By argNotPos ( ≤< (smax-lub
                 (ltB ≤⨟ ltB12)
-                (smax-≤R ≤⨟ ltB12 )) lto  })
+                (smax-≤R ≤⨟ ltB12 )) lto  ))
         ltcB =
           smax-mono
             ( ≤↑ _ ≤⨟ ≤ₛ-sucMono (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))))
