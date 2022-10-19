@@ -33,7 +33,7 @@ open import Assumption
 open import CastComp.Interface
 
 module CastComp.DataGermMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
-    (⁇Allowed : ⁇Flag){ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ⁇Allowed ℓ cSize vSize)
+    (⁇Allowed : ⁇Flag){ℓ} (size : Size)  (scm : SmallerCastMeet ⁇Allowed ℓ size)
 
   where
 
@@ -47,7 +47,7 @@ open SmallerCastMeet scm
 
 
 
-commandSize : ∀ {{æ : Æ}} {B+ : Set}  {B- : B+ → Set} { sig} {tyCtor : CName} {size}
+commandSize : ∀ {{æ : Æ}} {B+ : Set}  {B- : B+ → Set} { sig} (tyCtor : CName)
   → (D : GermCtor B+ B- sig)
   → (isCode : DataGermIsCode ℓ D)
   → (b+ : B+)
@@ -56,15 +56,14 @@ commandSize : ∀ {{æ : Æ}} {B+ : Set}  {B- : B+ → Set} { sig} {tyCtor : CNa
       (interpGermCtor' D b+ b-)
       (just tyCtor)
   → Size
-commandSize (GArg (A+ , _) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- ((a+ , a-) , rest) = S↑ (smax (elSize (c+ b+) (Iso.fun (iso+ b+) a+)) (commandSize D isCode (b+ , a+) (b- , a-)  rest))
-commandSize GEnd GEndCode b+ b- x = S1
-commandSize (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- x = commandSize D isCode b+ b- x
-commandSize (GRec D) (GRecCode isCode) b+ b- x = commandSize D isCode b+ b- x
-commandSize (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- x = commandSize D isCode b+ b- x
+commandSize tyCtor (GArg (A+ , _) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- ((a+ , a-) , rest) = S↑ (smax (elSize (c+ b+) (Iso.fun (iso+ b+) a+)) (commandSize tyCtor D isCode (b+ , a+) (b- , a-)  rest))
+commandSize tyCtor GEnd GEndCode b+ b- x = S1
+commandSize tyCtor (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- x = commandSize tyCtor D isCode b+ b- x
+commandSize tyCtor (GRec D) (GRecCode isCode) b+ b- x = commandSize tyCtor D isCode b+ b- x
+commandSize tyCtor (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- x = commandSize tyCtor D isCode b+ b- x
 
 castCommand : ∀ {{æ : Æ}} {B+ : Set}  {B- : B+ → Set} { sig} {tyCtor : CName}
-  → {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
-  → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
+  → {@(tactic assumption) pos : ⁇Allowed ≡p ⁇pos }
   → (D : GermCtor B+ B- sig)
   → (isCode : DataGermIsCode ℓ D)
   → (b+1 : B+)
@@ -74,15 +73,26 @@ castCommand : ∀ {{æ : Æ}} {B+ : Set}  {B- : B+ → Set} { sig} {tyCtor : CNa
   → (x : Command
       (interpGermCtor' D b+1 b-1)
       (just tyCtor))
-  → commandSize D isCode b+1 b-1 x <ₛ vSize
+  → commandSize tyCtor D isCode b+1 b-1 x <ₛ size
   → LÆ ( Command
       (interpGermCtor' D b+2 b-2)
       (just tyCtor) )
 castCommand (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+1 b-1 b+2 b-2 ((a+1 , a-1) , x) lt = do
-  (ca+2 , lt) ← ⟨ c+ b+2 ⇐ c+ b+1 ⟩ Iso.fun (iso+ b+1) a+1 cBy {!!} vBy {!!}
+  ca+2 ← ⟨ c+ b+2 ⇐ c+ b+1 ⟩ Iso.fun (iso+ b+1) a+1 By argPos (≤< (≤suc smax-≤L) lt)
   let a+2 = Iso.inv (iso+ b+2) ca+2
-  crest ← castCommand D isCode (b+1 , a+1) (b-1 , a-1) (b+2 , a+2) (b-2 , {!!}) {!!} {!!}
-  pure ((a+2 , {!!}) , crest)
+  let
+    ma-2 : LÆ (A- b+2 (Iso.inv (iso+ b+2) ca+2) b-2)
+    ma-2 = caseÆ
+      (λ eq → pure (Iso.inv (iso- b+2 (Iso.inv (iso+ b+2) ca+2) b-2) (▹Default eq)))
+      λ eq → do
+        ca-1 ← θ eq (Iso.fun (iso- b+1 a+1 b-1) a-1)
+        gSelf ← Lself {al = ⁇pos} eq
+        (ca-2 , _) ← oCast gSelf (c- b+1 a+1 b-1) (c- b+2 a+2 b-2) ca-1 reflp
+        pure (Iso.inv (iso- b+2 (Iso.inv (iso+ b+2) ca+2) b-2) (next ca-2))
+  a-2 ← ma-2
+    -- Iso.inv (iso- b+2 (Iso.inv (iso+ b+2) ca+2) b-2) (next ca-2)
+  crest ← castCommand D isCode (b+1 , a+1) (b-1 , a-1) (b+2 , a+2) (b-2 , a-2) x (≤< (≤suc smax-≤R) lt)
+  pure ((a+2 , a-2) , crest)
 castCommand GEnd GEndCode b+1 b-1 b+2 b-2 lt x = pure tt
 castCommand (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+1 b-1 b+2 b-2 x lt = castCommand D isCode b+1 b-1 b+2 b-2 x lt
 castCommand (GRec D) (GRecCode isCode) b+1 b-1 b+2 b-2 x lt = castCommand D isCode b+1 b-1 b+2 b-2 x lt
@@ -99,7 +109,7 @@ castCommand (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+1 b-1 b+2 b-2 x lt = 
 --   → (b+ : B+)
 --   → (b- : B- b+)
 --   → (cs1 cs2 : DescFunctor ℓ tyCtor D b+ b-)
---   → (smax (germIndSize tyCtor D isCode b+ b- cs1) (germIndSize tyCtor D isCode b+ b- cs2) <ₛ vSize)
+--   → (smax (germIndSize tyCtor D isCode b+ b- cs1) (germIndSize tyCtor D isCode b+ b- cs2) <ₛ size)
 --   → LÆ (DescFunctor ℓ tyCtor D b+ b-)
 -- germFIndMeet GEnd GEndCode b+ b- cs1 cs2 lt = pure (FC tt λ {(inl ()) ; (inr ())})
 -- -- We've got two parts, the recursive value and the "rest"
@@ -261,7 +271,7 @@ castCommand (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+1 b-1 b+2 b-2 x lt = 
 -- -- --   →  {@(tactic assumption) posNoCode : ⁇Allowed ≡p ⁇pos → SZ ≡p cSize}
 -- -- --   → {@(tactic assumption) cpf : if¬Pos ⁇Allowed (S1 ≡p cSize)  (SZ ≡p cSize)}
 -- -- --   → (x y : DataGerm ℓ tyCtor)
--- -- --   →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ vSize
+-- -- --   →  smax (germIndSize tyCtor x) (germIndSize tyCtor y) <ₛ size
 -- -- --   → LÆ (DataGerm ℓ tyCtor)
 -- -- -- germIndMeet W℧ y eq = pure W℧
 -- -- -- germIndMeet W⁇ y eq =  pure y

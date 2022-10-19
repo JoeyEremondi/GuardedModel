@@ -88,8 +88,8 @@ open SmallerCastMeet scm
 ⁇meet' {{æ = Approx}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) cpf lt eqx eqy (HEq reflp) | eq
   = pure ⦃ Approx ⦄ (⁇Π ⦃ _ ⦄ ⦃ _ ⦄ ⦃ Approx ⦄ (λ _ → fromL (⁇meet ⦃ Approx ⦄ (f1 U⁇) (f2 U⁇) cpf
     (smax-mono
-      (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
-      (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
+      (≤suc (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
+      (≤suc (≤ₛ-cocone {{æ = Approx}} (f1 U⁇)))
     ≤⨟ lt))))
 ⁇meet' {{æ = Exact}} (CodeModule.⁇Π f1) (CodeModule.⁇Π f2) cpf lt eqx eqy (HEq reflp) | eq
   = do

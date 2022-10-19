@@ -413,9 +413,22 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
     → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
+  infix 20 ⟨_⇐_⟩ₛ_By_
+  ⟨_⇐_⟩ₛ_By_ : ∀ {{_ : Æ}}
+      → (cdest csource : ℂ ℓ)
+      → (x : El csource)
+      → (ltc : Hide (if¬Pos ⁇Allowed
+             (smax (codeSize csource)  (codeSize cdest) <ₛ size)
+             (elSize csource x <ₛ size)))
+      → LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
+  ⟨_⇐_⟩ₛ_By_ cdest csource x (hide {clt}) with ⁇match ⁇Allowed
+  ... | inl reflp = oCast (self (<Size clt)) csource cdest x reflp
+  ... | inr (inl reflp) = oCast (self (<Size clt)) csource cdest x reflp
+  ... | inr (inr reflp) = oCast (self (<Size clt)) csource cdest x reflp
+
   self-1 : ∀ {s} {{ inst : 0< ℓ }} → SizedCastMeet ⁇any (predℕ ℓ) s
   self-1 {s = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣
-  Lself :  ∀  {æ al ℓ' s} → æ ≡p Exact → LÆ {{æ = æ}} (SizedCastMeet al ℓ' s)
+  Lself :  ∀  {æ al ℓ' s} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet al ℓ' s)
   Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 
 FixCastMeet :

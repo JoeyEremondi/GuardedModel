@@ -65,7 +65,6 @@ abstract
   ≤↑ s =  ≤↑o _
 
 
-
   SLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Size) → Size
   SLim c f = OS (omax∞ (OLim c (λ x → sOrd (f x)))) ( omax∞-idem (OLim c (λ x → sOrd (f x))) )
 
@@ -186,6 +185,9 @@ smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ (λ k1 →
 data _<ₛPair_ : (Size × Size) → (Size × Size) → Set where
   <ₛPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <ₛ o2c ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
   <ₛPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <ₛ o2v ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
+
+≤suc : ∀ {s1 s2} → s1 ≤ₛ s2 → s1 ≤ₛ S↑ s2
+≤suc {s1 = s1} lt = ≤↑ s1 ≤⨟ ≤ₛ-sucMono lt
 
 abstract
   sizeWF : WellFounded _<ₛ_

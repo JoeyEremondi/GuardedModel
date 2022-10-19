@@ -67,8 +67,8 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
           ltI
           ltcB
           (smax-mono
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))) )
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))) )
+              (≤suc (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))) )
+              (≤suc (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))) )
             ≤⨟ lt)
           )
         _
@@ -76,8 +76,8 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 D1 _ reflp) (C
       module DescMeetArg where
         ltB12 :  smax (codeSize cB1) (codeSize cB2) ≤ₛ  oTop
         ltB12 = smax-mono
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤↑ _ ≤⨟ ≤ₛ-sucMono smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
+              (≤suc (≤suc smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
+              (≤suc (≤suc smax-≤L ≤⨟ smax*-≤-n Fin.zero) )
           ≤⨟ lt
         cb1 : ApproxEl cB → ApproxEl cB1
         cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
@@ -114,8 +114,8 @@ descMeet {I1 = I1} {I2} {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (C
       module DescMeetHRec where
         ltB12 :  smax  (codeSize cB1)  (codeSize cB2) ≤ₛ  oTop
         ltB12 = smax-mono
-          (≤↑ _ ≤⨟ ≤ₛ-sucMono ((≤↑ _ ≤⨟ ≤ₛ-sucMono ( smax-≤L)) ≤⨟ smax*-≤L))
-          (≤↑ _ ≤⨟ ≤ₛ-sucMono ((≤↑ _ ≤⨟ ≤ₛ-sucMono ( smax-≤L)) ≤⨟ smax*-≤L))
+          (≤suc ((≤suc ( smax-≤L)) ≤⨟ smax*-≤L))
+          (≤suc ((≤suc ( smax-≤L)) ≤⨟ smax*-≤L))
           ≤⨟ lt
         cb1 : _ → _
         cb1 cb = fromL ([ Approx ]⟨ cB1 ⇐ cB ⟩ cb
@@ -129,21 +129,21 @@ descMeet {I1 = I1} {I2} {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (C
                 (smax-≤R ≤⨟ ltB12 )) lto  ))
         ltcB =
           smax-mono
-            ( ≤↑ _ ≤⨟ ≤ₛ-sucMono (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))))
-            ( ≤↑ _ ≤⨟ ≤ₛ-sucMono (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))))
+            ( ≤suc (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))))
+            ( ≤suc (smax*-≤-n (Fin.suc (Fin.suc Fin.zero))))
             ≤⨟ lt
         ltCone1 : ∀ cb →  (codeSize (c1 (cb1 cb))) ≤ₛ
                            descSize (CHRec c1 j1 D1 (CΣ cB1 c1) reflp)
-        ltCone1 cb = ≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax*-≤-n (Fin.suc Fin.zero))
+        ltCone1 cb = ≤suc (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax*-≤-n (Fin.suc Fin.zero))
         ltCone2 : ∀ cb →  (codeSize (c2 (cb2 cb))) ≤ₛ
                            descSize (CHRec c2 j2 D2 (CΣ cB2 c2) reflp)
-        ltCone2 cb = ≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax*-≤-n (Fin.suc Fin.zero))
+        ltCone2 cb = ≤suc (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax*-≤-n (Fin.suc Fin.zero))
         cRet : ApproxEl cB → ℂ ℓ
         cRet cb = c1 (cb1 cb) ⊓ c2 (cb2 cb)
           By hide {arg = ≤<
             (smax-mono
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
-              (≤↑ _ ≤⨟ ≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
+              (≤suc (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
+              (≤suc (≤ₛ-cocone {{æ = Approx}} _  ≤⨟ smax*-≤-n (Fin.suc Fin.zero)))
             ≤⨟ lt)
             lto }
         k12 : ∀ cb → ApproxEl (cRet cb) → ApproxEl (c1 (cb1 cb)) × ApproxEl (c2 (cb2 cb))
