@@ -139,21 +139,25 @@ fromL (Now a) = a
 
 -- If we're in approximate mode, this is just an approximate version of a T
 -- In exact mode, it's a pair with an approximate and exact version of a T
-Approxed : ∀ (T : {{_ : Æ }} → Set) → {{æ : Æ}} → Set
+Approxed : ∀ {ℓ} (T : {{_ : Æ }} → Set ℓ) → {{æ : Æ}} → Set ℓ
 Approxed T ⦃ Approx ⦄ = T {{Approx}}
 Approxed T ⦃ Exact ⦄ = T {{Approx}} × T {{Exact}}
 --Get the approximate version stored in an Approxed value
-approx : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed T {{æ}} → T {{Approx}}
+approx : ∀ {ℓ} {T : {{_ : Æ }} → Set ℓ} → {{æ : Æ}} → Approxed T {{æ}} → T {{Approx}}
 approx ⦃ æ = Approx ⦄ x = x
 approx ⦃ æ = Exact ⦄ x = fst x
 
-exact : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → Approxed (λ {{æ : Æ}} → T {{æ}}) {{æ}}  → T {{æ}}
+exact : ∀ {ℓ} {T : {{_ : Æ }} → Set ℓ} → {{æ : Æ}} → Approxed (λ {{æ : Æ}} → T {{æ}}) {{æ}}  → T {{æ}}
 exact ⦃ æ = Approx ⦄ x = x
 exact ⦃ æ = Exact ⦄ x = snd x
 
 withApprox : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) →  T {{æ}} )  → Approxed T {{æRet}}
 withApprox {{Approx}} f   = f Approx
 withApprox {{Exact}} f  = f Approx  , f Exact
+
+ApproxedSet : ∀ {{æ : Æ}} → Approxed Set {{æ}} → Set
+ApproxedSet ⦃ Approx ⦄ X = X
+ApproxedSet ⦃ Exact ⦄ (X , Y) = X × Y
 
 
 withApproxL : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T {{æ}}) )  → LÆ {{æRet}} (Approxed T {{æRet}})

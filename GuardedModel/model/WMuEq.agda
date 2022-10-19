@@ -298,7 +298,7 @@ posDataGermCode : ∀ (ℓ : ℕ)  {sig} {B+ : Set} {cB+ : ℂ ℓ} {B- : B+ →
   → ℂDesc C𝟙 cB+ sig
 posDataGermCode ℓ bIso GEnd GEndCode = CEnd true
 posDataGermCode ℓ bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
-  = CArg (λ cb → c+ (Iso.inv bIso ?)) {!!} {!!} {!!}
+  = CArg (λ cb → c+ ?) {!!} {!!} {!!}
 posDataGermCode ℓ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) = {!!}
 posDataGermCode ℓ bIso (GRec D) (GRecCode isCode) = {!!}
 posDataGermCode ℓ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) = {!!}
