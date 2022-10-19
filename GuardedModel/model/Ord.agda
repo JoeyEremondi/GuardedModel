@@ -61,7 +61,7 @@ postulate
 data Ord : Set where
   OZ : Ord
   O↑ : Ord -> Ord
-  OLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) → Ord) → Ord
+  OLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : ApproxedEl c → Ord) → Ord
   -- OBisim : ∀ {ℓ} {c : ℂ ℓ} → (f g : El c → Ord) → {!!} → OLim c f ≡ OLim c g
 
 O1 = O↑ OZ
@@ -70,8 +70,8 @@ O1 = O↑ OZ
 data _≤o_ : Ord → Ord → Set where
   ≤o-Z : ∀ {o} → OZ ≤o o
   ≤o-sucMono : ∀ {o1 o2} → o1 ≤o o2 → O↑ o1 ≤o O↑ o2
-  ≤o-cocone : ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} (f : Approxed (El c) {{æ}} → Ord) (k : Approxed (El c)) → o ≤o f k → o ≤o OLim c f
-  ≤o-limiting : ∀  {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : Approxed (El c) → Ord) → (∀ k → f k ≤o o) → OLim c f ≤o o
+  ≤o-cocone : ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} (f : ApproxedEl {{æ = æ}} c  → Ord) (k : ApproxedEl c) → o ≤o f k → o ≤o OLim c f
+  ≤o-limiting : ∀  {{æ : Æ }} {o ℓ} {c : ℂ ℓ} → (f : ApproxedEl c → Ord) → (∀ k → f k ≤o o) → OLim c f ≤o o
 
 ≤o-refl : ∀ o → o ≤o o
 ≤o-refl OZ = ≤o-Z
@@ -93,7 +93,7 @@ infixr 10 _≤⨟o_
 _≤⨟o_ :  ∀ {o1 o2 o3} → o1 ≤o o2 → o2 ≤o o3 → o1 ≤o o3
 lt1 ≤⨟o lt2 = ≤o-trans lt1 lt2
 
-≤o-℧ :  ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} {f : Approxed (El c) {{æ}} → Ord} → o ≤o f (℧Approxed c) → o ≤o OLim c f
+≤o-℧ :  ∀ {{æ : Æ}} {o ℓ} {c : ℂ ℓ} {f : ApproxedEl c → Ord} → o ≤o f (℧Approxed c) → o ≤o OLim c f
 ≤o-℧ {c = c} lt = ≤o-cocone _ (℧Approxed c) lt
 
 _<o_ : Ord → Ord → Set
@@ -119,14 +119,14 @@ o1 <o o2 = O↑ o1 ≤o o2
 ≤∘<-in-< : ∀ {x y z} → x ≤o y → y <o z → x <o z
 ≤∘<-in-< {x} {y} {z} x≤y y<z = ≤o-trans (≤o-sucMono x≤y) y<z
 
-underLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} o →  (f : Approxed (El c) → Ord) → (∀ k → o ≤o f k) → o ≤o OLim c f
+underLim : ∀ {{_ : Æ}} {ℓ} {c : ℂ ℓ} o →  (f : ApproxedEl c → Ord) → (∀ k → o ≤o f k) → o ≤o OLim c f
 underLim {c = c} o f all = ≤o-trans (≤o-℧ {c = c} (≤o-refl _)) (≤o-limiting (λ _ → o) (λ k → ≤o-cocone f k (all k)))
 
-extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : Approxed (El c) → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
+extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} →  (f1 f2 : ApproxedEl c → Ord) → (∀ k → f1 k ≤o f2 k) → OLim c f1 ≤o OLim c f2
 extLim {c = c} f1 f2 all = ≤o-limiting f1 (λ k → ≤o-cocone f2 k (all k))
 
 
-existsLim : ∀ {æ1 æ2 : Æ} {ℓ1 ℓ2} {c1 : ℂ ℓ1} {c2 : ℂ ℓ2} →  (f1 : Approxed (El c1) {{æ = æ1}} → Ord) (f2 : Approxed (El c2) {{æ = æ2}} → Ord) → (∀ k1 → Σ[ k2 ∈ Approxed (El c2) {{æ = æ2}} ] f1 k1 ≤o f2 k2) → OLim {{æ = æ1}} c1 f1 ≤o OLim {{æ = æ2}} c2 f2
+existsLim : ∀ {æ1 æ2 : Æ} {ℓ1 ℓ2} {c1 : ℂ ℓ1} {c2 : ℂ ℓ2} →  (f1 : ApproxedEl {{æ = æ1}} c1  → Ord) (f2 : ApproxedEl {{æ = æ2}} c2  → Ord) → (∀ k1 → Σ[ k2 ∈ ApproxedEl {{æ = æ2}} c2 ] f1 k1 ≤o f2 k2) → OLim {{æ = æ1}} c1 f1 ≤o OLim {{æ = æ2}} c2 f2
 existsLim {æ1} {æ2} f1 f2 allex = ≤o-limiting {{æ = æ1}} f1 (λ k → ≤o-cocone {{æ = æ2}} f2 (fst (allex k)) (snd (allex k)))
 
 
@@ -199,9 +199,9 @@ private
   data MaxView : Ord → Ord → Set where
     MaxZ-L : ∀ {o} → MaxView OZ o
     MaxZ-R : ∀ {o} → MaxView o OZ
-    MaxLim-L : ∀ {ℓ} {{_ : Æ}} {o } {c : ℂ ℓ} {f : Approxed (El c) → Ord} → MaxView (OLim c f) o
-    MaxLim-R : ∀ {ℓ} {{_ : Æ}} {o } {c : ℂ ℓ} {f : Approxed (El c) → Ord}
-      → (∀ {{æ : Æ}} {ℓ'} {c' : ℂ ℓ'} {f' : Approxed (El c') → Ord} → ¬ (o ≡p OLim {{æ = æ}} c' f'))
+    MaxLim-L : ∀ {ℓ} {{_ : Æ}} {o } {c : ℂ ℓ} {f : ApproxedEl c → Ord} → MaxView (OLim c f) o
+    MaxLim-R : ∀ {ℓ} {{_ : Æ}} {o } {c : ℂ ℓ} {f : ApproxedEl c → Ord}
+      → (∀ {{æ : Æ}} {ℓ'} {c' : ℂ ℓ'} {f' : ApproxedEl c' → Ord} → ¬ (o ≡p OLim {{æ = æ}} c' f'))
       → MaxView o (OLim c f)
     MaxLim-Suc : ∀  {o1 o2 } → MaxView (O↑ o1) (O↑ o2)
 
@@ -324,7 +324,7 @@ abstract
   omax-oneR {OLim c f} rewrite ctop (omax-Z (OLim c f))= ≤o-refl _
 
 
-  omax-limR : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} (f : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c) {{æ = æ}} → Ord) o → omax o (OLim c f) ≤o OLim c (λ k → omax o (f k))
+  omax-limR : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} (f : ApproxedEl {{æ = æ}} c  → Ord) o → omax o (OLim c f) ≤o OLim c (λ k → omax o (f k))
   omax-limR f OZ = ≤o-refl _
   omax-limR f (O↑ o) = extLim _ _ λ k → ≤o-refl _
   omax-limR f (OLim c f₁) = ≤o-limiting _ λ k → ≤o-trans (omax-limR f (f₁ k)) (extLim _ _ (λ k2 → omax-monoL {o1 = f₁ k} {o1' = OLim c f₁} {o2 = f k2}  (≤o-cocone _ k (≤o-refl _))))
@@ -382,9 +382,9 @@ abstract
     ∀ {æ1 æ2 : Æ}
     {ℓ1 ℓ2}
     {c1 : ℂ ℓ1}
-    (f1 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c1) {{æ = æ1}} → Ord)
+    (f1 : ApproxedEl {{æ = æ1}} c1 → Ord)
     {c2 : ℂ ℓ2}
-    (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Ord)
+    (f2 : ApproxedEl {{æ = æ2}} c2 → Ord)
     → OLim {{æ = æ1}} c1 (λ k1 → OLim {{æ = æ2}} c2 (λ k2 → omax (f1 k1) (f2 k2))) ≤o omax (OLim {{æ = æ1}} c1 f1) (OLim {{æ = æ2}} c2 f2)
   omax-lim2L {æ1} {æ2} f1 f2 = ≤o-limiting {{æ = æ1}} _ (λ k1 → ≤o-limiting {{æ = æ2}} _ λ k2 → omax-mono (≤o-cocone {{æ = æ1}} f1 k1 (≤o-refl _)) (≤o-cocone {{æ = æ2}} f2 k2 (≤o-refl _)))
 
@@ -392,9 +392,9 @@ abstract
     ∀ {æ1 æ2 : Æ}
     {ℓ1 ℓ2}
     {c1 : ℂ ℓ1}
-    (f1 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c1) {{æ = æ1}} → Ord)
+    (f1 : ApproxedEl {{æ = æ1}} c1 → Ord)
     {c2 : ℂ ℓ2}
-    (f2 : Approxed (λ {{æ : Æ}} → El {{æ = æ}} c2) {{æ = æ2}} → Ord)
+    (f2 : ApproxedEl {{æ = æ2}} c2 → Ord)
     →  omax (OLim {{æ = æ1}} c1 f1) (OLim {{æ = æ2}} c2 f2) ≤o OLim {{æ = æ1}} c1 (λ k1 → OLim {{æ = æ2}} c2 (λ k2 → omax (f1 k1) (f2 k2)))
   omax-lim2R {æ1} {æ2} f1 f2 = extLim ⦃ æ = æ1 ⦄ _ _ (λ k1 → omax-limR ⦃ æ = æ2 ⦄ _ (f1 k1))
 

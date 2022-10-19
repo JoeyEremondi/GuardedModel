@@ -117,7 +117,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   germFIndSize tyCtor (GHRec (A+ , A-) D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com k) φ
     = S↑ (SLim (c+ b+) helper)
       where
-      helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Size
+      helper : (a+ : ApproxedEl (c+ b+))  → Size
       helper a+  = smax*
         -- We only do sizes on the part that isn't hidden behind guardedness
         -- For the guarded part, we take the size at ℧, for the approx case this is the only argument
@@ -142,7 +142,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   germFIndSize tyCtor (GUnk (A+ , A-) D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com k) φ
     = S↑ (SLim (c+ b+) helper)
       where
-      helper : (a+ : Approxed (λ {{æ}} → El {{æ = æ}} (c+ b+)))  → Size
+      helper : (a+ : ApproxedEl (c+ b+))  → Size
       helper a+  = smax*
         -- We only do sizes on the part that isn't hidden behind guardedness
         -- For the guarded part, we take the size at ℧, for the approx case this is the only argument

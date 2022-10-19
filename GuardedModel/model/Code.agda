@@ -89,6 +89,10 @@ record CodeModule
     --Approximate type for a code
     ApproxEl : ℂ → Set
     ApproxEl c = El {{Approx}} c
+
+    ApproxedEl : {{æ : Æ}} → ℂ → Set
+    ApproxedEl {{æ}} c = Approxed (λ {{æ'}} → El {{æ = æ'}} c)
+
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
     -- ▹El : ℂ → Set
@@ -186,7 +190,7 @@ record CodeModule
       ⁇Π : (A.▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
-    El (CΠ dom cod) = (x : Approxed (El dom)) → (El (cod  (approx x)))
+    El (CΠ dom cod) = (x : ApproxedEl dom) → (El (cod  (approx x)))
     -- Notation for non-dep functions
     _C→_ : ℂ → ℂ → ℂ
     a C→ b = CΠ a (λ _ → b)
@@ -198,7 +202,7 @@ record CodeModule
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
       --TODO: is it only error if BOTH are error?
-    El (CΣ dom cod) = Σ[ x ∈ Approxed (El dom) ]( El (cod (approx x)) )
+    El (CΣ dom cod) = Σ[ x ∈ ApproxedEl dom ]( El (cod (approx x)) )
     -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
     -- Notation for non-dep pairs
     _C×_ : ℂ → ℂ → ℂ
@@ -263,7 +267,7 @@ record CodeModule
     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
     CommandD (CEnd j) i b = i ≅ j
-    CommandD (CArg c D _ _) i b = Σ[ a ∈ Approxed (El (c b)) ] CommandD D i (b , approx a)
+    CommandD (CArg c D _ _) i b = Σ[ a ∈ ApproxedEl (c b) ] CommandD D i (b , approx a)
     CommandD (CRec j D) i b = CommandD D i b
     CommandD (CHRec c j D _ _) i b = CommandD D i b
 --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
@@ -271,7 +275,7 @@ record CodeModule
     ResponseD (CEnd i) b com = 𝟘
     ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , approx a) com
     ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
-    ResponseD (CHRec c j D _ _) b com = Rec⇒ (Approxed (λ {{æ}} → El {{æ}} (c b)))    Rest⇒ (ResponseD D b com)
+    ResponseD (CHRec c j D _ _) b com = Rec⇒ (ApproxedEl (c b) )    Rest⇒ (ResponseD D b com)
     -- ResponseD (CHGuard c D E) (comD , comE) =
     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
     --     Rest⇒ ResponseD E comE
@@ -401,7 +405,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
 ℧Approx = ℧ {{Approx}}
 
-℧Approxed : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → Approxed (El c)
+℧Approxed : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → ApproxedEl c
 ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
 
 

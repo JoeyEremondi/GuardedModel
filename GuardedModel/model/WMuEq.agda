@@ -291,13 +291,14 @@ CμWiso = (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
 
 open import InductiveCodes
 
-posDataGermCode : ∀ (ℓ : ℕ)  {sig} {cB+ : ℂ ℓ} {B- : El cB+ → Set}
-  → (D : GermCtor (El cB+) B- sig)
+posDataGermCode : ∀ (ℓ : ℕ)  {sig} {B+ : Set} {cB+ : ℂ ℓ} {B- : B+ → Set}
+  → (Iso B+ (ApproxedEl cB+))
+  → (D : GermCtor B+ B- sig)
   → DataGermIsCode ℓ D
   → ℂDesc C𝟙 cB+ sig
-posDataGermCode ℓ GEnd GEndCode = CEnd true
-posDataGermCode ℓ (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
-  = CArg {!!} (posDataGermCode ℓ {!D!} {!!}) (CΣ _ _) reflp
-posDataGermCode ℓ (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) = {!!}
-posDataGermCode ℓ (GRec D) (GRecCode isCode) = {!!}
-posDataGermCode ℓ (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) = {!!}
+posDataGermCode ℓ bIso GEnd GEndCode = CEnd true
+posDataGermCode ℓ bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
+  = CArg (λ cb → c+ (Iso.inv bIso ?)) {!!} {!!} {!!}
+posDataGermCode ℓ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) = {!!}
+posDataGermCode ℓ bIso (GRec D) (GRecCode isCode) = {!!}
+posDataGermCode ℓ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) = {!!}
