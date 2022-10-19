@@ -188,27 +188,37 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
   <Size : ∀ {s} → (s <ₛ size) → ∥ ( ℓ , ⁇Allowed , s ) <CastComp ( ℓ , ⁇Allowed , size) ∥
   <Size lt = ∣ <LexR reflc (<LexR reflc lt) ∣
 
+  notPosL' : ∀ (x : ⁇Flag)
+        (np : notPos x)
+        {A B : Set} → A → if¬Pos x A B
+  notPosL' (Fin.zero) np a = a
+  notPosL' (Fin.suc (Fin.suc Fin.zero)) np a = a
+
+  notPosR' : ∀ (x : ⁇Flag)
+    (np : x ≡p ⁇pos)
+      {A B : Set} → B → if¬Pos x A B
+  notPosR' x reflp b = b
+
+  notPosIrrefut : ∀
+    {@(tactic assumption) np : notPos ⁇Allowed}
+    {A B : Set} → A → (if¬Pos ⁇Allowed A B )
+  notPosIrrefut {np = np} a = notPosL' _ np a
+
+  isPosIrrefut : ∀
+    {@(tactic assumption) pos : ⁇Allowed ≡p ⁇pos}
+    {A B : Set} → B → (if¬Pos ⁇Allowed A B )
+  isPosIrrefut {pos = pos} b = notPosR' _ pos b
 
   argNotPos : ∀
     {@(tactic assumption) np : notPos ⁇Allowed}
     {A B : Set} → A → Hide (if¬Pos ⁇Allowed A B )
   argNotPos {np = np} a = hide {arg = notPosL' ⁇Allowed np a}
-    where
-      notPosL' : ∀ (x : ⁇Flag)
-        (np : notPos x)
-        {A B : Set} → A → if¬Pos x A B
-      notPosL' (Fin.zero) np a = a
-      notPosL' (Fin.suc (Fin.suc Fin.zero)) np a = a
 
   argPos : ∀
-    {@(tactic assumption) np : ⁇Allowed ≡p ⁇pos}
+    {@(tactic assumption) pos : ⁇Allowed ≡p ⁇pos}
     {A B : Set} → B → Hide (if¬Pos ⁇Allowed A B )
-  argPos {np = np} b = hide {arg = notPosR' ⁇Allowed np b}
-    where
-      notPosR' : ∀ (x : ⁇Flag)
-        (np : x ≡p ⁇pos)
-        {A B : Set} → B → if¬Pos x A B
-      notPosR' x reflp b = b
+  argPos {pos = pos} b = hide {arg = notPosR' ⁇Allowed pos b}
+
 
     --
   infix 20 ⁇_By_

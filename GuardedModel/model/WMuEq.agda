@@ -79,12 +79,12 @@ WArg D  = W̃ (Arg λ d → interpDesc (D d) true)
 -- is identical to the version given by W-types
 -- I don't know if we'll actually use this, but it was an important sanity check
 -- Proof is at the bottom of this file
-ℂμWext : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI }  →
-  ℂμ tyCtor D ≡ WArg D
+-- ℂμWext : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI }  →
+--   ℂμ tyCtor D ≡ WArg D
 
 
-ℂμW : ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}  →
-  ℂμ tyCtor D i ≡ WArg D i
+-- ℂμW : ∀ {ℓ} {cI  : ℂ ℓ}  {tyCtor : CName} {D : DCtors tyCtor cI} {i : ApproxEl cI}  →
+--   ℂμ tyCtor D i ≡ WArg D i
 
 
 
@@ -281,24 +281,23 @@ CμWiso :
   → Iso (ℂμ tyCtor D i) (WArg D i)
 CμWiso = (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
 
-ℂμW = isoToPath CμWiso
 
-ℂμWext = funExt λ i → ℂμW {i = i}
+---------
+-- Data Germ Helpers
+-- We use these to extract the strictly-positive parts out of data germ descriptions
+-- And erase the negative parts of inhabitants of the described types,
+-- which are easier to traverse recursively in a way Agda sees as terminating
+---------
 
--- -- ℂElFContainer {D = D} = isoToPath (iso
--- --   (λ x → FC (fromCElCommand D x) (fromCElF D x) (λ _ → tt))
--- --   (λ (FC com k _) → toCElF D com k)
--- --   (λ (FC com k unk) 𝕚 → FC (fromToCElCommandF D com k 𝕚) (fromToCElF D com k 𝕚) unk)
--- --   (toFromCElF D))
+open import InductiveCodes
 
--- -- ℂElFContainerExt = funExt λ X → funExt (λ i → ℂElFContainer)
-
-
--- -- ℂμWProp : ∀ {ℓ} {cI : ℂ ℓ}  {tyCtor : CName} {D : DName tyCtor → ℂDesc cI}  →
--- --    W (Arg (λ a → interpDesc (D (approx a)))) Unit ≡p ℂμ tyCtor D
--- -- ℂμWProp = ctop (sym ℂμWext)
-
-
--- -- open import Agda.Builtin.Equality
--- -- open import Agda.Builtin.Equality.Rewrite
--- -- {-# REWRITE ℂμWProp #-}
+posDataGermCode : ∀ (ℓ : ℕ)  {sig} {cB+ : ℂ ℓ} {B- : El cB+ → Set}
+  → (D : GermCtor (El cB+) B- sig)
+  → DataGermIsCode ℓ D
+  → ℂDesc C𝟙 cB+ sig
+posDataGermCode ℓ GEnd GEndCode = CEnd true
+posDataGermCode ℓ (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
+  = CArg {!!} (posDataGermCode ℓ {!D!} {!!}) (CΣ _ _) reflp
+posDataGermCode ℓ (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) = {!!}
+posDataGermCode ℓ (GRec D) (GRecCode isCode) = {!!}
+posDataGermCode ℓ (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) = {!!}
