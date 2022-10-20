@@ -58,8 +58,27 @@ open import Ord -- ℂ El ℧ C𝟙 refl
 ÆIso : ∀ {ℓ} → ÆSet ℓ → ÆSet ℓ → Set ℓ
 ÆIso X Y = ∀ æ → Iso (X æ) (Y æ)
 
+ÆIsoFun : ∀ {{æ : Æ}} {ℓ} {X Y : ÆSet ℓ} → ÆIso X Y → Approxed X → Approxed Y
+ÆIsoFun ifun x = withApprox2 (λ æ → Iso.fun (ifun æ)) x
 
--- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
+ÆIsoInv : ∀ {{æ : Æ}} {ℓ} {X Y : ÆSet ℓ} → ÆIso X Y → Approxed Y → Approxed X
+ÆIsoInv ifun y = withApprox2 (λ æ → Iso.inv (ifun æ)) y
+
+ÆIsoRightInv : ∀ {{æ : Æ}} {ℓ} {X Y : ÆSet ℓ} → (ifun : ÆIso X Y) → (y : Approxed Y) → ÆIsoFun ifun (ÆIsoInv ifun y) ≡ y
+ÆIsoRightInv ⦃ Approx ⦄ ifun y = Iso.rightInv (ifun Approx) y
+ÆIsoRightInv ⦃ Exact ⦄ ifun (ya , ye) = cong₂ (λ x y → x , y) (Iso.rightInv (ifun Approx) ya) (Iso.rightInv (ifun Exact) ye)
+
+ÆIsoLeftInv : ∀ {{æ : Æ}} {ℓ} {X Y : ÆSet ℓ} → (ifun : ÆIso X Y) → (x : Approxed X) → ÆIsoInv ifun (ÆIsoFun ifun x) ≡ x
+ÆIsoLeftInv ⦃ Approx ⦄ ifun x = Iso.leftInv (ifun Approx) x
+ÆIsoLeftInv ⦃ Exact ⦄ ifun (xa , xe) = cong₂ (λ x y → x , y) (Iso.leftInv (ifun Approx) xa) (Iso.leftInv (ifun Exact) xe)
+
+ApproxedIso : ∀ {{æ : Æ}} {ℓ} {X Y : ÆSet ℓ} → ÆIso X Y → Iso (Approxed X) (Approxed Y)
+Iso.fun (ApproxedIso aiso) = ÆIsoFun aiso
+Iso.inv (ApproxedIso aiso) = ÆIsoInv aiso
+Iso.rightInv (ApproxedIso aiso) = ÆIsoRightInv aiso
+Iso.leftInv (ApproxedIso aiso) = ÆIsoLeftInv aiso
+
+--  xPredicate classifying whether a datagerm description is equivalent to a ℂDesc
 --TODO: do we still need this with the more strict code requirements?
 data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ → Set} → GermCtor B+ B- sig → Set2  where
  GEndCode : ∀ {B+ B- } → DataGermIsCode ℓ {B+ = B+} {B- } GEnd
@@ -170,6 +189,23 @@ record InductiveCodes : Set2 where
   DataGermRec  P unk rec base {i} W℧ = fst (base i)
   DataGermRec  P unk rec base {i} W⁇ = snd (base i)
 
+
+
+  DataGermRec' : ∀ {{_ : Æ}} {ℓ} (P : Maybe CName → Set)
+    -- Unk case
+    → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ (mc , _) → P mc) (nothing , x) → P nothing)
+    -- DataGerm case
+    → (∀ {tyCtor} (d : DName tyCtor) (x : FContainer (DataGermContainer ℓ tyCtor d) (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ (mc , _) → P mc) (_ , x) → P (just tyCtor))
+    → ((mc : Maybe CName) → P mc × P mc)
+    → ∀ {mc} → AllDataTypes ℓ mc → P mc
+  DataGermRec' P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec' P unk rec base (resp r)
+  DataGermRec' P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
+    rec
+      d
+      (FC com resp)
+      (λ r → DataGermRec' P unk rec base (resp r))
+  DataGermRec'  P unk rec base {i} W℧ = fst (base i)
+  DataGermRec'  P unk rec base {i} W⁇ = snd (base i)
 
 
   -- Predicate that determines if a code is well formed

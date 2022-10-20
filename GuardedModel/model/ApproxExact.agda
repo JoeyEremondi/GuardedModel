@@ -165,6 +165,9 @@ withApprox {{Approx}} f   = f Approx
 withApprox {{Exact}} f  = f Approx  , f Exact
 
 
+withApprox2 : ∀ {ℓ} {{æRet : Æ}} {T1 T2 : ÆSet ℓ} → (f : ∀ (æ : Æ) → T1 æ →  T2 æ )  → Approxed {{æRet}} T1 → Approxed {{æRet}} T2
+withApprox2 {{Approx}} f x   = f Approx x
+withApprox2 {{Exact}} f x = f Approx (fst x) , f Exact (snd x)
 
 withApproxL : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
 withApproxL {{Approx}} f   = f Approx

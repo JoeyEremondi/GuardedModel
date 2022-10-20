@@ -5,7 +5,7 @@
 
 
 -- open import Guarded
-open import Cubical.Data.Maybe
+open import Cubical.Data.Maybe as Maybe
 open import Level
 open import Cubical.Relation.Nullary
 
@@ -61,7 +61,7 @@ data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} 
 -- Since we use these for comparing things for consistency
 
 data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : ApproxEl cI)  : Set where
-  Cinit : (d : DName tyCtor) → ℂDescEl (D d) (ℂμ tyCtor D) i true → ℂμ  tyCtor D i
+  Cinit : (d : DName tyCtor) → ℂDescEl (D d) (ℂμ tyCtor D) i tt → ℂμ  tyCtor D i
   Cμ⁇ Cμ℧ :  ℂμ tyCtor D  i
 
 
@@ -69,7 +69,7 @@ data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : App
 -- ℂμ1 tyCtor D i = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
 WArg : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) → ApproxEl cI →  Set
-WArg D  = W̃ (Arg λ d → interpDesc (D d) true)
+WArg D  = W̃ (Arg λ d → interpDesc (D d) tt)
 
 
 -- ℂElFContainer : ∀ {ℓ} {cI : ℂ ℓ} {i : ApproxEl cI} {X : ApproxEl cI → Set} → {D : ℂDesc cI} → ℂDescEl D X i ≡ FContainer (interpDesc D) X Unit i
@@ -224,7 +224,7 @@ fromToCμ :  ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i
 fromToCμ {cI = cI} D = wInd
   (λ(ix , x) → fromCμ (toCμ D x) ≡ x) helper refl refl
   where
-    helper : ∀ {i : ApproxEl cI} (cs : FContainer (Arg (λ d → interpDesc (D d) true)) (WArg D) i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
+    helper : ∀ {i : ApproxEl cI} (cs : FContainer (Arg (λ d → interpDesc (D d) tt)) (WArg D) i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
     helper {i} (FC (d , com) k) φ 𝕚 =
       Wsup (FC
         (d , fromToCElCommand (D d) D com k 𝕚)
@@ -340,23 +340,60 @@ descAddFunDeps cB cUnused (CodeModule.CHRec c j D cB' x)
     _
     reflp
 
-posDataGermCode : ∀ (ℓ : ℕ)  {sig} {B+ : Set} {cB+ : ℂ ℓ} {B- : B+ → Set}
+posDataGermCode :
+  ∀ (ℓ : ℕ)  {sig} {B+ : Set} {cB+ : ℂ ℓ} {B- : B+ → Set}
   → (Iso B+ (ApproxEl cB+))
   → (D : GermCtor B+ B- sig)
   → DataGermIsCode ℓ D
-  → ℂDesc C𝟙 cB+ sig
-posDataGermCode ℓ bIso GEnd GEndCode = CEnd true
+  → ℂDesc C𝟘 cB+ sig
+posDataGermCode ℓ bIso GEnd GEndCode = CEnd tt
 posDataGermCode ℓ bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
   = CArg (λ cb → c+ (Iso.inv bIso cb)) (posDataGermCode ℓ theIso D isCode) _ reflp
     where
      theIso = Σ-cong-iso bIso λ b+ → subst (λ x → Iso (A+ b+ Approx) (ApproxEl (c+ x))) (sym (Iso.leftInv bIso _)) (iso+ b+ Approx)
 posDataGermCode ℓ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode)
-  = CHRec (λ cb → c+ (Iso.inv bIso cb)) (λ _ _ → true) (posDataGermCode ℓ bIso D isCode) _ reflp
+  = CHRec (λ cb → c+ (Iso.inv bIso cb)) (λ _ _ → tt) (posDataGermCode ℓ bIso D isCode) _ reflp
 posDataGermCode ℓ bIso (GRec D) (GRecCode isCode)
-  = CRec true (posDataGermCode ℓ bIso D isCode)
+  = CRec tt (posDataGermCode ℓ bIso D isCode)
 -- Unk is just an Arg with return type C⁇
 posDataGermCode ℓ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)
   -- Positive part isn't allowed to depend on values of ⁇
   = CArg (λ cb → CΠ (c+ (Iso.inv bIso cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (Iso.inv bIso z)) C⁇ recDesc) _ reflp
     where
       recDesc = posDataGermCode ℓ bIso D isCode
+
+
+
+posDataGermFVal : ∀ {{_ : InductiveCodes}} {ℓ} {{æ : Æ}} {cB+ : ℂ ℓ}  {B+ B- sig} (tyCtor : CName)
+    → (bIso : Iso B+ (ApproxEl cB+))
+    → (D : GermCtor B+ B- sig)
+    → (isCode : DataGermIsCode ℓ D)
+    → (b+ : B+)
+    → (b- : B- b+)
+    → (cs : DescFunctor {{æ = æ}} ℓ tyCtor D b+ b-)
+    → □ _ (λ (m , _) → Maybe.rec Unit  (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt) m) (just tyCtor , cs)
+    → ℂDescEl {cB = cB+} (posDataGermCode ℓ bIso D isCode) (λ _ → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt ) tt (Iso.fun bIso b+)
+posDataGermFVal tyCtor bIso GEnd GEndCode b+ b- cs φ = ElEnd tt (tt ⊢ tt ≅ tt)
+posDataGermFVal tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC (arg , com) resp) φ
+  = ElArg (subst (λ x → ApproxedEl (c+ x)) (sym (Iso.leftInv bIso b+)) ?) {!!}
+posDataGermFVal tyCtor bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- cs φ = {!!}
+posDataGermFVal tyCtor bIso (GRec D) (GRecCode isCode) b+ b- cs φ = {!!}
+posDataGermFVal tyCtor bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- cs φ = {!!}
+
+
+posDataGermVal : {{_ : InductiveCodes}}
+  → ∀ (ℓ : ℕ) (tyCtor : CName)
+  → DataGerm ℓ tyCtor
+  → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt
+posDataGermVal ℓ tyCtor x = recFun reflp
+  where
+    recFun =
+      DataGermRec'
+        (Maybe.rec Unit (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt))
+        (λ _ _ → tt)
+        (λ {d x φ reflp → Cinit d (posDataGermFVal {ℓ = ℓ} {cB+ = C𝟘} tyCtor idIso _ _ tt tt x φ)})
+        (λ { nothing → tt , tt ; (just x) → (λ _ → Cμ⁇) , λ _ → Cμ⁇})
+        x
+    -- wRec {X = λ { nothing → Unit ; (just x) → x ≡p tyCtor → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) true}}
+    --   (λ { {nothing} x₁ → tt ; {just _} (FC (d , com) response) reflp → Cinit d (posDataGermFVal tyCtor idIso _ _ {!!} tt {!FC com response!} {!!} )})
+    --   (λ { nothing → tt , tt ; (just x) → (λ {reflp → Cμ⁇}) , λ {reflp → Cμ℧}}) x

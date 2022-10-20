@@ -412,7 +412,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
 DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
-DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d)
+DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟘 (indSkeleton tyCtor d)
 
 ▹⁇ : {{_ : Æ}} →  ℕ → A.▹ Set
 ▹⁇ ℓ = A.dfix (F⁇ {ℓ})
