@@ -231,7 +231,7 @@ data GermCtor : (B : Set) → (B → Set) → IndSig → Set1 where
   GRec : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigR sig)
   -- -- Since we don't have Unk in non-germ descriptions specially, it doesn't affect the signature
   -- -- TODO: is this right?
-  GUnk : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- sig
+  GUnk : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigA sig)
 
 GermCommand : ∀ {{æ : Æ}} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
 GermCommand GEnd b+ b- = Unit

@@ -55,6 +55,9 @@ open import Ord -- ℂ El ℧ C𝟙 refl
 
 -- Like El, but interprets C⁇ to ▹⁇
 
+ÆIso : ∀ {ℓ} → ÆSet ℓ → ÆSet ℓ → Set ℓ
+ÆIso X Y = ∀ æ → Iso (X æ) (Y æ)
+
 
 -- Predicate classifying whether a datagerm description is equivalent to a ℂDesc
 --TODO: do we still need this with the more strict code requirements?
@@ -65,23 +68,23 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ →
    → DataGermIsCode ℓ (GRec D)
  GArgCode : ∀ {B+ B- sig}  {(A+ , A-) : +-Set B+ B- } {D : GermCtor _ _ sig}
    → (c+ : B+ → ℂ ℓ)
-   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (iso+ : ∀ b+ → Iso (A+ b+) (El (c+ b+)))
-   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
+   → (c- : (b+ : B+) → A+ b+ Approx → B- b+ → ℂ ℓ)
+   → (iso+ : ∀ b+ → ÆIso (A+ b+) (ÆEl (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → ÆIso  (A- b+ a+ b-) (λ æ' → ▹ El {{æ = æ'}} (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GArg (A+ , A-) D)
  GHRecCode : ∀ {B+ B- sig} {(A+ , A- ) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
-   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (iso+ : ∀ b+ → Iso (A+ b+) (ApproxedEl (c+ b+)))
-   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (El (c- b+ a+ b-))))
+   → (c- : (b+ : B+) → A+ b+ Approx → B- b+ → ℂ ℓ)
+   → (iso+ : ∀ b+ → ÆIso (A+ b+) (ÆEl (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → ÆIso  (A- b+ a+ b-) ( λ æ' → ▹ (El {{æ = æ'}} (c- b+ a+ b-))))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GHRec (A+ , A-) D)
  GUnkCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
-   → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (iso+ : ∀ b+ → Iso (A+ b+) (ApproxedEl (c+ b+)))
-   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (El (c- b+ a+ b-))))
+   → (c- : (b+ : B+) → A+ b+ Approx → B- b+ → ℂ ℓ)
+   → (iso+ : ∀ b+ → ÆIso (A+ b+) (ÆEl (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → ÆIso  (A- b+ a+ b-) (λ æ' → ▹ (El {{æ = æ'}} (c- b+ a+ b-))))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk (A+ , A-) D)
 

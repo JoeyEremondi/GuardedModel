@@ -45,11 +45,11 @@ open import Util
 -- Also, Cubical Agda recognizes these as strictly decreasing, which is nice
 data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cI cB sig → ApproxEl cI → ApproxEl cB → Set where
   ElEnd : ∀ {cB b i} j → i ≅ j →  ℂDescEl' cI X cB (CEnd j) i b
-  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : Approxed (El (cA b)) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D _ reflp) i b
+  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : ApproxedEl (cA b) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D _ reflp) i b
   ElRec : ∀ {cB b i sig} {j : ApproxEl cI} {D : ℂDesc cI cB sig} →
     X j → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CRec j D) i b
   ElHRec : ∀ {cB b i sig} {c : ApproxEl cB → ℂ ℓ} {j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl cI} {D : ℂDesc cI cB sig} →
-    ((x : Approxed (λ {{æ}} → El {{æ = æ}} (c b))) → X (j b (approx x))) → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CHRec c j D _ reflp) i b
+    ((x : ApproxedEl (c b)) → X (j b (approx x))) → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CHRec c j D _ reflp) i b
 
 
 
@@ -291,14 +291,72 @@ CμWiso = (iso fromCμ (toCμ _) (fromToCμ _) toFromCμ)
 
 open import InductiveCodes
 
+Σ-swap-dist : ∀ {A : Set} {B : A → Set} {C : Set}
+  → Iso (Σ (Σ A B) (λ _ → C)) (Σ (A × C) (λ (a , _) → B a))
+Iso.fun Σ-swap-dist ((a , b) , c) = (a , c) , b
+Iso.inv Σ-swap-dist ((a , c) , b) = (a , b) , c
+Iso.rightInv Σ-swap-dist ((a , c) , b) = refl
+Iso.leftInv Σ-swap-dist ((a , b) , c) = refl
+
+descSwapIso : ∀ {ℓ} {cI : ℂ ℓ} {sig : IndSig} {cB1 cB2 : ℂ ℓ} (bIso : Iso (ApproxEl cB1) (ApproxEl cB2))
+  →  ℂDesc cI cB1 sig
+  →  ℂDesc cI cB2 sig
+descSwapIso bIso (CEnd i) = CEnd i
+descSwapIso bIso (CArg c D cB' x) = CArg (λ x → c (Iso.inv bIso x)) (descSwapIso theIso D) _ reflp
+  where
+    theIso = Σ-cong-iso bIso (λ cb1 → subst (λ x → Iso (ApproxEl (c cb1)) (ApproxEl (c x))) (sym (Iso.leftInv bIso cb1)) idIso)
+descSwapIso bIso (CRec j D) = CRec j (descSwapIso bIso D)
+descSwapIso bIso (CHRec c j D cB' x) = CHRec (λ x → c (Iso.inv bIso x)) ((λ x → j (Iso.inv bIso x))) (descSwapIso bIso D) _ reflp
+
+descAddDeps : ∀ {ℓ} {cI : ℂ ℓ} {sig : IndSig} {cB : ℂ ℓ} (cUnused)
+  →  ℂDesc cI cB sig
+  →  ℂDesc cI (CΣ cB (λ _ → cUnused)) sig
+descAddDeps cUnused (CEnd i) = CEnd i
+descAddDeps cUnused (CArg c D cB' x) = CArg (λ (cb , _) → c cb) (descSwapIso theIso (descAddDeps cUnused D)) _ reflp
+  where
+    theIso = Σ-swap-dist
+descAddDeps cUnused (CRec j D) = CRec j (descAddDeps cUnused D)
+descAddDeps cUnused (CHRec c j D cB' x) = CHRec (λ (cb , _) → c cb) (λ (cb , _) → j cb) (descAddDeps cUnused D) _ reflp
+
+descAddFunDeps : ∀ {ℓ} {cI : ℂ ℓ} {sig : IndSig} {cB1 : ℂ ℓ} (cB2 : ApproxEl cB1 → ℂ ℓ) (cUnused)
+  →  ℂDesc cI cB1 sig
+  →  ℂDesc cI (CΣ cB1 (λ x → CΠ (cB2 x) λ _ → cUnused)) sig
+descAddFunDeps cB cUnused (CodeModule.CEnd i) = CEnd i
+descAddFunDeps cB cUnused (CodeModule.CArg c D cB' x)
+  = CArg (λ (cb1 , f) → c cb1) (descSwapIso theIso (descAddFunDeps (λ (x , _) → cB x) cUnused D)) _ reflp
+    where
+      theIso =
+        iso
+          (λ ((cb1 , x) , f) → (cb1 , f) , x)
+          (λ ((cb1 , f) , x) → (cb1 , x) , f)
+          (λ ((cb1 , f) , x) → refl)
+          (λ ((cb1 , x) , f) → refl)
+descAddFunDeps cB cUnused (CodeModule.CRec j D) = CRec j (descAddFunDeps cB cUnused D)
+descAddFunDeps cB cUnused (CodeModule.CHRec c j D cB' x)
+  = CHRec
+    (λ (cb1 , f) → c cb1)
+    (λ (cb1 , f) → j cb1)
+    (descAddFunDeps cB cUnused D)
+    _
+    reflp
+
 posDataGermCode : ∀ (ℓ : ℕ)  {sig} {B+ : Set} {cB+ : ℂ ℓ} {B- : B+ → Set}
-  → (Iso B+ (ApproxedEl cB+))
+  → (Iso B+ (ApproxEl cB+))
   → (D : GermCtor B+ B- sig)
   → DataGermIsCode ℓ D
   → ℂDesc C𝟙 cB+ sig
 posDataGermCode ℓ bIso GEnd GEndCode = CEnd true
 posDataGermCode ℓ bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
-  = CArg (λ cb → c+ ?) {!!} {!!} {!!}
-posDataGermCode ℓ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) = {!!}
-posDataGermCode ℓ bIso (GRec D) (GRecCode isCode) = {!!}
-posDataGermCode ℓ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) = {!!}
+  = CArg (λ cb → c+ (Iso.inv bIso cb)) (posDataGermCode ℓ theIso D isCode) _ reflp
+    where
+     theIso = Σ-cong-iso bIso λ b+ → subst (λ x → Iso (A+ b+ Approx) (ApproxEl (c+ x))) (sym (Iso.leftInv bIso _)) (iso+ b+ Approx)
+posDataGermCode ℓ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode)
+  = CHRec (λ cb → c+ (Iso.inv bIso cb)) (λ _ _ → true) (posDataGermCode ℓ bIso D isCode) _ reflp
+posDataGermCode ℓ bIso (GRec D) (GRecCode isCode)
+  = CRec true (posDataGermCode ℓ bIso D isCode)
+-- Unk is just an Arg with return type C⁇
+posDataGermCode ℓ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)
+  -- Positive part isn't allowed to depend on values of ⁇
+  = CArg (λ cb → CΠ (c+ (Iso.inv bIso cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (Iso.inv bIso z)) C⁇ recDesc) _ reflp
+    where
+      recDesc = posDataGermCode ℓ bIso D isCode
