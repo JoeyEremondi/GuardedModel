@@ -9,6 +9,7 @@ open import Cubical.Data.Unit
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Equality
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
+open import Agda.Primitive
 
 data Æ : Set where
   Approx Exact : Æ
@@ -137,37 +138,42 @@ open import GuardedAlgebra
 fromL : ∀ {ℓ} → {A : Set ℓ} → LÆ {{Approx}} A → A
 fromL (Now a) = a
 
+
+
+ÆSet : (ℓ : Level) → Set (lsuc ℓ)
+ÆSet ℓ = Æ → Set ℓ
+
+ÆSet0 : Type (ℓ-suc ℓ-zero)
+ÆSet0 = ÆSet lzero
+
 -- If we're in approximate mode, this is just an approximate version of a T
 -- In exact mode, it's a pair with an approximate and exact version of a T
-Approxed : ∀ {ℓ} (T : {{_ : Æ }} → Set ℓ) → {{æ : Æ}} → Set ℓ
-Approxed T ⦃ Approx ⦄ = T {{Approx}}
-Approxed T ⦃ Exact ⦄ = T {{Approx}} × T {{Exact}}
+Approxed : ∀ {ℓ} {{æ : Æ}} (T : ÆSet ℓ) → Set ℓ
+Approxed ⦃ Approx ⦄ T = T Approx
+Approxed ⦃ Exact ⦄ T = T Approx × T Exact
 --Get the approximate version stored in an Approxed value
-approx : ∀ {ℓ} {T : {{_ : Æ }} → Set ℓ} → {{æ : Æ}} → Approxed T {{æ}} → T {{Approx}}
+approx : ∀ {ℓ} {T : ÆSet ℓ} → {{æ : Æ}} → Approxed {{æ}} T → T Approx
 approx ⦃ æ = Approx ⦄ x = x
 approx ⦃ æ = Exact ⦄ x = fst x
 
-exact : ∀ {ℓ} {T : {{_ : Æ }} → Set ℓ} → {{æ : Æ}} → Approxed (λ {{æ : Æ}} → T {{æ}}) {{æ}}  → T {{æ}}
+exact : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → Approxed {{æ}} T → T æ
 exact ⦃ æ = Approx ⦄ x = x
 exact ⦃ æ = Exact ⦄ x = snd x
 
-withApprox : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) →  T {{æ}} )  → Approxed T {{æRet}}
+withApprox : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) →  T æ )  → Approxed {{æRet}} T
 withApprox {{Approx}} f   = f Approx
 withApprox {{Exact}} f  = f Approx  , f Exact
 
-ApproxedSet : ∀ {{æ : Æ}} → Approxed Set {{æ}} → Set
-ApproxedSet ⦃ Approx ⦄ X = X
-ApproxedSet ⦃ Exact ⦄ (X , Y) = X × Y
 
 
-withApproxL : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T {{æ}}) )  → LÆ {{æRet}} (Approxed T {{æRet}})
+withApproxL : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
 withApproxL {{Approx}} f   = f Approx
 withApproxL {{Exact}} f  = do
   a ← f Approx
   e ← f Exact
   pure {{Exact}} (a , e)
 
-withApproxL' : ∀ {{æRet : Æ}} {T : {{æ : Æ }}  → Set} → (f : ∀ (æ : Æ) (conv : Approxed T {{æRet}} → Approxed T {{æ}}) → LÆ {{æ}} (T {{æ}}) )  → LÆ {{æRet}} (Approxed T {{æRet}})
+withApproxL' : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) (conv : Approxed {{æRet}} T  → Approxed {{æ}} T ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
 withApproxL' {{Approx}} f   = f Approx λ x → x
 withApproxL' {{Exact}} {T = T} f  = do
   a ← f Approx (approx {T = T} {{Exact}} )

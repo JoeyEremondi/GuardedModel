@@ -86,12 +86,14 @@ record CodeModule
     data ℂ : Set
     -- Interpretation of codes into types
     El : {{æ : Æ}} → ℂ → Set
+    ÆEl : ℂ → ApproxExact.ÆSet0
+    ÆEl c æ = El {{æ = æ}} c
     --Approximate type for a code
     ApproxEl : ℂ → Set
     ApproxEl c = El {{Approx}} c
 
     ApproxedEl : {{æ : Æ}} → ℂ → Set
-    ApproxedEl {{æ}} c = Approxed (λ {{æ'}} → El {{æ = æ'}} c)
+    ApproxedEl {{æ}} c = Approxed (ÆEl c)
 
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes

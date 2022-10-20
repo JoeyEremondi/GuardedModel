@@ -200,7 +200,7 @@ data IndSig : Set where
   SigA SigR SigHR : IndSig → IndSig
 
 +-Set : (B+ : Set) → (B+ → Set) → Set1
-+-Set B+ B- = Σ[ A+ ∈ (B+ → Set) ] ((b : B+) → A+ b → B- b → Set)
++-Set B+ B- = Σ[ A+ ∈ (B+ → ÆSet0) ] ((b : B+) → A+ b Approx → B- b → ÆSet0)
 
 ⁇Ref SelfRef : Bool
 ⁇Ref = false
@@ -226,43 +226,43 @@ Maybe-elim B n j (just a) = j a
 data GermCtor : (B : Set) → (B → Set) → IndSig → Set1 where
   GEnd : ∀ { B+ B- } → GermCtor B+ B- SigE
   -- Future arguments can only depend on the strictly positive part of the germ
-  GArg : ∀ {B+ B- sig} → ((A+ , A-) : +-Set B+ B-) → (D : GermCtor (Σ B+ A+) (λ (b , a) → Σ (B- b) (A- b a)) sig) → GermCtor B+ B- (SigA sig)
+  GArg : ∀ {B+ B- sig} → ((A+ , A-) : +-Set B+ B-) → (D : GermCtor (Σ[ b+ ∈ B+ ](A+ b+ Approx)) (λ (b+ , a+) → Σ[ b- ∈ (B- b+) ](A- b+ a+ b- Approx )) sig) → GermCtor B+ B- (SigA sig)
   GHRec : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigHR sig)
   GRec : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigR sig)
   -- -- Since we don't have Unk in non-germ descriptions specially, it doesn't affect the signature
   -- -- TODO: is this right?
   GUnk : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- sig
 
-GermCommand : ∀ {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
+GermCommand : ∀ {{æ : Æ}} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
 GermCommand GEnd b+ b- = Unit
-GermCommand (GArg (A+ , A-) D) b+ b- = Σ[ a+- ∈  (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-) ] GermCommand D (b+ , fst a+-) (b- , snd a+-)
+GermCommand {{æ = æ}} (GArg (A+ , A-) D) b+ b- = Σ[ a+- ∈  (Σ[ a+ ∈ Approxed {{æ}} (A+ b+) ] Approxed {{æ}} (A- b+ (approx a+) b-)) ] GermCommand D (b+ , approx (fst a+-)) (b- , approx (snd a+-))
 GermCommand (GHRec (A+ , A-) D) b+ b- = GermCommand D b+ b-
 GermCommand (GRec D) b+ b- = GermCommand D b+ b-
 GermCommand (GUnk (A+ , A-) D) b+ b- = GermCommand D b+ b-
 
-GermResponse : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
+GermResponse : ∀ {{æ : Æ}} {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
 GermResponse {B+}{ B- } GEnd b+ b- com = 𝟘
-GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , a+) (b- , a-) com
+GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , approx a+) (b- , approx a-) com
 GermResponse {B+ }{B- } (GHRec (A+ , A-) D) b+ b- com =
   -- We have two functions, one for just the positive part, and one for the negative part
-  Rec⇒  ((A+ b+) ⊎ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-))
+  Rec⇒  (Approxed (A+ b+) ⊎ (Σ[ a+ ∈ Approxed (A+ b+) ] Approxed (A- b+ (approx a+) b-)))
   Rest⇒  (GermResponse D b+ b- com) --TODO: need response to be parameterized by A+ and A- ?
 GermResponse {B+ }{B- } (GRec D) b+ b- com = Rec⇒ 𝟙   Rest⇒ GermResponse D b+ b- com
 GermResponse {B+ }{B- } (GUnk A D) b+ b- com = GermResponse D b+ b- com
 
 
-GermResponseUnk : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
+GermResponseUnk : ∀ {{æ : Æ}} {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
 -- Like before, we separate the positive from the negative parts
 -- In the "Rest" case, we also need to paramterize by A+ and A- values,
 GermResponseUnk (GUnk (A+ , A-) D) b+ b- com =
-  Rec⇒ ((A+ b+) ⊎ (Σ[ a+ ∈ A+ b+ ] A- b+ a+ b-))
+  Rec⇒ (Approxed (A+ b+) ⊎ (Σ[ a+ ∈ Approxed (A+ b+) ] Approxed (A- b+ (approx a+) b-)))
   Rest⇒ ( GermResponseUnk D b+ b- com) --TODO need more here?
 GermResponseUnk GEnd b+ b- x = 𝟘
-GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , a+) (b- , a-) com
+GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , approx a+) (b- , approx a-) com
 GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com
 GermResponseUnk (GRec D) b+ b- com = GermResponseUnk D b+ b- com
 
-interpGermCtor' : ∀ {A} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container (Maybe A)
+interpGermCtor' : ∀ {{æ : Æ}} {A} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container (Maybe A)
 interpGermCtor' D b+ b- =
   -- Command encodes any non-recursive parts of datatype
   -- We're only describing uses of ⁇, not defining it, so we don't have commands for when i is false
@@ -278,7 +278,7 @@ interpGermCtor' D b+ b- =
       (λ _ → nothing)
       res
 
-interpGermCtor : ∀ {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
+interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
 interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
 -- -- data IndSig : Set where
 -- --   SigE SigA SigR SigHR SigU : IndSig

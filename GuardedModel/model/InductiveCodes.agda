@@ -70,18 +70,18 @@ data DataGermIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} {B+ : Set} {B- : B+ →
    → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ El (c- b+ a+ b-)))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GArg (A+ , A-) D)
- GHRecCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
+ GHRecCode : ∀ {B+ B- sig} {(A+ , A- ) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
    → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (iso+ : ∀ b+ → Iso (A+ b+) (Approxed (λ {{æ'}} → El ⦃ æ = æ' ⦄ (c+ b+))))
-   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (Approxed (λ {{æ'}} → El ⦃ æ = æ' ⦄ (c- b+ a+ b-)))))
+   → (iso+ : ∀ b+ → Iso (A+ b+) (ApproxedEl (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (El (c- b+ a+ b-))))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GHRec (A+ , A-) D)
  GUnkCode : ∀ {B+ B- sig} {(A+ , A-) : +-Set B+ B- } {D : GermCtor B+ B- sig}
    → (c+ : B+ → ℂ ℓ)
    → (c- : (b+ : B+) → A+ b+ → B- b+ → ℂ ℓ)
-   → (iso+ : ∀ b+ → Iso (A+ b+) (Approxed (λ {{æ'}} → El ⦃ æ = æ' ⦄ (c+ b+))))
-   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (Approxed (λ {{æ'}} → El ⦃ æ = æ' ⦄ (c- b+ a+ b-)))))
+   → (iso+ : ∀ b+ → Iso (A+ b+) (ApproxedEl (c+ b+)))
+   → (iso- : ∀ b+ a+ b- → Iso  (A- b+ a+ b-) (▹ (El (c- b+ a+ b-))))
    → DataGermIsCode ℓ D
    → DataGermIsCode ℓ (GUnk (A+ , A-) D)
 
