@@ -1,6 +1,6 @@
 
 
-{-# OPTIONS --cubical --guarded #-}
+{-# OPTIONS --cubical --guarded --rewriting #-}
 
 
 
@@ -32,6 +32,35 @@ open import ApproxExact
 
 --TODO: don't make ℓ module param
 module WMuEq {{_ : DataTypes}} {{_ : DataGerms}} where
+
+
+
+{-# BUILTIN REWRITE _≡_ #-}
+
+abstract
+  isoFun : ∀ {A B : Set} (i : Iso A B) → A → B
+  isoFun i = Iso.fun i
+  isoInv : ∀ {A B : Set} (i : Iso A B) → B → A
+  isoInv i = Iso.inv i
+
+  isoFun≡ : ∀ {A B} i x → isoFun i x ≡ Iso.fun i x
+  isoFun≡ _ _ = refl
+
+
+  isoRightInv : ∀ {A B : Set} {x} {i : Iso A B} → isoFun i (isoInv i x) ≡ x
+  isoRightInv {i = i} = Iso.rightInv i _
+
+  isoLeftInv : ∀ {A B : Set} {x} {i : Iso A B} → isoInv i (isoFun i x) ≡ x
+  isoLeftInv {i = i} = Iso.leftInv i _
+
+
+{-# REWRITE isoRightInv isoLeftInv #-}
+
+rwIso : ∀ {A B : Set} → Iso A B → Iso A B
+Iso.fun (rwIso i) = isoFun i
+Iso.inv (rwIso i) = isoInv i
+Iso.rightInv (rwIso i) x = refl
+Iso.leftInv (rwIso i) x = refl
 
 open import Code
 -- open import Head
@@ -302,11 +331,11 @@ descSwapIso : ∀ {ℓ} {cI : ℂ ℓ} {sig : IndSig} {cB1 cB2 : ℂ ℓ} (bIso 
   →  ℂDesc cI cB1 sig
   →  ℂDesc cI cB2 sig
 descSwapIso bIso (CEnd i) = CEnd i
-descSwapIso bIso (CArg c D cB' x) = CArg (λ x → c (Iso.inv bIso x)) (descSwapIso theIso D) _ reflp
+descSwapIso bIso (CArg c D cB' x) = CArg (λ x → c (isoInv bIso x)) (descSwapIso theIso D) _ reflp
   where
-    theIso = Σ-cong-iso bIso (λ cb1 → subst (λ x → Iso (ApproxEl (c cb1)) (ApproxEl (c x))) (sym (Iso.leftInv bIso cb1)) idIso)
+    theIso = Σ-cong-iso-fst (rwIso bIso)
 descSwapIso bIso (CRec j D) = CRec j (descSwapIso bIso D)
-descSwapIso bIso (CHRec c j D cB' x) = CHRec (λ x → c (Iso.inv bIso x)) ((λ x → j (Iso.inv bIso x))) (descSwapIso bIso D) _ reflp
+descSwapIso bIso (CHRec c j D cB' x) = CHRec (λ x → c (isoInv bIso x)) ((λ x → j (isoInv bIso x))) (descSwapIso bIso D) _ reflp
 
 descAddDeps : ∀ {ℓ} {cI : ℂ ℓ} {sig : IndSig} {cB : ℂ ℓ} (cUnused)
   →  ℂDesc cI cB sig
@@ -349,21 +378,21 @@ posDataGermCode :
 posDataGermCode ℓ cB+ bIso GEnd GEndCode = CEnd tt
 posDataGermCode ℓ cB+ bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode)
   = CArg
-    (λ cb → c+ (Iso.inv bIso cb))
+    (λ cb → c+ (isoInv bIso cb))
     (posDataGermCode
       ℓ
-      (CΣ cB+ (λ cb → c+ (Iso.inv bIso cb)))
-      (Σ-cong-iso bIso λ b+ → subst (λ x → Iso (A+ b+ Approx) (ApproxEl (c+ x))) (sym (Iso.leftInv bIso _)) (iso+ b+ Approx))
+      (CΣ cB+ (λ cb → c+ (isoInv bIso cb)))
+      (Σ-cong-iso (rwIso bIso) λ b+ → iso+ b+ Approx)
       D
       isCode) _ reflp
 posDataGermCode ℓ cB+ bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode)
-  = CHRec (λ cb → c+ (Iso.inv bIso cb)) (λ _ _ → tt) (posDataGermCode ℓ cB+ bIso D isCode) _ reflp
+  = CHRec (λ cb → c+ (isoInv bIso cb)) (λ _ _ → tt) (posDataGermCode ℓ cB+ bIso D isCode) _ reflp
 posDataGermCode ℓ cB+ bIso (GRec D) (GRecCode isCode)
   = CRec tt (posDataGermCode ℓ cB+ bIso D isCode)
 -- Unk is just an Arg with return type C⁇
 posDataGermCode ℓ cB+ bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode)
   -- Positive part isn't allowed to depend on values of ⁇
-  = CArg (λ cb → CΠ (c+ (Iso.inv bIso cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (Iso.inv bIso z)) C⁇ recDesc) _ reflp
+  = CArg (λ cb → CΠ (c+ (isoInv bIso cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (isoInv bIso z)) C⁇ recDesc) _ reflp
     where
       recDesc = posDataGermCode ℓ cB+ bIso D isCode
 
@@ -377,20 +406,33 @@ posDataGermFVal : ∀ {{_ : InductiveCodes}} {ℓ} {{æ : Æ}} (cB+ : ℂ ℓ)  
     → (b- : B- b+)
     → (cs : DescFunctor {{æ = æ}} ℓ tyCtor D b+ b-)
     → □ _ (λ (m , _) → Maybe.rec Unit  (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟘 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt) m) (just tyCtor , cs)
-    → ℂDescEl {cB = cB+} (posDataGermCode ℓ cB+ bIso D isCode) (λ _ → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟘 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt ) tt (Iso.fun bIso b+)
+    → ℂDescEl {cB = cB+} (posDataGermCode ℓ cB+ bIso D isCode) (λ _ → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟘 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt ) tt (isoFun bIso b+)
 posDataGermFVal cB+ tyCtor bIso GEnd GEndCode b+ b- cs φ = ElEnd tt (tt ⊢ tt ≅ tt)
 posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) resp) φ
   -- This is all just awful rewriting of equalities and such
-  = ElArg (subst (λ x → ApproxedEl (c+ x)) (sym (Iso.leftInv bIso b+)) (Iso.fun (ApproxedIso (iso+ b+)) a+))
-    (subst
-      {x = Iso.fun theIso (b+ , approx a+)}
-      {y = Iso.fun bIso b+ , approx (Iso.fun (ApproxedIso (iso+ _)) (subst (λ x → Approxed (A+ x)) (sym (Iso.leftInv bIso b+)) a+))}
-      (λ x → ℂDescEl' _ _ _ _ _ x) (ΣPathP (refl , (toPathP (caseÆ (λ {reflp → {!!}}) (λ {reflp → {!!}}))))) recVal)
+    = ElArg (Iso.fun (ApproxedIso (iso+ b+)) a+)
+      (subst
+        (λ x → ℂDescEl (posDataGermCode _ (CΣ cB+ (λ ca+ → c+ (isoInv bIso ca+))) theIso D isCode) _ tt x)
+        (( isoFun≡
+          (Σ-cong-iso (rwIso bIso) λ b+ → iso+ b+ Approx) (b+ , approx a+))
+            ∙ ΣPathP (refl , caseÆ (λ {reflp → refl}) (λ {reflp → refl})))
+        recVal)
       where
-        theIso = (Σ-cong-iso bIso λ b+ → subst (λ x → Iso (A+ b+ Approx) (ApproxEl (c+ x))) (sym (Iso.leftInv bIso _)) (iso+ b+ Approx))
+        theIso = Σ-cong-iso (rwIso bIso) λ b+ → iso+ b+ Approx
+        recVal : ℂDescEl
+                   (posDataGermCode _ (CΣ cB+ (λ ca+ → c+ (isoInv bIso ca+))) theIso D
+                    isCode)
+                   (λ _ →
+                      ℂμ tyCtor
+                      (λ d →
+                         posDataGermCode _ C𝟘 idIso
+                         (DataGerms.preDataGerm _ _ tyCtor (▹⁇ _) d)
+                         (InductiveCodes.dataGermIsCode _ _ tyCtor d))
+                      tt)
+                   tt (isoFun theIso (b+ , approx a+))
         recVal =
           posDataGermFVal
-          (CΣ cB+ λ ca+ → c+ (Iso.inv bIso  ca+))
+          (CΣ cB+ λ ca+ → c+ (isoInv bIso  ca+))
           tyCtor
           theIso
           D
