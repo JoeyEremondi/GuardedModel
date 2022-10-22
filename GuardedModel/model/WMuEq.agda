@@ -441,7 +441,8 @@ posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- i
           (b- , approx a-)
           (FC com (Sum.elim (λ r → resp (inl r)) λ r → resp (inr r)))
           (Sum.elim (λ r → φ (inl r)) (λ r → φ (inr r)))
-posDataGermFVal cB+ tyCtor bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- cs φ = {!!}
+posDataGermFVal cB+ tyCtor bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com resp) φ =
+  ElHRec (λ x → φ ?) ? --(posDataGermFVal cB+ tyCtor bIso D isCode b+ b- (FC com (Sum.elim (λ r → resp (inl (Rest r))) λ r → resp (inr r))) (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
 posDataGermFVal cB+ tyCtor bIso (GRec D) (GRecCode isCode) b+ b- cs φ = {!!}
 posDataGermFVal cB+ tyCtor bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- cs φ = {!!}
 
