@@ -109,7 +109,7 @@ commandSizeLt : ∀ {{æ : Æ}} {B+ B- sig} (tyCtor : CName)
   → commandSize tyCtor D isCode b+ b- com ≤ₛ germIndSize tyCtor D isCode b+ b- (FC com resp)
 commandSizeLt tyCtor GEnd GEndCode b+ b- (FC com resp) = ≤ₛ-refl
 commandSizeLt tyCtor (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC com resp)
-  = ≤ₛ-sucMono ?
+  = ≤ₛ-sucMono {!!}
 commandSizeLt tyCtor (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com resp) =
   commandSizeLt tyCtor D isCode b+ b- _ ≤⨟ ≤suc ( smax*-≤-n (Fin.suc (Fin.suc Fin.zero)) ≤⨟ ≤ₛ-cocone (℧Approxed (c+ b+)))
 commandSizeLt tyCtor (GRec D) (GRecCode isCode) b+ b- (FC com resp)

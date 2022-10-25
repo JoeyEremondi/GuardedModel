@@ -184,6 +184,15 @@ withApproxL' {{Exact}} {T = T} f  = do
   pure {{Exact}} (a , e)
 
 
+approxedFun : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : Set ℓ1} {B : ÆSet ℓ2} → (A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → A → B æ'
+approxedFun ⦃ æ = Approx ⦄ f = f
+approxedFun ⦃ æ = Exact ⦄ f = (λ x → fst (f x)) , λ x → snd (f x)
+
+
+-- approxedFun' : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : ÆSet ℓ1} {B : ÆSet ℓ2} → (Approxed {{æ = æ}} A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → Approxed {{æ = æ'}} A → B æ'
+-- approxedFun' ⦃ æ = Approx ⦄ f = f
+-- approxedFun' ⦃ æ = Exact ⦄ f = (λ x → fst (f {!!})) , λ x → snd (f {!!})
+
 caseÆ : ∀ {{æ : Æ}} {ℓ } {A : Set ℓ} → (æ ≡p Approx → A) → (æ ≡p Exact → A) → A
 caseÆ ⦃ Approx ⦄ fa fe = fa reflp
 caseÆ ⦃ Exact ⦄ fa fe = fe reflp
