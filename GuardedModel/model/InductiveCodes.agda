@@ -7,8 +7,7 @@ open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
 
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
-open import DecPEq hiding (_∎)
+open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
@@ -21,7 +20,6 @@ open import GuardedAlgebra
 import GuardedModality as G
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Equality using (ptoc ; ctop)
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 open import Cubical.Data.Sum

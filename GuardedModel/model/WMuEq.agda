@@ -31,7 +31,7 @@ open import Code
 --TODO: don't make ℓ module param
 module WMuEq {{_ : DataTypes}} {{_ : DataGerms}} {{_ : Æ}} where
 
-open import WMuConversion
+open import WMuConversion public
 
 
 

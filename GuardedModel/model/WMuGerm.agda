@@ -24,7 +24,9 @@ open import Cubical.Data.Sum as Sum
 open import GuardedModality using (later-ext)
 
 open import ApproxExact
-
+open import WMuEq
+open import Code
+open import WMuEq
 
 --TODO: don't make ℓ module param
 module WMuGerm {{_ : DataTypes}} {{_ : DataGerms}} where
@@ -39,7 +41,7 @@ abstract
   isoInv : ∀ {A B : Set} (i : Iso A B) → B → A
   isoInv i = Iso.inv i
 
-  isoFun≡ : ∀ {A B} i x → isoFun i x ≡ Iso.fun i x
+  isoFun≡ : ∀ {A B : Set} (i : Iso A B) x → isoFun i x ≡ Iso.fun i x
   isoFun≡ _ _ = refl
 
 
@@ -50,36 +52,19 @@ abstract
   isoLeftInv {i = i} = Iso.leftInv i _
 
 
--- {-# BUILTIN REWRITE _≡_ #-}
-
--- abstract
---   isoFun : ∀ {A B : Set} (i : Iso A B) → A → B
---   isoFun i = Iso.fun i
---   isoInv : ∀ {A B : Set} (i : Iso A B) → B → A
---   isoInv i = Iso.inv i
-
---   isoFun≡ : ∀ {A B} i x → isoFun i x ≡ Iso.fun i x
---   isoFun≡ _ _ = refl
 
 
---   isoRightInv : ∀ {A B : Set} {x} {i : Iso A B} → isoFun i (isoInv i x) ≡ x
---   isoRightInv {i = i} = Iso.rightInv i _
+{-# REWRITE isoRightInv isoLeftInv #-}
 
---   isoLeftInv : ∀ {A B : Set} {x} {i : Iso A B} → isoInv i (isoFun i x) ≡ x
---   isoLeftInv {i = i} = Iso.leftInv i _
+rwIso : ∀ {A B : Set} → Iso A B → Iso A B
+Iso.fun (rwIso i) = isoFun i
+Iso.inv (rwIso i) = isoInv i
+Iso.rightInv (rwIso i) x = refl
+Iso.leftInv (rwIso i) x = refl
 
-
--- -- {-# REWRITE isoRightInv isoLeftInv #-}
-
--- -- rwIso : ∀ {A B : Set} → Iso A B → Iso A B
--- -- Iso.fun (rwIso i) = isoFun i
--- -- Iso.inv (rwIso i) = isoInv i
--- -- Iso.rightInv (rwIso i) x = refl
--- -- Iso.leftInv (rwIso i) x = refl
-
--- -- open import Code
--- -- -- open import Head
--- -- open import Util
+open import Code
+-- open import Head
+open import Util
 
 
 
@@ -180,7 +165,7 @@ posDataGermFVal : ∀ {{_ : InductiveCodes}} {ℓ} {{æ : Æ}} (cB+ : ℂ ℓ)  
     → □ _ (λ (m , _) → Maybe.rec Unit  (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟘 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt) m) (just tyCtor , cs)
     → ℂDescEl {cB = cB+} (posDataGermCode ℓ cB+ bIso D isCode) (λ _ → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟘 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) tt ) tt (isoFun bIso b+)
 posDataGermFVal cB+ tyCtor bIso GEnd GEndCode b+ b- cs φ = ElEnd tt (tt ⊢ tt ≅ tt)
-posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) resp) φ
+posDataGermFVal {ℓ} {{æ = æ}} cB+ tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) resp) φ
   -- This is all just awful rewriting of equalities and such
     = ElArg (Iso.fun (ApproxedIso (iso+ b+)) a+)
       (subst
@@ -198,8 +183,8 @@ posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GArg (A+ , A-) D) (GArgCode c+ c- i
                       ℂμ tyCtor
                       (λ d →
                          posDataGermCode _ C𝟘 idIso
-                         (DataGerms.preDataGerm _ _ tyCtor (▹⁇ _) d)
-                         (InductiveCodes.dataGermIsCode _ _ tyCtor d))
+                         (preDataGerm ℓ tyCtor (▹⁇ ℓ) d)
+                         (dataGermIsCode ℓ tyCtor d))
                       tt)
                    tt (isoFun theIso (b+ , approx a+))
         recVal =
@@ -217,9 +202,14 @@ posDataGermFVal cB+ tyCtor bIso (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b
   ElHRec (λ x → φ (inl (Rec (inl (isoInv (ApproxedIso (iso+ b+)) x)))) reflp) (posDataGermFVal cB+ tyCtor bIso D isCode b+ b- (FC com (Sum.elim (λ r → resp (inl (Rest r))) λ r → resp (inr r))) (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
 posDataGermFVal cB+ tyCtor bIso (GRec D) (GRecCode isCode) b+ b- (FC com resp) φ
   = ElRec (φ (inl (Rec tt)) reflp) (posDataGermFVal cB+ tyCtor bIso D isCode b+ b- (FC com (Sum.elim (λ r → resp (inl (Rest r))) λ r → resp (inr r))) (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
-posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- cs φ
+posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com resp) φ
   = ElArg
-    {!!}
+    (caseÆ
+      (λ {reflp → λ x → ⁇FromW {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (ApproxedIso ⦃ æ = Approx ⦄ (iso+ b+)) x)))))})
+      (λ {reflp →
+        (λ x → ⁇FromW ⦃ æ = Approx ⦄ {!!})
+        , {!!}}))
+    -- (withApproxA (λ x → ⁇FromW {{æ = Approx}} (approx {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (ApproxedIso (iso+ b+)) {!x!}))))))) {!!})
     {!!}
 
 

@@ -184,6 +184,7 @@ withApproxL' {{Exact}} {T = T} f  = do
   pure {{Exact}} (a , e)
 
 
+
 approxedFun : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : Set ℓ1} {B : ÆSet ℓ2} → (A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → A → B æ'
 approxedFun ⦃ æ = Approx ⦄ f = f
 approxedFun ⦃ æ = Exact ⦄ f = (λ x → fst (f x)) , λ x → snd (f x)
@@ -197,6 +198,10 @@ caseÆ : ∀ {{æ : Æ}} {ℓ } {A : Set ℓ} → (æ ≡p Approx → A) → (æ
 caseÆ ⦃ Approx ⦄ fa fe = fa reflp
 caseÆ ⦃ Exact ⦄ fa fe = fe reflp
 
+
+withApproxA : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → (a : T Approx) → (e : æ ≡p Exact →  T Exact )  → Approxed {{æ}} T
+withApproxA a e = caseÆ (λ {reflp → a}) λ {reflp → a , e reflp}
+
 --Termination and divergence for LÆ
 Terminates : ∀ {ℓ} {A : Set ℓ} → LÆ {{Exact}} A → Set ℓ
 Terminates {A = A} xL = Σ[ x ∈ A ](xL ≡ Now x)
@@ -208,6 +213,11 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 
 ▹ApproxUnique : ∀ {ℓ} {A : Set ℓ} → (x y : ▹_ {{approxExact {{æ = Approx}}}} A) → x ≡p y
 ▹ApproxUnique tt* tt* = reflp
+
+-- unguardType∞ : ∀ {{æ : Æ}} → LÆ Set → Set
+-- unguardType∞ (Now x) =  ▹ x
+-- unguardType∞ {{æ = Exact}} (Later  x) = G.▸ (λ tic → unguardType∞ ⦃ æ = Exact ⦄ (x tic))
+-- unguardType∞ {{æ = Exact}} (Extract x i) = {!x!}
 
 -- pairWithApprox : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → T {{Approx}} → T {{æ}} → Approxed T {{æ}}
 -- pairWithApprox ⦃ æ = Approx ⦄ a e = a

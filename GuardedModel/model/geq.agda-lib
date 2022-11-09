@@ -2,4 +2,4 @@ name: geq-gtt
 depend:
     cubical, abt
 include: .
-flags: --cubical --guarded  --prop -WnoUnsupportedIndexedMatch
+flags: --cubical --guarded  --prop -WnoUnsupportedIndexedMatch --lossy-unification
