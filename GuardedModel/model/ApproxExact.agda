@@ -7,8 +7,8 @@ import GuardedModality as G
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Equality
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
+open import DecPEq
 open import Agda.Primitive
 
 data Æ : Set where

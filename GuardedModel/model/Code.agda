@@ -8,7 +8,6 @@ open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 open import Cubical.Data.Nat.Order
 open import Cubical.HITs.SetQuotients
 open import DecPEq
-open import Cubical.Data.Equality
 open import Cubical.Data.Sigma
 
 open import Cubical.Relation.Nullary

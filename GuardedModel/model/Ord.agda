@@ -4,20 +4,18 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Vec
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
-open import Cubical.Data.Equality
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Inductives
 open import GuardedAlgebra
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Equality using (ptoc)
+open import Cubical.HITs.PropositionalTruncation
 
 open import ApproxExact
 
@@ -150,20 +148,20 @@ ordWF (OLim c f) = acc helper
 
 open import Cubical.HITs.PropositionalTruncation as Prop
 
-ordWFAcc : ∀ x → Acc _<o_ x → Acc (λ x y → ∥ x <o y ∥) x
+ordWFAcc : ∀ x → Acc _<o_ x → Acc (λ x y → ∥ x <o y ∥₁) x
 ordWFAcc x (acc f) = acc λ y → Prop.elim (λ _ → isPropAcc _) λ lt' → ordWFAcc y (f y lt')
 
-ordWFProp : WellFounded (λ x y → ∥ x <o y ∥)
+ordWFProp : WellFounded (λ x y → ∥ x <o y ∥₁)
 ordWFProp x = ordWFAcc x (ordWF x)
 
-ordSquash : ∀ {x y} (p1 p2 : ∥ x <o y ∥) → p1 ≡ p2
-ordSquash = Prop.squash
+ordSquash : ∀ {x y} (p1 p2 : ∥ x <o y ∥₁) → p1 ≡ p2
+ordSquash = Prop.squash₁
 
 -- Lexicographic ordering. We use c and v because this is useful when recursing on the size of a (c)ode
 -- and the size of a value of that (c)ode's interpetation
 data _<oPair_ : (Ord × Ord) → (Ord × Ord) → Set where
-  <oPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <o o2c ∥ → (o1c , o1v) <oPair (o2c , o2v)
-  <oPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <o o2v ∥ → (o1c , o1v) <oPair (o2c , o2v)
+  <oPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <o o2c ∥₁ → (o1c , o1v) <oPair (o2c , o2v)
+  <oPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <o o2v ∥₁ → (o1c , o1v) <oPair (o2c , o2v)
 
 
 -- Similar to the above, but there are two codes and two values being compared
@@ -172,23 +170,23 @@ data _<oQuad_ : ((Ord × Ord) × (Ord × Ord)) → ((Ord × Ord) × (Ord × Ord)
   <oQuadR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → o1v <oPair o2v → (o1c , o1v) <oQuad (o2c , o2v)
 
 ≤oo-reflL : ∀ {o o1' o2'} → (o , o1') <oPair (O↑ o , o2')
-≤oo-reflL = <oPairL ∣ (≤o-refl _) ∣
+≤oo-reflL = <oPairL ∣ (≤o-refl _) ∣₁
 
 
 ≤oo-reflR : ∀ {o o'} → (o , o') <oPair (o , O↑ o')
-≤oo-reflR = <oPairR reflp ∣ (≤o-refl _) ∣
+≤oo-reflR = <oPairR reflp ∣ (≤o-refl _) ∣₁
 
 ≤oo-sucL : ∀ {o1 o2 o1' o2'} → o1 ≤o o2 → (o1 , o1') <oPair (O↑ o2 , o2')
-≤oo-sucL lt = <oPairL ∣ (≤o-sucMono lt) ∣
+≤oo-sucL lt = <oPairL ∣ (≤o-sucMono lt) ∣₁
 
 ≤oo-sucR : ∀ {o o1' o2'} → o1' ≤o o2' → (o , o1') <oPair (o , O↑ o2')
-≤oo-sucR lt = <oPairR reflp ∣ (≤o-sucMono lt) ∣
+≤oo-sucR lt = <oPairR reflp ∣ (≤o-sucMono lt) ∣₁
 
 -- Adapted from https://agda.github.io/agda-stdlib/Data.Product.Relation.Binary.Lex.Strict.html#6731
 oPairWF : WellFounded _<oPair_
 oPairWF (x1 , x2) = acc (helper (ordWFProp x1) (ordWFProp x2))
   where
-    helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <o v₁ ∥) x1 → Acc (λ v v₁ → ∥ v <o v₁ ∥) x2 → WFRec _<oPair_ (Acc _<oPair_) (x1 , x2)
+    helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <o v₁ ∥₁) x1 → Acc (λ v v₁ → ∥ v <o v₁ ∥₁) x2 → WFRec _<oPair_ (Acc _<oPair_) (x1 , x2)
     helper (acc rec₁) acc₂ (y1 , y2) (<oPairL lt) = acc (helper (rec₁ y1 lt ) (ordWFProp y2))
     helper acc₁ (acc rec₂) (y1 , y2) (<oPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
 
@@ -321,7 +319,7 @@ abstract
   omax-oneR : ∀ {o} → omax (O↑ o) O1 ≤o O↑ o
   omax-oneR {OZ} = ≤o-sucMono (≤o-refl _)
   omax-oneR {O↑ o} = ≤o-sucMono (≤o-refl _)
-  omax-oneR {OLim c f} rewrite ctop (omax-Z (OLim c f))= ≤o-refl _
+  omax-oneR {OLim c f} = ≤o-sucMono (substPath (λ x → x ≤o OLim c f) (sym (omax-Z (OLim c f))) (≤o-refl (OLim c f))) -- rewrite ctop (omax-Z (OLim c f))= ≤o-refl _
 
 
   omax-limR : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} (f : ApproxedEl {{æ = æ}} c  → Ord) o → omax o (OLim c f) ≤o OLim c (λ k → omax o (f k))
@@ -522,7 +520,7 @@ abstract
   omax*-mono {ℕ.suc n} {o1 ∷ os1} {o2 ∷ os2} (lt , rest) = omax-mono {o1 = o1} {o1' = o2} lt (omax*-mono {os1 = os1} {os2 = os2} rest)
 
 orec : ∀ {ℓ} (P : Ord → Set ℓ)
-  → ((x : Ord) → (rec : (y : Ord) → (_ : ∥ y <o x ∥) → P y ) → P x)
+  → ((x : Ord) → (rec : (y : Ord) → (_ : ∥ y <o x ∥₁) → P y ) → P x)
   → ∀ {o} → P o
 orec P f = induction (λ x rec → f x rec) _
   where open WFI (ordWFProp)

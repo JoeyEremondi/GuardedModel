@@ -3,18 +3,18 @@ open import Cubical.Data.Nat
 import Cubical.Data.FinData as F
 open import Cubical.Data.FinData using (Fin ; discreteFin)
 open import Cubical.Data.Unit
-open import Cubical.Data.Bool renaming (Bool to 𝟚)
+open import Cubical.Data.Bool
 open import Cubical.Data.Sigma hiding (_≡_)
-open import Cubical.Data.Equality renaming (_≡⟨_⟩_ to _≡p⟨_⟩_  ;  _∎ to _∎p ; _∙_ to pTrans ; sym to pSym ; ap to pCong ; funExt to pFunExt)
-open import Agda.Builtin.Equality renaming (_≡_ to _≡p_ ;  refl to reflp )
 import Cubical.Data.Equality as PEq
 open import Cubical.Relation.Nullary
 
-open import Cubical.Foundations.Prelude renaming (refl to reflc ; _≡_ to _≡c_) hiding (_∎)
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Isomorphism
 module DecPEq where
 
+open import Cubical.Foundations.Prelude renaming (refl to reflc ; _≡_ to _≡c_) public
+open import Agda.Builtin.Equality renaming (_≡_ to _≡p_ ;  refl to reflp ) public
+open import Cubical.Data.Equality hiding (_≡_ ; refl) renaming (_≡⟨_⟩_ to _≡p⟨_⟩_  ;  _∎ to _∎p ; _∙_ to pTrans ; sym to pSym ; ap to pCong ; funExt to pFunExt ; transport to pTransport ; isContr to pIsContr ; isProp to pIsProp ; isPropIsContr to pIsProPContr) public
 
 
 pCong4 : ∀ {ℓ} {A B C D E : Set ℓ} {a1 a2 : A} {b1 b2 : B} {c1 c2 : C} {d1 d2 : D}
@@ -42,7 +42,7 @@ decNat _ _ = pDec (discreteℕ _ _)
 decFin : ∀ {n : ℕ} (x y : Fin n) → Dec (x ≡p y)
 decFin _ _ = pDec (discreteFin _ _)
 
-decBool : ∀ (b1 b2 : 𝟚) → Dec (b1 ≡p b2)
+decBool : ∀ (b1 b2 : Bool) → Dec (b1 ≡p b2)
 decBool false false = yes reflp
 decBool false true = no (λ ())
 decBool true false = no (λ ())

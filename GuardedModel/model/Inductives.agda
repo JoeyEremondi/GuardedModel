@@ -15,7 +15,6 @@ open import Cubical.Data.FinData
 open import Cubical.Data.Bool renaming (Bool to 𝟚)
 
 open import Cubical.Data.Sum
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence using (ua)
