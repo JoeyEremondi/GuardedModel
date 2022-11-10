@@ -87,24 +87,24 @@ inext (C+ cA cB) {inr x} c resp = inr (inext cB c resp)
 -- where false index denotes ⁇ occurrences and true index denotes self reference,
 -- produce one giant container where Nothing denotes ⁇ and Just tyCtor denote reference to the nth data type
 -- We just ignore the command for the false case, since we are only encoding occurrences of ⁇, not its definition
-ContainerCtors : ∀ {n}
-  → (Cfor : Fin n → Container Bool)
-  → Container (Maybe (Fin n))
-Command (ContainerCtors Cfor) nothing = 𝟘
-Command (ContainerCtors Cfor) (just tyCtor) = Command (Cfor tyCtor) true
--- Again, we don't specify what ⁇ looks like, just where it occurs
-Response (ContainerCtors {n = n} Cfor) {nothing} ()
-Response (ContainerCtors Cfor ) {just tyCtor} com = Response (Cfor tyCtor ) com
-inext (ContainerCtors Cfor) {nothing} ()
-inext (ContainerCtors Cfor) {just tyCtor} com resp =
-  if inext (Cfor tyCtor) com resp
-  then just tyCtor
-  else nothing
+-- ContainerCtors : ∀ {n}
+--   → (Cfor : Fin n → Container (Æ × Bool))
+--   → Container (Æ × Maybe (Fin n))
+-- Command (ContainerCtors Cfor) (æ , nothing) = 𝟘
+-- Command (ContainerCtors Cfor) (æ , just tyCtor) = Command (Cfor tyCtor) (æ , true)
+-- -- Again, we don't specify what ⁇ looks like, just where it occurs
+-- Response (ContainerCtors {n = n} Cfor) {æ , nothing} ()
+-- Response (ContainerCtors Cfor ) {æ , just tyCtor} com = Response (Cfor tyCtor ) com
+-- inext (ContainerCtors Cfor) {æ , nothing} ()
+-- inext (ContainerCtors Cfor) {æ , just tyCtor} com resp =
+--   if snd (inext (Cfor tyCtor) com resp)
+--   then  æ , just tyCtor
+--   else æ , nothing
 -- The semantics ("extension") of an indexed container.
 --
 
 
-record FContainer {I} (C : Container I) (X : I → Set) (i : I) : Set where
+record ⟦_⟧F {I} (C : Container I) (X : I → Set) (i : I) : Set where
   constructor FC
   field
     command : Command C i
@@ -118,11 +118,12 @@ record FContainer {I} (C : Container I) (X : I → Set) (i : I) : Set where
     --   → LÆ (X j)
     -- responseUnk : ResponseUnk C command → Unk
 
-
-
+-- Functoral action aka good old map
+FMap : ∀ {I} {C : Container I} {X Y : I → Set} {i : I} → (∀ {i} → X i → Y i) → ⟦ C ⟧F X i → ⟦ C ⟧F Y i
+FMap f (FC com resp) = FC com (λ r → f (resp r))
 
 -- TODO : can't implement the full traversals until we have meet for indices
-□ : ∀ {ℓ I} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (FContainer C X)) → Set ℓ
+□ : ∀ {ℓ I} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (⟦ C ⟧F X)) → Set ℓ
 □ C P (i , (FC c k)) = ∀ r → P (inext C c r , k r)
 
 --   -- Any.
@@ -139,12 +140,12 @@ record FContainer {I} (C : Container I) (X : I → Set) (i : I) : Set where
 -- -- The family of gradual indexed W-types.
 
 data W̃ {I : Set} (C : Container I) (i : I)  :  Set where
-  Wsup : FContainer C  (W̃ C) i → W̃ C i
+  Wsup : ⟦ C ⟧F  (W̃ C) i → W̃ C i
   W℧ W⁇ : W̃ C i
   -- Projections.
 
 W1 : ∀ {I : Set} (C : Container I) (i : I) → Set
-W1 C = FContainer C (W̃ C)
+W1 C = ⟦ C ⟧F (W̃ C)
 
 -- head : ∀ {I Unk i} {C : Container I} →  W C Unk i → Command C i
 -- head (sup (FC c now later unk)) = c
@@ -152,10 +153,10 @@ W1 C = FContainer C (W̃ C)
 -- tail : ∀ {I Unk} {C : Container I} {i} (w : W C Unk i) (r : Response C (head w)) → W C Unk (inext C (head w) r)
 -- tail {I = I} (sup (_ , _ , k)) r = k r {!!} {!!}
 
--- --   -- Induction, (primitive) recursion and iteration.
+-- --   -- Induction,  (primitive) recursion, and mapping
 
 wInd : ∀ {ℓ} {I } {C : Container I} (P : Σ I (W̃ C) → Set ℓ) →
-        (∀ {i} (cs : FContainer C (W̃ C) i) → □ C P (i , cs) → P (i , Wsup cs)) →
+        (∀ {i} (cs : ⟦ C ⟧F (W̃ C) i) → □ C P (i , cs) → P (i , Wsup cs)) →
         (∀ {i} → P (i , W℧ {i = i})) →
         (∀ {i} → P (i , W⁇ {i = i})) →
         ∀ {i} (w : W̃ C i) → P (i , w)
@@ -163,11 +164,17 @@ wInd P φ base℧ base⁇ (Wsup (FC c k)) = φ (FC c k) (λ r → wInd P φ base
 wInd P φ base℧ base⁇ W℧ = base℧
 wInd P φ base℧ base⁇ W⁇ = base⁇
 
-wRec : ∀ {I } {C : Container I} {X : I → Set} → (∀ {i} → FContainer C (λ i → W̃ C i × X i) i → X i) → (∀ i → X i × X i) → ∀ {i} → W̃ C i → X i
+wRec : ∀ {I } {C : Container I} {X : I → Set} → (∀ {i} → ⟦ C ⟧F (λ i → W̃ C i × X i) i → X i) → (∀ i → X i × X i) → ∀ {i} → W̃ C i → X i
 wRec φ base (Wsup (FC c k))= φ (FC c (λ r → (k r , wRec φ base (k r))))
 wRec φ base W℧ = fst (base _)
 wRec φ base W⁇ = snd (base _)
 
+-- Apply a function at each node in a well-founded tree, bottom-up
+-- Basically lifts FMap over the fixed point
+everywhere : ∀ {I } {C : Container I} → (∀ {i} → W̃ C i → W̃ C i) → ∀ {i} → W̃ C i → W̃ C i
+everywhere f (Wsup (FC com resp)) = Wsup (FC com (λ r → f (everywhere f (resp r))))
+everywhere f W℧ = f W℧
+everywhere f W⁇ = f W⁇
 
 
 
@@ -261,23 +268,24 @@ GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , app
 GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com
 GermResponseUnk (GRec D) b+ b- com = GermResponseUnk D b+ b- com
 
-interpGermCtor' : ∀ {{æ : Æ}} {A} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container (Maybe A)
+interpGermCtor' : ∀ {A} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → B- b → Container (Æ × Maybe A)
 interpGermCtor' D b+ b- =
   -- Command encodes any non-recursive parts of datatype
   -- We're only describing uses of ⁇, not defining it, so we don't have commands for when i is false
-  (λ i → caseMaybe 𝟘 (GermCommand D b+ b-) i)
+  (λ (æ , i) → caseMaybe 𝟘 (GermCommand {{æ = æ}} D b+ b-) i)
   -- The response is either a GermResponse or a GermResponseUnk
   -- Since the functor looks like Σ[ c ∈ Command ]((r : Response com) -> X (inext c r)), the sum is saying
   -- that we have two fields, one with type GermResponse -> X i and one with type GermResponseUnk → X i
   -- The function below encodes that in the first case, X should have index true (self reference)
   -- and in the second case, it should have index False (⁇ reference)
-  ◃ (λ {i} com → GermResponse D b+ b- (maybeIrrefute {m = i} com) ⊎ GermResponseUnk D b+ b- (maybeIrrefute {m = i} com) )
-  / λ {mTyCtor} com res → Sum.rec
-      (λ _ → just (maybeIrrefuteUnwrap {A = GermCommand D b+ b- } com))
+  ◃ (λ {(æ , i)} com → GermResponse {{æ = æ}} D b+ b- (maybeIrrefute {m = i} com) ⊎ GermResponseUnk {{æ = æ}} D b+ b- (maybeIrrefute {m = i} com) )
+  / λ {(æ , mTyCtor)} com res →
+    æ , Sum.rec
+      (λ _ → just (maybeIrrefuteUnwrap {A = GermCommand {{æ = æ}} D b+ b- } com))
       (λ _ → nothing)
       res
 
-interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Maybe A)
+interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor 𝟙 (λ _ → 𝟙) sig → Container (Æ × Maybe A)
 interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
 -- -- data IndSig : Set where
 -- --   SigE SigA SigR SigHR SigU : IndSig
@@ -359,20 +367,20 @@ open import HeadDefs
   → (▹Self : ▹ Set)
   → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (λ _ → 𝟙) (sigs tyCtor ctor))
   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
-  → Container (Maybe (Fin numTypes))
+  → Container (Æ × Maybe (Fin numTypes))
 ⁇Container ℂ-1 El-1 numTypes numCtors sigs ▹Self DescFor =
   let
-    comT : Maybe _ → Set
-    comT =
+    comT : (Æ × Maybe _ ) → Set
+    comT = λ (æ , i) →
       -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
       Maybe.rec
         (Σ[ h ∈ TyHead numTypes ] (⁇Args ℂ-1 El-1 numTypes h))
-        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt tt))
+        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt tt)) i
 -- -- Functor has form (r : Response c) -> X (inext c r )
 -- so the response field produces the thing on the LHS of the arrow
 -- No fields for ⁇⁇ or ⁇℧
     respT : ∀ mTyCtor → comT mTyCtor → Type
-    respT =
+    respT = λ (æ , i) →
       Maybe-elim (λ m → Maybe.rec _ _ m → Type)
        -- Unk cases
        (λ (h , args) → ⁇Resp ℂ-1 El-1 numTypes ▹Self h args)
@@ -380,15 +388,15 @@ open import HeadDefs
        -- In DataGerm mode, response is either the response for Self or the response for Unk
        -- i.e. encoding that we have both references to Self and ⁇
        (λ tyCtor (ctor , com)
-         → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com )
+         → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com ) i
     -- All references in ⁇ are to ⁇, except for ⁇μ case
     ix : ∀ i → (com : comT i ) → (resp : respT i com) → Maybe (Fin numTypes)
-    ix = Maybe-elim (λ m → (c : comT m) → respT m c → Maybe (Fin numTypes))
+    ix = λ (æ , i) → (Maybe-elim (λ m → (c : comT (æ , m)) → respT (æ , m) c → Maybe (Fin numTypes))
       -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
       (λ (h , _) resp → recForHead h)
       -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
-      (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
-   in comT ◃ (λ {i} → respT i) / λ {i} → ix i
+      (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp) i)
+   in comT ◃ (λ {i} → respT i) / λ {i} com res → fst i , ix i com res
         where
           recForHead : TyHead numTypes → Maybe _
           recForHead (HCtor tyCtor) = just tyCtor
@@ -404,24 +412,24 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- We ensure positivity by writing the datatype using a description
     preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
-  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
+  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Æ × Maybe CName)
   preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
-  preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
+  preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Æ × Maybe CName → Set
   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
-  FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
-  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
-  Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
-  Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+  FPreGerm : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
+  FPreGerm {{æ = æ}} ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (æ , just tyCtor)
+  Pre⁇ : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
+  Pre⁇ {{æ = æ}} ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (æ , nothing)
 
 
 open DataGerms {{...}} public
 
 
-
+-- Helpful traversal to get recursion started on an inductive type
 wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
-        (∀ {i} d (cs : FContainer (C d) (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
+        (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
         P →
         P →
         ∀ {i} (w : W̃ (Arg C) i) → P

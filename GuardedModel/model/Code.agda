@@ -13,6 +13,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Relation.Nullary
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 open import Inductives
 open import Util
@@ -80,6 +81,51 @@ record CodeModule
     -- ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
 
+
+    ---------------------------------------------------------------------
+    ----------- The Unknown Type ----------------------------------------
+    -- The Functor describing the unknown type ⁇
+    -- We write it as a HIT to make sure all of the error values are equal
+  data F⁇ {{ æ : Æ }} (Self : A.▹ Type) :  Set where
+      ⁇℧ : F⁇ Self
+      ⁇⁇ : F⁇ Self
+      ⁇𝟙 : F⁇ Self
+      ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
+      ⁇Cumul :  {{ inst : 0< ℓ }} → (c : ℂ-1) → El-1 c → F⁇ Self
+      -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
+      -- So we need to guard the use of ⁇ in the domain
+      ⁇Π : (A.▸ Self →  (F⁇ Self )) → F⁇ Self
+      -- The germ of pairs is a pair of ⁇s
+      ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
+      -- The germ of an equality type is a witness of equality between two ⁇s
+      -- TODO: is there a way to make the witness approx?
+      ⁇≡ : _≅_ {A = F⁇ Self} ⁇⁇ ⁇⁇ → F⁇ Self
+      -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
+      -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
+      -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
+      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ ℂ-1 El-1 Self tyCtor) →  F⁇ Self
+      -- ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
+    -- The unknown type, i.e. the fixed-point of F⁇
+  ⁇ : {{æ : Æ}} → Set
+  -- ⁇ Is the guarded fixed point of F⁇
+  ⁇ = A.fix F⁇
+
+  -- Approximating/embedding for the unknown type
+  toApprox⁇ : ⁇ {{æ = Exact}} → ⁇ {{æ = Approx}}
+  toExact⁇ : ⁇ {{æ = Approx}} → ⁇ {{æ = Exact}}
+
+  toApprox⁇ ⁇℧ = ⁇℧
+  toApprox⁇ ⁇⁇ = ⁇⁇
+  toApprox⁇ ⁇𝟙 = ⁇𝟙
+  toApprox⁇ (⁇Type x) = ⁇Type x
+  toApprox⁇ (⁇Cumul c x) = ⁇Cumul c (toApprox-1 c x)
+  -- This is where we really need to approx: we have a guarded function,
+  -- so we take its upper limit by giving it ⁇ as an argument
+  toApprox⁇ (⁇Π f) = ⁇Π (λ _ → toApprox⁇ (f (transport⁻ G.hollowEq (G.next (⁇⁇ {{æ = Exact}})))))
+  toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
+  toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
+  toApprox⁇ (⁇μ tyCtor x) = {!!}
+
   interleaved mutual
 
     ------------------ Declarations ------------------------------
@@ -108,11 +154,6 @@ record CodeModule
     -- Interpretation of codes when they're on the left of an arrow,
     -- used to make the germs of datatypes
     -- ▹El : ℂ → Set
-    -- The Functor describing the unknown type ⁇
-    -- We write it as a HIT to make sure all of the error values are equal
-    data F⁇ {{ _ : Æ }} (Self : A.▹ Type) :  Set
-    -- The unknown type, i.e. the fixed-point of F⁇
-    ⁇ : {{_ : Æ}} → Set
     -- Code-based Descriptions of inductive data types
     data ℂDesc (I : ℂ) : ℂ → IndSig → Set
     -- Interpretation of description codes into W-types
@@ -136,7 +177,6 @@ record CodeModule
     --- Unknown type
     data _ where
       C⁇ : ℂ
-      ⁇⁇ : F⁇ Self
     -- The unknown code denotes the unknown type
     El C⁇ = ⁇
     toApprox C⁇ x = {!!}
@@ -148,7 +188,6 @@ record CodeModule
     --- Error type
     data _ where
       C℧ : ℂ
-      ⁇℧ : F⁇ Self
     -- Failure is the only value of the failure type
     -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
     -- But the failure type is not
@@ -171,7 +210,6 @@ record CodeModule
     --- Gradual unit type
     data _ where
       C𝟙 : ℂ
-      ⁇𝟙 : F⁇ Self
     El C𝟙 = 𝟚
     toApprox C𝟙 x = x
     toExact C𝟙 x = x
@@ -182,7 +220,6 @@ record CodeModule
     -- These are just codes from the level below
     data _ where
       CType : {{ inst : 0< ℓ }} → ℂ
-      ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
     El CType = ℂ-1
     toApprox CType x = {!!}
     toExact CType x = {!!}
@@ -191,7 +228,6 @@ record CodeModule
     --For lower universes, we can lift codes to this universe without needing guardedness
     data _ where
       CCumul :  {{ inst : 0< ℓ }} → ℂ-1 → ℂ
-      ⁇Cumul :  {{ inst : 0< ℓ }} → (c : ℂ-1) → El-1 c → F⁇ Self
       -- ⁇Cumul : ⁇-1 → F⁇ Self
     El (CCumul c) = El-1 c
     toApprox (CCumul c) x = {!!}
@@ -217,9 +253,6 @@ record CodeModule
     --- For approx-norm, L A = A
     data _ where
       CΠ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
-      -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
-      -- So we need to guard the use of ⁇ in the domain
-      ⁇Π : (A.▸ Self →  (F⁇ Self )) → F⁇ Self
 
 
     El (CΠ dom cod) = (x : El dom) → (El (cod  (approx x)))
@@ -245,8 +278,6 @@ record CodeModule
     --- Gradual pairs
     data _ where
       CΣ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
-      -- The germ of pairs is a pair of ⁇s
-      ⁇Σ : (F⁇ Self  × F⁇ Self ) → F⁇ Self
       --TODO: is it only error if BOTH are error?
     El (CΣ dom cod) = Σ[ x ∈ El dom ]( El (cod (approx x)) )
     toApprox (CΣ dom cod) (x , y) = toApprox dom x , toApprox _ y
@@ -277,8 +308,6 @@ record CodeModule
     --- Gradual propositional equality i.e. witnesses of consistency
     data _ where
       C≡ : (c :  ℂ) → (x y : ApproxEl c) → ℂ
-      -- The germ of an equality type is a witness of equality between two ⁇s
-      ⁇≡ : _≅_ {A = F⁇ Self} ⁇⁇ ⁇⁇ → F⁇ Self
     El (C≡ c x y) = x ≅ y
     toApprox (C≡ c x y) pf = pf
     toExact (C≡ c x y) pf = pf
@@ -295,11 +324,6 @@ record CodeModule
         → (cI : ℂ)
         → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
         → ApproxEl cI → ℂ
-      -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
-      -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
-      -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
-      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ ℂ-1 El-1 Self tyCtor) →  F⁇ Self
-      -- ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
     El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
     toApprox (Cμ tyCtor cI D i) x = {!!}
     toExact (Cμ tyCtor cI D i) x = {!!}
@@ -319,8 +343,6 @@ record CodeModule
 
 --     ----------------------------------------------------------------------
 
-    -- ⁇ Is the guarded fixed point of F⁇
-    ⁇ = A.fix F⁇
 
 
     ----------------------------------------------------------------------
