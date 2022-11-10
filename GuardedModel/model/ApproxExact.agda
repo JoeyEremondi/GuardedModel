@@ -148,46 +148,46 @@ fromL (Now a) = a
 
 -- If we're in approximate mode, this is just an approximate version of a T
 -- In exact mode, it's a pair with an approximate and exact version of a T
-Approxed : ∀ {ℓ} {{æ : Æ}} (T : ÆSet ℓ) → Set ℓ
-Approxed ⦃ Approx ⦄ T = T Approx
-Approxed ⦃ Exact ⦄ T = T Approx × T Exact
+-- Approxed : ∀ {ℓ} {{æ : Æ}} (T : ÆSet ℓ) → Set ℓ
+-- Approxed ⦃ Approx ⦄ T = T Approx
+-- Approxed ⦃ Exact ⦄ T = T Approx × T Exact
 --Get the approximate version stored in an Approxed value
-approx : ∀ {ℓ} {T : ÆSet ℓ} → {{æ : Æ}} → Approxed {{æ}} T → T Approx
-approx ⦃ æ = Approx ⦄ x = x
-approx ⦃ æ = Exact ⦄ x = fst x
+-- approx : ∀ {ℓ} {T : ÆSet ℓ} → {{æ : Æ}} → Approxed {{æ}} T → T Approx
+-- approx ⦃ æ = Approx ⦄ x = x
+-- approx ⦃ æ = Exact ⦄ x = fst x
 
-exact : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → Approxed {{æ}} T → T æ
-exact ⦃ æ = Approx ⦄ x = x
-exact ⦃ æ = Exact ⦄ x = snd x
+-- exact : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → Approxed {{æ}} T → T æ
+-- exact ⦃ æ = Approx ⦄ x = x
+-- exact ⦃ æ = Exact ⦄ x = snd x
 
-withApprox : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) →  T æ )  → Approxed {{æRet}} T
-withApprox {{Approx}} f   = f Approx
-withApprox {{Exact}} f  = f Approx  , f Exact
-
-
-withApprox2 : ∀ {ℓ} {{æRet : Æ}} {T1 T2 : ÆSet ℓ} → (f : ∀ (æ : Æ) → T1 æ →  T2 æ )  → Approxed {{æRet}} T1 → Approxed {{æRet}} T2
-withApprox2 {{Approx}} f x   = f Approx x
-withApprox2 {{Exact}} f x = f Approx (fst x) , f Exact (snd x)
-
-withApproxL : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
-withApproxL {{Approx}} f   = f Approx
-withApproxL {{Exact}} f  = do
-  a ← f Approx
-  e ← f Exact
-  pure {{Exact}} (a , e)
-
-withApproxL' : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) (conv : Approxed {{æRet}} T  → Approxed {{æ}} T ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
-withApproxL' {{Approx}} f   = f Approx λ x → x
-withApproxL' {{Exact}} {T = T} f  = do
-  a ← f Approx (approx {T = T} {{Exact}} )
-  e ← f Exact λ x → x
-  pure {{Exact}} (a , e)
+-- withApprox : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) →  T æ )  → Approxed {{æRet}} T
+-- withApprox {{Approx}} f   = f Approx
+-- withApprox {{Exact}} f  = f Approx  , f Exact
 
 
+-- withApprox2 : ∀ {ℓ} {{æRet : Æ}} {T1 T2 : ÆSet ℓ} → (f : ∀ (æ : Æ) → T1 æ →  T2 æ )  → Approxed {{æRet}} T1 → Approxed {{æRet}} T2
+-- withApprox2 {{Approx}} f x   = f Approx x
+-- withApprox2 {{Exact}} f x = f Approx (fst x) , f Exact (snd x)
 
-approxedFun : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : Set ℓ1} {B : ÆSet ℓ2} → (A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → A → B æ'
-approxedFun ⦃ æ = Approx ⦄ f = f
-approxedFun ⦃ æ = Exact ⦄ f = (λ x → fst (f x)) , λ x → snd (f x)
+-- withApproxL : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
+-- withApproxL {{Approx}} f   = f Approx
+-- withApproxL {{Exact}} f  = do
+--   a ← f Approx
+--   e ← f Exact
+--   pure {{Exact}} (a , e)
+
+-- withApproxL' : ∀ {ℓ} {{æRet : Æ}} {T : ÆSet ℓ} → (f : ∀ (æ : Æ) (conv : Approxed {{æRet}} T  → Approxed {{æ}} T ) → LÆ {{æ}} (T æ) )  → LÆ {{æRet}} (Approxed {{æRet}} T )
+-- withApproxL' {{Approx}} f   = f Approx λ x → x
+-- withApproxL' {{Exact}} {T = T} f  = do
+--   a ← f Approx (approx {T = T} {{Exact}} )
+--   e ← f Exact λ x → x
+--   pure {{Exact}} (a , e)
+
+
+
+-- approxedFun : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : Set ℓ1} {B : ÆSet ℓ2} → (A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → A → B æ'
+-- approxedFun ⦃ æ = Approx ⦄ f = f
+-- approxedFun ⦃ æ = Exact ⦄ f = (λ x → fst (f x)) , λ x → snd (f x)
 
 
 -- approxedFun' : ∀ {{æ : Æ}} {ℓ1 ℓ2} {A : ÆSet ℓ1} {B : ÆSet ℓ2} → (Approxed {{æ = æ}} A → Approxed {{æ = æ}} B) → Approxed {{æ = æ}} λ æ' → Approxed {{æ = æ'}} A → B æ'
@@ -199,8 +199,8 @@ caseÆ ⦃ Approx ⦄ fa fe = fa reflp
 caseÆ ⦃ Exact ⦄ fa fe = fe reflp
 
 
-withApproxA : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → (a : T Approx) → (e : æ ≡p Exact →  T Exact )  → Approxed {{æ}} T
-withApproxA a e = caseÆ (λ {reflp → a}) λ {reflp → a , e reflp}
+-- withApproxA : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → (a : T Approx) → (e : æ ≡p Exact →  T Exact )  → Approxed {{æ}} T
+-- withApproxA a e = caseÆ (λ {reflp → a}) λ {reflp → a , e reflp}
 
 --Termination and divergence for LÆ
 Terminates : ∀ {ℓ} {A : Set ℓ} → LÆ {{Exact}} A → Set ℓ

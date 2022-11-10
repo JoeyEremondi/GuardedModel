@@ -22,6 +22,7 @@ open import DecPEq
 
 -- open import Cubical.Data.Bool
 open import GuardedAlgebra
+import GuardedModality as G
 
 open import ApproxExact
 module Inductives where
@@ -206,7 +207,7 @@ data IndSig : Set where
   SigA SigR SigHR : IndSig → IndSig
 
 +-Set : (B+ : Set) → (B+ → Set) → Set1
-+-Set B+ B- = Σ[ A+ ∈ (B+ → ÆSet0) ] ((b : B+) → A+ b Approx → B- b → ÆSet0)
++-Set B+ B- = Σ[ A+ ∈ (B+ → Set0) ] ((b : B+) → A+ b → B- b → Set0)
 
 ⁇Ref SelfRef : Bool
 ⁇Ref = false
@@ -232,26 +233,26 @@ Maybe-elim B n j (just a) = j a
 data GermCtor : (B : Set) → (B → Set) → IndSig → Set1 where
   GEnd : ∀ { B+ B- } → GermCtor B+ B- SigE
   -- Future arguments can only depend on the strictly positive part of the germ
-  GArg : ∀ {B+ B- sig} → ((A+ , A-) : +-Set B+ B-) → (D : GermCtor (Σ[ b+ ∈ B+ ](A+ b+ Approx)) (λ (b+ , a+) → Σ[ b- ∈ (B- b+) ](A- b+ a+ b- Approx )) sig) → GermCtor B+ B- (SigA sig)
+  GArg : ∀ {B+ B- sig} → ((A+ , A-) : +-Set B+ B-) → (D : GermCtor (Σ[ b+ ∈ B+ ](A+ b+ )) (λ (b+ , a+) → Σ[ b- ∈ (B- b+) ](A- b+ a+ b- )) sig) → GermCtor B+ B- (SigA sig)
   GHRec : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigHR sig)
   GRec : ∀ {B+ B- sig} → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigR sig)
   -- -- Since we don't have Unk in non-germ descriptions specially, it doesn't affect the signature
   -- -- TODO: is this right?
   GUnk : ∀ {B+ B- sig} → (A : +-Set B+ B-) → (D : GermCtor B+ B- sig) → GermCtor B+ B- (SigA sig)
 
-GermCommand : ∀ {{æ : Æ}} {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
+GermCommand : ∀  {B+ B- sig} → GermCtor B+ B- sig → (b : B+) → (B- b) → Set
 GermCommand GEnd b+ b- = Unit
-GermCommand {{æ = æ}} (GArg (A+ , A-) D) b+ b- = Σ[ a+- ∈  (Σ[ a+ ∈ Approxed {{æ}} (A+ b+) ] Approxed {{æ}} (A- b+ (approx a+) b-)) ] GermCommand D (b+ , approx (fst a+-)) (b- , approx (snd a+-))
+GermCommand (GArg (A+ , A-) D) b+ b- = Σ[ a+- ∈  (Σ[ a+ ∈ (A+ b+) ] (A- b+ a+ b-)) ] GermCommand D (b+ , (fst a+-)) (b- , (snd a+-))
 GermCommand (GHRec (A+ , A-) D) b+ b- = GermCommand D b+ b-
 GermCommand (GRec D) b+ b- = GermCommand D b+ b-
 GermCommand (GUnk (A+ , A-) D) b+ b- = GermCommand D b+ b-
 
 GermResponse : ∀ {{æ : Æ}} {B+ B- sig} → (D : GermCtor B+ B- sig) → (b+ : B+) → (b- : B- b+) → GermCommand D b+ b- → Set
 GermResponse {B+}{ B- } GEnd b+ b- com = 𝟘
-GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , approx a+) (b- , approx a-) com
+GermResponse {B+}{ B- } (GArg A D) b+ b- ((a+ , a-) , com) = GermResponse D (b+ , a+) (b- , a-) com
 GermResponse {B+ }{B- } (GHRec (A+ , A-) D) b+ b- com =
   -- We have two functions, one for just the positive part, and one for the negative part
-  Rec⇒  (Approxed (A+ b+) ⊎ (Σ[ a+ ∈ Approxed (A+ b+) ] Approxed (A- b+ (approx a+) b-)))
+  Rec⇒  ( (A+ b+) ⊎ (Σ[ a+ ∈ (A+ b+) ]  (A- b+  a+ b-)))
   Rest⇒  (GermResponse D b+ b- com) --TODO: need response to be parameterized by A+ and A- ?
 GermResponse {B+ }{B- } (GRec D) b+ b- com = Rec⇒ 𝟙   Rest⇒ GermResponse D b+ b- com
 GermResponse {B+ }{B- } (GUnk A D) b+ b- com = GermResponse D b+ b- com
@@ -261,10 +262,10 @@ GermResponseUnk : ∀ {{æ : Æ}} {B+ B- sig} → (D : GermCtor B+ B- sig) → (
 -- Like before, we separate the positive from the negative parts
 -- In the "Rest" case, we also need to paramterize by A+ and A- values,
 GermResponseUnk (GUnk (A+ , A-) D) b+ b- com =
-  Rec⇒ (Approxed (A+ b+) ⊎ (Σ[ a+ ∈ Approxed (A+ b+) ] Approxed (A- b+ (approx a+) b-)))
+  Rec⇒ ( (A+ b+) ⊎ (Σ[ a+ ∈ (A+ b+) ] (A- b+ a+ b-)))
   Rest⇒ ( GermResponseUnk D b+ b- com) --TODO need more here?
 GermResponseUnk GEnd b+ b- x = 𝟘
-GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , approx a+) (b- , approx a-) com
+GermResponseUnk (GArg A D) b+ b- ((a+ , a-) , com) = GermResponseUnk D (b+ , a+) (b- , a-) com
 GermResponseUnk (GHRec A D) b+ b- com = GermResponseUnk D b+ b- com
 GermResponseUnk (GRec D) b+ b- com = GermResponseUnk D b+ b- com
 
@@ -409,11 +410,11 @@ record DataGerms {{_ : DataTypes}} : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    preDataGerm : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
+    preDataGerm : ℕ → (c : CName) → (Set → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
   preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
-  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor ▹Self ctor)
-  preAllDataTypes : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
+  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor (▸ ▹Self) ctor)
+  preAllDataTypes : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
@@ -421,6 +422,27 @@ record DataGerms {{_ : DataTypes}} : Set1 where
   FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
   Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
   Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+  -- Traverse a ⁇ structure to switch exact to approx or vice versa
+  PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
+    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
+    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
+  ResToApprox :  ∀ {ℓ ℂ-1 El-1 Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com
+  ResToApprox {tyHead = HΠ} x = tt*
+  ResToApprox {tyHead = HΣ} x = x
+  ResToApprox {tyHead = H≅} x = x
+  ResToApprox {tyHead = HCtor x₁} x = x
+  ResToExact :  ∀ {ℓ ℂ-1 El-1 Self tyHead com} → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ Self tyHead com
+  ResToExact {tyHead = HΠ} x = {!!}
+  ResToExact {tyHead = HΣ} x = x
+  ResToExact {tyHead = H≅} x = x
+  ResToExact {tyHead = HCtor x₁} x = x
+  PreAllToApprox {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToApprox (res (ResToExact r)))
+  PreAllToApprox {mI = just tyCtor} (Wsup (FC (d , fields) res)) = Wsup (FC (d , {!fields!}) {!!})
+  PreAllToApprox W℧ = W℧
+  PreAllToApprox W⁇ = W⁇
+  PreAllToExact : ∀ {ℓ ℂ-1 El-1 Self mI}
+    → preAllDataTypes {{æ = Approx}} ℓ ℂ-1 El-1 tt* mI
+    → preAllDataTypes ⦃ æ = Exact ⦄ ℓ ℂ-1 El-1 Self mI
 
 
 open DataGerms {{...}} public
