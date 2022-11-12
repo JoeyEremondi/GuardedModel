@@ -207,7 +207,7 @@ posDataGermFVal {{æ = æ}} cB+ tyCtor bIso (GUnk A D) (GUnkCode c+ c- iso+ iso-
     (caseÆ
       (λ {reflp → λ x → ⁇FromW {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (ApproxedIso ⦃ æ = Approx ⦄ (iso+ b+)) x)))))})
       (λ {reflp →
-        (λ x → ⁇FromW ⦃ æ = Approx ⦄ {!!})
+        (λ x → ⁇FromW ⦃ æ = Approx ⦄ {!x!})
         , {!!}}))
     -- (withApproxA (λ x → ⁇FromW {{æ = Approx}} (approx {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (ApproxedIso (iso+ b+)) {!x!}))))))) {!!})
     {!!}
