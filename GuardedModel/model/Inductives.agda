@@ -210,14 +210,17 @@ record +-Set (B+ : Set) (B- : B+ → Set → Set) : Set1 where
   constructor +-set
   field
     A+set : B+ → Set
-    A-LHS : (Self : Set) → (b : B+) → A+set b → B- b Self → Set
-    A-RHS : (Self : Set) → (b : B+) → (a+ : A+set b) → (b- : B- b Self) →  (A-LHS Self b a+ b- ) → Set
+    A-RHS : (Self : Set) → (b : B+)  → (A+set b) → B- b Self → Self → Set
+  --   A-LHS : (Self : Set) → (b : B+) → A+set b → B- b Self → Set
+  --   A-RHS : (Self : Set) → (b : B+) → (a+ : A+set b) → (b- : B- b Self) →  (A-LHS Self b a+ b- ) → Set
+  -- The negative set is where ⁇ occurs negatively, i.e. on the LHS of the arrow
+  -- To make sure we can always inhabit this type, we cast everthing on the LHS to ⁇
+  -- TODO: does this cause too much approx?
   A-set : (Self : Set) → (b : B+) → (a+ : A+set b) → (b- : B- b Self) → Set
-  A-set b a+ b- Self = (x : A-LHS b a+ b- Self) → A-RHS b a+ b- Self x
-  field
-    pointedLHS : (Self : Set) → Self → (b : B+) → (a+ : A+set b) → (b- : B- b Self) → (A-LHS Self b a+ b- )
+  A-set Self b a+ b- = (x : Self) → A-RHS Self b a+ b- x
+  -- field
+  --   pointedLHS : (Self : Set) → Self → (b : B+) → (a+ : A+set b) → (b- : B- b Self) → (A-LHS Self b a+ b- )
 -- +-Set B+ B- = Σ[ A+ ∈ (B+ → Set0) ] ((b : B+) → A+ b → B- b → Set → Set)
-
 open +-Set
 
 ⁇Ref SelfRef : Bool
@@ -296,14 +299,12 @@ interpGermCtor' D b+ b- =
       (λ _ → nothing)
       res
 
-interpGermCtor : ∀ {{æ : Æ}} {A} {sig Self} → GermCtor 𝟙 (λ _ _ → 𝟙) sig → Container (Maybe A)
-interpGermCtor D = interpGermCtor' D tt tt --interpGermCtor' D tt tt
---
--- fs qq
+interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor 𝟙 (λ _ _ → 𝟙) sig → Set → Container (Maybe A)
+interpGermCtor D Self = interpGermCtor' {Self = Self} D tt tt --interpGermCtor' D tt tt
+-- --
+-- -- fs qq
 
 
-GermCommandToApprox : ∀  {B+ B- sig Self} → (D : GermCtor B+ B- sig ) → (b+ : B+) → (b- : B- b+ Self) → (b-𝟙 : B- b+ Unit) → GermCommand {Self = Self} D b+ b- → GermCommand {Self = Unit} D b+ b-𝟙
-GermCommandToApprox
 
 -- -- data IndSig : Set where
 -- --   SigE SigA SigR SigHR SigU : IndSig
@@ -360,11 +361,11 @@ open import HeadDefs
   → (ℂ-1 : Set)
   → (El-1 : ℂ-1 → Set)
   → (numTypes : ℕ)
-  → (▹Self : ▹ Set)
+  → (▹Self : ▹ ⁇Self)
   → (h : TyHead numTypes)
   → ⁇Args ℂ-1 El-1 numTypes h
   → Type
-⁇Resp ℂ-1 El-1 numTypes ▹Self HΠ arg = ▸ ▹Self
+⁇Resp ℂ-1 El-1 numTypes ▹Self HΠ arg = ▹⁇Ty ▹Self
 ⁇Resp ℂ-1 El-1 numTypes ▹Self HΣ arg = 𝟚
 ⁇Resp ℂ-1 El-1 numTypes ▹Self H≅ arg = 𝟙
 ⁇Resp ℂ-1 El-1 numTypes ▹Self H𝟙 arg = 𝟘
@@ -372,107 +373,107 @@ open import HeadDefs
 ⁇Resp ℂ-1 El-1 numTypes ▹Self HCumul arg =  𝟘
 ⁇Resp ℂ-1 El-1 numTypes ▹Self (HCtor x) arg = 𝟙
 
--- -- The inductive structure of ⁇ as a type.
--- -- We use this to encode positive references to ⁇ inside DataGerm types
--- -- This should end up being isomorphic to ⁇Ty as defined in Code.agda
--- ⁇Container :
---   {{æ : Æ}}
---   → (ℂ-1 : Set)
---   → (El-1 : ℂ-1 → Set)
---   → (numTypes : ℕ)
---   → (numCtors : Fin numTypes → ℕ)
---   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
---   → (▹Self : ▹ Set)
---   → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor (▸ ▹Self) 𝟙 (λ _ → 𝟙) (sigs tyCtor ctor))
---   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
---   → Container (Maybe (Fin numTypes))
--- ⁇Container ℂ-1 El-1 numTypes numCtors sigs ▹Self DescFor =
---   let
---     comT : Maybe _ → Set
---     comT =
---       -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
---       Maybe.rec
---         (Σ[ h ∈ TyHead numTypes ] (⁇Args ℂ-1 El-1 numTypes h))
---         (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt tt))
--- -- -- Functor has form (r : Response c) -> X (inext c r )
--- -- so the response field produces the thing on the LHS of the arrow
--- -- No fields for ⁇⁇ or ⁇℧
---     respT : ∀ mTyCtor → comT mTyCtor → Type
---     respT =
---       Maybe-elim (λ m → Maybe.rec _ _ m → Type)
---        -- Unk cases
---        (λ (h , args) → ⁇Resp ℂ-1 El-1 numTypes ▹Self h args)
---        -- DataGerm cases
---        -- In DataGerm mode, response is either the response for Self or the response for Unk
---        -- i.e. encoding that we have both references to Self and ⁇
---        (λ tyCtor (ctor , com)
---          → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com )
---     -- All references in ⁇ are to ⁇, except for ⁇μ case
---     ix : ∀ i → (com : comT i ) → (resp : respT i com) → Maybe (Fin numTypes)
---     ix = Maybe-elim (λ m → (c : comT m) → respT m c → Maybe (Fin numTypes))
---       -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
---       (λ (h , _) resp → recForHead h)
---       -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
---       (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
---    in comT ◃ (λ {i} → respT i) / λ {i} → ix i
---         where
---           recForHead : TyHead numTypes → Maybe _
---           recForHead (HCtor tyCtor) = just tyCtor
---           recForHead _ = nothing
+-- The inductive structure of ⁇ as a type.
+-- We use this to encode positive references to ⁇ inside DataGerm types
+-- This should end up being isomorphic to ⁇Ty as defined in Code.agda
+⁇Container :
+  {{æ : Æ}}
+  → (ℂ-1 : Set)
+  → (El-1 : ℂ-1 → Set)
+  → (numTypes : ℕ)
+  → (numCtors : Fin numTypes → ℕ)
+  → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
+  → (▹Self : ▹ ⁇Self)
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (λ _ _ → 𝟙) (sigs tyCtor ctor) )
+  -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
+  → Container (Maybe (Fin numTypes))
+⁇Container ℂ-1 El-1 numTypes numCtors sigs ▹Self DescFor =
+  let
+    comT : Maybe _ → Set
+    comT =
+      -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
+      Maybe.rec
+        (Σ[ h ∈ TyHead numTypes ] (⁇Args ℂ-1 El-1 numTypes h))
+        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand {Self = ▹⁇Ty ▹Self} (DescFor tyCtor ctor) tt tt))
+-- -- Functor has form (r : Response c) -> X (inext c r )
+-- so the response field produces the thing on the LHS of the arrow
+-- No fields for ⁇⁇ or ⁇℧
+    respT : ∀ mTyCtor → comT mTyCtor → Type
+    respT =
+      Maybe-elim (λ m → Maybe.rec _ _ m → Type)
+       -- Unk cases
+       (λ (h , args) → ⁇Resp ℂ-1 El-1 numTypes ▹Self h args)
+       -- DataGerm cases
+       -- In DataGerm mode, response is either the response for Self or the response for Unk
+       -- i.e. encoding that we have both references to Self and ⁇
+       (λ tyCtor (ctor , com)
+         → GermResponse (DescFor tyCtor ctor) tt tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt tt com )
+    -- All references in ⁇ are to ⁇, except for ⁇μ case
+    ix : ∀ i → (com : comT i ) → (resp : respT i com) → Maybe (Fin numTypes)
+    ix = Maybe-elim (λ m → (c : comT m) → respT m c → Maybe (Fin numTypes))
+      -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
+      (λ (h , _) resp → recForHead h)
+      -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
+      (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
+   in comT ◃ (λ {i} → respT i) / λ {i} → ix i
+        where
+          recForHead : TyHead numTypes → Maybe _
+          recForHead (HCtor tyCtor) = just tyCtor
+          recForHead _ = nothing
 
 
 
 
--- record DataGerms {{_ : DataTypes}} : Set1 where
---   field
---     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
---     -- And guarded negative uses of ⁇
---     -- We ensure positivity by writing the datatype using a description
---     preDataGerm : ℕ → (c : CName) → ((Self : Set) → (d : DName c) → GermCtor 𝟙 (λ _ → 𝟙) (indSkeleton c d) )
---     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
---   preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Container (Maybe CName)
---   preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor (▸ ▹Self) ctor)
---   preAllDataTypes : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Maybe CName → Set
---   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
---   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
---   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
---   FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → CName → Set
---   FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
---   Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ Set → Set
---   Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
---   -- Traverse a ⁇ structure to switch exact to approx or vice versa
---   PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
---     → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
---     → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
---   ResToApprox :  ∀ {ℓ ℂ-1 El-1 Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com
---   ResToApprox {tyHead = HΠ} x = tt*
---   ResToApprox {tyHead = HΣ} x = x
---   ResToApprox {tyHead = H≅} x = x
---   ResToApprox {tyHead = HCtor x₁} x = x
---   ResToExact :  ∀ {ℓ ℂ-1 El-1 Self tyHead com} → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ Self tyHead com
---   ResToExact {tyHead = HΠ} x = {!!}
---   ResToExact {tyHead = HΣ} x = x
---   ResToExact {tyHead = H≅} x = x
---   ResToExact {tyHead = HCtor x₁} x = x
---   PreAllToApprox {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToApprox (res (ResToExact r)))
---   PreAllToApprox {mI = just tyCtor} (Wsup (FC (d , fields) res)) = Wsup (FC (d , {!fields!}) {!!})
---   PreAllToApprox W℧ = W℧
---   PreAllToApprox W⁇ = W⁇
---   PreAllToExact : ∀ {ℓ ℂ-1 El-1 Self mI}
---     → preAllDataTypes {{æ = Approx}} ℓ ℂ-1 El-1 tt* mI
---     → preAllDataTypes ⦃ æ = Exact ⦄ ℓ ℂ-1 El-1 Self mI
+record DataGerms {{_ : DataTypes}}  : Set1 where
+  field
+    -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
+    -- And guarded negative uses of ⁇
+    -- We ensure positivity by writing the datatype using a description
+    preDataGerm : ℕ → (c : CName) → ((Self : Set) → (d : DName c) → GermCtor 𝟙 (λ _ _ → 𝟙) (indSkeleton c d) )
+    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Container (Maybe CName)
+  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor (▹⁇Ty ▹Self) ctor)
+  preAllDataTypes : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Maybe CName → Set
+  preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
+  -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
+  -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
+  FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → CName → Set
+  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
+  Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Set
+  Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
+  -- Traverse a ⁇ structure to switch exact to approx or vice versa
+  PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
+    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
+    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
+  ResToApprox :  ∀ {ℓ ℂ-1 El-1 ▹Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ ▹Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com
+  ResToApprox {tyHead = HΠ} x = tt*
+  ResToApprox {tyHead = HΣ} x = x
+  ResToApprox {tyHead = H≅} x = x
+  ResToApprox {tyHead = HCtor x₁} x = x
+  ResToExact :  ∀ {ℓ ℂ-1 El-1 ▹Self tyHead com} → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ ▹Self tyHead com
+  ResToExact {tyHead = HΠ} x = ▹⁇⁇ ⦃ æ = Exact ⦄ _
+  ResToExact {tyHead = HΣ} x = x
+  ResToExact {tyHead = H≅} x = x
+  ResToExact {tyHead = HCtor x₁} x = x
+  PreAllToApprox {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToApprox (res (ResToExact r)))
+  PreAllToApprox {mI = just tyCtor} (Wsup (FC (d , fields) res)) = Wsup (FC (d , {!fields!}) {!!})
+  PreAllToApprox W℧ = W℧
+  PreAllToApprox W⁇ = W⁇
+  PreAllToExact : ∀ {ℓ ℂ-1 El-1 Self mI}
+    → preAllDataTypes {{æ = Approx}} ℓ ℂ-1 El-1 tt* mI
+    → preAllDataTypes ⦃ æ = Exact ⦄ ℓ ℂ-1 El-1 Self mI
 
 
--- open DataGerms {{...}} public
+open DataGerms {{...}} public
 
 
--- -- Helpful traversal to get recursion started on an inductive type
--- wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
---         (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
---         P →
---         P →
---         ∀ {i} (w : W̃ (Arg C) i) → P
+-- Helpful traversal to get recursion started on an inductive type
+wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
+        (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
+        P →
+        P →
+        ∀ {i} (w : W̃ (Arg C) i) → P
 
--- wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
--- wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
--- wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇
+wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
+wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
+wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇

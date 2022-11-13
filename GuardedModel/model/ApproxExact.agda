@@ -253,3 +253,23 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 
 ▹Default : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡p Approx) → ▹ A
 ▹Default reflp = tt*
+
+
+
+-- What we use as a recursive argument for guarded access to ⁇
+record ⁇Self : Set1 where
+  field
+    ⁇TySelf : Set
+    ⁇⁇Self : ⁇TySelf
+    ⁇℧Self : ⁇TySelf
+
+open ⁇Self public
+
+▹⁇Ty : {{æ : Æ}} → ▹ ⁇Self → Set
+▹⁇Ty ▹Self = ▸ map▹ ⁇TySelf ▹Self
+
+▹⁇⁇ : {{æ : Æ}} → (▹Self : ▹ ⁇Self) → ▹⁇Ty ▹Self
+▹⁇⁇ = Dep▸ ⁇⁇Self
+
+▹⁇℧ : {{æ : Æ}} → (▹Self : ▹ ⁇Self) → ▹⁇Ty ▹Self
+▹⁇℧ = Dep▸ ⁇℧Self

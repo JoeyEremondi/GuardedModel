@@ -51,3 +51,4 @@ record GuardedAlgebra : Typeω where
     θL : ∀ {ℓ} {A : Set ℓ} → A → ▹ (L A) → L A
 
 open GuardedAlgebra {{...}} public
+
