@@ -422,16 +422,16 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
     -- We ensure positivity by writing the datatype using a description
     preDataGerm : ℕ → (c : CName) → ( (d : DName c) → GermCtor 𝟙 (indSkeleton c d) )
     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
-  preAllDataContainer : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Container (Maybe CName)
-  preAllDataContainer ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 El-1 numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor  ctor)
+  preAllDataContainer : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 :  ℂ-1 → Set) → ▹ ⁇Self → Container (Maybe CName)
+  preAllDataContainer {{æ = æ}} ℓ ℂ-1 El-1 ▹Self = (⁇Container ℂ-1 (El-1) numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor  ctor)
 
-  preAllDataTypes : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Maybe CName → Set
+  preAllDataTypes : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 :  ℂ-1 → Set) → ▹ ⁇Self → Maybe CName → Set
   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
   FPreGerm : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → CName → Set
-  FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
-  Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Set
+  FPreGerm {{æ = æ}} ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
+  Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 :  ℂ-1 → Set) → ▹ ⁇Self → Set
   Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
   -- Traverse a ⁇ structure to switch exact to approx or vice versa
   ResToApprox :  ∀ {ℓ ℂ-1 El-1 ▹Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 (El-1 {{æ = Exact}}) ℓ ▹Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 (El-1 {{æ = Approx}}) ℓ tt* tyHead com
@@ -445,15 +445,15 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   ResToExact {tyHead = H≅} x = x
   ResToExact {tyHead = HCtor x₁} x = x
 
-  PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
-    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
-    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
+  PreAllToApprox : ∀ {ℓ ℂ-1} {El-1 : Æ → _ → _} {Self mI}
+    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 (El-1 Exact) Self mI
+    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 (El-1 Approx) tt* mI
   PreAllToApprox {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToApprox (res (ResToExact r)))
   PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
   PreAllToApprox W℧ = W℧
   PreAllToApprox W⁇ = W⁇
 
-  PreAllToExact : ∀ {ℓ ℂ-1 El-1 Self mI}
+  PreAllToExact : ∀ {ℓ ℂ-1} {El-1 : Æ → _ → _} {Self mI}
     → preAllDataTypes {{æ = Approx}} ℓ ℂ-1 El-1 tt* mI
     → preAllDataTypes ⦃ æ = Exact ⦄ ℓ ℂ-1 El-1 Self mI
   PreAllToExact {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToExact (res (ResToApprox r)))
