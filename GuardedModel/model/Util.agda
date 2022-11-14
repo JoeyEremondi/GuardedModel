@@ -50,3 +50,10 @@ ToSort {zero} s = ⊥
 
 typeof : ∀ {ℓ} {A : Set ℓ} → A → Set ℓ
 typeof {A = A} _ = A
+
+
+pathi0 : ∀ {A : Set} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i0
+pathi0 pf i j = pf (i ∧ ~ j)
+
+pathi1 : ∀ {A : Set} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i1
+pathi1 pf i  = pathi0 (sym pf) (~ i)

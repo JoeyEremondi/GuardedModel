@@ -375,6 +375,44 @@ open SmallerCode public
 ⁇Resp sc numTypes ▹Self HCumul arg =  𝟘
 ⁇Resp sc numTypes ▹Self (HCtor x) arg = 𝟙
 
+⁇CCommand :
+  {{æ : Æ}}
+  → (sc : SmallerCode)
+  → (numTypes : ℕ)
+  → (numCtors : Fin numTypes → ℕ)
+  → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
+  → (▹Self : ▹ ⁇Self)
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → Maybe (Fin numTypes) → Set
+⁇CCommand sc numTypes numCtors sigs ▹Self DescFor =
+      -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
+      Maybe.rec
+        (Σ[ h ∈ TyHead numTypes ] (⁇Args sc numTypes h))
+        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt))
+
+⁇CResp :
+  {{æ : Æ}}
+  → (sc : SmallerCode)
+  → (numTypes : ℕ)
+  → (numCtors : Fin numTypes → ℕ)
+  → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
+  → (▹Self : ▹ ⁇Self)
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → ∀ mTyCtor → ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor mTyCtor → Type
+⁇CResp sc numTypes numCtors sigs ▹Self DescFor =
+      Maybe-elim (λ m → Maybe.rec _ _ m → Type)
+       -- Unk cases
+       (λ (h , args) → ⁇Resp sc numTypes ▹Self h args)
+       -- DataGerm cases
+       -- In DataGerm mode, response is either the response for Self or the response for Unk
+       -- i.e. encoding that we have both references to Self and ⁇
+       (λ tyCtor (ctor , com)
+         → GermResponse (DescFor tyCtor ctor) tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt com )
+
+recForHead : ∀ {numTypes} → TyHead numTypes → Maybe _
+recForHead (HCtor tyCtor) = just tyCtor
+recForHead _ = nothing
+
 -- The inductive structure of ⁇ as a type.
 -- We use this to encode positive references to ⁇ inside DataGerm types
 -- This should end up being isomorphic to ⁇Ty as defined in Code.agda
@@ -388,40 +426,36 @@ open SmallerCode public
   → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
   → Container (Maybe (Fin numTypes))
-⁇Container sc numTypes numCtors sigs ▹Self DescFor =
-  let
-    comT : Maybe _ → Set
-    comT =
-      -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
-      Maybe.rec
-        (Σ[ h ∈ TyHead numTypes ] (⁇Args sc numTypes h))
-        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt))
--- -- Functor has form (r : Response c) -> X (inext c r )
--- so the response field produces the thing on the LHS of the arrow
--- No fields for ⁇⁇ or ⁇℧
-    respT : ∀ mTyCtor → comT mTyCtor → Type
-    respT =
-      Maybe-elim (λ m → Maybe.rec _ _ m → Type)
-       -- Unk cases
-       (λ (h , args) → ⁇Resp sc numTypes ▹Self h args)
-       -- DataGerm cases
-       -- In DataGerm mode, response is either the response for Self or the response for Unk
-       -- i.e. encoding that we have both references to Self and ⁇
-       (λ tyCtor (ctor , com)
-         → GermResponse (DescFor tyCtor ctor) tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt com )
-    -- All references in ⁇ are to ⁇, except for ⁇μ case
-    ix : ∀ i → (com : comT i ) → (resp : respT i com) → Maybe (Fin numTypes)
-    ix = Maybe-elim (λ m → (c : comT m) → respT m c → Maybe (Fin numTypes))
-      -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
-      (λ (h , _) resp → recForHead h)
-      -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
-      (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
-   in comT ◃ (λ {i} → respT i) / λ {i} → ix i
-        where
-          recForHead : TyHead numTypes → Maybe _
-          recForHead (HCtor tyCtor) = just tyCtor
-          recForHead _ = nothing
 
+⁇Container sc numTypes numCtors sigs ▹Self DescFor
+  = (⁇CCommand sc numTypes numCtors sigs ▹Self DescFor) ◃ (⁇CResp sc numTypes numCtors sigs ▹Self DescFor _) / λ {i} c r → ix i c r
+    where
+      ix : ∀ i → (com : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor i ) → (resp : ⁇CResp sc numTypes numCtors sigs ▹Self DescFor i com) → Maybe (Fin numTypes)
+      ix = Maybe-elim (λ m → (c : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor m) → ⁇CResp sc numTypes numCtors sigs ▹Self DescFor m c → Maybe (Fin numTypes))
+        -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
+        (λ (h , _) resp → recForHead h)
+        -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
+        (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
+
+-- ⁇Container sc numTypes numCtors sigs ▹Self DescFor =
+--   let
+-- -- -- Functor has form (r : Response c) -> X (inext c r )
+-- -- so the response field produces the thing on the LHS of the arrow
+-- -- No fields for ⁇⁇ or ⁇℧
+--     respT : ∀ mTyCtor → comT mTyCtor → Type
+--     respT =
+--     -- All references in ⁇ are to ⁇, except for ⁇μ case
+--     ix : ∀ i → (com : comT i ) → (resp : respT i com) → Maybe (Fin numTypes)
+--     ix = Maybe-elim (λ m → (c : comT m) → respT m c → Maybe (Fin numTypes))
+--       -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
+--       (λ (h , _) resp → recForHead h)
+--       -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
+--       (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
+--    in comT ◃ (λ {i} → respT i) / λ {i} → ix i
+--         where
+--           recForHead : TyHead numTypes → Maybe _
+--           recForHead (HCtor tyCtor) = just tyCtor
+--           recForHead _ = nothing
 
 
 
@@ -477,11 +511,18 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   ResToApprox {tyHead = HΣ} x = x
   ResToApprox {tyHead = H≅} x = x
   ResToApprox {tyHead = HCtor x₁} x = x
+
   ResToExact :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com) → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com
   ResToExact {tyHead = HΠ} x = ▹⁇⁇ ⦃ æ = Exact ⦄ _
   ResToExact {tyHead = HΣ} x = x
   ResToExact {tyHead = H≅} x = x
   ResToExact {tyHead = HCtor x₁} x = x
+
+  ResToApproxExact :  ∀ {sc} {▹Self tyHead com} → (x : ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)) → ResToApprox {▹Self = ▹Self } (ResToExact x) ≡c x
+  ResToApproxExact {tyHead = HΠ} x = refl
+  ResToApproxExact {tyHead = HΣ} x = refl
+  ResToApproxExact {tyHead = H≅} x = refl
+  ResToApproxExact {tyHead = HCtor x₁} x = refl
 
   PreAllToApprox : ∀ {ℓ sc} {Self mI}
     → preAllDataTypes {{æ = Exact}} ℓ sc Self mI
@@ -513,7 +554,38 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
       {y = arg}
       (λ a b → Wsup (FC (h , a) b))
       (ArgToApproxExact sc h arg)
-      (toPathP (funExt (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
+      retEq
+    where
+      -- retEq : PathP
+      --           (λ i →
+      --              (r
+      --               : Response (preAllDataContainer ℓ sc tt*)
+      --                 (h , ArgToApproxExact sc h arg i)) →
+      --              W̃ (preAllDataContainer ℓ sc tt*)
+      --              (inext (preAllDataContainer ℓ sc tt*)
+      --               (h , ArgToApproxExact sc h arg i) r))
+      --           (λ r →
+      --              PreAllToApprox
+      --              (PreAllToExact
+      --               (resp
+      --                (substPath (⁇Resp sc (DataTypes.numTypes _) tt* h)
+      --                 (ArgToApproxExact sc h arg) (ResToApprox (ResToExact r))))))
+      --           (λ r → resp r)
+      retEq : _
+      retEq i r =
+        PreAllToApproxExact {Self = Self} {mI = recForHead h}
+          {!!} i
+            where
+
+          -- test : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
+          --     {i = nothing} (h , ArgToApproxExact sc h arg i)
+          --   → Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
+          --     {i = nothing }(h , arg)
+          -- test r = transport (congPath {x = ArgToApproxExact sc h arg i} {y = arg}
+          --                       (λ x →
+          --                          Response (preAllDataContainer ⦃ æ = Approx ⦄ ℓ sc tt*) {i = nothing} (h , x))
+          --                       (pathi1 (ArgToApproxExact sc h arg) i)) r
+
       -- (toPathP (funExtPath (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
   PreAllToApproxExact {Self = Self} {mI = just ctor} (Wsup (FC com resp))
     = congPath {A = typeof resp} {x = λ r → PreAllToApprox {Self = Self} (PreAllToExact (resp r))} {y = resp} (λ x → Wsup {i = just ctor} (FC com x)) (funExtPath (λ r → PreAllToApproxExact (resp r)))
