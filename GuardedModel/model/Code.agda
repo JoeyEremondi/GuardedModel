@@ -67,6 +67,7 @@ data IsNeg : Polarity → Set where
 --     ℧Self : ⁇Self
 -- open SelfRec
 
+
 -- We have each level of codes and ⁇ in its own module
 -- So we can then use induction afterwards to build them up from the previous level
 record CodeModule
