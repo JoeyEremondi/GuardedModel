@@ -74,10 +74,11 @@ record CodeModule
   (ℓ : ℕ)
   : Set (lsuc lzero) where
   field
-    ℂ-1 : Set
-    El-1 : {{æ : Æ}} → ℂ-1 -> Set
-    toApprox-1 : (c : ℂ-1) -> El-1 {{æ = Exact}} c → El-1 {{æ = Approx}} c
-    toExact-1 : (c : ℂ-1) -> El-1 {{æ = Approx}} c → El-1 {{æ = Exact}} c
+    sc : SmallerCode
+    -- ℂ-1 : Set
+    -- El-1 : {{æ : Æ}} → ℂ-1 -> Set
+    -- toApprox-1 : (c : ℂ-1) -> El-1 {{æ = Exact}} c → El-1 {{æ = Approx}} c
+    -- toExact-1 : (c : ℂ-1) -> El-1 {{æ = Approx}} c → El-1 {{æ = Exact}} c
     -- ⁇-1 : {{_ : Æ}} → Set
     -- ℧-1 : {{_ : 0< ℓ}} →  ℂ-1
     -- ℂSelf : ▹ Set
@@ -91,8 +92,8 @@ record CodeModule
       ⁇℧ : F⁇ Self
       ⁇⁇ : F⁇ Self
       ⁇𝟙 : F⁇ Self
-      ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 → F⁇ Self
-      ⁇Cumul :  {{ inst : 0< ℓ }} → (c : ℂ-1) → El-1 c → F⁇ Self
+      ⁇Type : {{ inst : 0< ℓ }} → ℂ-1 sc → F⁇ Self
+      ⁇Cumul :  {{ inst : 0< ℓ }} → (c : ℂ-1 sc) → El-1 sc c → F⁇ Self
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
       ⁇Π : (▹⁇Ty Self  →  (F⁇ Self )) → F⁇ Self
@@ -104,309 +105,342 @@ record CodeModule
       -- TODO: right now, must approximate taking the germ of inductives that use their parameters in dependent ways
       -- e.g. data NotProp A where np : (a b : A) → a ≠ b → NotProp A
       -- It's unclear whether we can use Induction-Induction to do this in a strictly-positive way
-      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ ℂ-1 (El-1 {{æ = æ}}) Self tyCtor) →  F⁇ Self
+      ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ sc Self tyCtor) →  F⁇ Self
       -- ⁇μ : (tyCtor : CName) → (x : FPreGerm ℓ tyCtor Self (F⁇ Self)) →  F⁇ Self
     -- The unknown type, i.e. the fixed-point of F⁇
+
+  -- Approximating/embedding for the unknown type
+  toApprox⁇ : ∀ {Self} → F⁇ {{æ = Exact}} Self  → F⁇ {{æ = Approx}} tt*
+  toExact⁇ : ∀ {Self} → F⁇ {{æ = Approx}} tt* → F⁇ {{æ = Exact}} Self
+
+  toApprox⁇ ⁇℧ = ⁇℧
+  toApprox⁇ ⁇⁇ = ⁇⁇
+  toApprox⁇ ⁇𝟙 = ⁇𝟙
+  toApprox⁇ (⁇Type x) = ⁇Type x
+  toApprox⁇ (⁇Cumul c x) = ⁇Cumul c (toApprox-1 sc c x)
+  -- This is where we really need to approx: we have a guarded function,
+  -- so we take its upper limit by giving it ⁇ as an argument
+  toApprox⁇ {Self = Self} (⁇Π f) = ⁇Π (λ _ → toApprox⁇ (f (▹⁇⁇ {{æ = Exact}} Self)))
+  toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
+  toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
+  toApprox⁇ (⁇μ tyCtor x) = ⁇μ tyCtor (PreAllToApprox x)
+
+  toExact⁇ ⁇℧ = ⁇℧
+  toExact⁇ ⁇⁇ = ⁇⁇
+  toExact⁇ ⁇𝟙 = ⁇𝟙
+  toExact⁇ (⁇Type x) = ⁇Type x
+  toExact⁇ (⁇Cumul c x) = ⁇Cumul c (toExact-1 sc c x)
+  -- This is where we really need to approx: we have a guarded function,
+  -- so we take its upper limit by giving it ⁇ as an argument
+  toExact⁇ (⁇Π f) = ⁇Π (λ _ → toExact⁇ (f tt*))
+  toExact⁇ (⁇Σ (x , y)) = ⁇Σ (toExact⁇ x , toExact⁇ y)
+  toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
+  toExact⁇ (⁇μ tyCtor x) = ⁇μ tyCtor (PreAllToExact x)
+
+  toApproxExact⁇ :  ∀ {Self} → ( x : F⁇ {{æ = Approx}} tt*) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
+  toApproxExact⁇ ⁇℧ = refl
+  toApproxExact⁇ ⁇⁇ = refl
+  toApproxExact⁇ ⁇𝟙 = refl
+  toApproxExact⁇ (⁇Type x) = refl
+  toApproxExact⁇ (⁇Cumul c x) = cong (λ x → ⁇Cumul {{æ = Approx}} c x) (toApproxExact-1 sc)
+  toApproxExact⁇ (⁇Π f) = congPath (⁇Π ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt*))
+  toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
+  toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
+                                      (λ x →
+                                         ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
+                                      (toApproxExact⁇ w)
+  toApproxExact⁇ (⁇μ tyCtor x) = {!!}
+
+  -- Take the fixed point to get the actual type
   ▹⁇Rec : {{æ : Æ}} → A.▹ ⁇Self → ⁇Self
   ▹⁇Rec Self = record { ⁇TySelf = F⁇ Self ; ⁇⁇Self = ⁇⁇ ; ⁇℧Self = ⁇℧ }
   ⁇Rec : {{æ : Æ}} → ⁇Self
   ⁇Rec =  RecFix ▹⁇Rec
   ⁇ : {{æ : Æ}} → Set
   -- ⁇ Is the guarded fixed point of F⁇
-  ⁇ = ⁇TySelf (▹⁇Rec (A.next ⁇Rec)) --A.fix F⁇
+  ⁇ = ⁇TySelf ⁇Rec --A.fix F⁇
 
-  -- Approximating/embedding for the unknown type
-  toApprox⁇ : ⁇ {{æ = Exact}} → ⁇ {{æ = Approx}}
-  toExact⁇ : ⁇ {{æ = Approx}} → ⁇ {{æ = Exact}}
+  interleaved mutual
 
-  toApprox⁇ ⁇℧ = ⁇℧
-  toApprox⁇ ⁇⁇ = ⁇⁇
-  toApprox⁇ ⁇𝟙 = ⁇𝟙
-  toApprox⁇ (⁇Type x) = ⁇Type x
-  toApprox⁇ (⁇Cumul c x) = ⁇Cumul c (toApprox-1 c x)
-  -- This is where we really need to approx: we have a guarded function,
-  -- so we take its upper limit by giving it ⁇ as an argument
-  toApprox⁇ (⁇Π f) = ⁇Π (λ _ → toApprox⁇ ⁇⁇)
-  toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
-  toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
-  toApprox⁇ (⁇μ tyCtor x) = ⁇μ tyCtor {!!}
-    where
-      x' = PreAllToApprox x
+    ------------------ Declarations ------------------------------
+    -- Codes describing types
+    data ℂ : Set
+    -- Interpretation of codes into types
+    El : {{æ : Æ}} → ℂ → Set
+    ÆEl : ℂ → ApproxExact.ÆSet0
+    ÆEl c æ = El {{æ = æ}} c
+    --Approximate type for a code
+    ApproxEl : ℂ → Set
+    ApproxEl c = El {{Approx}} c
+    toApprox : ∀ c → El {{Exact}} c → El {{Approx}} c
+    toExact : ∀ c → El {{Approx}} c → El {{Exact}} c
+    toApproxExact : ∀ c x → toApprox c (toExact c x) ≡c x
+    approx : ∀ {{æ : Æ}} → {c : ℂ} → ÆEl c æ → ApproxEl c
+    exact : ∀ {{æ : Æ}} → {c : ℂ} → ApproxEl c → ÆEl c æ
+    approx {{Approx}} x = x
+    approx {{Exact}} x = toApprox _ x
+    exact {{Approx}} x = x
+    exact {{Exact}} x = toExact _ x
 
---   interleaved mutual
+    -- ApproxedEl : {{æ : Æ}} → ℂ → Set
+    -- ApproxedEl {{æ}} c = Approxed (ÆEl c)
 
---     ------------------ Declarations ------------------------------
---     -- Codes describing types
---     data ℂ : Set
---     -- Interpretation of codes into types
---     El : {{æ : Æ}} → ℂ → Set
---     ÆEl : ℂ → ApproxExact.ÆSet0
---     ÆEl c æ = El {{æ = æ}} c
---     --Approximate type for a code
---     ApproxEl : ℂ → Set
---     ApproxEl c = El {{Approx}} c
---     toApprox : ∀ c → El {{Exact}} c → El {{Approx}} c
---     toExact : ∀ c → El {{Approx}} c → El {{Exact}} c
---     toApproxExact : ∀ c x → toApprox c (toExact c x) ≡c x
---     approx : ∀ {{æ : Æ}} → {c : ℂ} → ÆEl c æ → ApproxEl c
---     exact : ∀ {{æ : Æ}} → {c : ℂ} → ApproxEl c → ÆEl c æ
---     approx {{Approx}} x = x
---     approx {{Exact}} x = toApprox _ x
---     exact {{Approx}} x = x
---     exact {{Exact}} x = toExact _ x
-
---     -- ApproxedEl : {{æ : Æ}} → ℂ → Set
---     -- ApproxedEl {{æ}} c = Approxed (ÆEl c)
-
---     -- Interpretation of codes when they're on the left of an arrow,
---     -- used to make the germs of datatypes
---     -- ▹El : ℂ → Set
---     -- Code-based Descriptions of inductive data types
---     data ℂDesc (I : ℂ) : ℂ → IndSig → Set
---     -- Interpretation of description codes into W-types
---     interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
---     CommandD : ∀ {{_ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
---     ResponseD : ∀ {{_ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
---     inextD : ∀ {{_ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
---     FWUnk : {{_ : Æ}} → A.▹ Set → Set
---     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
---     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
---     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
+    -- Interpretation of codes when they're on the left of an arrow,
+    -- used to make the germs of datatypes
+    -- ▹El : ℂ → Set
+    -- Code-based Descriptions of inductive data types
+    data ℂDesc (I : ℂ) : ℂ → IndSig → Set
+    -- Interpretation of description codes into W-types
+    interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
+    CommandD : ∀ {{_ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
+    ResponseD : ∀ {{_ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
+    inextD : ∀ {{_ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD D i b) → ResponseD D b c → ApproxEl  I
+    FWUnk : {{_ : Æ}} → A.▹ Set → Set
+    -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
+    -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
+    -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
 
 
---     toApproxDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Exact}} D b) i → W̃  (interpDesc {{æ = Approx}} D b) i
---     toExactDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Approx}} D b) i → W̃  (interpDesc {{æ = Exact}} D b) i
---     -- toExactDesc : ∀  {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
+    toApproxDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Exact}} D b) i → W̃  (interpDesc {{æ = Approx}} D b) i
+    toExactDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Approx}} D b) i → W̃  (interpDesc {{æ = Exact}} D b) i
+    -- toExactDesc : ∀  {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
 
---     ------------------------------- Definitions --------------------
+    ------------------------------- Definitions --------------------
 
---     ----------------------------------------------------------------
---     --- Unknown type
---     data _ where
---       C⁇ : ℂ
---     -- The unknown code denotes the unknown type
---     El C⁇ = ⁇
---     toApprox C⁇ x = {!!}
---     toExact C⁇ x = {!!}
---     -- ▹El C⁇ = G.▹ (⁇ {{Exact}})
-
-
---     ----------------------------------------------------------------
---     --- Error type
---     data _ where
---       C℧ : ℂ
---     -- Failure is the only value of the failure type
---     -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
---     -- But the failure type is not
---     El C℧ = 𝟙
---     toApprox C℧ _ = tt
---     toExact C℧ _ = tt
---     toApproxExact C℧ tt = refl
---     -- ▹El C℧ = 𝟙
---     ----------------------------------------------------------------
---     --- Gradual empty type
---     data _ where
---       C𝟘 : ℂ
---       -- There is no way to embed a value of the empty type into ⁇, except as error
---     El C𝟘 = 𝟙
---     toApprox C𝟘 x = tt
---     toExact C𝟘 x = tt
---     toApproxExact C𝟘 tt = refl
---     -- ▹El C𝟘 = 𝟙
---     ----------------------------------------------------------------
---     --- Gradual unit type
---     data _ where
---       C𝟙 : ℂ
---     El C𝟙 = 𝟚
---     toApprox C𝟙 x = x
---     toExact C𝟙 x = x
---     toApproxExact C𝟙 x = refl
---     -- ▹El C𝟙 = 𝟚
---     ----------------------------------------------------------------
---     -- Universes
---     -- These are just codes from the level below
---     data _ where
---       CType : {{ inst : 0< ℓ }} → ℂ
---     El CType = ℂ-1
---     toApprox CType x = {!!}
---     toExact CType x = {!!}
---     -- ▹El CType = ℂ-1
---     --
---     --For lower universes, we can lift codes to this universe without needing guardedness
---     data _ where
---       CCumul :  {{ inst : 0< ℓ }} → ℂ-1 → ℂ
---       -- ⁇Cumul : ⁇-1 → F⁇ Self
---     El (CCumul c) = El-1 c
---     toApprox (CCumul c) x = {!!}
---     toExact (CCumul c) x = {!!}
---     --
---     -----------------------------------------------------------------
---     -- Codes can "eat themselves" and have a code denoting the set of all codes
---     -- So long as we hide it behind the guarded modality
---     -- data _ where
---     --   CTypeSelf : ℂ
---     --   ⁇TypeSelf : ▸ ℂSelf → F⁇ Self
---     -- El CTypeSelf = ▸ ℂSelf
-
---     --For lower universes, we can lift codes to this universe without needing guardedness
---     -- data _ where
---     --   CCumul : ℂ-1 → ℂ
---     --   ⁇Cumul : ⁇-1 → F⁇ Self
---     -- El (CCumul c) = El-1 c
-
---     ----------------------------------------------------------------
---     --- Gradual functions
---     --- This is where we capture the possibility for non-termination (in the guarded version)
---     --- For approx-norm, L A = A
---     data _ where
---       CΠ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
+    ----------------------------------------------------------------
+    --- Unknown type
+    data _ where
+      C⁇ : ℂ
+    -- The unknown code denotes the unknown type
+    El C⁇ = ⁇
+    toApprox C⁇ x = toApprox⁇ x
+    toExact C⁇ x = toExact⁇ x
+    toApproxExact C⁇ x = {!!}
+    -- ▹El C⁇ = G.▹ (⁇ {{Exact}})
 
 
---     El (CΠ dom cod) = (x : El dom) → (El (cod  (approx x)))
---     toApprox (CΠ dom cod) f = λ x → toApprox (cod (approx ⦃ Approx ⦄ {dom} x)) (subst (λ y → ÆEl (cod y) Exact) (toApproxExact dom x) (f (toExact dom x)))
---     toExact (CΠ dom cod) f = λ x → toExact (cod (approx ⦃ Exact ⦄ {dom} x)) (f (toApprox dom x))
---     toApproxExact (CΠ dom cod) f = funExt λ x →
---       JPath
---         (λ y pf → toApprox _ (substPath (λ z → ÆEl (cod z) Exact) pf (toExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))) ≡c f y)
---         (congPath (toApprox (cod (toApprox dom (toExact dom x)))) (substRefl (toExact (cod (toApprox dom (toExact dom x)))
---                                                                                (f (toApprox dom (toExact dom x))))) ∙ toApproxExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))
---         (toApproxExact dom x)
---  -- toApprox (cod x)
---  --      (substPath (λ y → ÆEl (cod y) Exact) (toApproxExact dom x)
---  --       (toExact (cod (toApprox dom (toExact dom x)))
---  --        (f (toApprox dom (toExact dom x)))))
---  --      ≡c f x
+    ----------------------------------------------------------------
+    --- Error type
+    data _ where
+      C℧ : ℂ
+    -- Failure is the only value of the failure type
+    -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
+    -- But the failure type is not
+    El C℧ = 𝟙
+    toApprox C℧ _ = tt
+    toExact C℧ _ = tt
+    toApproxExact C℧ tt = refl
+    -- ▹El C℧ = 𝟙
+    ----------------------------------------------------------------
+    --- Gradual empty type
+    data _ where
+      C𝟘 : ℂ
+      -- There is no way to embed a value of the empty type into ⁇, except as error
+    El C𝟘 = 𝟙
+    toApprox C𝟘 x = tt
+    toExact C𝟘 x = tt
+    toApproxExact C𝟘 tt = refl
+    -- ▹El C𝟘 = 𝟙
+    ----------------------------------------------------------------
+    --- Gradual unit type
+    data _ where
+      C𝟙 : ℂ
+    El C𝟙 = 𝟚
+    toApprox C𝟙 x = x
+    toExact C𝟙 x = x
+    toApproxExact C𝟙 x = refl
+    -- ▹El C𝟙 = 𝟚
+    ----------------------------------------------------------------
+    -- Universes
+    -- These are just codes from the level below
+    data _ where
+      CType : {{ inst : 0< ℓ }} → ℂ
+    El CType = ℂ-1 sc
+    toApprox CType x = x
+    toExact CType x = x
+    toApproxExact CType x = refl
+    -- ▹El CType = ℂ-1
+    --
+    --For lower universes, we can lift codes to this universe without needing guardedness
+    data _ where
+      CCumul :  {{ inst : 0< ℓ }} → ℂ-1 sc → ℂ
+      -- ⁇Cumul : ⁇-1 → F⁇ Self
+    El (CCumul c) = El-1 sc c
+    toApprox (CCumul c) x = toApprox-1 sc c x
+    toExact (CCumul c) x = toExact-1 sc c x
+    toApproxExact (CCumul c) x = toApproxExact-1 sc
+    --
+    -----------------------------------------------------------------
+    -- Codes can "eat themselves" and have a code denoting the set of all codes
+    -- So long as we hide it behind the guarded modality
+    -- data _ where
+    --   CTypeSelf : ℂ
+    --   ⁇TypeSelf : ▸ ℂSelf → F⁇ Self
+    -- El CTypeSelf = ▸ ℂSelf
 
---     -- Notation for non-dep functions
---     _C→_ : ℂ → ℂ → ℂ
---     a C→ b = CΠ a (λ _ → b)
+    --For lower universes, we can lift codes to this universe without needing guardedness
+    -- data _ where
+    --   CCumul : ℂ-1 → ℂ
+    --   ⁇Cumul : ⁇-1 → F⁇ Self
+    -- El (CCumul c) = El-1 c
 
---     ----------------------------------------------------------------
---     --- Gradual pairs
---     data _ where
---       CΣ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
---       --TODO: is it only error if BOTH are error?
---     El (CΣ dom cod) = Σ[ x ∈ El dom ]( El (cod (approx x)) )
---     toApprox (CΣ dom cod) (x , y) = toApprox dom x , toApprox _ y
---     toExact (CΣ dom cod) (x , y) = toExact dom x , toExact (cod (toApprox dom (toExact dom x))) (substPath (λ z → ApproxEl (cod z)) (sym (toApproxExact dom x)) y)
---     toApproxExact (CΣ dom cod) (x , y) = ΣPathP (toApproxExact dom x , λ i → toApproxExact (cod _) (pth2 i) i )
---       where
---         pth2 : PathP (λ i → ApproxEl (cod (toApproxExact dom x i)))
---             (substPath (λ z → ApproxEl (cod z))
---             (λ i → toApproxExact dom x (~ i)) y)
---           y
---         pth2 = symP (subst-filler (λ z → ApproxEl (cod z)) (λ i → toApproxExact dom x (~ i)) y)
-
---     -- JDep
---     --                                                                      (λ xx eq yy pth →
---     --                                                                         PathP (λ i → ApproxEl (cod (eq i)))
---     --                                                                         (toApprox (cod (toApprox dom (toExact dom x)))
---     --                                                                          (toExact (cod (toApprox dom (toExact dom x)))
---     --                                                                           (substPath (λ z → ApproxEl (cod z))
---     --                                                                            (sym eq) yy)))
---     --                                                                         yy)
---     --                                                                      {!!} (toApproxExact dom x) λ i → substPath {!!} {!!} y)
---     -- toApproxExact (CΣ dom cod) (x , y) = ΣPathP (toApproxExact dom x , toPathP (JPath (λ yy eq → toExact (cod (toApprox dom (toExact dom x))) (subst (λ z → ApproxEl (cod z)) eq) yy ≡c y) {!!} (toApproxExact dom x)))
---     -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
---     -- Notation for non-dep pairs
---     _C×_ : ℂ → ℂ → ℂ
---     a C× b = CΣ a (λ _ → b)
-
---     --- Gradual propositional equality i.e. witnesses of consistency
---     data _ where
---       C≡ : (c :  ℂ) → (x y : ApproxEl c) → ℂ
---     El (C≡ c x y) = x ≅ y
---     toApprox (C≡ c x y) pf = pf
---     toExact (C≡ c x y) pf = pf
---     toApproxExact (C≡ c x y) pf = refl
---     -- ▹El (C≡ c x y) = ▹El c
---     ----------------------------------------------------------------
---     --- Gradual inductive types
---     ---
-
-
---     data _ where
---       Cμ :
---         (tyCtor : CName)
---         → (cI : ℂ)
---         → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
---         → ApproxEl cI → ℂ
---     El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
---     toApprox (Cμ tyCtor cI D i) x = {!!}
---     toExact (Cμ tyCtor cI D i) x = {!!}
---     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
+    ----------------------------------------------------------------
+    --- Gradual functions
+    --- This is where we capture the possibility for non-termination (in the guarded version)
+    --- For approx-norm, L A = A
+    data _ where
+      CΠ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
 
 
---     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
---     -- This is so casting from ⁇ to a type, and then back, always produces ℧
+    El (CΠ dom cod) = (x : El dom) → (El (cod  (approx x)))
+    toApprox (CΠ dom cod) f = λ x → toApprox (cod (approx ⦃ Approx ⦄ {dom} x)) (subst (λ y → ÆEl (cod y) Exact) (toApproxExact dom x) (f (toExact dom x)))
+    toExact (CΠ dom cod) f = λ x → toExact (cod (approx ⦃ Exact ⦄ {dom} x)) (f (toApprox dom x))
+    toApproxExact (CΠ dom cod) f = funExt λ x →
+      JPath
+        (λ y pf → toApprox _ (substPath (λ z → ÆEl (cod z) Exact) pf (toExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))) ≡c f y)
+        (congPath (toApprox (cod (toApprox dom (toExact dom x)))) (substRefl (toExact (cod (toApprox dom (toExact dom x)))
+                                                                               (f (toApprox dom (toExact dom x))))) ∙ toApproxExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))
+        (toApproxExact dom x)
+ -- toApprox (cod x)
+ --      (substPath (λ y → ÆEl (cod y) Exact) (toApproxExact dom x)
+ --       (toExact (cod (toApprox dom (toExact dom x)))
+ --        (f (toApprox dom (toExact dom x)))))
+ --      ≡c f x
 
---     -- -- Path constructors for F⁇
---     -- data F⁇ where
---     --   -- All error values are equal
---     --   ⁇℧≡ : ∀ (x : F⁇ Self {true}) → ℧≡ x → ⁇℧ ≡ x
---     --   -- All equalities are equal
---     --   ⁇IsSet : ∀ (x y : F⁇ Self {true}) → (p1 p2 : x ≡ y) → p1 ≡ p2
---       -- ⁇⊥≡ : ∀ x
+    -- Notation for non-dep functions
+    _C→_ : ℂ → ℂ → ℂ
+    a C→ b = CΠ a (λ _ → b)
 
--- --     ----------------------------------------------------------------------
+    ----------------------------------------------------------------
+    --- Gradual pairs
+    data _ where
+      CΣ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
+      --TODO: is it only error if BOTH are error?
+    El (CΣ dom cod) = Σ[ x ∈ El dom ]( El (cod (approx x)) )
+    toApprox (CΣ dom cod) (x , y) = toApprox dom x , toApprox _ y
+    toExact (CΣ dom cod) (x , y) = toExact dom x , toExact (cod (toApprox dom (toExact dom x))) (substPath (λ z → ApproxEl (cod z)) (sym (toApproxExact dom x)) y)
+    toApproxExact (CΣ dom cod) (x , y) = ΣPathP (toApproxExact dom x , λ i → toApproxExact (cod _) (pth2 i) i )
+      where
+        pth2 : PathP (λ i → ApproxEl (cod (toApproxExact dom x i)))
+            (substPath (λ z → ApproxEl (cod z))
+            (λ i → toApproxExact dom x (~ i)) y)
+          y
+        pth2 = symP (subst-filler (λ z → ApproxEl (cod z)) (λ i → toApproxExact dom x (~ i)) y)
+
+    -- JDep
+    --                                                                      (λ xx eq yy pth →
+    --                                                                         PathP (λ i → ApproxEl (cod (eq i)))
+    --                                                                         (toApprox (cod (toApprox dom (toExact dom x)))
+    --                                                                          (toExact (cod (toApprox dom (toExact dom x)))
+    --                                                                           (substPath (λ z → ApproxEl (cod z))
+    --                                                                            (sym eq) yy)))
+    --                                                                         yy)
+    --                                                                      {!!} (toApproxExact dom x) λ i → substPath {!!} {!!} y)
+    -- toApproxExact (CΣ dom cod) (x , y) = ΣPathP (toApproxExact dom x , toPathP (JPath (λ yy eq → toExact (cod (toApprox dom (toExact dom x))) (subst (λ z → ApproxEl (cod z)) eq) yy ≡c y) {!!} (toApproxExact dom x)))
+    -- ▹El (CΣ dom cod) = Σ[ x ∈ ▹El dom ]( ▹El (cod (inr x)) )
+    -- Notation for non-dep pairs
+    _C×_ : ℂ → ℂ → ℂ
+    a C× b = CΣ a (λ _ → b)
+
+    --- Gradual propositional equality i.e. witnesses of consistency
+    data _ where
+      C≡ : (c :  ℂ) → (x y : ApproxEl c) → ℂ
+    El (C≡ c x y) = x ≅ y
+    toApprox (C≡ c x y) pf = pf
+    toExact (C≡ c x y) pf = pf
+    toApproxExact (C≡ c x y) pf = refl
+    -- ▹El (C≡ c x y) = ▹El c
+    ----------------------------------------------------------------
+    --- Gradual inductive types
+    ---
 
 
+    data _ where
+      Cμ :
+        (tyCtor : CName)
+        → (cI : ℂ)
+        → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
+        → ApproxEl cI → ℂ
+    El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
+    toApprox (Cμ tyCtor cI D i) x = {!!}
+    toExact (Cμ tyCtor cI D i) x = {!!}
+    toApproxExact (Cμ tyCtor cI D i) x = {!!}
+    -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
+
+
+    -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
+    -- This is so casting from ⁇ to a type, and then back, always produces ℧
+
+    -- -- Path constructors for F⁇
+    -- data F⁇ where
+    --   -- All error values are equal
+    --   ⁇℧≡ : ∀ (x : F⁇ Self {true}) → ℧≡ x → ⁇℧ ≡ x
+    --   -- All equalities are equal
+    --   ⁇IsSet : ∀ (x y : F⁇ Self {true}) → (p1 p2 : x ≡ y) → p1 ≡ p2
+      -- ⁇⊥≡ : ∀ x
 
 --     ----------------------------------------------------------------------
---     -- Codes for descriptions of inductive types
---     data ℂDesc  where
---       CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB SigE
---       CArg : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc  I cB (SigA rest)
---       CRec : ∀ {cB} {rest} (j :  ApproxEl I) → (D :  ℂDesc I cB rest) → ℂDesc I cB (SigR rest)
---       CHRec : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB rest)
---         → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
---         → ℂDesc I cB (SigHR rest)
-
---     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
---     interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b / inextD D b
---     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
-
---     CommandD (CEnd j) i b = i ≅ j
---     CommandD (CArg c D _ _) i b = Σ[ a ∈ El (c b) ] CommandD D i (b , approx a)
---     CommandD (CRec j D) i b = CommandD D i b
---     CommandD (CHRec c j D _ _) i b = CommandD D i b
--- --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
-
---     ResponseD (CEnd i) b com = 𝟘
---     ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , approx a) com
---     ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
---     ResponseD (CHRec c j D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
---     -- ResponseD (CHGuard c D E) (comD , comE) =
---     --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
---     --     Rest⇒ ResponseD E comE
 
 
---     inextD (CArg c D _ _) {i} b (a , com) res = inextD D (b , approx a) com res
---     inextD (CRec j D) {i} b com (Rec x) = j
---     inextD (CRec j D) {i} b com (Rest x) = inextD D b com x
---     inextD (CHRec c j D _ _) {i} b com (Rec res) = j b (approx res)
---     inextD (CHRec c j D _ _) {i} b com (Rest res) = inextD D b com res
---     -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
---     -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
+
+    ----------------------------------------------------------------------
+    -- Codes for descriptions of inductive types
+    data ℂDesc  where
+      CEnd : ∀ {cB} → (i : ApproxEl  I) → ℂDesc I cB SigE
+      CArg : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc I (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc  I cB (SigA rest)
+      CRec : ∀ {cB} {rest} (j :  ApproxEl I) → (D :  ℂDesc I cB rest) → ℂDesc I cB (SigR rest)
+      CHRec : ∀ {cB} {rest} → (c : ApproxEl cB → ℂ) → (j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl I) → (D : ℂDesc I cB rest)
+        → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
+        → ℂDesc I cB (SigHR rest)
+
+    --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
+    interpDesc {I = I} {cB = cB} D b  = (λ i → CommandD D i b) ◃ ResponseD D b / inextD D b
+    -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
+
+    CommandD (CEnd j) i b = i ≅ j
+    CommandD (CArg c D _ _) i b = Σ[ a ∈ El (c b) ] CommandD D i (b , approx a)
+    CommandD (CRec j D) i b = CommandD D i b
+    CommandD (CHRec c j D _ _) i b = CommandD D i b
+--     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
+
+    ResponseD (CEnd i) b com = 𝟘
+    ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , approx a) com
+    ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
+    ResponseD (CHRec c j D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
+    -- ResponseD (CHGuard c D E) (comD , comE) =
+    --   GuardedArg⇒ (Σ[ a▹ ∈  ▹ El c ] (ResponseD D (comD a▹)))
+    --     Rest⇒ ResponseD E comE
 
 
---     -- ▹interpDesc {I = I} D = (λ _ → ▹CommandD D) ◃ ▹ResponseD D  ◃  (λ _ → 𝟘) / λ _ _ → tt
+    inextD (CArg c D _ _) {i} b (a , com) res = inextD D (b , approx a) com res
+    inextD (CRec j D) {i} b com (Rec x) = j
+    inextD (CRec j D) {i} b com (Rest x) = inextD D b com x
+    inextD (CHRec c j D _ _) {i} b com (Rec res) = j b (approx res)
+    inextD (CHRec c j D _ _) {i} b com (Rest res) = inextD D b com res
+    -- inextD (CHGuard c D D₁) {i} (f , com) (GuardedArg (a , res)) = inextD D (f a) res
+    -- inextD (CHGuard c D D₁) {i} (a , com) (GRest x) = inextD D₁ com x
 
---     -- ▹CommandD (CEnd j) = 𝟙
---     -- ▹CommandD (CArg c D) = Σ[ a ∈ ▹El c ] ▹CommandD (D (inr a))
---     -- ▹CommandD (CRec j D) = ▹CommandD D
---     -- ▹CommandD (CHRec c j D) = (a : ▹El c) → ▹CommandD (D (inr a))
---     -- -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
---     -- ▹ResponseD (CEnd i) com = 𝟘
---     -- ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
---     -- ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
---     -- ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
---     --
---     --
---     --
---     FWUnk Self = Pre⁇ ℓ ℂ-1 El-1 {!!}
--- -----------------------------------------------------------------------
+    -- ▹interpDesc {I = I} D = (λ _ → ▹CommandD D) ◃ ▹ResponseD D  ◃  (λ _ → 𝟘) / λ _ _ → tt
+
+    -- ▹CommandD (CEnd j) = 𝟙
+    -- ▹CommandD (CArg c D) = Σ[ a ∈ ▹El c ] ▹CommandD (D (inr a))
+    -- ▹CommandD (CRec j D) = ▹CommandD D
+    -- ▹CommandD (CHRec c j D) = (a : ▹El c) → ▹CommandD (D (inr a))
+    -- -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
+
+    -- ▹ResponseD (CEnd i) com = 𝟘
+    -- ▹ResponseD (CArg c D) (a , com) = ▹ResponseD (D (inr a)) com
+    -- ▹ResponseD (CRec j D) com = Rec⇒ 𝟙    Rest⇒ (▹ResponseD D com)
+    -- ▹ResponseD (CHRec c j D) com = Rec⇒ El c    Rest⇒ (Σ[ a ∈ ▹El c ] ▹ResponseD (D (inr a)) (com a))
+    --
+    --
+    --
+    FWUnk Self = Pre⁇ ℓ sc {!!}
+
+    toApproxDesc = {!!}
+    toExactDesc = {!!}
+-----------------------------------------------------------------------
 
 
 
