@@ -25,6 +25,7 @@ open import GuardedAlgebra
 import GuardedModality as G
 
 open import ApproxExact
+open import Util
 module Inductives where
 
 
@@ -485,20 +486,39 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   PreAllToApprox : ∀ {ℓ sc} {Self mI}
     → preAllDataTypes {{æ = Exact}} ℓ sc Self mI
     → preAllDataTypes ⦃ æ = Approx ⦄ ℓ sc tt* mI
-  PreAllToApprox {mI = nothing} (Wsup (FC (h , arg) res)) = Wsup (FC (h , ArgToApprox _ h arg ) λ r → PreAllToApprox (res (ResToExact r)))
-  PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
   PreAllToApprox W℧ = W℧
   PreAllToApprox W⁇ = W⁇
+  PreAllToApprox {mI = nothing} (Wsup (FC (h , arg) res)) = Wsup (FC (h , ArgToApprox _ h arg ) λ r → PreAllToApprox (res (ResToExact r)))
+  PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
 
   PreAllToExact : ∀ {ℓ sc} {Self mI}
     → preAllDataTypes {{æ = Approx}} ℓ sc tt* mI
     → preAllDataTypes ⦃ æ = Exact ⦄ ℓ sc Self mI
+  PreAllToExact {mI = mI} W℧ = W℧
+  PreAllToExact {mI = mI} W⁇ = W⁇
   PreAllToExact {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) res))
     = Wsup (FC (h , ArgToExact _ h arg )
       λ r → PreAllToExact (res (substPath (⁇Resp ⦃ æ = Approx ⦄ sc numTypes tt* h) (ArgToApproxExact sc h arg) (ResToApprox r))))
   PreAllToExact {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToExact (res r))
-  PreAllToExact {mI = mI} W℧ = W℧
-  PreAllToExact {mI = mI} W⁇ = W⁇
+
+  PreAllToApproxExact : ∀ {ℓ sc} {Self mI}
+    → (x : preAllDataTypes {{æ = Approx}} ℓ sc tt* mI)
+    → PreAllToApprox {Self = Self} (PreAllToExact {Self = Self} x) ≡ x
+  PreAllToApproxExact {ℓ = ℓ} {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) resp))
+    = cong₂
+      {A = ⁇Args {{æ = Approx}} sc numTypes h}
+      {B = λ a → (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , a)) →
+        W̃ (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (inext (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (h , a) r)}
+      {x = ArgToApprox sc h (ArgToExact sc h arg)}
+      {y = arg}
+      (λ a b → Wsup (FC (h , a) b))
+      (ArgToApproxExact sc h arg)
+      (toPathP (funExt (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
+      -- (toPathP (funExtPath (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
+  PreAllToApproxExact {Self = Self} {mI = just ctor} (Wsup (FC com resp))
+    = congPath {A = typeof resp} {x = λ r → PreAllToApprox {Self = Self} (PreAllToExact (resp r))} {y = resp} (λ x → Wsup {i = just ctor} (FC com x)) (funExtPath (λ r → PreAllToApproxExact (resp r)))
+  PreAllToApproxExact {mI = mI} W℧ = reflc
+  PreAllToApproxExact {mI = mI} W⁇ = refl
 
 
 open DataGerms {{...}} public

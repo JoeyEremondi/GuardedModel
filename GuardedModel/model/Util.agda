@@ -47,3 +47,6 @@ Set-1 (suc ℓ) = Set (# ℓ)
 ToSort : ∀ {ℓ} -> Set-1 ℓ -> Set (# ℓ)
 ToSort {suc ℓ} s = Lift s
 ToSort {zero} s = ⊥
+
+typeof : ∀ {ℓ} {A : Set ℓ} → A → Set ℓ
+typeof {A = A} _ = A
