@@ -258,6 +258,7 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 
 -- What we use as a recursive argument for guarded access to ⁇
 record ⁇Self : Set1 where
+  constructor ⁇self
   field
     ⁇TySelf : Set
     ⁇⁇Self : ⁇TySelf
@@ -273,3 +274,12 @@ open ⁇Self public
 
 ▹⁇℧ : {{æ : Æ}} → (▹Self : ▹ ⁇Self) → ▹⁇Ty ▹Self
 ▹⁇℧ = Dep▸ ⁇℧Self
+
+RecFix : {{æ : Æ}} → (▹ ⁇Self → ⁇Self) → ⁇Self
+RecFix fRec = fix fRec
+
+toRecFix : {{æ : Æ}} → (f : ▹ ⁇Self → ⁇Self) → ⁇TySelf (f (next (RecFix f))) → ⁇TySelf (RecFix f)
+toRecFix f = substPath ⁇TySelf (sym (löb f))
+
+fromRecFix : {{æ : Æ}} → (f : ▹ ⁇Self → ⁇Self) → ⁇TySelf (RecFix f) → ⁇TySelf (f (next (RecFix f)))
+fromRecFix f = substPath ⁇TySelf (löb f)

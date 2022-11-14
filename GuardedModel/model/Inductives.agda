@@ -429,15 +429,12 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   preAllDataTypes ℓ ℂ-1 El-1 ▹Self = W̃ (preAllDataContainer ℓ ℂ-1 El-1 ▹Self)
   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
-  FPreGerm : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → CName → Set
+  FPreGerm : {{æ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → CName → Set
   FPreGerm ℓ ℂ-1 El-1 ▹Self tyCtor  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self (just tyCtor)
   Pre⁇ : {{_ : Æ}} → ℕ → (ℂ-1 : Set) → (El-1 : ℂ-1 → Set) → ▹ ⁇Self → Set
   Pre⁇ ℓ ℂ-1 El-1 ▹Self  = preAllDataTypes ℓ ℂ-1 El-1 ▹Self nothing
   -- Traverse a ⁇ structure to switch exact to approx or vice versa
-  PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
-    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
-    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
-  ResToApprox :  ∀ {ℓ ℂ-1 El-1 ▹Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 El-1 ℓ ▹Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 El-1 ℓ tt* tyHead com
+  ResToApprox :  ∀ {ℓ ℂ-1 El-1 ▹Self tyHead com} → ⁇Resp {{æ = Exact}} ℂ-1 (El-1 {{æ = Exact}}) ℓ ▹Self tyHead com → ⁇Resp {{æ = Approx}} ℂ-1 (El-1 {{æ = Approx}}) ℓ tt* tyHead com
   ResToApprox {tyHead = HΠ} x = tt*
   ResToApprox {tyHead = HΣ} x = x
   ResToApprox {tyHead = H≅} x = x
@@ -447,10 +444,15 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   ResToExact {tyHead = HΣ} x = x
   ResToExact {tyHead = H≅} x = x
   ResToExact {tyHead = HCtor x₁} x = x
+
+  PreAllToApprox : ∀ {ℓ ℂ-1 El-1 Self mI}
+    → preAllDataTypes {{æ = Exact}} ℓ ℂ-1 El-1 Self mI
+    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ ℂ-1 El-1 tt* mI
   PreAllToApprox {mI = nothing} (Wsup (FC com res)) = Wsup (FC com λ r → PreAllToApprox (res (ResToExact r)))
   PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
   PreAllToApprox W℧ = W℧
   PreAllToApprox W⁇ = W⁇
+
   PreAllToExact : ∀ {ℓ ℂ-1 El-1 Self mI}
     → preAllDataTypes {{æ = Approx}} ℓ ℂ-1 El-1 tt* mI
     → preAllDataTypes ⦃ æ = Exact ⦄ ℓ ℂ-1 El-1 Self mI
