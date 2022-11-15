@@ -85,8 +85,12 @@ path01eq Aeq i j = pathij Aeq i j
 path01Transport : ∀ {ℓ} {A0 A1 : Set ℓ} (Aeq : A0 ≡c A1) → ∀ i (a :  Aeq i) → PathP (λ i → Aeq i) (transport (pathi0 Aeq i) a  ) (transport (pathi1 Aeq i) a)
 path01Transport Aeq i a j = transportPath (pathij Aeq i j) a
 
+-- funDomTrans : ∀ A0 A1 (Aeq : A0 ≡c A1) (B : ∀ {i} →  Aeq i → Set) → ((a : Aeq i0) → B {i0} a) ≡c
 
-extP : ∀ {A0 A1 : Set} (Aeq : A0 ≡c A1) {B : ∀ {i} →  Aeq i → Set} → (f : (a : Aeq i0) → B {i0} a ) (g : (a : Aeq i1) → B {i1} a)
-  → (∀ {a0 : A0} {a1 : A1} (eqq : PathP (λ i → Aeq i) a0 a1) → PathP (λ i → B {i} (eqq i)) (f (eqq i0)) (g (eqq i1)))
-  → PathP (λ i → (a : Aeq i) → B {i} a ) f g
-extP Aeq f g pf i a = ?
+-- extP : ∀ {A0 A1 : Set} (Aeq : A0 ≡c A1) {B : ∀ {i} →  Aeq i → Set} → (f : (a : Aeq i0) → B {i0} a ) (g : (a : Aeq i1) → B {i1} a)
+--   → (∀ {a0 : A0} {a1 : A1} (eqq : PathP (λ i → Aeq i) a0 a1) → PathP (λ i → B {i} (eqq i)) (f (eqq i0)) (g (eqq i1)))
+--   → PathP (λ i → (a : Aeq i) → B {i} a ) f g
+-- extP Aeq {B = B} f g pf = {!!}
+--   where
+    -- pth : PathP (λ j → B {i = j} (transport (pathij Aeq i j) a)) (f (transportPath (pathij Aeq i i0) a)) (g (transportPath (pathij Aeq i i1) a))
+    -- pth = pf (path01Transport (λ i₁ → Aeq i₁) i a)
