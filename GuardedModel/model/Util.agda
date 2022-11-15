@@ -52,8 +52,41 @@ typeof : ∀ {ℓ} {A : Set ℓ} → A → Set ℓ
 typeof {A = A} _ = A
 
 
-pathi0 : ∀ {A : Set} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i0
-pathi0 pf i j = pf (i ∧ ~ j)
+pathij : ∀ {ℓ} {A : Set ℓ} {x y : A} → (pf : x ≡c y) → ∀ i j → pf i ≡c pf j
+pathij pf i j k = pf (( k ∧ j) ∨ (~ k ∧ i))
 
-pathi1 : ∀ {A : Set} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i1
-pathi1 pf i  = pathi0 (sym pf) (~ i)
+
+pathi0 : ∀ {ℓ} {A : Set ℓ} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i0
+pathi0 pf i = pathij pf i i0
+
+pathi1 : ∀ {ℓ} {A : Set ℓ} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i1
+pathi1 pf i = pathij pf i i1
+
+compEqPath : ∀ {ℓ} {A : I → Set ℓ} {x : A i0} {y : A i1} {z : A i1} → PathP A x y → y ≡c z → PathP A x z
+compEqPath pth peq = substPath (λ w → PathP _ _ w) peq pth
+
+
+reflCompose : ∀ {ℓ} {A : Set ℓ} {x : A} → (refl {x = x} ) ≡c refl ∙ refl
+reflCompose {x = x}  = compPath-filler reflc λ i → x
+
+transportCompose : ∀ {ℓ} {A B C : Set ℓ} → (pf1 : A ≡ B) → (pf2 : B ≡ C) → (a : A) → transport pf2 (transport pf1 a) ≡c transport (pf1 ∙ pf2) a
+transportCompose pf1 pf2 a
+  =
+  JPath (λ y pf2 → transport pf2 (transport pf1 a) ≡c transport (pf1 ∙ pf2) a)
+  (JPath
+    (λ x pf1 →
+      transportPath reflc (transportPath pf1 a) ≡c
+      transportPath (compPath pf1 reflc) a)
+    (transportRefl (transportPath reflc a) ∙ transportRefl a ∙ sym (transportRefl a) ∙ congPath (λ pf → transportPath pf a) reflCompose) pf1) pf2
+
+path01eq : ∀ {ℓ} {A0 A1 : Set ℓ} (Aeq : A0 ≡c A1) → ∀ i → PathP (λ j → Aeq i ≡ Aeq j) (pathi0 Aeq i)  (pathi1 Aeq i)
+path01eq Aeq i j = pathij Aeq i j
+
+path01Transport : ∀ {ℓ} {A0 A1 : Set ℓ} (Aeq : A0 ≡c A1) → ∀ i (a :  Aeq i) → PathP (λ i → Aeq i) (transport (pathi0 Aeq i) a  ) (transport (pathi1 Aeq i) a)
+path01Transport Aeq i a j = transportPath (pathij Aeq i j) a
+
+
+extP : ∀ {A0 A1 : Set} (Aeq : A0 ≡c A1) {B : ∀ {i} →  Aeq i → Set} → (f : (a : Aeq i0) → B {i0} a ) (g : (a : Aeq i1) → B {i1} a)
+  → (∀ {a0 : A0} {a1 : A1} (eqq : PathP (λ i → Aeq i) a0 a1) → PathP (λ i → B {i} (eqq i)) (f (eqq i0)) (g (eqq i1)))
+  → PathP (λ i → (a : Aeq i) → B {i} a ) f g
+extP Aeq f g pf i a = ?

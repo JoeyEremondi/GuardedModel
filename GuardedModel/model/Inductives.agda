@@ -427,15 +427,24 @@ recForHead _ = nothing
   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
   → Container (Maybe (Fin numTypes))
 
-⁇Container sc numTypes numCtors sigs ▹Self DescFor
-  = (⁇CCommand sc numTypes numCtors sigs ▹Self DescFor) ◃ (⁇CResp sc numTypes numCtors sigs ▹Self DescFor _) / λ {i} c r → ix i c r
-    where
-      ix : ∀ i → (com : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor i ) → (resp : ⁇CResp sc numTypes numCtors sigs ▹Self DescFor i com) → Maybe (Fin numTypes)
-      ix = Maybe-elim (λ m → (c : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor m) → ⁇CResp sc numTypes numCtors sigs ▹Self DescFor m c → Maybe (Fin numTypes))
+
+⁇inext :
+  {{æ : Æ}}
+  → (sc : SmallerCode)
+  → (numTypes : ℕ)
+  → (numCtors : Fin numTypes → ℕ)
+  → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
+  → (▹Self : ▹ ⁇Self)
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → ∀ i → (com : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor i ) → (resp : ⁇CResp sc numTypes numCtors sigs ▹Self DescFor i com) → Maybe (Fin numTypes)
+⁇inext sc numTypes numCtors sigs ▹Self DescFor = Maybe-elim (λ m → (c : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor m) → ⁇CResp sc numTypes numCtors sigs ▹Self DescFor m c → Maybe (Fin numTypes))
         -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
         (λ (h , _) resp → recForHead h)
         -- In DataGerm, the response tells us whether the field is ⁇ or DataGerm
         (λ tyCtor com resp → Sum.rec (λ _ → just tyCtor) (λ _ → nothing) resp)
+
+⁇Container sc numTypes numCtors sigs ▹Self DescFor
+  = (⁇CCommand sc numTypes numCtors sigs ▹Self DescFor) ◃ (⁇CResp sc numTypes numCtors sigs ▹Self DescFor _) / λ {i} c r → ⁇inext sc numTypes numCtors sigs ▹Self DescFor i c r
 
 -- ⁇Container sc numTypes numCtors sigs ▹Self DescFor =
 --   let
@@ -458,151 +467,150 @@ recForHead _ = nothing
 --           recForHead _ = nothing
 
 
+-- record DataGerms {{_ : DataTypes}}  : Set1 where
+--   field
+--     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
+--     -- And guarded negative uses of ⁇
+--     -- We ensure positivity by writing the datatype using a description
+--     preDataGerm : ℕ → (c : CName) → ( (d : DName c) → GermCtor 𝟙 (indSkeleton c d) )
+--     -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+--   preAllDataContainer : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Container (Maybe CName)
+--   preAllDataContainer {{æ = æ}} ℓ sc ▹Self = (⁇Container sc numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor  ctor)
 
-record DataGerms {{_ : DataTypes}}  : Set1 where
-  field
-    -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
-    -- And guarded negative uses of ⁇
-    -- We ensure positivity by writing the datatype using a description
-    preDataGerm : ℕ → (c : CName) → ( (d : DName c) → GermCtor 𝟙 (indSkeleton c d) )
-    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
-  preAllDataContainer : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Container (Maybe CName)
-  preAllDataContainer {{æ = æ}} ℓ sc ▹Self = (⁇Container sc numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor  ctor)
+--   preAllDataTypes : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Maybe CName → Set
+--   preAllDataTypes ℓ sc ▹Self = W̃ (preAllDataContainer ℓ sc ▹Self)
+--   -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
+--   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
+--   FPreGerm : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → CName → Set
+--   FPreGerm {{æ = æ}} ℓ sc ▹Self tyCtor  = preAllDataTypes ℓ sc ▹Self (just tyCtor)
+--   Pre⁇ : {{_ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Set
+--   Pre⁇ ℓ sc ▹Self  = preAllDataTypes ℓ sc ▹Self nothing
 
-  preAllDataTypes : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Maybe CName → Set
-  preAllDataTypes ℓ sc ▹Self = W̃ (preAllDataContainer ℓ sc ▹Self)
-  -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
-  -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
-  FPreGerm : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → CName → Set
-  FPreGerm {{æ = æ}} ℓ sc ▹Self tyCtor  = preAllDataTypes ℓ sc ▹Self (just tyCtor)
-  Pre⁇ : {{_ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Set
-  Pre⁇ ℓ sc ▹Self  = preAllDataTypes ℓ sc ▹Self nothing
+--   -- Traverse a ⁇ structure to switch exact to approx or vice versa
+--   ArgToApprox :  ∀ sc (tyHead : TyHead numTypes) → ⁇Args {{æ = Exact}} sc numTypes tyHead → ⁇Args {{æ = Approx}} sc numTypes tyHead
+--   ArgToApprox sc HΠ x = x
+--   ArgToApprox sc HΣ x = x
+--   ArgToApprox sc H≅ x = x
+--   ArgToApprox sc H𝟙 x = x
+--   ArgToApprox sc HType x = x
+--   ArgToApprox sc HCumul (c , x) = c , toApprox-1 sc c x
+--   ArgToApprox sc (HCtor x₁) x = x
 
-  -- Traverse a ⁇ structure to switch exact to approx or vice versa
-  ArgToApprox :  ∀ sc (tyHead : TyHead numTypes) → ⁇Args {{æ = Exact}} sc numTypes tyHead → ⁇Args {{æ = Approx}} sc numTypes tyHead
-  ArgToApprox sc HΠ x = x
-  ArgToApprox sc HΣ x = x
-  ArgToApprox sc H≅ x = x
-  ArgToApprox sc H𝟙 x = x
-  ArgToApprox sc HType x = x
-  ArgToApprox sc HCumul (c , x) = c , toApprox-1 sc c x
-  ArgToApprox sc (HCtor x₁) x = x
+--   ArgToExact :  ∀ sc (tyHead : TyHead numTypes) → ⁇Args {{æ = Approx}} sc numTypes tyHead → ⁇Args {{æ = Exact}} sc numTypes tyHead
+--   ArgToExact sc HΠ x = x
+--   ArgToExact sc HΣ x = x
+--   ArgToExact sc H≅ x = x
+--   ArgToExact sc H𝟙 x = x
+--   ArgToExact sc HType x = x
+--   ArgToExact sc HCumul (c , x) = c , toExact-1 sc c x
+--   ArgToExact sc (HCtor x₁) x = x
 
-  ArgToExact :  ∀ sc (tyHead : TyHead numTypes) → ⁇Args {{æ = Approx}} sc numTypes tyHead → ⁇Args {{æ = Exact}} sc numTypes tyHead
-  ArgToExact sc HΠ x = x
-  ArgToExact sc HΣ x = x
-  ArgToExact sc H≅ x = x
-  ArgToExact sc H𝟙 x = x
-  ArgToExact sc HType x = x
-  ArgToExact sc HCumul (c , x) = c , toExact-1 sc c x
-  ArgToExact sc (HCtor x₁) x = x
+--   ArgToApproxExact :  ∀ sc (tyHead : TyHead numTypes) → (x : ⁇Args {{æ = Approx}} sc numTypes tyHead) → ArgToApprox sc tyHead (ArgToExact sc tyHead x) ≡c x
+--   ArgToApproxExact sc HΠ x = refl
+--   ArgToApproxExact sc HΣ x = refl
+--   ArgToApproxExact sc H≅ x = refl
+--   ArgToApproxExact sc H𝟙 x = refl
+--   ArgToApproxExact sc HType x = refl
+--   ArgToApproxExact sc HCumul (x , y) = ΣPathP (refl , toApproxExact-1 sc)
+--   ArgToApproxExact sc (HCtor x₁) x = refl
 
-  ArgToApproxExact :  ∀ sc (tyHead : TyHead numTypes) → (x : ⁇Args {{æ = Approx}} sc numTypes tyHead) → ArgToApprox sc tyHead (ArgToExact sc tyHead x) ≡c x
-  ArgToApproxExact sc HΠ x = refl
-  ArgToApproxExact sc HΣ x = refl
-  ArgToApproxExact sc H≅ x = refl
-  ArgToApproxExact sc H𝟙 x = refl
-  ArgToApproxExact sc HType x = refl
-  ArgToApproxExact sc HCumul (x , y) = ΣPathP (refl , toApproxExact-1 sc)
-  ArgToApproxExact sc (HCtor x₁) x = refl
+--   ResToApprox :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)
+--   ResToApprox {tyHead = HΠ} x = tt*
+--   ResToApprox {tyHead = HΣ} x = x
+--   ResToApprox {tyHead = H≅} x = x
+--   ResToApprox {tyHead = HCtor x₁} x = x
 
-  ResToApprox :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)
-  ResToApprox {tyHead = HΠ} x = tt*
-  ResToApprox {tyHead = HΣ} x = x
-  ResToApprox {tyHead = H≅} x = x
-  ResToApprox {tyHead = HCtor x₁} x = x
+--   ResToExact :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com) → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com
+--   ResToExact {tyHead = HΠ} x = ▹⁇⁇ ⦃ æ = Exact ⦄ _
+--   ResToExact {tyHead = HΣ} x = x
+--   ResToExact {tyHead = H≅} x = x
+--   ResToExact {tyHead = HCtor x₁} x = x
 
-  ResToExact :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com) → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com
-  ResToExact {tyHead = HΠ} x = ▹⁇⁇ ⦃ æ = Exact ⦄ _
-  ResToExact {tyHead = HΣ} x = x
-  ResToExact {tyHead = H≅} x = x
-  ResToExact {tyHead = HCtor x₁} x = x
+--   ResToApproxExact :  ∀ {sc} {▹Self tyHead com} → (x : ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)) → ResToApprox {▹Self = ▹Self } (ResToExact x) ≡c x
+--   ResToApproxExact {tyHead = HΠ} x = refl
+--   ResToApproxExact {tyHead = HΣ} x = refl
+--   ResToApproxExact {tyHead = H≅} x = refl
+--   ResToApproxExact {tyHead = HCtor x₁} x = refl
 
-  ResToApproxExact :  ∀ {sc} {▹Self tyHead com} → (x : ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)) → ResToApprox {▹Self = ▹Self } (ResToExact x) ≡c x
-  ResToApproxExact {tyHead = HΠ} x = refl
-  ResToApproxExact {tyHead = HΣ} x = refl
-  ResToApproxExact {tyHead = H≅} x = refl
-  ResToApproxExact {tyHead = HCtor x₁} x = refl
+--   PreAllToApprox : ∀ {ℓ sc} {Self mI}
+--     → preAllDataTypes {{æ = Exact}} ℓ sc Self mI
+--     → preAllDataTypes ⦃ æ = Approx ⦄ ℓ sc tt* mI
+--   PreAllToApprox W℧ = W℧
+--   PreAllToApprox W⁇ = W⁇
+--   PreAllToApprox {mI = nothing} (Wsup (FC (h , arg) res)) = Wsup (FC (h , ArgToApprox _ h arg ) λ r → PreAllToApprox (res (ResToExact r)))
+--   PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
 
-  PreAllToApprox : ∀ {ℓ sc} {Self mI}
-    → preAllDataTypes {{æ = Exact}} ℓ sc Self mI
-    → preAllDataTypes ⦃ æ = Approx ⦄ ℓ sc tt* mI
-  PreAllToApprox W℧ = W℧
-  PreAllToApprox W⁇ = W⁇
-  PreAllToApprox {mI = nothing} (Wsup (FC (h , arg) res)) = Wsup (FC (h , ArgToApprox _ h arg ) λ r → PreAllToApprox (res (ResToExact r)))
-  PreAllToApprox {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToApprox (res r))
+--   PreAllToExact : ∀ {ℓ sc} {Self mI}
+--     → preAllDataTypes {{æ = Approx}} ℓ sc tt* mI
+--     → preAllDataTypes ⦃ æ = Exact ⦄ ℓ sc Self mI
+--   PreAllToExact {mI = mI} W℧ = W℧
+--   PreAllToExact {mI = mI} W⁇ = W⁇
+--   PreAllToExact {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) res))
+--     = Wsup (FC (h , ArgToExact _ h arg )
+--       λ r → PreAllToExact (res (substPath (⁇Resp ⦃ æ = Approx ⦄ sc numTypes tt* h) (ArgToApproxExact sc h arg) (ResToApprox r))))
+--   PreAllToExact {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToExact (res r))
 
-  PreAllToExact : ∀ {ℓ sc} {Self mI}
-    → preAllDataTypes {{æ = Approx}} ℓ sc tt* mI
-    → preAllDataTypes ⦃ æ = Exact ⦄ ℓ sc Self mI
-  PreAllToExact {mI = mI} W℧ = W℧
-  PreAllToExact {mI = mI} W⁇ = W⁇
-  PreAllToExact {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) res))
-    = Wsup (FC (h , ArgToExact _ h arg )
-      λ r → PreAllToExact (res (substPath (⁇Resp ⦃ æ = Approx ⦄ sc numTypes tt* h) (ArgToApproxExact sc h arg) (ResToApprox r))))
-  PreAllToExact {mI = just tyCtor} (Wsup (FC c res)) = Wsup (FC c λ r → PreAllToExact (res r))
+--   PreAllToApproxExact : ∀ {ℓ sc} {Self mI}
+--     → (x : preAllDataTypes {{æ = Approx}} ℓ sc tt* mI)
+--     → PreAllToApprox {Self = Self} (PreAllToExact {Self = Self} x) ≡ x
+--   PreAllToApproxExact {ℓ = ℓ} {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) resp))
+--     = cong₂
+--       {A = ⁇Args {{æ = Approx}} sc numTypes h}
+--       {B = λ a → (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , a)) →
+--         W̃ (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (inext (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (h , a) r)}
+--       {x = ArgToApprox sc h (ArgToExact sc h arg)}
+--       {y = arg}
+--       (λ a b → Wsup (FC (h , a) b))
+--       (ArgToApproxExact sc h arg)
+--       (compEqPath
+--         (congP
+--           (λ i a →
+--             λ (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , ArgToApproxExact sc h arg i) )
+--               → PreAllToApprox {Self = Self} (PreAllToExact (a r))) rFunEq)
+--         (funExtPath (λ r → PreAllToApproxExact {Self = Self} (resp r)))
+--         )
+--     where
+--       sf : ∀ (r' : ⁇Resp {{æ = Approx}} sc numTypes tt* h
+--                         (ArgToApprox sc h (ArgToExact sc h arg))) → PathP _ (ResToApprox (ResToExact r')) (substPath (⁇Resp {{æ = Approx}} sc numTypes tt* h)
+--                                                                                                (ArgToApproxExact sc h arg) (ResToApprox (ResToExact r')))
+--       sf r' = subst-filler  (⁇Resp {{æ = Approx}} sc numTypes tt* h) (ArgToApproxExact sc h arg) (ResToApprox {▹Self = Self} (ResToExact r'))
+--       rFunEq : PathP (λ i → (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , ArgToApproxExact sc h arg i) ) → preAllDataTypes {{æ = Approx}} ℓ sc tt* (recForHead h) )
+--         (λ r →  resp (substPath (⁇Resp {{æ = Approx}} sc numTypes tt* h) (ArgToApproxExact sc h arg) (ResToApprox {▹Self = Self} (ResToExact r))))
+--         λ r → resp r
+--       rFunEq = symP (toPathP (funExtPath (λ r → {!!})))
 
-  PreAllToApproxExact : ∀ {ℓ sc} {Self mI}
-    → (x : preAllDataTypes {{æ = Approx}} ℓ sc tt* mI)
-    → PreAllToApprox {Self = Self} (PreAllToExact {Self = Self} x) ≡ x
-  PreAllToApproxExact {ℓ = ℓ} {sc = sc} {Self = Self} {mI = nothing} (Wsup (FC (h , arg) resp))
-    = cong₂
-      {A = ⁇Args {{æ = Approx}} sc numTypes h}
-      {B = λ a → (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , a)) →
-        W̃ (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (inext (preAllDataContainer {{æ = Approx}} ℓ sc tt*) (h , a) r)}
-      {x = ArgToApprox sc h (ArgToExact sc h arg)}
-      {y = arg}
-      (λ a b → Wsup (FC (h , a) b))
-      (ArgToApproxExact sc h arg)
-      retEq
-    where
-      -- retEq : PathP
-      --           (λ i →
-      --              (r
-      --               : Response (preAllDataContainer ℓ sc tt*)
-      --                 (h , ArgToApproxExact sc h arg i)) →
-      --              W̃ (preAllDataContainer ℓ sc tt*)
-      --              (inext (preAllDataContainer ℓ sc tt*)
-      --               (h , ArgToApproxExact sc h arg i) r))
-      --           (λ r →
-      --              PreAllToApprox
-      --              (PreAllToExact
-      --               (resp
-      --                (substPath (⁇Resp sc (DataTypes.numTypes _) tt* h)
-      --                 (ArgToApproxExact sc h arg) (ResToApprox (ResToExact r))))))
-      --           (λ r → resp r)
-      retEq : _
-      retEq i r =
-        PreAllToApproxExact {Self = Self} {mI = recForHead h}
-          {!!} i
-            where
+--       -- rEq : {!!}
+--         -- PreAllToApproxExact {Self = Self} {mI = recForHead h}
+--         --   {!!} i
+--         --     where
+--         --       pf : ∀ {j} → (congPath {B = λ _ → Type} (λ x → ⁇Resp ⦃ æ = Approx ⦄ sc _ tt* h x) {!!}) {!!}  ≡c {!!}
 
-          -- test : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
-          --     {i = nothing} (h , ArgToApproxExact sc h arg i)
-          --   → Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
-          --     {i = nothing }(h , arg)
-          -- test r = transport (congPath {x = ArgToApproxExact sc h arg i} {y = arg}
-          --                       (λ x →
-          --                          Response (preAllDataContainer ⦃ æ = Approx ⦄ ℓ sc tt*) {i = nothing} (h , x))
-          --                       (pathi1 (ArgToApproxExact sc h arg) i)) r
+--           -- test : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
+--           --     {i = nothing} (h , ArgToApproxExact sc h arg i)
+--           --   → Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
+--           --     {i = nothing }(h , arg)
+--           -- test r = transport (congPath {x = ArgToApproxExact sc h arg i} {y = arg}
+--           --                       (λ x →
+--           --                          Response (preAllDataContainer ⦃ æ = Approx ⦄ ℓ sc tt*) {i = nothing} (h , x))
+--           --                       (pathi1 (ArgToApproxExact sc h arg) i)) r
 
-      -- (toPathP (funExtPath (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
-  PreAllToApproxExact {Self = Self} {mI = just ctor} (Wsup (FC com resp))
-    = congPath {A = typeof resp} {x = λ r → PreAllToApprox {Self = Self} (PreAllToExact (resp r))} {y = resp} (λ x → Wsup {i = just ctor} (FC com x)) (funExtPath (λ r → PreAllToApproxExact (resp r)))
-  PreAllToApproxExact {mI = mI} W℧ = reflc
-  PreAllToApproxExact {mI = mI} W⁇ = refl
-
-
-open DataGerms {{...}} public
+--       -- (toPathP (funExtPath (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
+--   PreAllToApproxExact {Self = Self} {mI = just ctor} (Wsup (FC com resp))
+--     = congPath {A = typeof resp} {x = λ r → PreAllToApprox {Self = Self} (PreAllToExact (resp r))} {y = resp} (λ x → Wsup {i = just ctor} (FC com x)) (funExtPath (λ r → PreAllToApproxExact (resp r)))
+--   PreAllToApproxExact {mI = mI} W℧ = reflc
+--   PreAllToApproxExact {mI = mI} W⁇ = refl
 
 
--- Helpful traversal to get recursion started on an inductive type
-wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
-        (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
-        P →
-        P →
-        ∀ {i} (w : W̃ (Arg C) i) → P
+-- open DataGerms {{...}} public
 
-wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
-wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
-wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇
+
+-- -- Helpful traversal to get recursion started on an inductive type
+-- wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : Set ℓ) →
+--         (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ _ → P) (i , cs) → P ) →
+--         P →
+--         P →
+--         ∀ {i} (w : W̃ (Arg C) i) → P
+
+-- wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
+-- wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
+-- wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇
