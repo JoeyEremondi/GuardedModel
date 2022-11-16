@@ -420,7 +420,6 @@ record CodeModule
           (i , cs) →
           W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) i
         starter d cs φ with (FC com res) ← toExactDesc {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) j} (Ds d) true _ cs φ  = Wsup (FC (d , com) res)
-    toApproxExact (Cμ tyCtor cI D i) x = {!!}
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
 
@@ -520,6 +519,9 @@ record CodeModule
     -- toApproxExactDesc = {!!}
 -----------------------------------------------------------------------
 
+    toApproxExact (Cμ tyCtor cI D i) (Wsup x) = {!!}
+    toApproxExact (Cμ tyCtor cI D i) W℧ = refl
+    toApproxExact (Cμ tyCtor cI D i) W⁇ = refl
 
 
 
