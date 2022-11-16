@@ -582,23 +582,6 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
                                                            (substPath (⁇Resp ⦃ æ = Approx ⦄ sc numTypes tt* h)
                                                             (ArgToApproxExact sc h arg))
                                                            (ResToApproxExact r0) ∙ fromPathP p))
-
-      -- rEq : {!!}
-        -- PreAllToApproxExact {Self = Self} {mI = recForHead h}
-        --   {!!} i
-        --     where
-        --       pf : ∀ {j} → (congPath {B = λ _ → Type} (λ x → ⁇Resp ⦃ æ = Approx ⦄ sc _ tt* h x) {!!}) {!!}  ≡c {!!}
-
-          -- test : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
-          --     {i = nothing} (h , ArgToApproxExact sc h arg i)
-          --   → Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*)
-          --     {i = nothing }(h , arg)
-          -- test r = transport (congPath {x = ArgToApproxExact sc h arg i} {y = arg}
-          --                       (λ x →
-          --                          Response (preAllDataContainer ⦃ æ = Approx ⦄ ℓ sc tt*) {i = nothing} (h , x))
-          --                       (pathi1 (ArgToApproxExact sc h arg) i)) r
-
-      -- (toPathP (funExtPath (λ r → {!!} ∙ PreAllToApproxExact (resp r))))
   PreAllToApproxExact {Self = Self} {mI = just ctor} (Wsup (FC com resp))
     = congPath {A = typeof resp} {x = λ r → PreAllToApprox {Self = Self} (PreAllToExact (resp r))} {y = resp} (λ x → Wsup {i = just ctor} (FC com x)) (funExtPath (λ r → PreAllToApproxExact (resp r)))
   PreAllToApproxExact {mI = mI} W℧ = reflc
@@ -618,3 +601,14 @@ wRecArg : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor �
 wRecArg tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArg tyCtor P φ base℧ base⁇ (k r))
 wRecArg tyCtor P φ base℧ base⁇ W℧ = base℧
 wRecArg tyCtor P φ base℧ base⁇ W⁇ = base⁇
+
+
+wRecArgI : ∀ {{ _ : DataTypes }} {ℓ} (tyCtor : CName) {I} {C : DName tyCtor → Container I} (P : I → Set ℓ) →
+        (∀ {i} d (cs : ⟦ (C d) ⟧F (W̃ (Arg C) ) i) → □ (C d) (λ (j , _) → P j) (i , cs) → P i ) →
+        (∀ i → P i) →
+        (∀ i → P i) →
+        ∀ {i} (w : W̃ (Arg C) i) → P i
+
+wRecArgI tyCtor P φ base℧ base⁇ (Wsup (FC (d , c) k)) = φ d (FC c k) (λ r → wRecArgI tyCtor P φ base℧ base⁇ (k r))
+wRecArgI tyCtor P φ base℧ base⁇ W℧ = base℧ _
+wRecArgI tyCtor P φ base℧ base⁇ W⁇ = base⁇ _
