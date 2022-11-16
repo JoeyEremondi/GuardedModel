@@ -504,9 +504,19 @@ record CodeModule
     toApproxDesc (CEnd i₁) b i (FC com res) φ = FC com (λ ())
     toApproxDesc (CArg c D cB' x) b i (FC (a , com) res) φ
       = FC (toApprox (c b) a , toApproxCommandD ⦃ æ = Exact ⦄ D i _ com) λ r → φ (toExactResponseD D _ _ r)
-    toApproxDesc (CRec j D) b i (FC com res) φ = {!com!}
-    toApproxDesc (CHRec c j D cB' x) b i (FC com res) φ = {!!}
-    toExactDesc = {!!}
+    toApproxDesc (CRec j D) b i (FC com res) φ
+      = FC (toApproxCommandD {{æ = Exact}} D i _ com) ((λ { (Rec r) → φ (Rec tt) ; (Rest r) → φ (Rest (toExactResponseD D _ _ r)) }) )
+    toApproxDesc (CHRec c j D cB' x) b i (FC com res) φ
+      = FC (toApproxCommandD ⦃ æ = Exact ⦄ D _ _ com) (λ {(Rec r ) → φ (Rec (toExact _ r)) ; (Rest r) → φ (Rest (toExactResponseD D _ _ r))})
+    toExactDesc (CEnd i₁) b i (FC com res) φ = FC com (λ ())
+    toExactDesc (CArg c D cB' x) b i (FC (a , com) res) φ
+      = FC
+          (toExact (c b) a , substPath (λ a → CommandD ⦃ æ = Exact ⦄ D i (b , a)) (symPath (toApproxExact (c b) a)) (toExactCommandD D _ _ com))
+          λ r → φ (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ r)
+    toExactDesc (CRec j D) b i (FC com res) φ
+      = FC (toExactCommandD  D i _ com) ((λ { (Rec r) → φ (Rec tt) ; (Rest r) → φ (Rest (toApproxResponseD {{æ = Exact}} D _ _ r)) }) )
+    toExactDesc (CHRec c j D cB' x) b i (FC com res) φ
+      = FC (toExactCommandD  D _ _ com) (λ {(Rec r ) → φ (Rec (toApprox _ r)) ; (Rest r) → φ (Rest (toApproxResponseD {{æ = Exact}} D _ _ r))})
     -- toApproxExactDesc = {!!}
 -----------------------------------------------------------------------
 
