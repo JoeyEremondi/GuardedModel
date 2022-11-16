@@ -193,7 +193,7 @@ record CodeModule
     -- Interpretation of description codes into W-types
     interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
     CommandD : ∀ {{æ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
-    ResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD D i b → Set
+    ResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → Set
     inextD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D i b) → ResponseD {{æ = Approx}} D b c → ApproxEl  I
     FWUnk : {{_ : Æ}} → A.▹ ⁇Self → Set
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
@@ -215,18 +215,16 @@ record CodeModule
           → ⟦ interpDesc {{æ = Exact}} D b ⟧F Y i
 
     toApproxCommandD : ∀  {{æ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = æ}} D i b → CommandD {{æ = Approx}} D i b
-    toApproxResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD D i b)
-      → ResponseD {{æ = æ}} D b com → ResponseD {{æ = Approx}} D b (toApproxCommandD D i b com)
+    toApproxResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
+      → ResponseD {{æ = æ}} D b com → ResponseD {{æ = Approx}} D b com
     toExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → CommandD {{æ = Exact}} D i b
     toExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
-      → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = Exact}} D b (toExactCommandD D i b com)
+      → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = Exact}} D b com
     toApproxExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D i b)
       → toApproxCommandD {{æ = Exact}} D i b (toExactCommandD D i b c) ≡c c
     toApproxExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
       → (r : ResponseD {{æ = Approx}} D b com)
-      → PathP (λ i → ResponseD {{æ = Approx}} D b (toApproxExactCommandD D _ b com i))
-        (toApproxResponseD {{æ = Exact}} D b (toExactCommandD D i b com) (toExactResponseD D b com r) )
-        r
+      → (toApproxResponseD {{æ = Exact}} D b com (toExactResponseD D b com r) ) ≡c r
 
 
     -- toApproxDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Exact}} D b) i → W̃  (interpDesc {{æ = Approx}} D b) i
@@ -452,7 +450,7 @@ record CodeModule
         → ℂDesc I cB (SigHR rest)
 
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc {{æ = æ}} {I = I} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D i b) ◃ ResponseD {{æ = æ}} D b / λ {i} c r → inextD D b (toApproxCommandD  D i b c) (toApproxResponseD D b c r)
+    interpDesc {{æ = æ}} {I = I} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D i b) ◃ (λ c → ResponseD {{æ = æ}} D b (toApproxCommandD D _ b c)) / λ {i} c r → inextD D b (toApproxCommandD  D i b c) (toApproxResponseD D b _ r)
     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
     CommandD (CEnd j) i b = i ≅ j
@@ -462,7 +460,7 @@ record CodeModule
 --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd i) b com = 𝟘
-    ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , approx a) com
+    ResponseD (CArg c D _ _) b (a , com) = ResponseD D (b , a) com
     ResponseD (CRec j D) b com = Rec⇒ 𝟙    Rest⇒ (ResponseD D b com)
     ResponseD (CHRec c j D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
     -- ResponseD (CHGuard c D E) (comD , comE) =
@@ -505,7 +503,7 @@ record CodeModule
 
     toApproxDesc (CEnd i₁) b i (FC com res) φ = FC com (λ ())
     toApproxDesc (CArg c D cB' x) b i (FC (a , com) res) φ
-      = FC (toApprox (c b) a , toApproxCommandD ⦃ æ = Exact ⦄ D i _ com) {!!}
+      = FC (toApprox (c b) a , toApproxCommandD ⦃ æ = Exact ⦄ D i _ com) λ r → φ (toExactResponseD D _ _ r)
     toApproxDesc (CRec j D) b i (FC com res) φ = {!com!}
     toApproxDesc (CHRec c j D cB' x) b i (FC com res) φ = {!!}
     toExactDesc = {!!}
