@@ -379,31 +379,36 @@ record CodeModule
         → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
         → ApproxEl cI → ℂ
     El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
-    toApprox (Cμ tyCtor cI Ds iStart) x =
-      wRecArgI tyCtor (λ i → El {{æ = Approx}} (Cμ tyCtor cI Ds i)) starter (λ _ → W℧) (λ _ → W⁇) x
+    -- toApprox (Cμ tyCtor cI Ds iStart) (Wsup (FC (d , com) res)) =
+    --   with (FC retCom retRes) ← toApproxDesc {Y = λ j → {!!}} (Ds d) true {!!} (FC com res) (λ r → {!!})
+    --   = {!x!}
+    -- toApprox (Cμ tyCtor cI Ds iStart) W⁇ = W⁇
+    -- toApprox (Cμ tyCtor cI Ds iStart) W℧ = W℧
+    toApprox (Cμ tyCtor cI Ds iStart)  x =
+      wRecArgI tyCtor (λ i → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) true)) i) starter (λ _ → W℧) (λ _ → W⁇) x
       where
         starter : {i : ApproxEl cI} (d : DName tyCtor)
           (cs
           : ⟦ interpDesc {{æ = Exact}} (Ds d) true ⟧F
             (W̃ (Arg (λ d₁ → interpDesc {{æ = Exact}} (Ds d₁) true))) i) →
           □ (interpDesc {{æ = Exact}} (Ds d) true)
-          (λ (j , _) → El {{æ = Approx}} (Cμ tyCtor cI Ds j))
+          (λ (j , _) → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) true)) j)
           (i , cs) →
-          El {{æ = Approx}} (Cμ tyCtor cI Ds i)
-        starter d cs φ with (FC com res) ← toApproxDesc {Y = λ j → El {{æ = Approx}} (Cμ tyCtor cI Ds j)} (Ds d) true _ cs φ  = Wsup (FC (d , com) res)
+          W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) true)) i
+        starter d cs φ with (FC com res) ← toApproxDesc {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) true)) j} (Ds d) true _ cs φ  = Wsup (FC (d , com) res)
 
-    toExact (Cμ tyCtor cI Ds iStart) x =
-      wRecArgI tyCtor (λ i → El {{æ = Exact}} (Cμ tyCtor cI Ds i)) starter (λ _ → W℧) (λ _ → W⁇) x
+    toExact (Cμ tyCtor cI Ds iStart)  x =
+      wRecArgI tyCtor (λ i → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) i) starter (λ _ → W℧) (λ _ → W⁇) x
       where
         starter : {i : ApproxEl cI} (d : DName tyCtor)
           (cs
           : ⟦ interpDesc {{æ = Approx}} (Ds d) true ⟧F
             (W̃ (Arg (λ d₁ → interpDesc {{æ = Approx}} (Ds d₁) true))) i) →
           □ (interpDesc {{æ = Approx}} (Ds d) true)
-          (λ (j , _) → El {{æ = Exact}} (Cμ tyCtor cI Ds j))
+          (λ (j , _) → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) j)
           (i , cs) →
-          El {{æ = Exact}} (Cμ tyCtor cI Ds i)
-        starter d cs φ with (FC com res) ← toExactDesc {Y = λ j → El {{æ = Exact}} (Cμ tyCtor cI Ds j)} (Ds d) true _ cs φ  = Wsup (FC (d , com) res)
+          W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) i
+        starter d cs φ with (FC com res) ← toExactDesc {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) true)) j} (Ds d) true _ cs φ  = Wsup (FC (d , com) res)
     toApproxExact (Cμ tyCtor cI D i) x = {!!}
     -- ▹El (Cμ tyCtor cI D i) = W (Arg (λ d → ▹interpDesc {{Exact}} (D d))) 𝟙 tt
 
@@ -478,10 +483,10 @@ record CodeModule
     --
     FWUnk Self = Pre⁇ ℓ sc Self
 
-    toApproxDesc (CEnd i₁) b i cs φ = {!!}
-    toApproxDesc (CArg c D cB' x) b i cs φ = {!!}
-    toApproxDesc (CRec j D) b i cs φ = {!!}
-    toApproxDesc (CHRec c j D cB' x) b i cs φ = {!!}
+    toApproxDesc (CEnd i₁) b i (FC com res) φ = FC com (λ r → {!φ r!})
+    toApproxDesc (CArg c D cB' x) b i (FC com res) φ = {!!}
+    toApproxDesc (CRec j D) b i (FC com res) φ = {!!}
+    toApproxDesc (CHRec c j D cB' x) b i (FC com res) φ = {!!}
     toExactDesc = {!!}
     -- toApproxExactDesc = {!!}
 -----------------------------------------------------------------------
