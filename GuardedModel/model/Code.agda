@@ -264,6 +264,7 @@ record CodeModule
             (λ r → toApproxμ tyCtor cI cBstart Ds _ bStart (⟦_⟧F.response (toExactDesc D b i cs (λ r → toExactμ tyCtor cI cBstart Ds _ bStart (⟦_⟧F.response cs r))) r)) ≡c cs
 
     toApproxCommandD : ∀  {{æ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = æ}} D i b → CommandD {{æ = Approx}} D i b
+    -- toApproxCommandDEq : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (x : CommandD {{æ = Approx}} D i b) → toApproxCommandD {{æ = Approx}} D i b x ≡c x
     toApproxResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
       → ResponseD {{æ = æ}} D b com → ResponseD {{æ = Approx}} D b com
     toExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → CommandD {{æ = Exact}} D i b
@@ -553,11 +554,13 @@ record CodeModule
     --
     FWUnk Self = Pre⁇ ℓ sc Self
 
+    toApproxCommandD {{æ = Approx}} D i b com = com
     toApproxCommandD (CEnd i₁) i b com = com
     toApproxCommandD (CArg c D cB' x) i b (a , com) = approx  {c = c b}  a , toApproxCommandD D i (b , approx {c = c b} a) com
     toApproxCommandD (CRec j D) i b com = toApproxCommandD D i b com
     toApproxCommandD (CHRec c j D cB' x) i b com = toApproxCommandD D i b com
 
+    toApproxResponseD {{æ = Approx}} D b com r = r
     toApproxResponseD (CArg c D cB' x) b com r = toApproxResponseD D (b , (fst com)) (snd com) r
     toApproxResponseD (CRec j D) b com (Rec x) = Rec tt
     toApproxResponseD (CRec j D) b com (Rest r) = Rest (toApproxResponseD D b _ r)
@@ -591,26 +594,27 @@ record CodeModule
     toApproxExactResponseD (CHRec c j D cB' x) b com (Rec r) = congPath Rec (toApproxExact (c b) r)
     toApproxExactResponseD (CHRec c j D cB' x) b com (Rest r) = congPath Rest (toApproxExactResponseD D b com r)
 
---     toApproxDesc (CEnd i₁) b i (FC com res) φ = FC com (λ ())
---     toApproxDesc (CArg c D cB' x) b i (FC (a , com) res) φ
---       = FC (toApprox (c b) a , toApproxCommandD ⦃ æ = Exact ⦄ D i _ com) λ r → φ (toExactResponseD D _ _ r)
---     toApproxDesc (CRec j D) b i (FC com res) φ
---       = FC (toApproxCommandD {{æ = Exact}} D i _ com) ((λ { (Rec r) → φ (Rec tt) ; (Rest r) → φ (Rest (toExactResponseD D _ _ r)) }) )
---     toApproxDesc (CHRec c j D cB' x) b i (FC com res) φ
---       = FC (toApproxCommandD ⦃ æ = Exact ⦄ D _ _ com) (λ {(Rec r ) → φ (Rec (toExact _ r)) ; (Rest r) → φ (Rest (toExactResponseD D _ _ r))})
---     toExactDesc (CEnd i₁) b i (FC com res) φ = FC com (λ ())
---     toExactDesc (CArg c D cB' x) b i (FC (a , com) res) φ
---       = FC
---           (toExact (c b) a , substPath (λ a → CommandD ⦃ æ = Exact ⦄ D i (b , a)) (symPath (toApproxExact (c b) a)) (toExactCommandD D _ _ com))
---           λ r → φ (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ r)
+    toApproxDesc {Y = Y} D b i (FC com res) φ =
+      FC
+        (toApproxCommandD ⦃ æ = Exact ⦄ D i b com)
+        λ r →
+          let
+            ret = φ (toExactResponseD D b (toApproxCommandD ⦃ Exact ⦄ {_} {_} {_} D i b com) r)
+          in subst Y (cong₂ (inextD D b) refl (toApproxExactResponseD D b _ r)) ret
 
---     toApproxExactDesc tyCtor cI cB Ds iStart bStart D cs i x = {!Ds!}
+    toExactDesc {Y = Y} D b i (FC com res) φ =
+      FC (toExactCommandD D i b com)
+      λ r →
+          let
+            ret = φ (toApproxResponseD ⦃ æ = Exact ⦄ D b _ (transport (congPath (ResponseD ⦃ æ = _ ⦄ D b) (toApproxExactCommandD D i b com)) r))
+          in substPath Y (cong₂ (λ c r → inextD D b c (toApproxResponseD {{æ = Exact}} D b c r)) (symPath (toApproxExactCommandD D i b com)) (symP (toPathP refl))) ret
 
---     toExactDesc (CRec j D) b i (FC com res) φ
---       = FC (toExactCommandD  D i _ com) ((λ { (Rec r) → φ (Rec tt) ; (Rest r) → φ (Rest (toApproxResponseD {{æ = Exact}} D _ _ r)) }) )
---     toExactDesc (CHRec c j D cB' x) b i (FC com res) φ
---       = FC (toExactCommandD  D _ _ com) (λ {(Rec r ) → φ (Rec (toApprox _ r)) ; (Rest r) → φ (Rest (toApproxResponseD {{æ = Exact}} D _ _ r))})
---     -- toApproxExactDesc = {!!}
+    toApproxExactDesc tyCtor cI cB Ds iStart bStart D cs i (FC com resp) =
+      cong₂
+        FC
+          (toApproxExactCommandD D i cs com)
+          (funExtDep λ {r1} {r2} p → symP (toPathP (congPath (transportPath _) (symPath (toApproxExactμ ? ? ? ? ? ? ? )))))
+        where open import Cubical.Functions.FunExtEquiv using (funExtDep)
 -- -----------------------------------------------------------------------
 
 
