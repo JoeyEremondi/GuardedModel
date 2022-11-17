@@ -580,7 +580,7 @@ record CodeModule
                        (λ r → transport (cong₂ (λ x y → X (inextD D b x (toApproxResponseD {{æ = Exact}} D b x y))) (sym (toApproxExactCommandD D i b _)) (symP (transport-filler
                                                                                                                                                                    (congPath (ResponseD ⦃ æ = _ ⦄ D b)
                                                                                                                                                                     (toApproxExactCommandD D i b _))
-                                                                                                                                                                   r))) (⟦_⟧F.response cs (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ (transport (congPath (ResponseD ⦃ æ = Exact ⦄ D b) (toApproxExactCommandD D i b _)) r))))
+                                                                                                                                                                   r))) (⟦_⟧F.response cs (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ (subst (ResponseD ⦃ æ = Exact ⦄ D b) ( (toApproxExactCommandD D i b _)) r))))
           ≡c cs
     toApproxExactDesc D cs i (FC com resp) φ = cong₂ FC (toApproxExactCommandD D i _ com)
       (funExtDep (λ {r1} {r2} p → {!resp!}))
