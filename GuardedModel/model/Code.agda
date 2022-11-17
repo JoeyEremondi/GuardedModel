@@ -191,7 +191,6 @@ record CodeModule
     -- Code-based Descriptions of inductive data types
     data ℂDesc (I : ℂ) : ℂ → IndSig → Set
     -- Interpretation of description codes into W-types
-    interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
     CommandD : ∀ {{æ : Æ}}  {I cB sig} → ℂDesc I cB sig → ApproxEl I → (ApproxEl cB → Set)
     ResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → Set
     inextD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i} → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D i b) → ResponseD {{æ = Approx}} D b c → ApproxEl  I
@@ -199,6 +198,22 @@ record CodeModule
     -- ▹interpDesc : ∀{{ _ : Æ }} {I} → (ℂDesc I ) → Container 𝟙
     -- ▹CommandD : ∀ {{ _ : Æ }}{I} →  ℂDesc I  → Set
     -- ▹ResponseD : ∀ {{ _ : Æ }}{I} →  (D : ℂDesc I ) → ▹CommandD D → Set
+    toApproxCommandD : ∀  {{æ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = æ}} D i b → CommandD {{æ = Approx}} D i b
+    -- toApproxCommandDEq : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (x : CommandD {{æ = Approx}} D i b) → toApproxCommandD {{æ = Approx}} D i b x ≡c x
+    toApproxResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
+      → ResponseD {{æ = æ}} D b com → ResponseD {{æ = Approx}} D b com
+    toExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → CommandD {{æ = Exact}} D i b
+    toExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
+      → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = Exact}} D b com
+    toApproxExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D i b)
+      → toApproxCommandD {{æ = Exact}} D i b (toExactCommandD D i b c) ≡c c
+    toApproxExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
+      → (r : ResponseD {{æ = Approx}} D b com)
+      → (toApproxResponseD {{æ = Exact}} D b com (toExactResponseD D b com r) ) ≡c r
+
+    interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
+    --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
+    interpDesc {{æ = æ}} {I = I} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D i b) ◃ (λ c → ResponseD {{æ = æ}} D b (toApproxCommandD D _ b c)) / λ {i} c r → inextD D b (toApproxCommandD  D i b c) (toApproxResponseD D b _ r)
 
     toApproxμ :
       (tyCtor : CName)
@@ -244,37 +259,6 @@ record CodeModule
           → □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (i , cs)
           → ⟦ interpDesc {{æ = Exact}} D b ⟧F Y i
 
-    toApproxExactDesc :
-      (tyCtor : CName)
-        → (cI : ℂ)
-        → (cBstart : ℂ)
-        → (Ds : (d : DName tyCtor) → ℂDesc cI cBstart (indSkeleton tyCtor d))
-        → (iStart : ApproxEl cI)
-        → (bStart : ApproxEl cBstart)
-        →  ∀ {  cB sig }
-        → (D : ℂDesc cI cB sig)
-        → (b : ApproxEl cB)
-        → (i : ApproxEl cI)
-        → (cs : ⟦ interpDesc {{æ = Approx}} D b ⟧F (W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) bStart))) i)
-        → toApproxDesc
-          {X = (W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) bStart)))} D b i
-            (toExactDesc
-              {X = (W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) bStart)))} D b i cs
-              (λ r → toExactμ tyCtor cI cBstart (λ d → Ds d) _ bStart (⟦_⟧F.response cs r) ))
-            (λ r → toApproxμ tyCtor cI cBstart Ds _ bStart (⟦_⟧F.response (toExactDesc D b i cs (λ r → toExactμ tyCtor cI cBstart Ds _ bStart (⟦_⟧F.response cs r))) r)) ≡c cs
-
-    toApproxCommandD : ∀  {{æ : Æ}} {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = æ}} D i b → CommandD {{æ = Approx}} D i b
-    -- toApproxCommandDEq : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (x : CommandD {{æ = Approx}} D i b) → toApproxCommandD {{æ = Approx}} D i b x ≡c x
-    toApproxResponseD : ∀ {{æ :  Æ}} {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
-      → ResponseD {{æ = æ}} D b com → ResponseD {{æ = Approx}} D b com
-    toExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → CommandD {{æ = Approx}} D i b → CommandD {{æ = Exact}} D i b
-    toExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
-      → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = Exact}} D b com
-    toApproxExactCommandD : ∀   {I cB sig} → (D : ℂDesc I cB sig) → (i : ApproxEl I) → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D i b)
-      → toApproxCommandD {{æ = Exact}} D i b (toExactCommandD D i b c) ≡c c
-    toApproxExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
-      → (r : ResponseD {{æ = Approx}} D b com)
-      → (toApproxResponseD {{æ = Exact}} D b com (toExactResponseD D b com r) ) ≡c r
 
 
     -- toApproxDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Exact}} D b) i → W̃  (interpDesc {{æ = Approx}} D b) i
@@ -450,38 +434,9 @@ record CodeModule
     toExact (Cμ tyCtor cI Ds iStart) x = toExactμ tyCtor cI C𝟙 Ds iStart true x
     toApproxExact (Cμ tyCtor cI Ds i) x = toApproxExactμ tyCtor cI C𝟙 Ds i true x
 
-    toApproxμ tyCtor cI cB Ds iStart b W⁇ = W⁇
-    toApproxμ tyCtor cI cB Ds iStart b W℧ = W℧
-    toApproxμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = Wsup (FC (d , ⟦_⟧F.command recVal) (⟦_⟧F.response recVal))
-      where
-        recVal =
-          toApproxDesc
-          {X = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) j}
-          {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b)) j}
-          (Ds d)
-          b
-          _
-          (FC com resp)
-          λ r → toApproxμ tyCtor cI cB (λ d₁ → Ds d₁) _ b (resp r)
-    toExactμ tyCtor cI cB Ds iStart b W⁇ = W⁇
-    toExactμ tyCtor cI cB Ds iStart b W℧ = W℧
-    toExactμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = Wsup (FC (d , ⟦_⟧F.command recVal) (⟦_⟧F.response recVal))
-      where
-        recVal =
-          toExactDesc
-          {X = λ j → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b)) j}
-          {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) j}
-          (Ds d)
-          b
-          _
-          (FC com resp)
-          λ r → toExactμ tyCtor cI cB (λ d₁ → Ds d₁) _ b (resp r)
-
-    toApproxExactμ tyCtor cI cB Ds iStart b W⁇ = refl
-    toApproxExactμ tyCtor cI cB Ds iStart b W℧ = refl
-    toApproxExactμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = cong (λ (FC com resp) → Wsup (FC (d , com) resp)) recEq
-      where
-        recEq = toApproxExactDesc tyCtor cI _ Ds iStart b (Ds d) b _ (FC com resp)
+    -- cong (λ (FC com resp) → Wsup (FC (d , com) resp)) recEq
+    --   where
+    --     recEq = toApproxExactDesc tyCtor cI _ Ds iStart b (Ds d) b _ (FC com resp)
 
 
     -- We then take the quotient of ⁇ by a relation defining errors at each of the germ types
@@ -509,8 +464,6 @@ record CodeModule
         → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
         → ℂDesc I cB (SigHR rest)
 
-    --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
-    interpDesc {{æ = æ}} {I = I} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D i b) ◃ (λ c → ResponseD {{æ = æ}} D b (toApproxCommandD D _ b c)) / λ {i} c r → inextD D b (toApproxCommandD  D i b c) (toApproxResponseD D b _ r)
     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
     CommandD (CEnd j) i b = i ≅ j
@@ -609,12 +562,60 @@ record CodeModule
             ret = φ (toApproxResponseD ⦃ æ = Exact ⦄ D b _ (transport (congPath (ResponseD ⦃ æ = _ ⦄ D b) (toApproxExactCommandD D i b com)) r))
           in substPath Y (cong₂ (λ c r → inextD D b c (toApproxResponseD {{æ = Exact}} D b c r)) (symPath (toApproxExactCommandD D i b com)) (symP (toPathP refl))) ret
 
-    toApproxExactDesc tyCtor cI cB Ds iStart bStart D cs i (FC com resp) =
-      cong₂
-        FC
-          (toApproxExactCommandD D i cs com)
-          (funExtDep λ {r1} {r2} p → symP (toPathP (congPath (transportPath _) (symPath (toApproxExactμ ? ? ? ? ? ? ? )))))
-        where open import Cubical.Functions.FunExtEquiv using (funExtDep)
+    open import Cubical.Functions.FunExtEquiv using (funExtDep)
+    toApproxExactDesc :
+      ∀ { cI cB sig X Y}
+        → (D : ℂDesc cI cB sig)
+        → (b : ApproxEl cB)
+        → (i : ApproxEl cI)
+        → (cs : ⟦ interpDesc {{æ = Approx}} D b ⟧F X i)
+        → (φ : □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (i , cs))
+        → toApproxDesc {X = Y} D b i (toExactDesc D b i cs φ )
+                       (λ r → transport (cong₂ (λ x y → X (inextD D b x (toApproxResponseD {{æ = Exact}} D b x y))) (sym (toApproxExactCommandD D i b _)) (symP (transport-filler
+                                                                                                                                                                   (congPath (ResponseD ⦃ æ = _ ⦄ D b)
+                                                                                                                                                                    (toApproxExactCommandD D i b _))
+                                                                                                                                                                   r))) (⟦_⟧F.response cs (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ (transport (congPath (ResponseD ⦃ æ = Exact ⦄ D b) (toApproxExactCommandD D i b _)) r))))
+          ≡c cs
+    toApproxExactDesc D cs i (FC com resp) φ = cong₂ FC (toApproxExactCommandD D i _ com)
+      (funExtDep (λ {r1} {r2} p → {!resp!}))
+
+
+
+    toApproxμ tyCtor cI cB Ds iStart b W⁇ = W⁇
+    toApproxμ tyCtor cI cB Ds iStart b W℧ = W℧
+    toApproxμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = Wsup (FC (d , ⟦_⟧F.command recVal) (⟦_⟧F.response recVal))
+      where
+        recVal =
+          toApproxDesc
+          {X = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) j}
+          {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b)) j}
+          (Ds d)
+          b
+          _
+          (FC com resp)
+          λ r → toApproxμ tyCtor cI cB (λ d₁ → Ds d₁) _ b (resp r)
+    toExactμ tyCtor cI cB Ds iStart b W⁇ = W⁇
+    toExactμ tyCtor cI cB Ds iStart b W℧ = W℧
+    toExactμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = Wsup (FC (d , ⟦_⟧F.command recVal) (⟦_⟧F.response recVal))
+      where
+        recVal =
+          toExactDesc
+          {X = λ j → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b)) j}
+          {Y = λ j → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) j}
+          (Ds d)
+          b
+          _
+          (FC com resp)
+          λ r → toExactμ tyCtor cI cB (λ d₁ → Ds d₁) _ b (resp r)
+
+    toApproxExactμ tyCtor cI cB Ds iStart b W⁇ = refl
+    toApproxExactμ tyCtor cI cB Ds iStart b W℧ = refl
+    toApproxExactμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp)) = {!!}
+    --   cong₂
+    --     FC
+    --       (toApproxExactCommandD D i cs com)
+    --       (funExtDep λ {r1} {r2} p → symP (toPathP (congPath (transportPath _) (symPath (toApproxExactμ ? ? ? ? ? ? ? )))))
+    --     where open import Cubical.Functions.FunExtEquiv using (funExtDep)
 -- -----------------------------------------------------------------------
 
 
