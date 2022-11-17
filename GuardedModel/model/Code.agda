@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --guarded #-}
+{-# OPTIONS --cubical --guarded --rewriting #-}
 -- open import Desc
 -- open import Level hiding (#_)
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
@@ -210,6 +210,8 @@ record CodeModule
     toApproxExactResponseD : ∀  {I cB sig} → (D : ℂDesc I cB sig) → ∀ {i : ApproxEl I} → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D i b)
       → (r : ResponseD {{æ = Approx}} D b com)
       → (toApproxResponseD {{æ = Exact}} D b com (toExactResponseD D b com r) ) ≡c r
+
+
 
     interpDesc : ∀ {{æ : Æ}} {I} {cB} {sig} →  (ℂDesc I cB sig) → ApproxEl cB → Container (ApproxEl I)
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
@@ -547,20 +549,24 @@ record CodeModule
     toApproxExactResponseD (CHRec c j D cB' x) b com (Rec r) = congPath Rec (toApproxExact (c b) r)
     toApproxExactResponseD (CHRec c j D cB' x) b com (Rest r) = congPath Rest (toApproxExactResponseD D b com r)
 
+
+    {-# BUILTIN REWRITE _≡_ #-}
+    {-# REWRITE toApproxExactResponseD toApproxExactCommandD #-}
+
     toApproxDesc {Y = Y} D b i (FC com res) φ =
       FC
         (toApproxCommandD ⦃ æ = Exact ⦄ D i b com)
         λ r →
           let
             ret = φ (toExactResponseD D b (toApproxCommandD ⦃ Exact ⦄ {_} {_} {_} D i b com) r)
-          in subst Y (cong₂ (inextD D b) refl (toApproxExactResponseD D b _ r)) ret
+          in transport (cong₂ (λ c r → Y (inextD D b c r)) refl (toApproxExactResponseD D b _ r)) ret
 
     toExactDesc {Y = Y} D b i (FC com res) φ =
       FC (toExactCommandD D i b com)
       λ r →
           let
             ret = φ (toApproxResponseD ⦃ æ = Exact ⦄ D b _ (transport (congPath (ResponseD ⦃ æ = _ ⦄ D b) (toApproxExactCommandD D i b com)) r))
-          in substPath Y (cong₂ (λ c r → inextD D b c (toApproxResponseD {{æ = Exact}} D b c r)) (symPath (toApproxExactCommandD D i b com)) (symP (toPathP refl))) ret
+          in transport (cong₂ (λ c r → Y (inextD D b c (toApproxResponseD {{æ = Exact}} D b c r))) (symPath (toApproxExactCommandD D i b com)) (symP (toPathP refl))) ret
 
     open import Cubical.Functions.FunExtEquiv using (funExtDep)
     toApproxExactDesc :
