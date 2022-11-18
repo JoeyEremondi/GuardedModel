@@ -96,3 +96,11 @@ path01Transport Aeq i a j = transportPath (pathij Aeq i j) a
 --   where
     -- pth : PathP (λ j → B {i = j} (transport (pathij Aeq i j) a)) (f (transportPath (pathij Aeq i i0) a)) (g (transportPath (pathij Aeq i i1) a))
     -- pth = pf (path01Transport (λ i₁ → Aeq i₁) i a)
+
+compPathPEx : ∀ {ℓ} (A : I → Set ℓ) (x : A i0) (y : A i1) (B_i1 : Set ℓ) (B : (A i1) ≡ B_i1) {z : B i1}
+            → PathP A x y → PathP (λ i → B i) y z → PathP (λ j → ((λ i → A i) ∙ B) j) x z
+compPathPEx A x y B_i1 B p q i =
+  comp (λ j → compPath-filler (λ i → A i) B j i)
+       (λ j → λ { (i = i0) → x ;
+                  (i = i1) → q j })
+       (p i)

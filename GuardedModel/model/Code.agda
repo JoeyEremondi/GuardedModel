@@ -606,7 +606,6 @@ record CodeModule
                       (⟦_⟧F.command {X = Y} (toExactDesc D b ix (FC com resp) φ)))
                     r1 i))
         eq2 :  (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com))) → _
-        -- eq2 = _
         eq2 = λ r1 i →
                   X
                   (inextD D b (symPath (toApproxExactCommandD D ix b com) i)
@@ -620,20 +619,25 @@ record CodeModule
                         (⟦_⟧F.command {X = Y} (toExactDesc {X = X} D b ix (FC com resp) φ)))
                        r1))
                      i)))
-        -- helperPath :
-        --   (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
-        --   → PathP (λ i →  (eq2 r1 ∙ eq1 r1) i) (transport (eq2 r1 ∙ eq1 r1) (lx r1)) (lx r1)
-        -- -- helperPath r1 = symP (transport-filler (eq2 r1 ∙ eq1 r1) (lx r1) )
-        -- helperComp : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
-        --   → (r2 : ResponseD {{æ = Approx}} D b com)
-        --   → (p : PathP
-        --       (λ i →
-        --          ResponseD ⦃ æ = Approx ⦄ D b (toApproxExactCommandD D ix b com i))
-        --       r1 r2) → PathP (λ i →
-        --                          X
-        --                          (inextD D b (toApproxExactCommandD D ix b com i) (p i)))
-        --                      (transport (eq2 r1 ∙ eq1 r1) (lx r1))
-        --                      (resp r2)
+        helperPath : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
+          → (r2 : ResponseD {{æ = Approx}} D b com)
+          → (p : PathP
+              (λ i →
+                 ResponseD ⦃ æ = Approx ⦄ D b (toApproxExactCommandD D ix b com i))
+              r1 r2)
+              → PathP (λ i →  (eq2 r1 ∙ eq1 r1) (~ i)) (transportPath ( (eq2 r1) ∙ (eq1 r1)) (lx r1)) (lx r1)
+        helperPath r1 r2 p = symP (transport-filler (eq2 r1 ∙ eq1 r1) (lx r1) )
+        helperComp : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
+          → (r2 : ResponseD {{æ = Approx}} D b com)
+          → (p : PathP
+              (λ i →
+                 ResponseD ⦃ æ = Approx ⦄ D b (toApproxExactCommandD D ix b com i))
+              r1 r2) → PathP (λ i →
+                                 X
+                                 (inextD D b (toApproxExactCommandD D ix b com i) (p i)))
+                             (transport (eq2 r1 ∙ eq1 r1) (lx r1))
+                             (resp r2)
+        helperComp r1 r2 p = compPathPEx {!!} ? ? ? {!!} {!!} {!!}
         helper : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
           → (r2 : ResponseD {{æ = Approx}} D b com)
           → (p : PathP
@@ -644,7 +648,7 @@ record CodeModule
                                  (inextD D b (toApproxExactCommandD D ix b com i) (p i)))
                              (transport (eq1 r1) (transport (eq2 r1) (lx r1)))
                              (resp r2)
-        -- helper r1 r2 p = compEqPath (sym (transportComposite _ _ _)) (helperComp r1 r2 p)
+        helper r1 r2 p = compEqPath (sym (transportComposite _ _ _)) (helperComp r1 r2 p)
       -- compEqPath (symPath (transportComposite  _ _ (resp (toApproxResponseD ⦃ æ = Exact ⦄ D cs com (substPath (ResponseD ⦃ æ = _ ⦄ D cs)
       --                                                                                                                             (toApproxExactCommandD D i cs com) (toExactResponseD D cs com r1))) )))
       --                           {!!}))

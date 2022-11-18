@@ -1,4 +1,4 @@
-
+{-# OPTIONS --cubical --guarded --lossy-unification #-}
 
 -- Inductive Descriptions for Gradual Datatypes
 
