@@ -62,9 +62,11 @@ pathi0 pf i = pathij pf i i0
 pathi1 : ∀ {ℓ} {A : Set ℓ} {x y : A} → (pf : x ≡c y) → ∀ i → pf i ≡c pf i1
 pathi1 pf i = pathij pf i i1
 
-compEqPath : ∀ {ℓ} {A : I → Set ℓ} {x : A i0} {y : A i1} {z : A i1} → PathP A x y → y ≡c z → PathP A x z
-compEqPath pth peq = substPath (λ w → PathP _ _ w) peq pth
+compPathEq : ∀ {ℓ} {A : I → Set ℓ} {x : A i0} {y : A i1} {z : A i1} → PathP A x y → y ≡c z → PathP A x z
+compPathEq pth peq = substPath (λ w → PathP _ _ w) peq pth
 
+compEqPath : ∀ {ℓ} {A : I → Set ℓ} {x : A i0} {y : A i0} {z : A i1} → x ≡c y → PathP A y z → PathP A x z
+compEqPath peq pth = substPath (λ w → PathP _ w _) (sym peq) pth
 
 reflCompose : ∀ {ℓ} {A : Set ℓ} {x : A} → (refl {x = x} ) ≡c refl ∙ refl
 reflCompose {x = x}  = compPath-filler reflc λ i → x

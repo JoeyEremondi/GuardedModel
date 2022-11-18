@@ -563,7 +563,7 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
       {y = arg}
       (λ a b → Wsup (FC (h , a) b))
       (ArgToApproxExact sc h arg)
-      (compEqPath
+      (compPathEq
         (congP
           (λ i a →
             λ (r : Response (preAllDataContainer {{æ = Approx}} ℓ sc tt*) {i = nothing} (h , ArgToApproxExact sc h arg i) )

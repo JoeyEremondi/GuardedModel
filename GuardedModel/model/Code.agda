@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --guarded --rewriting #-}
+{-# OPTIONS --cubical --guarded #-}
 -- open import Desc
 -- open import Level hiding (#_)
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
@@ -217,6 +217,22 @@ record CodeModule
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
     interpDesc {{æ = æ}} {I = I} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D i b) ◃ (λ c → ResponseD {{æ = æ}} D b (toApproxCommandD D _ b c)) / λ {i} c r → inextD D b (toApproxCommandD  D i b c) (toApproxResponseD D b _ r)
 
+    toApproxDesc : ∀ { cI cB sig X Y}
+          → (D : ℂDesc cI cB sig)
+          → (b : ApproxEl cB)
+          → (i : ApproxEl cI)
+          → (cs : ⟦ interpDesc {{æ = Exact}} D b ⟧F X i)
+          → □ (interpDesc {{æ = Exact}} D b) (λ (j , _) → Y j) (i , cs)
+          → ⟦ interpDesc {{æ = Approx}} D b ⟧F Y i
+    toExactDesc :
+      ∀ { cI cB sig X Y}
+          → (D : ℂDesc cI cB sig)
+          → (b : ApproxEl cB)
+          → (i : ApproxEl cI)
+          → (cs : ⟦ interpDesc {{æ = Approx}} D b ⟧F X i)
+          → □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (i , cs)
+          → ⟦ interpDesc {{æ = Exact}} D b ⟧F Y i
+
     toApproxμ :
       (tyCtor : CName)
         → (cI : ℂ)
@@ -245,21 +261,6 @@ record CodeModule
         → (x : W̃ (Arg (λ d → interpDesc {{æ = Approx}} (D d) b)) i )
         → toApproxμ tyCtor cI cB D i b (toExactμ tyCtor cI cB D i b x) ≡c x
 
-    toApproxDesc : ∀ { cI cB sig X Y}
-          → (D : ℂDesc cI cB sig)
-          → (b : ApproxEl cB)
-          → (i : ApproxEl cI)
-          → (cs : ⟦ interpDesc {{æ = Exact}} D b ⟧F X i)
-          → □ (interpDesc {{æ = Exact}} D b) (λ (j , _) → Y j) (i , cs)
-          → ⟦ interpDesc {{æ = Approx}} D b ⟧F Y i
-    toExactDesc :
-      ∀ { cI cB sig X Y}
-          → (D : ℂDesc cI cB sig)
-          → (b : ApproxEl cB)
-          → (i : ApproxEl cI)
-          → (cs : ⟦ interpDesc {{æ = Approx}} D b ⟧F X i)
-          → □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (i , cs)
-          → ⟦ interpDesc {{æ = Exact}} D b ⟧F Y i
 
 
 
@@ -537,9 +538,9 @@ record CodeModule
     toApproxExactCommandD (CArg c D cB' x) i b (a , com) =
       ΣPathP
         (toApproxExact (c b) a
-        , compEqPath (congP (λ _ x → toApproxCommandD ⦃ æ = Exact ⦄ D _ _ (toExactCommandD D _ _ x )) pth) (toApproxExactCommandD D i _ com))
+        , compPathEq (congP (λ _ x → toApproxCommandD ⦃ æ = Exact ⦄ D _ _ (toExactCommandD D _ _ x )) pth) (toApproxExactCommandD D i _ com))
       where
-        pth = symP (subst-filler _ (λ i₁ → toApproxExact (c b) a (~ i₁)) com)
+        pth = symP (subst-filler (λ v → CommandD {{æ = _}} D i (b , v)) (λ i₁ → toApproxExact (c b) a (~ i₁)) com)
     toApproxExactCommandD (CRec j D) i b com = toApproxExactCommandD D i b com
     toApproxExactCommandD (CHRec c j D cB' x) i b com = toApproxExactCommandD D i b com
 
@@ -550,8 +551,8 @@ record CodeModule
     toApproxExactResponseD (CHRec c j D cB' x) b com (Rest r) = congPath Rest (toApproxExactResponseD D b com r)
 
 
-    {-# BUILTIN REWRITE _≡_ #-}
-    {-# REWRITE toApproxExactResponseD toApproxExactCommandD #-}
+--     {-# BUILTIN REWRITE _≡_ #-}
+--     {-# REWRITE toApproxExactResponseD toApproxExactCommandD #-}
 
     toApproxDesc {Y = Y} D b i (FC com res) φ =
       FC
@@ -578,13 +579,93 @@ record CodeModule
         → (φ : □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (i , cs))
         → toApproxDesc {X = Y} D b i (toExactDesc D b i cs φ )
                        (λ r → transport (cong₂ (λ x y → X (inextD D b x (toApproxResponseD {{æ = Exact}} D b x y))) (sym (toApproxExactCommandD D i b _)) (symP (transport-filler
-                                                                                                                                                                   (congPath (ResponseD ⦃ æ = _ ⦄ D b)
-                                                                                                                                                                    (toApproxExactCommandD D i b _))
-                                                                                                                                                                   r))) (⟦_⟧F.response cs (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ (subst (ResponseD ⦃ æ = Exact ⦄ D b) ( (toApproxExactCommandD D i b _)) r))))
+                              (congPath (ResponseD ⦃ æ = _ ⦄ D b)
+                              (toApproxExactCommandD D i b _))
+                              r))) (⟦_⟧F.response cs (toApproxResponseD ⦃ æ = Exact ⦄ D _ _ (subst (ResponseD ⦃ æ = Exact ⦄ D b) ( (toApproxExactCommandD D i b _)) r))))
           ≡c cs
-    toApproxExactDesc D cs i (FC com resp) φ = cong₂ FC (toApproxExactCommandD D i _ com)
-      (funExtDep (λ {r1} {r2} p → {!resp!}))
-
+    toApproxExactDesc {X = X} {Y = Y} D b ix (FC com resp) φ = cong₂ FC (toApproxExactCommandD D ix _ com)
+      (funExtDep (λ {r1} {r2} p → helper r1 r2 p ))
+      where
+        lx :  (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com))) → _
+        lx = λ r1 →
+                 resp
+                 (toApproxResponseD {{æ = Exact}} D b com
+                  (substPath (ResponseD {{æ = Exact}} D b) (toApproxExactCommandD D ix b com)
+                   (toExactResponseD D b
+                    (toApproxCommandD {{æ = Exact}} D ix b
+                     (⟦_⟧F.command {X = Y} (toExactDesc {X = X} D b ix (FC com resp) φ)))
+                    r1)))
+        eq1 :  (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com))) → _
+        eq1 = λ r1 i →
+                  X
+                  (inextD D b
+                   (toApproxCommandD {{æ = Exact}} D ix b
+                     (⟦_⟧F.command {X = Y} (toExactDesc {X = X} D b ix (FC com resp) φ)))
+                   (toApproxExactResponseD D b
+                     (toApproxCommandD {{æ = Exact}} D ix b
+                      (⟦_⟧F.command {X = Y} (toExactDesc D b ix (FC com resp) φ)))
+                    r1 i))
+        eq2 :  (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com))) → _
+        -- eq2 = _
+        eq2 = λ r1 i →
+                  X
+                  (inextD D b (symPath (toApproxExactCommandD D ix b com) i)
+                   (toApproxResponseD {{æ = Exact}} D b
+                    (symPath (toApproxExactCommandD D ix b com) i)
+                    (symP {A = λ i → (congPath (ResponseD {{æ = Exact}} D b) (toApproxExactCommandD D ix b com)) (~ i) }
+                     (transport-filler
+                      (congPath (ResponseD {{æ = Exact}} D b) (toApproxExactCommandD D ix b com))
+                      (toExactResponseD D b
+                       (toApproxCommandD {{æ = Exact}} D ix b
+                        (⟦_⟧F.command {X = Y} (toExactDesc {X = X} D b ix (FC com resp) φ)))
+                       r1))
+                     i)))
+        -- helperPath :
+        --   (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
+        --   → PathP (λ i →  (eq2 r1 ∙ eq1 r1) i) (transport (eq2 r1 ∙ eq1 r1) (lx r1)) (lx r1)
+        -- -- helperPath r1 = symP (transport-filler (eq2 r1 ∙ eq1 r1) (lx r1) )
+        -- helperComp : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
+        --   → (r2 : ResponseD {{æ = Approx}} D b com)
+        --   → (p : PathP
+        --       (λ i →
+        --          ResponseD ⦃ æ = Approx ⦄ D b (toApproxExactCommandD D ix b com i))
+        --       r1 r2) → PathP (λ i →
+        --                          X
+        --                          (inextD D b (toApproxExactCommandD D ix b com i) (p i)))
+        --                      (transport (eq2 r1 ∙ eq1 r1) (lx r1))
+        --                      (resp r2)
+        helper : (r1 : ResponseD ⦃ æ = Approx ⦄ D b (toApproxCommandD {{æ = Exact}} D ix b (toExactCommandD D ix b com)))
+          → (r2 : ResponseD {{æ = Approx}} D b com)
+          → (p : PathP
+              (λ i →
+                 ResponseD ⦃ æ = Approx ⦄ D b (toApproxExactCommandD D ix b com i))
+              r1 r2) → PathP (λ i →
+                                 X
+                                 (inextD D b (toApproxExactCommandD D ix b com i) (p i)))
+                             (transport (eq1 r1) (transport (eq2 r1) (lx r1)))
+                             (resp r2)
+        -- helper r1 r2 p = compEqPath (sym (transportComposite _ _ _)) (helperComp r1 r2 p)
+      -- compEqPath (symPath (transportComposite  _ _ (resp (toApproxResponseD ⦃ æ = Exact ⦄ D cs com (substPath (ResponseD ⦃ æ = _ ⦄ D cs)
+      --                                                                                                                             (toApproxExactCommandD D i cs com) (toExactResponseD D cs com r1))) )))
+      --                           {!!}))
+-- Goal: PathP
+--       (λ i₁ →
+--          X (inextD D cs (toApproxExactCommandD D i cs com i₁) (p i₁)))
+--       (transportPath
+--        (compPath
+--         (cong₂ (λ x y → X (inextD D cs x (toApproxResponseD D cs x y)))
+--          (symPath (toApproxExactCommandD D i cs com))
+--          (symP
+--           (transport-filler
+--            (congPath (ResponseD D cs) (toApproxExactCommandD D i cs com))
+--            (toExactResponseD D cs com r1))))
+--         (λ i₁ →
+--            X (inextD D cs com (toApproxExactResponseD D cs com r1 i₁))))
+--        (resp
+--         (toApproxResponseD D cs com
+--          (substPath (ResponseD D cs) (toApproxExactCommandD D i cs com)
+--           (toExactResponseD D cs com r1)))))
+--       (resp r2)
 
 
     toApproxμ tyCtor cI cB Ds iStart b W⁇ = W⁇
