@@ -106,11 +106,13 @@ compPathPEx A x y B_i1 B p q i =
        (p i)
 
 
+transpFunLemma : ∀ {ℓ ℓ'} {A : Set ℓ} (P : A → Set ℓ') (f : (a : A) → P a ) {x y} (pf : x ≡c y)
+  → transport (cong P pf) (f x) ≡c (f y)
+transpFunLemma P f {y = y} pf =
+  (JPath {x = y} (λ z zpf → transport (cong P (sym zpf)) (f z) ≡c transport refl (f y)) refl (sym pf)) ∙ transportRefl (f _)
+
+
 
 subLemma : ∀ {ℓ ℓ'} {A : Set ℓ} (P : A → Set ℓ') (f : (a : A) → P a ) {x y} (pf : x ≡c y)
   → subst P pf (f x) ≡c (f  y)
-subLemma P f pf = transpSubLemma P f pf ∙ transportRefl (f _)
-  where
-    transpSubLemma : ∀ {ℓ ℓ'} {A : Set ℓ} (P : A → Set ℓ') (f : (a : A) → P a ) {x y} (pf : x ≡c y)
-      → transport (cong P pf) (f x) ≡c transport  (cong P refl) (f  y)
-    transpSubLemma P f {y = y} pf = JPath {x = y} (λ z zpf → transport (cong P (sym zpf)) (f z) ≡c transport refl (f y)) refl (sym pf)
+subLemma P f pf = transpFunLemma P f pf
