@@ -12,6 +12,7 @@ open import Cubical.Data.FinData hiding (elim)
 -- open import Cubical.Data.Prod
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Transport
 open import Cubical.Data.Empty
 
 open import Agda.Builtin.Reflection
@@ -122,15 +123,19 @@ funExtI : ∀ {ℓ} {f g : I → Set ℓ}
   → f ≡c g
 funExtI p i x = p x i
 
-compPathPGoal : ∀ {P : I → Set} {x : P i0} {z : P i1}
-  → {Y : Set}
-  → {y : Y}
-  → (eqxy : P i0 ≡c Y)
-  → (eqyz : Y ≡c P i1)
-  → PathP (λ i → eqxy i) x y
-  → PathP (λ i → eqyz i) y z
-  → PathP P x z
-compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
-  let
-    cmp = compPathP pxy pyz
-  in transport (cong₂ {A = I → Set} {B = λ P → (P i0 × P i1)} (λ P (x , z) → PathP P x z) (funExtI (λ j → {!P i!})) λ _ → (x , z)) cmp
+pathTransport : ∀ {P : I → Set} {A : Set} {x : A} {eqA : A ≡c P i0} {y : P i1}
+  → PathP (λ i → (eqA ∙ (λ j → P j)) i) x y
+  → PathP P (transport eqA x) y
+pathTransport pth = toPathP (symPath (transportComposite _ _ _) ∙ fromPathP pth)
+
+compPathTransport : ∀ {P : I → Set} {A : Set} {x : A} {eqA : A ≡c P i0} {y : P i1}
+  → {z : eqA i1}
+  → PathP (λ z₁ → eqA z₁) x z
+  → PathP P z y
+  → PathP P (transport eqA x) y
+compPathTransport pxz pzy = toPathP (symPath (transportComposite _ _ _) ∙ fromPathP (compPathP pxz pzy))
+
+-- compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
+--   let
+--     cmp = compPathP pxy pyz
+--   in transport (cong₂ {A = I → Set} {B = λ P → (P i0 × P i1)} (λ P (x , z) → PathP P x z) (funExtI (λ j → {!P i!})) λ _ → (x , z)) cmp
