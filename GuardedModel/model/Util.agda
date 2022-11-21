@@ -116,3 +116,21 @@ transpFunLemma P f {y = y} pf =
 subLemma : ∀ {ℓ ℓ'} {A : Set ℓ} (P : A → Set ℓ') (f : (a : A) → P a ) {x y} (pf : x ≡c y)
   → subst P pf (f x) ≡c (f  y)
 subLemma P f pf = transpFunLemma P f pf
+
+funExtI : ∀ {ℓ} {f g : I → Set ℓ}
+  → (∀ i → f i ≡c g i)
+  → f ≡c g
+funExtI p i x = p x i
+
+compPathPGoal : ∀ {P : I → Set} {x : P i0} {z : P i1}
+  → {Y : Set}
+  → {y : Y}
+  → (eqxy : P i0 ≡c Y)
+  → (eqyz : Y ≡c P i1)
+  → PathP (λ i → eqxy i) x y
+  → PathP (λ i → eqyz i) y z
+  → PathP P x z
+compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
+  let
+    cmp = compPathP pxy pyz
+  in transport (cong₂ {A = I → Set} {B = λ P → (P i0 × P i1)} (λ P (x , z) → PathP P x z) (funExtI (λ j → {!P i!})) λ _ → (x , z)) cmp
