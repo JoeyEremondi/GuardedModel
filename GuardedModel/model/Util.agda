@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --guarded #-}
+{-# OPTIONS --cubical --guarded --prop #-}
 
 
 module Util where
@@ -134,6 +134,9 @@ compPathTransport : ∀ {P : I → Set} {A : Set} {x : A} {eqA : A ≡c P i0} {y
   → PathP P z y
   → PathP P (transport eqA x) y
 compPathTransport pxz pzy = toPathP (symPath (transportComposite _ _ _) ∙ fromPathP (compPathP pxz pzy))
+
+data Erase {ℓ} (A : Set ℓ) : Prop ℓ where
+  erase : A → Erase A
 
 -- compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
 --   let
