@@ -781,7 +781,7 @@ record CodeModule
                  (congP (λ i → toExactμ tyCtor cI cB Ds
                    (inextD (Ds d) b (toApproxExactCommandD (Ds d) _ b com (~ i))
                      (toApproxResponseD ⦃ æ = Exact ⦄ (Ds d) b (toApproxExactCommandD (Ds d) iStart b com (~ i))
-                       (respPath i))) b)
+                       (respDPath i))) b)
                         {x = resp (toApproxResponseD {{æ = Exact}} (Ds d) b com
                           (transportPath (cong (ResponseD {{æ = Exact}} (Ds d) b) (toApproxExactCommandD (Ds d) _ b com)) (toExactResponseD (Ds d) b
                             (toApproxCommandD {{æ = Exact}} (Ds d) iStart b (toExactCommandD (Ds d) iStart b com)) r1) ))}
@@ -790,11 +790,11 @@ record CodeModule
                   {!!}) )
             {!!}
           where
-            respPath : PathP
+            respDPath : PathP
               (λ i → ResponseD {{æ = Exact}} (Ds d) b (toApproxExactCommandD (Ds d) iStart b com (~ i)))
               (transport (cong (ResponseD {{æ = Exact}} (Ds d) b) (toApproxExactCommandD (Ds d) iStart b com)) (toExactResponseD (Ds d) b comcom r1))
               (toExactResponseD (Ds d) b comcom r1)
-            respPath = _
+            respDPath = _
             -- ({!!} ▷ (toApproxExactμ tyCtor cI cB (λ d₁ → Ds d₁) (inextD (Ds d) b (toApproxExactCommandD (Ds d) iStart b com i1)
             --                                                       (pth i1)) b (resp r2)))
       -- cong₂ (λ x y → Wsup (FC (d , x) y)) (toApproxExactCommandD ((Ds d)) iStart b com)
