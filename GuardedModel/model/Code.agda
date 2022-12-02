@@ -811,7 +811,7 @@ record CodeModule
         comSwap = (symPath (transportCommandApproxCommute ⦃ æ = Exact ⦄ (Ds d) b i j com))
         comPath : PathP (λ iv → CommandD ⦃ æ = _ ⦄ (Ds d) (i≡j iv) b) com (transportCommand ⦃ æ = _ ⦄ (Ds d) b i j com)
         comPath = transportCommandPath ⦃ æ = _ ⦄ (Ds d) b _ _ com i≡j
-        rpath : PathP (λ iv → ResponseD {{æ = _}} (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))) {!!} {!!}
+        rpath : PathP (λ iv → ResponseD {{æ = _}} (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))) {!r1!} {!!}
         rpath = {!!}
         -- congP (λ iv → transportIndexμ {{æ = _}} Ds b (inextD (Ds d) b ? {!pth i!}) _) {!!}
     transportIndexApproxCommut Ds b i j W℧ = {!!}
