@@ -265,7 +265,6 @@ record CodeModule
 
 
 
-
     -- toApproxDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Exact}} D b) i → W̃  (interpDesc {{æ = Approx}} D b) i
     -- toExactDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → W̃  (interpDesc {{æ = Approx}} D b) i → W̃  (interpDesc {{æ = Exact}} D b) i
     -- toApproxExactDesc : ∀  {I} {cB} {sig} →  (D : ℂDesc I cB sig) → (b : ApproxEl cB) (i : ApproxEl I) → (x : W̃  (interpDesc {{æ = Approx}} D b) i)
@@ -692,6 +691,16 @@ record CodeModule
     transportIndexμ D b i j W℧ = W℧
     transportIndexμ D b i j W⁇ = W⁇
 
+    transportIndexPathP :
+      ∀ {{æ : Æ}} { cI cB } {tyCtor : CName}
+        → (D : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
+        → (b : ApproxEl cB)
+        → (i j : ApproxEl cI)
+        → (i≡j : i ≡c j)
+        → (x : W̃ (Arg (λ d → interpDesc (D d) b)) i)
+        → PathP (λ iv → W̃ (Arg (λ d → interpDesc (D d) b)) (i≡j iv)) x (transportIndexμ D b i j x)
+    transportIndexPathP D b i j i≡j x = {!!}
+
 
 --     {-# BUILTIN REWRITE _≡_ #-}
 --     {-# REWRITE toApproxExactResponseD toApproxExactCommandD #-}
@@ -788,34 +797,53 @@ record CodeModule
           eqc
           {u = res1} {v = res2}
           (funExtDep (λ {x} {x1} pth → eqr x x1 pth))
+    --TODO: prove this, but we've been stuck too long
+    postulate
+      transportIndexApproxCommut :
+        ∀ { cI cB } {tyCtor : CName}
+          → (Ds : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
+          → (b : ApproxEl cB)
+          → (i j : ApproxEl cI)
+          → (x : W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) i)
+          → i ≡c j
+          → transportIndexμ {{æ = _}} Ds b i j (toApproxμ tyCtor cI cB Ds i b x)
+            ≡c toApproxμ tyCtor cI cB Ds j b (transportIndexμ {{æ = Exact}} Ds b i j x)
 
-    transportIndexApproxCommut :
-      ∀ { cI cB } {tyCtor : CName}
-        → (Ds : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
-        → (b : ApproxEl cB)
-        → (i j : ApproxEl cI)
-        → (x : W̃ (Arg (λ d → interpDesc {{æ = Exact}} (Ds d) b)) i)
-        → i ≡c j
-        → transportIndexμ {{æ = _}} Ds b i j (toApproxμ tyCtor cI cB Ds i b x)
-          ≡c toApproxμ tyCtor cI cB Ds j b (transportIndexμ {{æ = Exact}} Ds b i j x)
-    transportIndexApproxCommut Ds b i j (Wsup (FC (d , com) resp)) i≡j =
-      WPathP {{æ = _}}
-        comSwap
-        λ r1 r2 pth →
-          congP (λ iv → transportIndexμ ⦃ æ = _ ⦄ Ds b
-                   (inextD (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))
-                     (rpath iv))
-                   (inextD (Ds d) b (comSwap iv) _))
-                {!!}
+    toApproxExactμ tyCtor cI cB D i b (Wsup (FC (d , com) res)) = WPathP {{æ = _}} (toApproxExactCommandD _ _ _ com) helper
       where
-        comSwap = (symPath (transportCommandApproxCommute ⦃ æ = Exact ⦄ (Ds d) b i j com))
-        comPath : PathP (λ iv → CommandD ⦃ æ = _ ⦄ (Ds d) (i≡j iv) b) com (transportCommand ⦃ æ = _ ⦄ (Ds d) b i j com)
-        comPath = transportCommandPath ⦃ æ = _ ⦄ (Ds d) b _ _ com i≡j
-        rpath : PathP (λ iv → ResponseD {{æ = _}} (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))) {!r1!} {!!}
-        rpath = {!!}
-        -- congP (λ iv → transportIndexμ {{æ = _}} Ds b (inextD (Ds d) b ? {!pth i!}) _) {!!}
-    transportIndexApproxCommut Ds b i j W℧ = {!!}
-    transportIndexApproxCommut Ds b i j W⁇ = {!!}
+        helper : (r1 : _) → (r2 : _ ) → (pth : _) → _
+        helper r1 r2 pth = {!!}
+    toApproxExactμ tyCtor cI cB D i b W℧ = reflc
+    toApproxExactμ tyCtor cI cB D i b W⁇ = reflc
+    -- transportIndexApproxCommut Ds b i j (Wsup (FC (d , com) resp)) i≡j =
+    --   WPathP {{æ = _}} comSwap helper
+    --     where
+    --       comSwap = (symPath (transportCommandApproxCommute ⦃ æ = Exact ⦄ (Ds d) b i j com))
+    --       comPath : PathP (λ iv → CommandD ⦃ æ = _ ⦄ (Ds d) (i≡j iv) b) com (transportCommand ⦃ æ = _ ⦄ (Ds d) b i j com)
+    --       comPath = transportCommandPath ⦃ æ = _ ⦄ (Ds d) b _ _ com i≡j
+    --       helper : (r1 : _) → (r2 : _) → (pth : _) → _
+    --       helper r1 r2 pth = congP (λ iv → transportIndexμ ⦃ æ = _ ⦄ Ds b (inextD (Ds d) b
+    --                                                                          (toApproxCommandD ⦃ æ = Exact ⦄ (Ds d) (i≡j iv) b (comPath iv)) (rpath iv)) _)
+    --                          {!!}
+    --              where
+    --                rpath : PathP (λ iv → ResponseD {{æ = Approx}} (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) (i≡j iv) b (comPath iv) ))
+    --                  (transportResp ⦃ æ = _ ⦄ (Ds d) b i j
+    --                     (toApproxCommandD ⦃ æ = _ ⦄ (Ds d) i b com) (substPath (ResponseD {{æ = _}} (Ds d) b) (λ _ → transportCommand {{æ = _}} (Ds d) b i j (toApproxCommandD {{æ = Exact}} (Ds d) i b com)) r1))
+    --                  (toApproxResponseD {{æ = _}} (Ds d) b
+    --                     (toApproxCommandD {{æ = _}} (Ds d) j b (transportCommand {{æ = _}} (Ds d) b i j com))
+    --                     (toExactResponseD (Ds d) b
+    --                     (toApproxCommandD {{æ = _}} (Ds d) j b (transportCommand {{æ = _}} (Ds d) b i j com))
+    --                     r2))
+    --                rpath = {!!}
+
+    --     --   congP (λ iv → transportIndexμ ⦃ æ = _ ⦄ Ds b
+    --     --            (inextD (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))
+    --     --              (rpath iv))
+    --     --            (inextD (Ds d) b (comSwap iv) _))
+    --     --         {!!}
+    --     -- congP (λ iv → transportIndexμ {{æ = _}} Ds b (inextD (Ds d) b ? {!pth i!}) _) {!!}
+    -- transportIndexApproxCommut Ds b i j W℧ _ = reflc
+    -- transportIndexApproxCommut Ds b i j W⁇ _ = reflc
 
 
 --     toApproxExactμ tyCtor cI cB Ds iStart b W⁇ = refl
