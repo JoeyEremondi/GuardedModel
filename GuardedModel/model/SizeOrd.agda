@@ -4,18 +4,18 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
+-- open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
-open import Cubical.Data.Equality
+-- open import Cubical.Data.Equality
 open import Cubical.Data.Sigma
 open import Inductives
 open import GuardedAlgebra
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Equality using (ptoc)
+-- open import Cubical.Data.Equality using (ptoc)
 open import Cubical.HITs.PropositionalTruncation as Prop
 
 open import ApproxExact
@@ -51,7 +51,7 @@ abstract
 
 
   SZ : Size
-  SZ = OS OZ (subst (λ x → x ≤o OZ) (sym (omax-Z OZ)) ≤o-Z)
+  SZ = OS OZ (subst (λ x → x ≤o OZ) (symPath (omax-Z OZ)) ≤o-Z)
 
 
   S↑ : Size → Size
@@ -65,7 +65,7 @@ abstract
   ≤↑ s =  ≤↑o _
 
 
-  SLim : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → (f : ApproxedEl c → Size) → Size
+  SLim : ∀  {ℓ} (c : ℂ ℓ) → (f : ApproxEl c → Size) → Size
   SLim c f = OS (omax∞ (OLim c (λ x → sOrd (f x)))) ( omax∞-idem (OLim c (λ x → sOrd (f x))) )
 
 
@@ -83,16 +83,16 @@ abstract
   ≤ₛ-refl : ∀ {s} → s ≤ₛ s
   ≤ₛ-refl =  ≤o-refl _
 
-  ≤ₛ-cocone : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f : ApproxedEl c → Size}
+  ≤ₛ-cocone : ∀  {ℓ} {c : ℂ ℓ} → {f : ApproxEl c → Size}
     → ∀ k → f k ≤ₛ SLim c f
   ≤ₛ-cocone {c = c} {f = f} k =  ≤o-cocone (λ x → sOrd (f x)) k (≤o-refl _) ≤⨟o omax∞-self (OLim c (λ x → sOrd (f x)))
 
-  ≤ₛ-limiting : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f : ApproxedEl c → Size}
+  ≤ₛ-limiting : ∀  {ℓ} {c : ℂ ℓ} → {f : ApproxEl c → Size}
     → {s : Size}
     → (∀ k → f k ≤ₛ s) → SLim c f ≤ₛ s
   ≤ₛ-limiting {f = f} {s = OS o idem} lt = ≤o-trans (omax∞-mono (≤o-limiting (λ x → sOrd (f x)) λ k → lt k))  (omax∞-≤ idem)
 
-  ≤ₛ-extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f1 f2 : ApproxedEl c → Size}
+  ≤ₛ-extLim : ∀ {{æ : Æ}} {ℓ} {c : ℂ ℓ} → {f1 f2 : ApproxEl c → Size}
     → (∀ k → f1 k ≤ₛ f2 k)
     → SLim c f1 ≤ₛ SLim c f2
   ≤ₛ-extLim {f1 = f1} {f2} lt =  omax∞-mono (extLim (λ x → sOrd (f1 x)) (λ x → sOrd (f2 x)) lt)
@@ -175,16 +175,16 @@ smax-lim2L :
     ∀ {æ1 æ2 : Æ}
     {ℓ1 ℓ2}
     {c1 : ℂ ℓ1}
-    (f1 : ApproxedEl {{æ = æ1}} c1 → Size)
+    (f1 : ApproxEl  c1 → Size)
     {c2 : ℂ ℓ2}
-    (f2 : ApproxedEl {{æ = æ2}} c2 → Size)
-    → SLim {{æ = æ1}} c1 (λ k1 → SLim {{æ = æ2}} c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim {{æ = æ1}} c1 f1) (SLim {{æ = æ2}} c2 f2)
-smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting ⦃ æ = _ ⦄ (λ k1 → ≤ₛ-limiting ⦃ æ = _ ⦄ (λ k2 → smax-mono (≤ₛ-cocone ⦃ æ = _ ⦄ k1) (≤ₛ-cocone {{æ = _}} k2)))
+    (f2 : ApproxEl  c2 → Size)
+    → SLim  c1 (λ k1 → SLim  c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim  c1 f1) (SLim  c2 f2)
+smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting  (λ k1 → ≤ₛ-limiting  (λ k2 → smax-mono (≤ₛ-cocone  k1) (≤ₛ-cocone  k2)))
 
 
 data _<ₛPair_ : (Size × Size) → (Size × Size) → Set where
-  <ₛPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <ₛ o2c ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
-  <ₛPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <ₛ o2v ∥ → (o1c , o1v) <ₛPair (o2c , o2v)
+  <ₛPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <ₛ o2c ∥₁ → (o1c , o1v) <ₛPair (o2c , o2v)
+  <ₛPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <ₛ o2v ∥₁ → (o1c , o1v) <ₛPair (o2c , o2v)
 
 ≤suc : ∀ {s1 s2} → s1 ≤ₛ s2 → s1 ≤ₛ S↑ s2
 ≤suc {s1 = s1} lt = ≤↑ s1 ≤⨟ ≤ₛ-sucMono lt
@@ -196,19 +196,19 @@ abstract
       sizeAcc : ∀ {s} → Acc _<o_ (sOrd s) → Acc _<ₛ_ s
       sizeAcc {s} (acc x) = acc (λ y lt → sizeAcc (x (sOrd y) lt))
 
-  sizeWFAcc : ∀ x → Acc _<ₛ_ x → Acc (λ x y → ∥ x <ₛ y ∥) x
+  sizeWFAcc : ∀ x → Acc _<ₛ_ x → Acc (λ x y → ∥ x <ₛ y ∥₁) x
   sizeWFAcc x (acc f) = acc λ y → Prop.elim (λ _ → isPropAcc _) λ lt' → sizeWFAcc y (f y lt')
 
-  sizeWFProp : WellFounded (λ x y → ∥ x <ₛ y ∥)
+  sizeWFProp : WellFounded (λ x y → ∥ x <ₛ y ∥₁)
   sizeWFProp x = sizeWFAcc x (sizeWF x)
 
-  sizeSquash : ∀ {x y} (p1 p2 : ∥ x <ₛ y ∥) → p1 ≡ p2
-  sizeSquash = Prop.squash
+  sizeSquash : ∀ {x y} (p1 p2 : ∥ x <ₛ y ∥₁) → p1 ≡ p2
+  sizeSquash = Prop.squash₁
 
 
   <ₛPairWF : WellFounded _<ₛPair_
   <ₛPairWF (x1 , x2) = acc (helper (sizeWFProp x1) (sizeWFProp x2))
     where
-      helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥) x1 → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥) x2 → WFRec _<ₛPair_ (Acc _<ₛPair_) (x1 , x2)
+      helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x1 → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x2 → WFRec _<ₛPair_ (Acc _<ₛPair_) (x1 , x2)
       helper (acc rec₁) acc₂ (y1 , y2) (<ₛPairL lt) = acc (helper (rec₁ y1 lt ) (sizeWFProp y2))
       helper acc₁ (acc rec₂) (y1 , y2) (<ₛPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
