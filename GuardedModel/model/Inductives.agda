@@ -340,7 +340,7 @@ record SmallerCode : Set1 where
     El-1 : {{æ : Æ}} → ℂ-1 -> Set
     toApprox-1 : (c : ℂ-1) -> El-1 {{æ = Exact}} c → El-1 {{æ = Approx}} c
     toExact-1 : (c : ℂ-1) -> El-1 {{æ = Approx}} c → El-1 {{æ = Exact}} c
-    toApproxExact-1 : ∀ {c} {x : El-1 {{æ = Approx }} c} → toApprox-1 c (toExact-1 c x) ≡c x
+    toApproxExact-1 : ∀ c (x : El-1 {{æ = Approx }} c) → toApprox-1 c (toExact-1 c x) ≡c x
 
 open SmallerCode public
 
@@ -512,7 +512,7 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
   ArgToApproxExact sc H≅ x = refl
   ArgToApproxExact sc H𝟙 x = refl
   ArgToApproxExact sc HType x = refl
-  ArgToApproxExact sc HCumul (x , y) = ΣPathP (refl , toApproxExact-1 sc)
+  ArgToApproxExact sc HCumul (x , y) = ΣPathP (refl , toApproxExact-1 sc _ _)
   ArgToApproxExact sc (HCtor x₁) x = refl
 
   ResToApprox :  ∀ {sc} {▹Self tyHead com} → ⁇Resp {{æ = Exact}} sc _ ▹Self tyHead com → ⁇Resp {{æ = Approx}} sc _ tt* tyHead (ArgToApprox sc tyHead com)

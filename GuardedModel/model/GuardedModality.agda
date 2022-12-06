@@ -44,6 +44,9 @@ _⊛_ f x a = f a (x a)
 map▹ : (f : A → B) → ▹ A → ▹ B
 map▹ f x α = f (x α)
 
+mapNext : (f : A → B) → (a : A) → (map▹ f (next a)) ≡ next (f a)
+mapNext f a α i = f a
+
 transpLater : ∀ (A : I → ▹ Set) → ▸ (A i0) → ▸ (A i1)
 transpLater A u0 a = primTransp (\ i → A i a) i0 (u0 a)
 

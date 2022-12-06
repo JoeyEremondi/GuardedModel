@@ -73,6 +73,7 @@ data IsNeg : Polarity → Set where
 record CodeModule
   (ℓ : ℕ)
   : Set (lsuc lzero) where
+  constructor codeModule
   field
     sc : SmallerCode
     -- ℂ-1 : Set
@@ -142,7 +143,7 @@ record CodeModule
   toApproxExact⁇ ⁇⁇ = refl
   toApproxExact⁇ ⁇𝟙 = refl
   toApproxExact⁇ (⁇Type x) = refl
-  toApproxExact⁇ (⁇Cumul c x) = cong (λ x → ⁇Cumul {{æ = Approx}} c x) (toApproxExact-1 sc)
+  toApproxExact⁇ (⁇Cumul c x) = cong (λ x → ⁇Cumul {{æ = Approx}} c x) (toApproxExact-1 sc _ _)
   toApproxExact⁇ (⁇Π f) = congPath (⁇Π ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt*))
   toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
   toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
@@ -337,7 +338,7 @@ record CodeModule
     El (CCumul c) = El-1 sc c
     toApprox (CCumul c) x = toApprox-1 sc c x
     toExact (CCumul c) x = toExact-1 sc c x
-    toApproxExact (CCumul c) x = toApproxExact-1 sc
+    toApproxExact (CCumul c) x = toApproxExact-1 sc  c x
     --
     -----------------------------------------------------------------
     -- Codes can "eat themselves" and have a code denoting the set of all codes
@@ -867,245 +868,254 @@ record CodeModule
 
 
 
--- -- -- -- -- We can then recursively build the codes for each level
--- -- -- -- -- We take a guarded fixed-point, so we can have a code CSelf such that
--- -- -- -- -- El CSelf = ℂ
--- -- -- -- -- This gives us a version of Girard's Paradox that is safely stowed behind the guarded modality
--- -- -- -- CodeModuleAt : ∀  ℓ →  CodeModule ℓ
--- -- -- -- CodeModuleAt zero = --G.fix λ ModSelf →
--- -- -- --   record
--- -- -- --     { ℂ-1 = 𝟘
--- -- -- --     ; El-1 = λ ()
--- -- -- --     -- ; ⁇-1 = 𝟘
--- -- -- --     -- ; ℧-1 = λ { {{()}} }
--- -- -- --     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
--- -- -- --     }
--- -- -- -- CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
--- -- -- --   record
--- -- -- --     { ℂ-1 = CodeModule.ℂ (CodeModuleAt ℓ)
--- -- -- --     ; El-1 = λ x → CodeModule.El (CodeModuleAt ℓ) x
--- -- -- --     -- ; ⁇-1 = CodeModule.⁇ (CodeModuleAt ℓ)
--- -- -- --     -- ; ℧-1 = CodeModule.ℂ.C℧
--- -- -- --     -- ; ℂSelf = map▹ CodeModule.ℂ ModSelf
--- -- -- --     }
+-- We can then recursively build the codes for each level
+-- We take a guarded fixed-point, so we can have a code CSelf such that
+-- El CSelf = ℂ
+-- This gives us a version of Girard's Paradox that is safely stowed behind the guarded modality
+CodeModuleAt : ∀  ℓ →  CodeModule ℓ
+CodeModuleAt zero = --G.fix λ ModSelf →
+  codeModule (record
+                { ℂ-1 = 𝟘
+                ; El-1 = λ ()
+                ; toApprox-1 = λ ()
+                ; toExact-1 = λ ()
+                ; toApproxExact-1 = λ ()
+                }
+                )
+CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
+  codeModule (record
+                { ℂ-1 = ℂ
+                ; El-1 = El
+                ; toApprox-1 = toApprox
+                ; toExact-1 = toExact
+                ; toApproxExact-1 = toApproxExact
+                })
+        where open CodeModule (CodeModuleAt ℓ)
 
 
--- -- -- -- -- If we have smaller codes, ℓ > 0
--- -- -- -- ℓsuc : ∀ {ℓ} → CodeModule.ℂ-1 (CodeModuleAt ℓ) → Σ[ ℓ' ∈ ℕ ](ℓ ≡p suc ℓ')
--- -- -- -- ℓsuc {suc ℓ} x = _ , reflp
+-- -- If we have smaller codes, ℓ > 0
+-- ℓsuc : ∀ {ℓ} → CodeModule.ℂ-1 (CodeModuleAt ℓ) → Σ[ ℓ' ∈ ℕ ](ℓ ≡p suc ℓ')
+-- ℓsuc {suc ℓ} x = _ , reflp
 
--- -- -- -- -- Expose each value in the Code module with implicit level ℓ
--- -- -- -- -- Except for ℂ and ⁇, which each need an explicit level
--- -- -- -- module CIMod {ℓ} where
--- -- -- --   open CodeModule (CodeModuleAt ℓ) public hiding (ℂ ; ⁇ )
+-- Expose each value in the Code module with implicit level ℓ
+-- Except for ℂ and ⁇, which each need an explicit level
+module CIMod {ℓ} where
+  open CodeModule (CodeModuleAt ℓ) public hiding (ℂ ; ⁇ )
 
--- -- -- -- open CIMod public
+open CIMod public
 
--- -- -- -- -- Make the levels explicit for each code
--- -- -- -- ℂ : ℕ → Set
--- -- -- -- ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
+-- Make the levels explicit for each code
+ℂ : ℕ → Set
+ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
 
--- -- -- -- -- ⁇Ty : ∀ {{_ : Æ}} ℓ → Set
--- -- -- -- -- ⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
+⁇Ty : ∀ {{_ : Æ}} ℓ → Set
+⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
 
-
--- -- -- -- -- ⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ F⁇ {ℓ} (A.next (⁇Ty ℓ))
--- -- -- -- -- ⁇lob {ℓ} = cong (λ P → F⁇ {ℓ} P) (A.pfix (F⁇ {ℓ}))
-
-
-
--- -- -- -- -- unfold⁇ : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ →  F⁇ (A.next (⁇Ty ℓ))
--- -- -- -- -- unfold⁇ {ℓ} x = subst (λ x → x) ⁇lob x
-
-
--- -- -- -- -- fold⁇ : ∀ {{_ : Æ}} {ℓ} →  F⁇ (A.next (⁇Ty ℓ))  → ⁇Ty ℓ
--- -- -- -- -- fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
-
-
--- -- -- -- -- ℂ-1>0 : ∀ {ℓ} → ℂ-1 {ℓ = ℓ} → 0< ℓ
--- -- -- -- -- ℂ-1>0 {suc ℓ} x = suc<
-
--- -- -- -- -- -- The least precise argument to a guarded function from ⁇ to ⁇
--- -- -- -- -- -- Used for checking if functions are errors
--- -- -- -- -- -- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
--- -- -- -- -- -- topArg {ℓ} = Dep▸ ℧Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
+⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ F⁇ {ℓ} (A.next (⁇Rec {ℓ = ℓ}))
+⁇lob {ℓ} = congPath F⁇ (A.pfix _)
 
 
 
--- -- -- -- -- -- Relation for whether a value is an error in type ⁇
--- -- -- -- -- -- data ℧≡ {ℓ} : ⁇Ty ℓ → Set where
--- -- -- -- -- --          ℧℧ : ℧≡ ⁇℧
--- -- -- -- -- --          ⁇Π℧ : ∀ {f} → ⁇℧ ≡ f topArg  → ℧≡ (⁇Π f)
--- -- -- -- -- --          -- ⁇Π℧ : ∀ {f : ▸ map▹ ⁇Self Self → F⁇ Self  } → ⁇℧ ≡ f (λ tic → ℧Self (Self tic))  → ℧≡ (⁇Π f)
--- -- -- -- -- --          ⁇Type℧ : {{_ : 0< ℓ}} → ℧≡ (⁇Type ℧-1)
--- -- -- -- -- --          ⁇Σ℧ : ℧≡ (⁇Σ (⁇℧ , ⁇℧))
--- -- -- -- -- --          ⁇≡℧ : ℧≡ (⁇≡ ⁇℧)
--- -- -- -- -- --          ⁇μ℧ : ∀ (tyCtor : CName) (ctor : DName tyCtor)
--- -- -- -- -- --            → ℧≡ (⁇μ tyCtor ctor μ℧)
+unfold⁇ : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ →  F⁇ (A.next (⁇Rec {ℓ = ℓ}))
+unfold⁇ {ℓ} x = subst (λ x → x) ⁇lob x
 
 
--- -- -- -- -- -- -- Every type has an error element
--- -- -- -- -- -- ℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
--- -- -- -- -- -- ℧ CodeModule.C⁇ = ⁇℧
--- -- -- -- -- -- ℧ CodeModule.C℧ = tt
--- -- -- -- -- -- ℧ CodeModule.C𝟘 = tt
--- -- -- -- -- -- ℧ CodeModule.C𝟙 = false
--- -- -- -- -- -- ℧ {suc ℓ} CodeModule.CType = C℧
--- -- -- -- -- -- ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
--- -- -- -- -- -- ℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
--- -- -- -- -- -- --withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
--- -- -- -- -- -- -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
--- -- -- -- -- -- ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
--- -- -- -- -- -- ℧ (CodeModule.Cμ tyCtor c D x) = W℧
--- -- -- -- -- -- ℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
-
--- -- -- -- -- -- ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
--- -- -- -- -- -- ℧Approx = ℧ {{Approx}}
-
--- -- -- -- -- -- -- ℧Approxed : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → El c
--- -- -- -- -- -- -- ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
+fold⁇ : ∀ {{_ : Æ}} {ℓ} →  F⁇ (A.next (⁇Rec {ℓ = ℓ}))  → ⁇Ty ℓ
+fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
--- -- -- -- -- -- DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
--- -- -- -- -- -- DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟘 (indSkeleton tyCtor d)
+-- ℂ-1>0 : ∀ {ℓ} → ℂ-1 {ℓ = ℓ} → 0< ℓ
+-- ℂ-1>0 {suc ℓ} x = suc<
 
--- -- -- -- -- -- ▹⁇ : {{_ : Æ}} →  ℕ → A.▹ Set
--- -- -- -- -- -- ▹⁇ ℓ = A.dfix (F⁇ {ℓ})
-
--- -- -- -- -- -- ▹⁇≡ : ∀ {{_ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
--- -- -- -- -- -- ▹⁇≡ = A.pfix F⁇
-
--- -- -- -- -- -- apply▸ : ∀ {{_ : Æ}} {ℓ} (f : (A.▸ (A.dfix (F⁇ {ℓ = ℓ}))) → ⁇Ty ℓ) → (x : A.▹ (⁇Ty ℓ)) →  ⁇Ty ℓ
--- -- -- -- -- -- apply▸ f x = f (transport (cong A.▹_ (⁇lob ∙ cong F⁇ (sym ▹⁇≡)) ∙ sym A.hollowEq ) x)
-
--- -- -- -- -- -- WUnk : ∀ {{æ : Æ}} → ℕ → Set
--- -- -- -- -- -- WUnk ℓ = (FWUnk {ℓ = ℓ} (▹⁇ ℓ))
-
--- -- -- -- -- -- ⁇ToW : ∀ {{æ : Æ}} {ℓ} → ⁇Ty ℓ → WUnk ℓ
--- -- -- -- -- -- ⁇ToW ⁇⁇ = W⁇
--- -- -- -- -- -- ⁇ToW ⁇℧ = W℧
--- -- -- -- -- -- ⁇ToW ⁇𝟙 = Wsup (FC ( H𝟙 , tt) λ ())
--- -- -- -- -- -- ⁇ToW {ℓ = suc ℓ} (⁇Type ty) = Wsup (FC ( HType , ty) λ ())
--- -- -- -- -- -- ⁇ToW {ℓ = suc ℓ} (⁇Cumul c x) = Wsup (FC ( HCumul , (c , x)) λ ())
--- -- -- -- -- -- ⁇ToW (⁇Π f) = Wsup (FC ( HΠ , tt) λ x → ⁇ToW (f x))
--- -- -- -- -- -- ⁇ToW (⁇Σ (x , y)) = Wsup (FC ( HΣ , tt) λ r → if r then ⁇ToW x else ⁇ToW y)
--- -- -- -- -- -- ⁇ToW (⁇≡ (x ⊢ _ ≅ _)) = Wsup (FC ( H≅ , tt) λ _ → ⁇ToW x)
--- -- -- -- -- -- ⁇ToW (⁇μ tyCtor x) = Wsup (FC ( (HCtor tyCtor) , tt) λ _ → x)
-
-
--- -- -- -- -- -- ⁇FromW : ∀ {{æ : Æ}} {ℓ} → WUnk ℓ → ⁇Ty ℓ
--- -- -- -- -- -- ⁇FromW (Wsup (FC (HΠ , arg) res)) = ⁇Π (λ x → ⁇FromW (res x))
--- -- -- -- -- -- ⁇FromW (Wsup (FC (HΣ , arg) res)) = ⁇Σ ((⁇FromW (res true)) , (⁇FromW (res false)))
--- -- -- -- -- -- ⁇FromW (Wsup (FC (H≅ , arg) res)) = ⁇≡ ((⁇FromW (res tt)) ⊢ _ ≅ _)
--- -- -- -- -- -- ⁇FromW (Wsup (FC (H𝟙 , arg) res)) = ⁇𝟙
--- -- -- -- -- -- ⁇FromW {ℓ = suc ℓ} (Wsup (FC (HType , c) res)) = ⁇Type {{inst = suc<}} c
--- -- -- -- -- -- ⁇FromW {ℓ = suc ℓ} (Wsup (FC (HCumul , (c , x)) res)) = ⁇Cumul {{inst = suc<}} c x
--- -- -- -- -- -- ⁇FromW (Wsup (FC (HCtor tyCtor , arg) res)) = ⁇μ tyCtor (res tt)
--- -- -- -- -- -- ⁇FromW W⁇ = ⁇⁇
--- -- -- -- -- -- ⁇FromW W℧ = ⁇℧
-
--- -- -- -- -- -- ⁇IsoWL : ∀ {{æ : Æ}} {ℓ} → (x : ⁇Ty ℓ) → ⁇FromW (⁇ToW x) ≡ x
--- -- -- -- -- -- ⁇IsoWL ⁇⁇ = reflc
--- -- -- -- -- -- ⁇IsoWL ⁇℧ = reflc
--- -- -- -- -- -- ⁇IsoWL ⁇𝟙 = reflc
--- -- -- -- -- -- ⁇IsoWL {ℓ = suc ℓ} (⁇Type ⦃ inst = suc< {ℓ = .ℓ} ⦄ x) = reflc
--- -- -- -- -- -- ⁇IsoWL {ℓ = suc ℓ} (⁇Cumul ⦃ inst = suc< {ℓ = .ℓ} ⦄ c x) = reflc
--- -- -- -- -- -- ⁇IsoWL (⁇Π f) = cong ⁇Π (funExt λ x → ⁇IsoWL (f x))
--- -- -- -- -- -- ⁇IsoWL (⁇Σ (x , y)) = cong₂ (λ x y → ⁇Σ (x , y)) (⁇IsoWL x) (⁇IsoWL y)
--- -- -- -- -- -- ⁇IsoWL (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = cong (λ x → ⁇≡ (x ⊢ _ ≅ _)) (⁇IsoWL x)
--- -- -- -- -- -- ⁇IsoWL (⁇μ tyCtor x) = reflc
-
--- -- -- -- -- -- Wsup-cong : ∀ {I} {C : Container I} {i : I} → {com : Command C i} → {x y : (res : Response C com) → W̃ C (inext C com res)} → x ≡ y → Wsup (FC com x) ≡c Wsup (FC com y)
--- -- -- -- -- -- Wsup-cong {com = com} {x = x} {y = y} pf = cong {x = x} {y = y} (λ x → Wsup (FC _ x)) pf
-
--- -- -- -- -- -- ⁇IsoWR : ∀ {{æ : Æ}} {ℓ} (x : WUnk ℓ)  → ⁇ToW (⁇FromW x) ≡ x
--- -- -- -- -- -- ⁇IsoWR (Wsup (FC (HΠ , tt) f)) = Wsup-cong (funExt λ x → ⁇IsoWR (f x))
--- -- -- -- -- -- ⁇IsoWR (Wsup (FC (HΣ , tt) res)) = Wsup-cong (funExt (λ {true → ⁇IsoWR (res true) ; false → ⁇IsoWR (res false)}))
--- -- -- -- -- -- ⁇IsoWR (Wsup (FC (H≅ , arg) res)) = Wsup-cong (funExt (λ (tt) → ⁇IsoWR (res tt)))
--- -- -- -- -- -- ⁇IsoWR (Wsup (FC (H𝟙 , arg) res)) = Wsup-cong (funExt (λ ()))
--- -- -- -- -- -- ⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HType , arg) res)) = Wsup-cong (funExt λ ())
--- -- -- -- -- -- ⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HCumul , arg) res)) = Wsup-cong (funExt λ ())
--- -- -- -- -- -- ⁇IsoWR (Wsup (FC (HCtor x , arg) res)) = Wsup-cong (funExt (λ x → reflc))
--- -- -- -- -- -- ⁇IsoWR W℧ = reflc
--- -- -- -- -- -- ⁇IsoWR W⁇ = reflc
-
-
--- -- -- -- -- -- ⁇DescIso : ∀ {{_ : Æ}} {ℓ} → Iso (⁇Ty ℓ) (WUnk ℓ)
--- -- -- -- -- -- ⁇DescIso = iso ⁇ToW ⁇FromW ⁇IsoWR ⁇IsoWL
-
--- -- -- -- -- -- -- -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
--- -- -- -- -- -- -- -- ⁇ CodeModule.C⁇ = ⁇⁇
--- -- -- -- -- -- -- -- ⁇ CodeModule.C℧ = tt
--- -- -- -- -- -- -- -- ⁇ CodeModule.C𝟘 = tt
--- -- -- -- -- -- -- -- ⁇ CodeModule.C𝟙 = false
--- -- -- -- -- -- -- -- ⁇ {suc ℓ} CodeModule.CType = C⁇
--- -- -- -- -- -- -- -- ⁇ (CodeModule.CΠ dom cod) = λ x → (⁇ (cod (approx x)))
--- -- -- -- -- -- -- -- ⁇ (CodeModule.CΣ dom cod)  = pairWithApprox (⁇ dom {{Approx}}) (⁇ dom ) , ⁇ (cod _)
--- -- -- -- -- -- -- -- -- ⁇ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (⁇ dom {{Approx}} , ⁇ dom {{Exact}}) , ⁇ (cod (⁇ dom {{Approx}})) {{Exact}}
--- -- -- -- -- -- -- -- ⁇ (CodeModule.C≡ c x y) = ⁇⊢ x ≅ y
--- -- -- -- -- -- -- -- ⁇ (CodeModule.Cμ tyCtor c D x) = W⁇
-
--- -- -- -- -- -- -- -- {-# DISPLAY CodeModule.ℂ _ = ℂ  #-}
--- -- -- -- -- -- -- -- {-# DISPLAY CodeModule.El _  = El  #-}
+-- -- The least precise argument to a guarded function from ⁇ to ⁇
+-- -- Used for checking if functions are errors
+-- -- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
+-- -- topArg {ℓ} = Dep▸ ℧Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
 
 
 
--- -- -- -- -- -- -- -- -- -- Lift a code to a higher universe
--- -- -- -- -- -- -- -- -- liftℂ : ∀ {j k} → j ≤ k → ℂ j → ℂ k
--- -- -- -- -- -- -- -- -- liftDesc : ∀ {j k} → (pf : j ≤ k) → (c : ℂ j) → ℂDesc {j} c → ℂDesc {k} (liftℂ pf c)
--- -- -- -- -- -- -- -- -- toLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) → El c →  El (liftℂ pf c)
--- -- -- -- -- -- -- -- -- fromLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) →  El (liftℂ pf c) → El c
--- -- -- -- -- -- -- -- -- fromToLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) (x : El c) → fromLift pf c (toLift pf c x ) ≡ x
--- -- -- -- -- -- -- -- -- liftℂ pf CodeModule.C⁇ = C⁇
--- -- -- -- -- -- -- -- -- liftℂ pf CodeModule.C℧ = C℧
--- -- -- -- -- -- -- -- -- liftℂ pf CodeModule.C𝟘 = C𝟘
--- -- -- -- -- -- -- -- -- liftℂ pf CodeModule.C𝟙 = C𝟙
--- -- -- -- -- -- -- -- -- liftℂ (zero , pf) CodeModule.CType = transport (cong ℂ pf) CType
--- -- -- -- -- -- -- -- -- liftℂ (suc diff , pf) CodeModule.CType = CType {{transport (cong 0< pf) suc<}}
--- -- -- -- -- -- -- -- -- liftℂ pf (CodeModule.CΠ dom cod) = CΠ (liftℂ pf dom) (λ x → (liftℂ pf (cod (fromLift pf dom x))))
--- -- -- -- -- -- -- -- -- liftℂ pf (CodeModule.CΣ dom cod) = CΣ (liftℂ pf dom) (λ x → (liftℂ pf (cod (fromLift pf dom x))))
--- -- -- -- -- -- -- -- -- liftℂ pf (CodeModule.C≡ c x y) = C≡ (liftℂ pf c) (toLift pf c x) (toLift pf c y)
--- -- -- -- -- -- -- -- -- liftℂ pf (CodeModule.Cμ tyCtor c D x) = Cμ tyCtor (liftℂ pf c) (λ ctor → liftDesc pf c (D ctor)) (toLift pf c x)
+-- -- Relation for whether a value is an error in type ⁇
+-- -- data ℧≡ {ℓ} : ⁇Ty ℓ → Set where
+-- --          ℧℧ : ℧≡ ⁇℧
+-- --          ⁇Π℧ : ∀ {f} → ⁇℧ ≡ f topArg  → ℧≡ (⁇Π f)
+-- --          -- ⁇Π℧ : ∀ {f : ▸ map▹ ⁇Self Self → F⁇ Self  } → ⁇℧ ≡ f (λ tic → ℧Self (Self tic))  → ℧≡ (⁇Π f)
+-- --          ⁇Type℧ : {{_ : 0< ℓ}} → ℧≡ (⁇Type ℧-1)
+-- --          ⁇Σ℧ : ℧≡ (⁇Σ (⁇℧ , ⁇℧))
+-- --          ⁇≡℧ : ℧≡ (⁇≡ ⁇℧)
+-- --          ⁇μ℧ : ∀ (tyCtor : CName) (ctor : DName tyCtor)
+-- --            → ℧≡ (⁇μ tyCtor ctor μ℧)
 
--- -- -- -- -- -- -- -- -- liftDesc pf c (CodeModule.CEnd i) = CEnd (toLift pf c i)
--- -- -- -- -- -- -- -- -- liftDesc pf c (CodeModule.CArg c₁ D) = CArg (liftℂ pf c₁) (λ x → liftDesc pf c (D (fromLift pf c₁ x)))
--- -- -- -- -- -- -- -- -- liftDesc pf c (CodeModule.CRec c₁ j D) =
--- -- -- -- -- -- -- -- --   CRec (liftℂ pf c₁) (λ x → toLift pf c (j (fromLift pf c₁ x))) λ x → liftDesc pf c (D (fromLift pf c₁ x))
 
--- -- -- -- -- -- -- -- -- toLift pf CodeModule.C℧ x = tt
--- -- -- -- -- -- -- -- -- toLift pf CodeModule.C𝟘 x = x
--- -- -- -- -- -- -- -- -- toLift pf CodeModule.C𝟙 x = x
--- -- -- -- -- -- -- -- -- toLift {j = suc j} {zero} (_ , pf) CodeModule.CType x with () ← snotz (sym (+-suc _ j) ∙ pf)
--- -- -- -- -- -- -- -- -- toLift {j = suc j} {suc k} (diff , pf) CodeModule.CType x = liftℂ (zero , injSuc pf) x
--- -- -- -- -- -- -- -- -- toLift {j = suc j} {suc k} (suc diff , pf) CodeModule.CType x = liftℂ (suc diff , sym (+-suc _ j) ∙ injSuc pf) x
--- -- -- -- -- -- -- -- -- toLift pf (CodeModule.CΠ dom cod) f = λ x → toLift pf (cod (fromLift pf dom x)) (f (fromLift pf dom x))
--- -- -- -- -- -- -- -- -- toLift pf (CodeModule.CΣ dom cod) (x , y) =
--- -- -- -- -- -- -- -- --   toLift pf dom x , transport (cong (λ x → El (liftℂ pf (cod x))) (sym (fromToLift pf dom x))) (toLift pf (cod x) y)
--- -- -- -- -- -- -- -- -- toLift pf (CodeModule.C≡ c x₁ y) x = toLift pf c x
--- -- -- -- -- -- -- -- -- toLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
--- -- -- -- -- -- -- -- -- toLift pf CodeModule.C⁇ x = {!!}
+-- Every type has an error element
+℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
+℧ CodeModule.C⁇ = ⁇℧
+℧ CodeModule.C℧ = tt
+℧ CodeModule.C𝟘 = tt
+℧ CodeModule.C𝟙 = false
+℧ {suc ℓ} CodeModule.CType = C℧
+℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
+℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
+--withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
+-- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
+℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
+℧ (CodeModule.Cμ tyCtor c D x) = W℧
+℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
 
--- -- -- -- -- -- -- -- -- fromLift pf CodeModule.C℧ x = tt
--- -- -- -- -- -- -- -- -- fromLift pf CodeModule.C𝟘 x = tt
--- -- -- -- -- -- -- -- -- fromLift pf CodeModule.C𝟙 x = x
--- -- -- -- -- -- -- -- -- fromLift (zero , pf) CodeModule.CType x = transport (sym (cong (λ x → CodeModule.ℂ-1 (CodeModuleAt x)) pf)) x
--- -- -- -- -- -- -- -- -- -- This is the only place we differ: can't lower the level of a type
--- -- -- -- -- -- -- -- -- fromLift {suc j} (suc diff , pf) CodeModule.CType x = C℧
--- -- -- -- -- -- -- -- -- fromLift pf (CodeModule.CΠ dom cod) f = λ x →
--- -- -- -- -- -- -- -- --   fromLift pf (cod x) (transport (cong (λ x → El (liftℂ pf (cod x))) (fromToLift pf dom x)) (f (toLift pf dom x)) )
--- -- -- -- -- -- -- -- -- fromLift pf (CodeModule.CΣ dom cod) (x , y) = fromLift pf dom x , fromLift pf (cod (fromLift pf dom x)) y
--- -- -- -- -- -- -- -- -- fromLift pf (CodeModule.C≡ c x₁ y) x = fromLift pf c x
--- -- -- -- -- -- -- -- -- fromLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
--- -- -- -- -- -- -- -- -- fromLift pf CodeModule.C⁇ x = {!!}
+℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
+℧Approx = ℧ {{Approx}}
 
--- -- -- -- -- -- -- -- -- fromToLift pf CodeModule.C℧ x = refl
--- -- -- -- -- -- -- -- -- fromToLift pf CodeModule.C𝟘 x = refl
--- -- -- -- -- -- -- -- -- fromToLift pf CodeModule.C𝟙 x = refl
--- -- -- -- -- -- -- -- -- fromToLift {j = suc j} {zero} (_ , pf) CodeModule.CType x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift {j = suc j} {suc k} (zero , pf) CodeModule.CType x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift {j = suc j} {suc k} (suc diff , pf) CodeModule.CType x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift pf (CodeModule.CΠ c cod) x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift pf (CodeModule.CΣ c cod) x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift pf (CodeModule.C≡ c x₁ y) x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
--- -- -- -- -- -- -- -- -- fromToLift pf CodeModule.C⁇ x = {!!}
+-- ℧Approxed : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → El c
+-- ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
+
+
+DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
+DCtors tyCtor cI = (d : DName tyCtor) → ℂDesc cI C𝟘 (indSkeleton tyCtor d)
+
+
+▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
+▹⁇Self {{æ = æ}} ℓ = A.dfix (▹⁇Rec {ℓ = ℓ})
+
+▹⁇Self≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇Self ℓ ≡ A.next (⁇Rec {ℓ = ℓ})
+▹⁇Self≡ = A.pfix (CodeModule.▹⁇Rec (CodeModuleAt _))
+
+▹⁇ : {{_ : Æ}} →  ℕ → A.▹ Set
+▹⁇ ℓ = A.map▹ ⁇TySelf  (▹⁇Self ℓ)
+
+▹⁇≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
+▹⁇≡ ⦃ æ = Approx ⦄ {ℓ = ℓ} = refl
+▹⁇≡ ⦃ æ = Exact ⦄ {ℓ = ℓ} = congPath (G.map▹ ⁇TySelf) (▹⁇Self≡ {{æ = Exact}}) ∙ G.mapNext ⁇TySelf _
+
+-- apply▸ : ∀ {{_ : Æ}} {ℓ} (f : (A.▸ (A.dfix (F⁇ {ℓ = ℓ}))) → ⁇Ty ℓ) → (x : A.▹ (⁇Ty ℓ)) →  ⁇Ty ℓ
+-- apply▸ f x = f (transport (cong A.▹_ (⁇lob ∙ cong F⁇ (sym ▹⁇≡)) ∙ sym A.hollowEq ) x)
+
+WUnk : ∀ {{æ : Æ}} → ℕ → Set
+WUnk ℓ = (FWUnk {ℓ = ℓ} (▹⁇Self ℓ))
+
+⁇ToW : ∀ {{æ : Æ}} {ℓ} → ⁇Ty ℓ → WUnk ℓ
+⁇ToW ⁇⁇ = W⁇
+⁇ToW ⁇℧ = W℧
+⁇ToW ⁇𝟙 = Wsup (FC ( H𝟙 , tt) λ ())
+⁇ToW {ℓ = suc ℓ} (⁇Type ty) = Wsup (FC ( HType , ty) λ ())
+⁇ToW {ℓ = suc ℓ} (⁇Cumul c x) = Wsup (FC ( HCumul , (c , x)) λ ())
+⁇ToW (⁇Π f) = Wsup (FC ( HΠ , tt) λ x → ⁇ToW (f x))
+⁇ToW (⁇Σ (x , y)) = Wsup (FC ( HΣ , tt) λ r → if r then ⁇ToW x else ⁇ToW y)
+⁇ToW (⁇≡ (x ⊢ _ ≅ _)) = Wsup (FC ( H≅ , tt) λ _ → ⁇ToW x)
+⁇ToW (⁇μ tyCtor x) = Wsup (FC ( (HCtor tyCtor) , tt) λ _ → x)
+
+
+⁇FromW : ∀ {{æ : Æ}} {ℓ} → WUnk ℓ → ⁇Ty ℓ
+⁇FromW (Wsup (FC (HΠ , arg) res)) = ⁇Π (λ x → ⁇FromW (res x))
+⁇FromW (Wsup (FC (HΣ , arg) res)) = ⁇Σ ((⁇FromW (res true)) , (⁇FromW (res false)))
+⁇FromW (Wsup (FC (H≅ , arg) res)) = ⁇≡ ((⁇FromW (res tt)) ⊢ _ ≅ _)
+⁇FromW (Wsup (FC (H𝟙 , arg) res)) = ⁇𝟙
+⁇FromW {ℓ = suc ℓ} (Wsup (FC (HType , c) res)) = ⁇Type {{inst = suc<}} c
+⁇FromW {ℓ = suc ℓ} (Wsup (FC (HCumul , (c , x)) res)) = ⁇Cumul {{inst = suc<}} c x
+⁇FromW (Wsup (FC (HCtor tyCtor , arg) res)) = ⁇μ tyCtor (res tt)
+⁇FromW W⁇ = ⁇⁇
+⁇FromW W℧ = ⁇℧
+
+⁇IsoWL : ∀ {{æ : Æ}} {ℓ} → (x : ⁇Ty ℓ) → ⁇FromW (⁇ToW x) ≡ x
+⁇IsoWL ⁇⁇ = reflc
+⁇IsoWL ⁇℧ = reflc
+⁇IsoWL ⁇𝟙 = reflc
+⁇IsoWL {ℓ = suc ℓ} (⁇Type ⦃ inst = suc< {ℓ = .ℓ} ⦄ x) = reflc
+⁇IsoWL {ℓ = suc ℓ} (⁇Cumul ⦃ inst = suc< {ℓ = .ℓ} ⦄ c x) = reflc
+⁇IsoWL (⁇Π f) = cong ⁇Π (funExt λ x → ⁇IsoWL (f x))
+⁇IsoWL (⁇Σ (x , y)) = cong₂ (λ x y → ⁇Σ (x , y)) (⁇IsoWL x) (⁇IsoWL y)
+⁇IsoWL (CodeModule.⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = cong (λ x → ⁇≡ (x ⊢ _ ≅ _)) (⁇IsoWL x)
+⁇IsoWL (⁇μ tyCtor x) = reflc
+
+Wsup-cong : ∀ {I} {C : Container I} {i : I} → {com : Command C i} → {x y : (res : Response C com) → W̃ C (inext C com res)} → x ≡ y → Wsup (FC com x) ≡c Wsup (FC com y)
+Wsup-cong {com = com} {x = x} {y = y} pf = cong {x = x} {y = y} (λ x → Wsup (FC _ x)) pf
+
+⁇IsoWR : ∀ {{æ : Æ}} {ℓ} (x : WUnk ℓ)  → ⁇ToW (⁇FromW x) ≡ x
+⁇IsoWR (Wsup (FC (HΠ , tt) f)) = Wsup-cong (funExt λ x → ⁇IsoWR (f x))
+⁇IsoWR (Wsup (FC (HΣ , tt) res)) = Wsup-cong (funExt (λ {true → ⁇IsoWR (res true) ; false → ⁇IsoWR (res false)}))
+⁇IsoWR (Wsup (FC (H≅ , arg) res)) = Wsup-cong (funExt (λ (tt) → ⁇IsoWR (res tt)))
+⁇IsoWR (Wsup (FC (H𝟙 , arg) res)) = Wsup-cong (funExt (λ ()))
+⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HType , arg) res)) = Wsup-cong (funExt λ ())
+⁇IsoWR {ℓ = suc ℓ} (Wsup (FC (HCumul , arg) res)) = Wsup-cong (funExt λ ())
+⁇IsoWR (Wsup (FC (HCtor x , arg) res)) = Wsup-cong (funExt (λ x → reflc))
+⁇IsoWR W℧ = reflc
+⁇IsoWR W⁇ = reflc
+
+
+⁇DescIso : ∀ {{_ : Æ}} {ℓ} → Iso (⁇Ty ℓ) (WUnk ℓ)
+⁇DescIso = iso ⁇ToW ⁇FromW ⁇IsoWR ⁇IsoWL
+
+-- -- ⁇ : ∀ {ℓ} → (c : ℂ ℓ) → {{æ : Æ}} → El c
+-- -- ⁇ CodeModule.C⁇ = ⁇⁇
+-- -- ⁇ CodeModule.C℧ = tt
+-- -- ⁇ CodeModule.C𝟘 = tt
+-- -- ⁇ CodeModule.C𝟙 = false
+-- -- ⁇ {suc ℓ} CodeModule.CType = C⁇
+-- -- ⁇ (CodeModule.CΠ dom cod) = λ x → (⁇ (cod (approx x)))
+-- -- ⁇ (CodeModule.CΣ dom cod)  = pairWithApprox (⁇ dom {{Approx}}) (⁇ dom ) , ⁇ (cod _)
+-- -- -- ⁇ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (⁇ dom {{Approx}} , ⁇ dom {{Exact}}) , ⁇ (cod (⁇ dom {{Approx}})) {{Exact}}
+-- -- ⁇ (CodeModule.C≡ c x y) = ⁇⊢ x ≅ y
+-- -- ⁇ (CodeModule.Cμ tyCtor c D x) = W⁇
+
+-- -- {-# DISPLAY CodeModule.ℂ _ = ℂ  #-}
+-- -- {-# DISPLAY CodeModule.El _  = El  #-}
+
+
+
+-- -- -- -- Lift a code to a higher universe
+-- -- -- liftℂ : ∀ {j k} → j ≤ k → ℂ j → ℂ k
+-- -- -- liftDesc : ∀ {j k} → (pf : j ≤ k) → (c : ℂ j) → ℂDesc {j} c → ℂDesc {k} (liftℂ pf c)
+-- -- -- toLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) → El c →  El (liftℂ pf c)
+-- -- -- fromLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) →  El (liftℂ pf c) → El c
+-- -- -- fromToLift : ∀ {j k} (pf : j ≤ k) (c : ℂ j) (x : El c) → fromLift pf c (toLift pf c x ) ≡ x
+-- -- -- liftℂ pf CodeModule.C⁇ = C⁇
+-- -- -- liftℂ pf CodeModule.C℧ = C℧
+-- -- -- liftℂ pf CodeModule.C𝟘 = C𝟘
+-- -- -- liftℂ pf CodeModule.C𝟙 = C𝟙
+-- -- -- liftℂ (zero , pf) CodeModule.CType = transport (cong ℂ pf) CType
+-- -- -- liftℂ (suc diff , pf) CodeModule.CType = CType {{transport (cong 0< pf) suc<}}
+-- -- -- liftℂ pf (CodeModule.CΠ dom cod) = CΠ (liftℂ pf dom) (λ x → (liftℂ pf (cod (fromLift pf dom x))))
+-- -- -- liftℂ pf (CodeModule.CΣ dom cod) = CΣ (liftℂ pf dom) (λ x → (liftℂ pf (cod (fromLift pf dom x))))
+-- -- -- liftℂ pf (CodeModule.C≡ c x y) = C≡ (liftℂ pf c) (toLift pf c x) (toLift pf c y)
+-- -- -- liftℂ pf (CodeModule.Cμ tyCtor c D x) = Cμ tyCtor (liftℂ pf c) (λ ctor → liftDesc pf c (D ctor)) (toLift pf c x)
+
+-- -- -- liftDesc pf c (CodeModule.CEnd i) = CEnd (toLift pf c i)
+-- -- -- liftDesc pf c (CodeModule.CArg c₁ D) = CArg (liftℂ pf c₁) (λ x → liftDesc pf c (D (fromLift pf c₁ x)))
+-- -- -- liftDesc pf c (CodeModule.CRec c₁ j D) =
+-- -- --   CRec (liftℂ pf c₁) (λ x → toLift pf c (j (fromLift pf c₁ x))) λ x → liftDesc pf c (D (fromLift pf c₁ x))
+
+-- -- -- toLift pf CodeModule.C℧ x = tt
+-- -- -- toLift pf CodeModule.C𝟘 x = x
+-- -- -- toLift pf CodeModule.C𝟙 x = x
+-- -- -- toLift {j = suc j} {zero} (_ , pf) CodeModule.CType x with () ← snotz (sym (+-suc _ j) ∙ pf)
+-- -- -- toLift {j = suc j} {suc k} (diff , pf) CodeModule.CType x = liftℂ (zero , injSuc pf) x
+-- -- -- toLift {j = suc j} {suc k} (suc diff , pf) CodeModule.CType x = liftℂ (suc diff , sym (+-suc _ j) ∙ injSuc pf) x
+-- -- -- toLift pf (CodeModule.CΠ dom cod) f = λ x → toLift pf (cod (fromLift pf dom x)) (f (fromLift pf dom x))
+-- -- -- toLift pf (CodeModule.CΣ dom cod) (x , y) =
+-- -- --   toLift pf dom x , transport (cong (λ x → El (liftℂ pf (cod x))) (sym (fromToLift pf dom x))) (toLift pf (cod x) y)
+-- -- -- toLift pf (CodeModule.C≡ c x₁ y) x = toLift pf c x
+-- -- -- toLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
+-- -- -- toLift pf CodeModule.C⁇ x = {!!}
+
+-- -- -- fromLift pf CodeModule.C℧ x = tt
+-- -- -- fromLift pf CodeModule.C𝟘 x = tt
+-- -- -- fromLift pf CodeModule.C𝟙 x = x
+-- -- -- fromLift (zero , pf) CodeModule.CType x = transport (sym (cong (λ x → CodeModule.ℂ-1 (CodeModuleAt x)) pf)) x
+-- -- -- -- This is the only place we differ: can't lower the level of a type
+-- -- -- fromLift {suc j} (suc diff , pf) CodeModule.CType x = C℧
+-- -- -- fromLift pf (CodeModule.CΠ dom cod) f = λ x →
+-- -- --   fromLift pf (cod x) (transport (cong (λ x → El (liftℂ pf (cod x))) (fromToLift pf dom x)) (f (toLift pf dom x)) )
+-- -- -- fromLift pf (CodeModule.CΣ dom cod) (x , y) = fromLift pf dom x , fromLift pf (cod (fromLift pf dom x)) y
+-- -- -- fromLift pf (CodeModule.C≡ c x₁ y) x = fromLift pf c x
+-- -- -- fromLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
+-- -- -- fromLift pf CodeModule.C⁇ x = {!!}
+
+-- -- -- fromToLift pf CodeModule.C℧ x = refl
+-- -- -- fromToLift pf CodeModule.C𝟘 x = refl
+-- -- -- fromToLift pf CodeModule.C𝟙 x = refl
+-- -- -- fromToLift {j = suc j} {zero} (_ , pf) CodeModule.CType x = {!!}
+-- -- -- fromToLift {j = suc j} {suc k} (zero , pf) CodeModule.CType x = {!!}
+-- -- -- fromToLift {j = suc j} {suc k} (suc diff , pf) CodeModule.CType x = {!!}
+-- -- -- fromToLift pf (CodeModule.CΠ c cod) x = {!!}
+-- -- -- fromToLift pf (CodeModule.CΣ c cod) x = {!!}
+-- -- -- fromToLift pf (CodeModule.C≡ c x₁ y) x = {!!}
+-- -- -- fromToLift pf (CodeModule.Cμ tyCtor c D x₁) x = {!!}
+-- -- -- fromToLift pf CodeModule.C⁇ x = {!!}
