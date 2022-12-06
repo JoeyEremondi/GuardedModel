@@ -866,7 +866,15 @@ record CodeModule
 -- -- -- -----------------------------------------------------------------------
 
 
-
+SmallerCodeFor : ∀ {ℓ} → CodeModule ℓ → SmallerCode
+SmallerCodeFor CM = record
+                     { ℂ-1 = ℂ
+                     ; El-1 = El
+                     ; toApprox-1 = toApprox
+                     ; toExact-1 = toExact
+                     ; toApproxExact-1 = toApproxExact
+                     }
+               where open CodeModule CM
 
 -- We can then recursively build the codes for each level
 -- We take a guarded fixed-point, so we can have a code CSelf such that
@@ -882,16 +890,10 @@ CodeModuleAt zero = --G.fix λ ModSelf →
                 ; toApproxExact-1 = λ ()
                 }
                 )
-CodeModuleAt (suc ℓ) = -- G.fix λ ModSelf →
-  codeModule (record
-                { ℂ-1 = ℂ
-                ; El-1 = El
-                ; toApprox-1 = toApprox
-                ; toExact-1 = toExact
-                ; toApproxExact-1 = toApproxExact
-                })
-        where open CodeModule (CodeModuleAt ℓ)
+CodeModuleAt (suc ℓ) = codeModule (SmallerCodeFor (CodeModuleAt ℓ))
 
+SmallerCodeAt : ℕ → SmallerCode
+SmallerCodeAt ℓ = SmallerCodeFor (CodeModuleAt ℓ)
 
 -- -- If we have smaller codes, ℓ > 0
 -- ℓsuc : ∀ {ℓ} → CodeModule.ℂ-1 (CodeModuleAt ℓ) → Σ[ ℓ' ∈ ℕ ](ℓ ≡p suc ℓ')
