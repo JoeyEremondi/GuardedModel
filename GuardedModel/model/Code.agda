@@ -253,15 +253,18 @@ record CodeModule
         → (b : ApproxEl cB)
         → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (D d) b)) i
         → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (D d) b)) i
-    toApproxExactμ :
-      (tyCtor : CName)
-        → (cI : ℂ)
-        → (cB : ℂ)
-        → (D : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
-        → (i : ApproxEl cI)
-        → (b : ApproxEl cB)
-        → (x : W̃ (Arg (λ d → interpDesc {{æ = Approx}} (D d) b)) i )
-        → toApproxμ tyCtor cI cB D i b (toExactμ tyCtor cI cB D i b x) ≡c x
+    postulate
+    --TODO prove this
+    -- I'm sure it's true but I'm stuck in transport/index hell
+      toApproxExactμ :
+        (tyCtor : CName)
+          → (cI : ℂ)
+          → (cB : ℂ)
+          → (D : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
+          → (i : ApproxEl cI)
+          → (b : ApproxEl cB)
+          → (x : W̃ (Arg (λ d → interpDesc {{æ = Approx}} (D d) b)) i )
+          → toApproxμ tyCtor cI cB D i b (toExactμ tyCtor cI cB D i b x) ≡c x
 
 
 
@@ -691,15 +694,15 @@ record CodeModule
     transportIndexμ D b i j W℧ = W℧
     transportIndexμ D b i j W⁇ = W⁇
 
-    transportIndexPathP :
-      ∀ {{æ : Æ}} { cI cB } {tyCtor : CName}
-        → (D : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
-        → (b : ApproxEl cB)
-        → (i j : ApproxEl cI)
-        → (i≡j : i ≡c j)
-        → (x : W̃ (Arg (λ d → interpDesc (D d) b)) i)
-        → PathP (λ iv → W̃ (Arg (λ d → interpDesc (D d) b)) (i≡j iv)) x (transportIndexμ D b i j x)
-    transportIndexPathP D b i j i≡j x = {!!}
+    -- transportIndexPathP :
+    --   ∀ {{æ : Æ}} { cI cB } {tyCtor : CName}
+    --     → (D : (d : DName tyCtor) → ℂDesc cI cB (indSkeleton tyCtor d))
+    --     → (b : ApproxEl cB)
+    --     → (i j : ApproxEl cI)
+    --     → (i≡j : i ≡c j)
+    --     → (x : W̃ (Arg (λ d → interpDesc (D d) b)) i)
+    --     → PathP (λ iv → W̃ (Arg (λ d → interpDesc (D d) b)) (i≡j iv)) x (transportIndexμ D b i j x)
+    -- transportIndexPathP D b i j i≡j x = {!!}
 
 
 --     {-# BUILTIN REWRITE _≡_ #-}
@@ -809,12 +812,12 @@ record CodeModule
           → transportIndexμ {{æ = _}} Ds b i j (toApproxμ tyCtor cI cB Ds i b x)
             ≡c toApproxμ tyCtor cI cB Ds j b (transportIndexμ {{æ = Exact}} Ds b i j x)
 
-    toApproxExactμ tyCtor cI cB D i b (Wsup (FC (d , com) res)) = WPathP {{æ = _}} (toApproxExactCommandD _ _ _ com) helper
-      where
-        helper : (r1 : _) → (r2 : _ ) → (pth : _) → _
-        helper r1 r2 pth = {!!}
-    toApproxExactμ tyCtor cI cB D i b W℧ = reflc
-    toApproxExactμ tyCtor cI cB D i b W⁇ = reflc
+    -- toApproxExactμ tyCtor cI cB D i b (Wsup (FC (d , com) res)) = WPathP {{æ = _}} (toApproxExactCommandD _ _ _ com) helper
+    --   where
+    --     helper : (r1 : _) → (r2 : _ ) → (pth : _) → _
+    --     helper r1 r2 pth = {!!}
+    -- toApproxExactμ tyCtor cI cB D i b W℧ = reflc
+    -- toApproxExactμ tyCtor cI cB D i b W⁇ = reflc
     -- transportIndexApproxCommut Ds b i j (Wsup (FC (d , com) resp)) i≡j =
     --   WPathP {{æ = _}} comSwap helper
     --     where
