@@ -30,8 +30,14 @@ open import Code
 
 
 --TODO: don't make ℓ module param
-module WMuConversion {{_ : DataTypes}} {{_ : DataGerms}} {{_ : Æ}} where
+module WMuConversion {{_ : DataTypes}} {{_ : DataGerms}}  where
 
+-- We only ever attach a size to the approximate part of a computation
+-- and we only need this conversion for making a size
+private
+  instance
+    approxÆ : Æ
+    approxÆ = Approx
 
 
 
@@ -41,15 +47,15 @@ module WMuConversion {{_ : DataTypes}} {{_ : DataGerms}} {{_ : Æ}} where
 -- Also, Cubical Agda recognizes these as strictly decreasing, which is nice
 data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cI cB sig → ApproxEl cI → ApproxEl cB → Set where
   ElEnd : ∀ {cB b i} j → i ≅ j →  ℂDescEl' cI X cB (CEnd j) i b
-  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : ApproxedEl (cA b) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D _ reflp) i b
+  ElArg : ∀ {cB cA sig i b} {D : ℂDesc cI _ sig} → (a : El (cA b) ) →  ℂDescEl' cI X (CΣ cB cA)  D i (b , approx a) → ℂDescEl' cI X cB (CArg cA D _ reflp) i b
   ElRec : ∀ {cB b i sig} {j : ApproxEl cI} {D : ℂDesc cI cB sig} →
         X j → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CRec j D) i b
   ElHRec : ∀ {cB b i sig} {c : ApproxEl cB → ℂ ℓ} {j : (b : ApproxEl cB) → ApproxEl (c b) → ApproxEl cI} {D : ℂDesc cI cB sig} →
-    ((x : ApproxedEl (c b)) → X (j b (approx x))) → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CHRec c j D _ reflp) i b
+    ((x : El (c b)) → X (j b (approx x))) → ℂDescEl' cI X cB D i b → ℂDescEl' cI X cB  (CHRec c j D _ reflp) i b
 
 
 
-ℂDescEl : ∀  {ℓ sig} {cI cB : ℂ ℓ} → ℂDesc cI cB sig → (ApproxEl cI → Set) → ApproxEl cI → ApproxEl cB → Set
+ℂDescEl : ∀  {ℓ sig} {cI cB : ℂ ℓ} → ℂDesc cI cB sig → (X : ApproxEl cI → Set) → ApproxEl cI → ApproxEl cB → Set
 ℂDescEl {cI = cI} {cB} D X i b = ℂDescEl' cI X cB D i b
 
   -- Fixed Points of inductive descriptions from codes
@@ -101,13 +107,13 @@ fromCElCommand (CHRec c j D _ _) (ElHRec f x) = fromCElCommand D x
 
 fromCElF : ∀ {ℓ sig} {cI cB : ℂ ℓ} (D : ℂDesc cI cB sig) {X : ApproxEl cI → Set} {i : ApproxEl cI} {b : ApproxEl cB}
     → (x : ℂDescEl  D X i b)
-    → (r : ResponseD D b (fromCElCommand D x ) )
-        → X (inextD D b (fromCElCommand D x ) r)
-fromCElF (CArg c D _ _) (ElArg a x) r = fromCElF D x r
-fromCElF (CRec j D) (ElRec x x₁) (Rec _) = x
+    → (r : ResponseD D b (fromCElCommand D x) )
+        → X (inextD D b  _ r)
+fromCElF (CArg c D _ _) (ElArg a x) r =  fromCElF D x r
+fromCElF (CRec j D) (ElRec x x₁) (Rec _) =  x
 fromCElF (CRec i D) (ElRec x x₁) (Rest x₂) = fromCElF D x₁ x₂
-fromCElF (CHRec c i D _ _) (ElHRec f1 f2) (Rec a) = f1 a
-fromCElF (CHRec c i D _ _) (ElHRec f1 f2) (Rest r) = fromCElF D f2 r --fromCElF (D (approx a)) (f2 a) r
+fromCElF (CHRec c i D _ _) (ElHRec f1 f2) (Rec a) =  f1 a
+fromCElF (CHRec c i D _ _) (ElHRec f1 f2) (Rest r) =  fromCElF D f2 r --fromCElF (D (approx a)) (f2 a) r
 
 
 
@@ -117,7 +123,7 @@ fromCμ : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} {D : DCtors tyCtor cI} {i : 
 fromCEl : ∀ {ℓ sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i : ApproxEl cI} {b : ApproxEl cB}
     → (x : ℂDescEl  D (ℂμ tyCtor E) i b)
     → (r : ResponseD D b (fromCElCommand D x))
-        → WArg E (inextD D b (fromCElCommand D x ) r )
+        → WArg E (inextD D b (fromCElCommand D x) r)
 
 
 fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D d) D x))

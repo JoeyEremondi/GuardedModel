@@ -29,11 +29,17 @@ open import ApproxExact
 open import Code
 
 --TODO: don't make ℓ module param
-module WMuEq {{_ : DataTypes}} {{_ : DataGerms}} {{_ : Æ}} where
+module WMuEq {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import WMuConversion public
 
 
+-- We only ever attach a size to the approximate part of a computation
+-- and we only need this conversion for making a size
+private
+  instance
+    approxÆ : Æ
+    approxÆ = Approx
 
   -- TODO: report Agda issue about why this checks slow without the helper fn
 fromToCEl :
@@ -74,7 +80,7 @@ fromToCμ :  ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i
 fromToCμ {cI = cI} D = wInd
   (λ(ix , x) → fromCμ (toCμ D x) ≡ x) helper refl refl
   where
-    helper : ∀ {i : ApproxEl cI} (cs : FContainer (Arg (λ d → interpDesc (D d) tt)) (WArg D) i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
+    helper : ∀ {i : ApproxEl cI} (cs : ⟦ Arg (λ d → interpDesc (D d) tt)⟧F (WArg D) i)  →  (φ : _) → fromCμ (toCμ D (Wsup cs)) ≡ Wsup cs
     helper {i} (FC (d , com) k) φ 𝕚 =
       Wsup (FC
         (d , fromToCElCommand (D d) D com k 𝕚)
