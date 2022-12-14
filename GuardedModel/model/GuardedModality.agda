@@ -99,12 +99,7 @@ hollow : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f → ▹ fix f
 hollow  {f = f} x tic = transport (pfix' f tic) (x tic)
 
 hollowEq : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f ≡ ▹ fix f
-hollowEq {f = f} = ua (isoToEquiv (iso hollow unhollow sec ret))
-  where
-    sec : section hollow unhollow
-    sec b = later-ext (λ tic → transportTransport⁻ (pfix' f tic) (b tic))
-    ret : retract hollow unhollow
-    ret b = later-ext' (λ tic → transport⁻Transport (pfix' f tic) (b tic))
+hollowEq {f = f} i = (tic : Tick) → pfix' f tic i
 
 tyfix : ∀ {l} → (Set l → Set l) → Set l
 tyfix F = fix λ x → F (▸ x)
