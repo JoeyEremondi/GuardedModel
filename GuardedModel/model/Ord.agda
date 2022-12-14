@@ -34,6 +34,16 @@ module Ord {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Code
 C𝔹 : ℂ 0
 C𝔹 = C𝟙
+
+
+-- We only ever attach a size to the approximate part of a computation
+-- and we only need this conversion for making a size
+private
+  instance
+    approxÆ : Æ
+    approxÆ = Approx
+
+
 -- C𝔹Eq : El (C𝔹 ) ≡ Bool
 -- C𝔹Eq = refl
 

@@ -1,6 +1,6 @@
 
 
-{-# OPTIONS --cubical --guarded --rewriting #-}
+{-# OPTIONS --cubical --guarded  #-}
 
 
 

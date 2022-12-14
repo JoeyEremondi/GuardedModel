@@ -118,7 +118,7 @@ negUnique reflp iso- x y =
    → x ≡ y
 ΣnegUnique æeq iso- x y pf = ΣPathP (pf , toPathP (negUnique  æeq iso- _ (snd y)) )
 
-record InductiveCodes : Set2 where
+record CodesForInductives : Set2 where
   field
     ℓₚ : (ℓ : ℕ) → CName → ℕ
     Params : (ℓ : ℕ) → (tyCtor : CName) → ℂ (ℓₚ ℓ tyCtor)
@@ -156,6 +156,8 @@ record InductiveCodes : Set2 where
 
   DataGerm : {{ æ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
   DataGerm ℓ c = AllDataTypes ℓ (just c)
+
+open CodesForInductives {{...}} public
   -- FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
   --   → (D : GermCtor B+ B- sig)
   --   → (b+ : B+)

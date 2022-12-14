@@ -27,6 +27,14 @@ module SizeOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Ord
 open import Code
 
+
+-- We only ever attach a size to the approximate part of a computation
+-- and we only need this conversion for making a size
+private
+  instance
+    approxÆ : Æ
+    approxÆ = Approx
+
 -- open import Cubical.HITs.PropositionalTruncation as P
 -- open import Cubical.HITs.SetQuotients as Q
 -- open import Cubical.Foundations.Isomorphism
