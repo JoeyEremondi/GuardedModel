@@ -226,7 +226,6 @@ record CodeModule
           → (b : ApproxEl cB)
           → (cs : ⟦ interpDesc {{æ = Exact}} D b ⟧F X tt)
           → □ (interpDesc {{æ = Exact}} D b) (λ (j , _) → Y j) (tt , cs)
-          → (∀ {i' j'}  → Y i' → Y j')
           → ⟦ interpDesc {{æ = Approx}} D b ⟧F Y tt
     toExactDesc :
       ∀ { cB sig X Y}
@@ -234,7 +233,6 @@ record CodeModule
           → (b : ApproxEl cB)
           → (cs : ⟦ interpDesc {{æ = Approx}} D b ⟧F X tt)
           → □ (interpDesc {{æ = Approx}} D b) (λ (j , _) → Y j) (tt , cs)
-          → (∀ {i' j'} → Y i' → Y j')
           → ⟦ interpDesc {{æ = Exact}} D b ⟧F Y tt
 
     toApproxμ :
@@ -570,26 +568,26 @@ record CodeModule
 --     {-# BUILTIN REWRITE _≡_ #-}
 --     {-# REWRITE toApproxExactResponseD toApproxExactCommandD #-}
 
-    toApproxDesc {Y = Y} D b (FC com res) φ tportIx =
+    toApproxDesc {Y = Y} D b (FC com res) φ =
       FC
         (toApproxCommandD ⦃ æ = Exact ⦄ D b com)
         λ r →
           let
             ret = φ (toExactResponseD D b (toApproxCommandD ⦃ Exact ⦄ {_} {_} D b com) r)
-          in tportIx  ret
+          in ret
             -- subst
             --   (λ r → Y (inextD D b (toApproxCommandD {{æ = Exact}} D i b com) r))
             --   (toApproxExactResponseD D b _ r)
             --   ret -- {!λ r → Y (inextD D b com r)!} {!!} {!!}
           -- transport (cong₂ (λ c r → Y (inextD D b c r)) refl (toApproxExactResponseD D b _ r)) ret
 
-    toExactDesc {Y = Y} D b (FC com res) φ tportIx =
+    toExactDesc {Y = Y} D b (FC com res) φ =
       FC (toExactCommandD D b com)
       λ r →
           let
             ret = φ (toApproxResponseD ⦃ æ = Exact ⦄ D b _
               (transport (congPath (ResponseD ⦃ æ = _ ⦄ D b) (toApproxExactCommandD D b com)) r))
-          in tportIx  ret
+          in ret
             -- transport
             --   (cong₂ (λ c r → Y (inextD D b c (toApproxResponseD {{æ = Exact}} D b c r)))
             --   (symPath (toApproxExactCommandD D i b com))
@@ -611,7 +609,6 @@ record CodeModule
           b
           (FC com resp)
           (λ r → toApproxμ tyCtor cB (λ d₁ → Ds d₁) b (resp r))
-          (λ x → {!!})
     toExactμ tyCtor cB Ds b W⁇ = W⁇
     toExactμ tyCtor cB Ds b W℧ = W℧
     toExactμ tyCtor cB Ds b (Wsup (FC (d , com) resp)) = Wsup (FC (d , ⟦_⟧F.command recVal) (⟦_⟧F.response recVal))
@@ -624,7 +621,6 @@ record CodeModule
           b
           (FC com resp)
           (λ r → toExactμ tyCtor cB (λ d₁ → Ds d₁) b (resp r))
-          (λ x → {!!} )
 
 
     WPathP :
