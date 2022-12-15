@@ -652,7 +652,6 @@ record CodeModule
           eqc
           {u = res1} {v = res2}
           (funExtDep (λ {x} {x1} pth → eqr x x1 pth))
-    --TODO: prove this, but we've been stuck too long
 
 
     toApproxExactμ tyCtor cB Ds b W℧ = reflc
@@ -663,57 +662,6 @@ record CodeModule
         (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth))
         ∙ toApproxExactResponseD (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) b com) r2))) ▷ (toApproxExactμ tyCtor cB (λ d₁ → Ds d₁) b (resp r2))
 
-    -- toApproxExactμ tyCtor cI cB D i b (Wsup (FC (d , com) res)) = WPathP {{æ = _}} (toApproxExactCommandD _ _ _ com) helper
-    --   where
-    --     helper : (r1 : _) → (r2 : _ ) → (pth : _) → _
-    --     helper r1 r2 pth = {!!}
-    -- toApproxExactμ tyCtor cI cB D i b W℧ = reflc
-    -- toApproxExactμ tyCtor cI cB D i b W⁇ = reflc
-    -- transportIndexApproxCommut Ds b i j (Wsup (FC (d , com) resp)) i≡j =
-    --   WPathP {{æ = _}} comSwap helper
-    --     where
-    --       comSwap = (symPath (transportCommandApproxCommute ⦃ æ = Exact ⦄ (Ds d) b i j com))
-    --       comPath : PathP (λ iv → CommandD ⦃ æ = _ ⦄ (Ds d) (i≡j iv) b) com (transportCommand ⦃ æ = _ ⦄ (Ds d) b i j com)
-    --       comPath = transportCommandPath ⦃ æ = _ ⦄ (Ds d) b _ _ com i≡j
-    --       helper : (r1 : _) → (r2 : _) → (pth : _) → _
-    --       helper r1 r2 pth = congP (λ iv → transportIndexμ ⦃ æ = _ ⦄ Ds b (inextD (Ds d) b
-    --                                                                          (toApproxCommandD ⦃ æ = Exact ⦄ (Ds d) (i≡j iv) b (comPath iv)) (rpath iv)) _)
-    --                          {!!}
-    --              where
-    --                rpath : PathP (λ iv → ResponseD {{æ = Approx}} (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) (i≡j iv) b (comPath iv) ))
-    --                  (transportResp ⦃ æ = _ ⦄ (Ds d) b i j
-    --                     (toApproxCommandD ⦃ æ = _ ⦄ (Ds d) i b com) (substPath (ResponseD {{æ = _}} (Ds d) b) (λ _ → transportCommand {{æ = _}} (Ds d) b i j (toApproxCommandD {{æ = Exact}} (Ds d) i b com)) r1))
-    --                  (toApproxResponseD {{æ = _}} (Ds d) b
-    --                     (toApproxCommandD {{æ = _}} (Ds d) j b (transportCommand {{æ = _}} (Ds d) b i j com))
-    --                     (toExactResponseD (Ds d) b
-    --                     (toApproxCommandD {{æ = _}} (Ds d) j b (transportCommand {{æ = _}} (Ds d) b i j com))
-    --                     r2))
-    --                rpath = {!!}
-
-    --     --   congP (λ iv → transportIndexμ ⦃ æ = _ ⦄ Ds b
-    --     --            (inextD (Ds d) b (toApproxCommandD {{æ = Exact}} (Ds d) (i≡j iv) b (comPath iv))
-    --     --              (rpath iv))
-    --     --            (inextD (Ds d) b (comSwap iv) _))
-    --     --         {!!}
-    --     -- congP (λ iv → transportIndexμ {{æ = _}} Ds b (inextD (Ds d) b ? {!pth i!}) _) {!!}
-    -- transportIndexApproxCommut Ds b i j W℧ _ = reflc
-    -- transportIndexApproxCommut Ds b i j W⁇ _ = reflc
-
-
---     toApproxExactμ tyCtor cI cB Ds iStart b W⁇ = refl
---     toApproxExactμ tyCtor cI cB Ds iStart b W℧ = refl
---     toApproxExactμ tyCtor cI cB Ds iStart b (Wsup (FC (d , com) resp))
---       = cong₂
---         {A = typeof com}
---         {B = λ c → (r : ResponseD {{æ = _}} (Ds d) b c) → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b)) (inextD (Ds d) b c r) }
---         (λ c r → Wsup (FC (d , c) r))
---         (toApproxExactCommandD _ _ _ com)
---         (funExtDep λ {r1} {r2} pf → {!!})
---       where
---         Y = W̃ (Arg (λ d → interpDesc {{æ = Approx}} (Ds d) b))
---         comcom = (toApproxCommandD {{æ = Exact}} (Ds d) iStart b (toExactCommandD (Ds d) iStart b com))
---         helper : {!!}
--- -- -- -----------------------------------------------------------------------
 
 
 
@@ -825,8 +773,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
 
 
-DCtors : ∀ {ℓ} → CName → ℂ ℓ → Set
-DCtors {ℓ} tyCtor cI = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
+DCtors : ∀ {ℓ} → CName → Set
+DCtors {ℓ} tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
 
 
 ▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
