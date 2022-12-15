@@ -125,7 +125,8 @@ record CodesForInductives : Set2 where
     Indices : (ℓ : ℕ) → (tyCtor : CName) → ApproxEl (Params ℓ tyCtor) → ℂ ℓ
     descFor : (ℓ : ℕ) → (tyCtor : CName)
       → (pars : ApproxEl (Params ℓ tyCtor))
-      → (DCtors tyCtor (Indices ℓ tyCtor pars))
+      → (indices : ApproxEl (Indices ℓ tyCtor pars))
+      → (DCtors {ℓ = ℓ} tyCtor )
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (preDataGerm ℓ tyCtor d)
