@@ -180,7 +180,7 @@ abstract
 
 
 smax-lim2L :
-    ∀ {æ1 æ2 : Æ}
+    ∀
     {ℓ1 ℓ2}
     {c1 : ℂ ℓ1}
     (f1 : ApproxEl  c1 → Size)

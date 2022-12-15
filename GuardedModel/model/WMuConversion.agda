@@ -63,7 +63,7 @@ data ℂDescEl' {ℓ} (cI : ℂ ℓ) (X : ApproxEl cI → Set) : {sig : IndSig} 
   -- Since we use these for comparing things for consistency
 
 data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : ApproxEl cI)  : Set where
-    Cinit : (d : DName tyCtor) → ℂDescEl (D d) (ℂμ tyCtor D) i tt → ℂμ  tyCtor D i
+    Cinit : (d : DName tyCtor) → ℂDescEl (D d) (ℂμ tyCtor D) i true → ℂμ  tyCtor D i
     Cμ⁇ Cμ℧ :  ℂμ tyCtor D  i
 
 
@@ -71,7 +71,7 @@ data ℂμ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DCtors tyCtor cI) (i : App
   -- ℂμ1 tyCtor D i = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
 WArg : ∀ {ℓ} {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) → ApproxEl cI →  Set
-WArg D  = W̃ (Arg λ d → interpDesc (D d) tt)
+WArg D  = W̃ (Arg λ d → interpDesc (D d) true)
 
 
   -- ℂElFContainer : ∀ {ℓ} {cI : ℂ ℓ} {i : ApproxEl cI} {X : ApproxEl cI → Set} → {D : ℂDesc cI} → ℂDescEl D X i ≡ FContainer (interpDesc D) X Unit i

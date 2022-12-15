@@ -14,7 +14,7 @@ import Cubical.Induction.WellFounded as Nat
 open import Cubical.Data.Vec
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool
-open import Cubical.Data.Equality
+-- open import Cubical.Data.Equality
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Inductives
@@ -59,8 +59,8 @@ open import SizeOrd -- ℂ El ℧ C𝟙 refl
 record CodeSizeF (ℓ : ℕ) : Set  where
   constructor codeSizeF
   field
-    smallerCodeSize : {{inst : 0< ℓ}} → ℂ (predℕ ℓ ) → Size
-    smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ (predℕ ℓ)) → El c → Size
+    smallerCodeSize : {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ ) → Size
+    smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size
 
   -- germSize {ℓ} tyCtor = wInd (λ _ → LargeSize) (germDescFSize tyCtor (GArg (DName tyCtor) (dataGerm ℓ tyCtor (▹⁇ ℓ)))) LO1 LO1
 
@@ -98,12 +98,17 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   germUnkFSize : ∀ {{æ : Æ}} → (x : GermUnkFunctor ℓ) → □ _ (λ _ → Size) (nothing , x) → Size
 
 
-  germUnkFSize (FC (HΠ , arg) f) φ = ? -- S↑ (SLim C⁇ λ x → φ (transportPath (symPath hollowEq) (next (exact x))))
+  germUnkFSize (FC (HΠ , arg) f) φ = S↑ (SLim C⁇ helper)
+    where
+      helper : ApproxEl {ℓ = ℓ} C⁇ → Size
+      helper x = φ (transportPath (symPath ⁇Wrap≡) (next fx))
+        where
+          fx = apply⁇Fun (λ x → ⁇FromW (f x)) (exact {ℓ = ℓ} {c = C⁇} x)
   germUnkFSize (FC (HΣ , arg) resp) φ = S↑ (smax (φ true ) (φ false))
   germUnkFSize (FC (H≅ , arg) resp) φ = S↑ (φ tt)
   germUnkFSize (FC (H𝟙 , arg) resp) φ = S1
-  germUnkFSize (FC (HType , arg) resp) φ = ? -- S↑ (smallerCodeSize ⦃ ? ⦄ arg)
-  germUnkFSize (FC (HCumul , (c , x)) resp) φ = ? -- S↑ (smallerElSize {{inst = ?}} c x)
+  germUnkFSize (FC (HType , arg) resp) φ  = S↑ (smallerCodeSize ⦃ ℂ-1>0 arg ⦄ arg) -- S↑ (smallerCodeSize ⦃ ? ⦄ arg)
+  germUnkFSize (FC (HCumul , (c , x)) resp) φ =  S↑ (smallerElSize {{inst = ℂ-1>0 c}} c x)
   germUnkFSize (FC (HCtor x , arg) resp) φ = S↑ (φ tt)
 
   allDataSize : ∀ {{ æ : Æ }}  {mc : Maybe CName} →  AllDataTypes ℓ mc → Size
@@ -173,7 +178,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
 
   germUnkSize : ∀ {{æ : Æ}} → (x : WUnk ℓ) → Size
-  germUnkSize (Wsup x@(FC com resp)) = ? -- germUnkFSize x (λ r → allDataSize (resp r))
+  germUnkSize (Wsup x@(FC com resp)) = {!!} -- germUnkFSize x (λ r → allDataSize (resp r))
   germUnkSize W⁇ = S1
   germUnkSize W℧ = S1
 
@@ -230,7 +235,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
     S↑ (smax
       ( (codeSize c))
       ( (DLim tyCtor λ d → descSize (D d))))
-  codeSize (CCumul {{inst = inst}} c) = ? -- S↑ (smallerCodeSize c)
+  codeSize (CCumul {{inst = inst}} c) = S↑ (smallerCodeSize c)
 
   --TODO: need ElSizes here?
   descSize {cI = c} (CEnd i) = S1 -- S↑ (elSize {{Approx}} c i )
@@ -256,8 +261,8 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   ⁇Size : ∀ {{ _ : Æ}} → ⁇Ty ℓ → Size
   elSize : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
   -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
-  CμSize : ∀ {{_ : Æ}}  {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i} → ℂμ tyCtor D i → Size
-  CElSize : ∀ {{ _ : Æ }} {sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Size
+  CμSize : ∀  {cI : ℂ ℓ} {tyCtor : CName} (D : DCtors tyCtor cI) {i} → ℂμ tyCtor D i → Size
+  CElSize : ∀ {sig} {cI cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cI cB sig) (E : DCtors tyCtor cI) {i b} → ℂDescEl D (ℂμ tyCtor E) i b → Size
 
   ⁇Size x = germUnkSize (⁇ToW x)
 
@@ -266,19 +271,19 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   elSize C℧ x = S1
   elSize C𝟘 x = S1
   elSize C𝟙 x = S1
-  elSize (CType {{inst = inst}}) x = ? -- S↑ (smallerCodeSize x)
-  elSize (CΠ dom cod) f = ? -- S↑ (SLim dom (λ x → elSize (cod (approx x)) (f x))) -- (SLim dom λ x → elSize (cod (approx x)) (f ?))
-  elSize (CΣ dom cod) (x , y) = ? -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
+  elSize (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
+  elSize (CΠ dom cod) f = S↑ (SLim dom (λ x → elSize (cod x) (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
+  elSize (CΣ dom cod) (x , y) = S↑ (smax (elSize dom x) (elSize (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
   elSize (C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) = S↑ (elSize {{Approx}} c x)
-  elSize (Cμ tyCtor cI D i) x = ? -- S↑  (CμSize D (Iso.inv CμWiso x))
-  elSize (CCumul {{inst = inst}} c) x = ? -- smallerElSize c x --elSize c x
+  elSize (Cμ tyCtor cI D i) x = S↑ (CμSize D {i = i} (Iso.inv CμWiso (approx {ℓ = ℓ} {c = Cμ tyCtor cI D i} x)))
+  elSize (CCumul {{inst = inst}} c) x = smallerElSize c x --elSize c x
 
   CμSize D (Cinit d x) = S↑ (CElSize (D d) D x)
   CμSize D Cμ⁇ = S1
   CμSize D Cμ℧ = S1
 
   CElSize {cI = cI} .(CEnd j) E {i} (ElEnd j (w ⊢ _ ≅ _)) = elSize {{Approx}} cI w
-  CElSize {{æ}} (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ}} (c b) (exact a)) (CElSize D E x))
+  CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
   CElSize (CRec j D) E (ElRec x x₁) = S↑ (smax (CμSize E x) (CElSize D E x₁))
   CElSize (CHRec c j D _ _) E {b = b} (ElHRec f x) = S↑ (SLim (c b) λ a → smax (CμSize E (f a)) (CElSize D E x))
 
