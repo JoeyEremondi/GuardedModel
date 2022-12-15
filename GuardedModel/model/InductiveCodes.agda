@@ -130,7 +130,7 @@ record CodesForInductives : Set2 where
     dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → DataGermIsCode ℓ (preDataGerm ℓ tyCtor d)
   -- Now that ⁇ is defined we can tie the knot
-  germForCtor : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor 𝟙 (indSkeleton tyCtor d)
+  germForCtor : {{_ : Æ}} → ℕ → (tyCtor : CName) →  (d : DName tyCtor) → GermCtor G𝟙 (indSkeleton tyCtor d)
   germForCtor  ℓ tyCtor d = preDataGerm ℓ tyCtor  d
   -- FGerm : {{ _ : Æ }} → ℕ → (c : CName) → Set → Set
   -- FGerm ℓ c Unk = W̃ {!!} {!!} --W̃ (germContainer ℓ c (▹⁇ ℓ)) Unk tt
@@ -157,7 +157,8 @@ record CodesForInductives : Set2 where
   DataGerm : {{ æ : Æ }} → (ℓ : ℕ) → (c : CName) → Set
   DataGerm ℓ c = AllDataTypes ℓ (just c)
 
-open CodesForInductives {{...}} public
+
+
   -- FCGerm : ∀ {{æ : Æ}} ℓ {B+ B- sig} (tyCtor : CName)
   --   → (D : GermCtor B+ B- sig)
   --   → (b+ : B+)
@@ -165,90 +166,39 @@ open CodesForInductives {{...}} public
   --   → Set
   -- FCGerm ℓ tyCtor D b+ b- = {!!} --TODO put back
   -- FContainer (interpGermCtor' D b+ b- ) (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt
---   DataGermRec : ∀ {{_ : Æ}} {ℓ} (P : Set)
---     -- Unk case
---     → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ _ → P) (nothing , x) → P)
---     -- DataGerm case
---     → (∀ {tyCtor} (d : DName tyCtor) (x : FContainer (DataGermContainer ℓ tyCtor d) (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ _ → P) (_ , x) → P)
---     → (Maybe CName → P × P)
---     → ∀ {mc} → AllDataTypes ℓ mc → P
---   DataGermRec P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec P unk rec base (resp r)
---   DataGermRec P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
---     rec
---       d
---       (FC com resp)
---       (λ r → DataGermRec P unk rec base (resp r))
---   DataGermRec  P unk rec base {i} W℧ = fst (base i)
---   DataGermRec  P unk rec base {i} W⁇ = snd (base i)
+  DataGermRec : ∀ {{_ : Æ}} {ℓ} (P : Set)
+    -- Unk case
+    → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ _ → P) (nothing , x) → P)
+    -- DataGerm case
+    → (∀ {tyCtor} (d : DName tyCtor) (x : ⟦ (DataGermContainer ℓ tyCtor d) ⟧F (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ _ → P) (_ , x) → P)
+    → (Maybe CName → P × P)
+    → ∀ {mc} → AllDataTypes ℓ mc → P
+  DataGermRec P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec P unk rec base (resp r)
+  DataGermRec P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
+    rec
+      d
+      (FC com resp)
+      (λ r → DataGermRec P unk rec base (resp r))
+  DataGermRec  P unk rec base {i} W℧ = fst (base i)
+  DataGermRec  P unk rec base {i} W⁇ = snd (base i)
 
 
 
---   DataGermRec' : ∀ {{_ : Æ}} {ℓ} (P : Maybe CName → Set)
---     -- Unk case
---     → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ (mc , _) → P mc) (nothing , x) → P nothing)
---     -- DataGerm case
---     → (∀ {tyCtor} (d : DName tyCtor) (x : FContainer (DataGermContainer ℓ tyCtor d) (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ (mc , _) → P mc) (_ , x) → P (just tyCtor))
---     → ((mc : Maybe CName) → P mc × P mc)
---     → ∀ {mc} → AllDataTypes ℓ mc → P mc
---   DataGermRec' P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec' P unk rec base (resp r)
---   DataGermRec' P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
---     rec
---       d
---       (FC com resp)
---       (λ r → DataGermRec' P unk rec base (resp r))
---   DataGermRec'  P unk rec base {i} W℧ = fst (base i)
---   DataGermRec'  P unk rec base {i} W⁇ = snd (base i)
+  DataGermRec' : ∀ {{_ : Æ}} {ℓ} (P : Maybe CName → Set)
+    -- Unk case
+    → ((x : GermUnkFunctor ℓ) → □ (AllDataContainer ℓ) (λ (mc , _) → P mc) (nothing , x) → P nothing)
+    -- DataGerm case
+    → (∀ {tyCtor} (d : DName tyCtor) (x : ⟦ (DataGermContainer ℓ tyCtor d) ⟧F (AllDataTypes ℓ) (just tyCtor)) → □ {X = AllDataTypes ℓ} (DataGermContainer ℓ tyCtor d) (λ (mc , _) → P mc) (_ , x) → P (just tyCtor))
+    → ((mc : Maybe CName) → P mc × P mc)
+    → ∀ {mc} → AllDataTypes ℓ mc → P mc
+  DataGermRec' P unk rec base {nothing} (Wsup (FC com resp)) = unk (FC com resp) λ r → DataGermRec' P unk rec base (resp r)
+  DataGermRec' P unk rec base {just x₁} (Wsup (FC (d , com) resp)) =
+    rec
+      d
+      (FC com resp)
+      (λ r → DataGermRec' P unk rec base (resp r))
+  DataGermRec'  P unk rec base {i} W℧ = fst (base i)
+  DataGermRec'  P unk rec base {i} W⁇ = snd (base i)
 
 
---   -- Predicate that determines if a code is well formed
---   -- with respect to the inductive types it refers to
---   -- i.e. if it's an instantation of that type's parameters and indices
---   -- interleaved mutual
---   --   data IndWF {ℓ} : ℂ ℓ → Set
---   --   -- data DescIndWF {ℓ} {cI cB : ℂ ℓ } : ℂDesc cI cB → Set
---   --   data _ where
---   --     IWF⁇ : IndWF C⁇
---   --     IWF℧ : IndWF C℧
---   --     IWF𝟘 : IndWF C𝟘
---   --     IWF𝟙 : IndWF C𝟙
---   --     IWFType : ∀ {{_ : 0< ℓ}} → IndWF CType
---   --     IWFΠ : ∀ {dom cod}
---   --       → IndWF dom
---   --       → (∀ x → IndWF (cod x))
---   --       → IndWF (CΠ dom cod)
---   --     IWFΣ : ∀ {dom cod}
---   --       → IndWF dom
---   --       → (∀ x → IndWF (cod x))
---   --       → IndWF (CΣ dom cod)
---   --     IWF≡ : ∀ {c x y} → IndWF c → IndWF (C≡ c x y)
---   --     IWFμ : ∀ {tyCtor cI D i}
---   --       → (pars : ApproxEl (Params ℓ tyCtor))
---   --       → (indEq : cI ≡ Indices ℓ tyCtor pars)
---   --       → (∀ d → PathP (λ i → ℂDesc (indEq i) C𝟙 (indSkeleton tyCtor d)) (D d) (descFor ℓ tyCtor pars d))
---   --       → IndWF (Cμ tyCtor cI D i)
-
-
-
-
-
--- open InductiveCodes {{...}} public
-
-
--- -- record  ℂwf {{_ : InductiveCodes}} ℓ : Set where
--- --   constructor _|wf|_
--- --   field
--- --     code : ℂ ℓ
--- --     codeWF : IndWF code -- IndWF code
-
--- -- open ℂwf public
-
-
-
-
--- -- wfEl : ∀ {{_ : InductiveCodes}} {{æ : Æ}} {ℓ} → ℂwf ℓ → Set
--- -- wfEl {{ æ = æ}} c = El {{æ = æ}} (code c)
-
-
-
--- -- wfApproxEl : ∀ {{_ : InductiveCodes}} {ℓ} → ℂwf ℓ → Set
--- -- wfApproxEl  c = El {{æ = Approx}} (code c)
+open CodesForInductives {{...}} public

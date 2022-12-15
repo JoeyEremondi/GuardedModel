@@ -3,13 +3,14 @@
 -- open import Level hiding (#_)
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
 open import Cubical.Data.Fin hiding (_/_)
-open import Cubical.Data.Bool renaming (Bool to 𝟚)
+-- open import Cubical.Data.Bool renaming (Bool to 𝟚)
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 open import Cubical.Data.Nat.Order
 open import Cubical.HITs.SetQuotients
 open import DecPEq
 open import Cubical.Data.Sigma
 
+open import Cubical.Data.Bool
 open import Cubical.Relation.Nullary
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Univalence
@@ -299,10 +300,10 @@ record CodeModule
     -- Failure is the only value of the failure type
     -- However, the code is different from C𝟘 becuase the empty type is consistent with itself
     -- But the failure type is not
-    El C℧ = 𝟙
-    toApprox C℧ _ = tt
-    toExact C℧ _ = tt
-    toApproxExact C℧ tt = refl
+    El C℧ = G𝟘
+    toApprox C℧ _ = ℧𝟘
+    toExact C℧ _ = ℧𝟘
+    toApproxExact C℧ ℧𝟘 = refl
     -- ▹El C℧ = 𝟙
     ----------------------------------------------------------------
     --- Gradual empty type
@@ -318,7 +319,7 @@ record CodeModule
     --- Gradual unit type
     data _ where
       C𝟙 : ℂ
-    El C𝟙 = 𝟚
+    El C𝟙 = G𝟙
     toApprox C𝟙 x = x
     toExact C𝟙 x = x
     toApproxExact C𝟙 x = refl
@@ -435,15 +436,15 @@ record CodeModule
         → (D : (d : DName tyCtor) → ℂDesc cI C𝟙 (indSkeleton tyCtor d))
         → ApproxEl cI
         → ℂ
-    El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) true)) i
+    El (Cμ tyCtor cI D i) = W̃ (Arg (λ d → interpDesc (D d) Gtt)) i
     -- toApprox (Cμ tyCtor cI Ds iStart) (Wsup (FC (d , com) res)) =
     --   with (FC retCom retRes) ← toApproxDesc {Y = λ j → {!!}} (Ds d) true {!!} (FC com res) (λ r → {!!})
     --   = {!x!}
     -- toApprox (Cμ tyCtor cI Ds iStart) W⁇ = W⁇
     -- toApprox (Cμ tyCtor cI Ds iStart) W℧ = W℧
-    toApprox (Cμ tyCtor cI Ds iStart) x = toApproxμ tyCtor cI C𝟙 Ds iStart true x
-    toExact (Cμ tyCtor cI Ds iStart) x = toExactμ tyCtor cI C𝟙 Ds iStart true x
-    toApproxExact (Cμ tyCtor cI Ds i) x = toApproxExactμ tyCtor cI C𝟙 Ds i true x
+    toApprox (Cμ tyCtor cI Ds iStart) x = toApproxμ tyCtor cI C𝟙 Ds iStart Gtt x
+    toExact (Cμ tyCtor cI Ds iStart) x = toExactμ tyCtor cI C𝟙 Ds iStart Gtt x
+    toApproxExact (Cμ tyCtor cI Ds i) x = toApproxExactμ tyCtor cI C𝟙 Ds i Gtt x
 
     -- cong (λ (FC com resp) → Wsup (FC (d , com) resp)) recEq
     --   where
@@ -959,9 +960,9 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- Every type has an error element
 ℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
 ℧ CodeModule.C⁇ = ⁇℧
-℧ CodeModule.C℧ = tt
+℧ CodeModule.C℧ = ℧𝟘
 ℧ CodeModule.C𝟘 = tt
-℧ CodeModule.C𝟙 = false
+℧ CodeModule.C𝟙 = ℧𝟙
 ℧ {suc ℓ} CodeModule.CType = C℧
 ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
 ℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))

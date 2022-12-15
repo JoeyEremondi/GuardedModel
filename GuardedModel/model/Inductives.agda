@@ -9,10 +9,11 @@ open import Cubical.Data.Empty as Empty renaming (⊥ to 𝟘)
 open import Cubical.Relation.Nullary
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
+open import Cubical.Data.Bool renaming (Bool to 𝟚)
 open import Cubical.Data.Maybe as Maybe
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinData
-open import Cubical.Data.Bool renaming (Bool to 𝟚)
+-- Bool is the gradual unit type, true is tt and false is ℧
 
 open import Cubical.Data.Sum
 open import Cubical.Foundations.Prelude
@@ -28,6 +29,18 @@ import GuardedModality as G
 open import ApproxExact
 open import Util
 module Inductives where
+
+
+data G𝟙 : Set where
+  Gtt ℧𝟙 : G𝟙
+
+
+is-tt : G𝟙 → Bool
+is-tt Gtt = true
+is-tt ℧𝟙 = false
+
+data G𝟘 : Set where
+  ℧𝟘 : G𝟘
 
 
 ISet : Set → Set1
@@ -290,8 +303,8 @@ interpGermCtor' D b  =
       (λ _ → nothing)
       res
 
-interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor 𝟙 sig → Set → Container (Maybe A)
-interpGermCtor D Self = interpGermCtor'  D tt
+interpGermCtor : ∀ {{æ : Æ}} {A} {sig} → GermCtor G𝟙  sig → Set → Container (Maybe A)
+interpGermCtor D Self = interpGermCtor'  D Gtt
 -- --
 -- -- fs qq
 
@@ -383,13 +396,13 @@ open SmallerCode public
   → (numCtors : Fin numTypes → ℕ)
   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
   → (▹Self : ▹ ⁇Self)
-  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor G𝟙  (sigs tyCtor ctor) )
   → Maybe (Fin numTypes) → Set
 ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor =
       -- There's no entry in ⁇ for empty type, so we make sure that its tag isn't ever used
       Maybe.rec
         (Σ[ h ∈ TyHead numTypes ] (⁇Args sc numTypes h))
-        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) tt))
+        (λ tyCtor → Σ[ ctor ∈ Fin (numCtors tyCtor) ] (GermCommand (DescFor tyCtor ctor) Gtt))
 
 ⁇CResp :
   {{æ : Æ}}
@@ -398,7 +411,7 @@ open SmallerCode public
   → (numCtors : Fin numTypes → ℕ)
   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
   → (▹Self : ▹ ⁇Self)
-  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor G𝟙  (sigs tyCtor ctor) )
   → ∀ mTyCtor → ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor mTyCtor → Type
 ⁇CResp sc numTypes numCtors sigs ▹Self DescFor =
       Maybe-elim (λ m → Maybe.rec _ _ m → Type)
@@ -408,7 +421,7 @@ open SmallerCode public
        -- In DataGerm mode, response is either the response for Self or the response for Unk
        -- i.e. encoding that we have both references to Self and ⁇
        (λ tyCtor (ctor , com)
-         → GermResponse (DescFor tyCtor ctor) tt com ⊎ GermResponseUnk (DescFor tyCtor ctor) tt com )
+         → GermResponse (DescFor tyCtor ctor) Gtt com ⊎ GermResponseUnk (DescFor tyCtor ctor) Gtt com )
 
 recForHead : ∀ {numTypes} → TyHead numTypes → Maybe _
 recForHead (HCtor tyCtor) = just tyCtor
@@ -424,7 +437,7 @@ recForHead _ = nothing
   → (numCtors : Fin numTypes → ℕ)
   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
   → (▹Self : ▹ ⁇Self)
-  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor G𝟙 (sigs tyCtor ctor) )
   -- Nothing encodes ⁇, just tyCtor encodes the germ for tyCtor
   → Container (Maybe (Fin numTypes))
 
@@ -436,7 +449,7 @@ recForHead _ = nothing
   → (numCtors : Fin numTypes → ℕ)
   → (sigs : (tyCtor : Fin numTypes) → Fin (numCtors tyCtor) → IndSig)
   → (▹Self : ▹ ⁇Self)
-  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor 𝟙 (sigs tyCtor ctor) )
+  → (DescFor : (tyCtor : Fin numTypes) → (ctor : Fin (numCtors tyCtor)) → GermCtor G𝟙 (sigs tyCtor ctor) )
   → ∀ i → (com : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor i ) → (resp : ⁇CResp sc numTypes numCtors sigs ▹Self DescFor i com) → Maybe (Fin numTypes)
 ⁇inext sc numTypes numCtors sigs ▹Self DescFor = Maybe-elim (λ m → (c : ⁇CCommand sc numTypes numCtors sigs ▹Self DescFor m) → ⁇CResp sc numTypes numCtors sigs ▹Self DescFor m c → Maybe (Fin numTypes))
         -- Index for ⁇Case: recursive fields are ⁇ except for ⁇μ case
@@ -473,14 +486,14 @@ record DataGerms {{_ : DataTypes}}  : Set1 where
     -- Each datatye needs to have a Germ defined in terms of strictly positive uses of ⁇
     -- And guarded negative uses of ⁇
     -- We ensure positivity by writing the datatype using a description
-    preDataGerm : ℕ → (c : CName) → ( (d : DName c) → GermCtor 𝟙 (indSkeleton c d) )
-    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor 𝟙 )
+    preDataGerm : ℕ → (c : CName) → ( (d : DName c) → GermCtor G𝟙 (indSkeleton c d) )
+    -- germSig : {{_ : Æ}} → ℕ → (c : CName) → (▹ Set → DName c → GermCtor G𝟙  )
   preAllDataContainer : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Container (Maybe CName)
   preAllDataContainer {{æ = æ}} ℓ sc ▹Self = (⁇Container sc numTypes numCtors indSkeleton ▹Self λ tyCtor ctor → preDataGerm ℓ tyCtor  ctor)
 
   preAllDataTypes : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → Maybe CName → Set
   preAllDataTypes ℓ sc ▹Self = W̃ (preAllDataContainer ℓ sc ▹Self)
-  -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container 𝟚
+  -- germContainer : {{ _ : Æ }} → ℕ → (c : CName) → ▹ Set →  Container G𝟙
   -- germContainer ℓ c Self  = Arg λ d → interpGermCtor (preDataGerm ℓ c Self d)
   FPreGerm : {{æ : Æ}} → ℕ → (sc : SmallerCode) → ▹ ⁇Self → CName → Set
   FPreGerm {{æ = æ}} ℓ sc ▹Self tyCtor  = preAllDataTypes ℓ sc ▹Self (just tyCtor)
