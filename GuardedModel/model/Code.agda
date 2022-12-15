@@ -249,10 +249,7 @@ record CodeModule
         → (b : ApproxEl cB)
         → W̃ (Arg (λ d → interpDesc {{æ = Approx}} (D d) b)) tt
         → W̃ (Arg (λ d → interpDesc {{æ = Exact}} (D d) b)) tt
-    postulate
-    --TODO prove this
-    -- I'm sure it's true but I'm stuck in transport/index hell
-      toApproxExactμ :
+    toApproxExactμ :
         (tyCtor : CName)
           → (cB : ℂ)
           → (D : (d : DName tyCtor) → ℂDesc cB (indSkeleton tyCtor d))
@@ -656,6 +653,15 @@ record CodeModule
           {u = res1} {v = res2}
           (funExtDep (λ {x} {x1} pth → eqr x x1 pth))
     --TODO: prove this, but we've been stuck too long
+
+
+    toApproxExactμ tyCtor cB Ds b W℧ = reflc
+    toApproxExactμ tyCtor cB Ds b W⁇ = reflc
+    toApproxExactμ tyCtor cB Ds b (Wsup (FC (d , com) resp)) = WPathP {{æ = Approx}}
+      (toApproxExactCommandD (Ds d) b com)
+      λ r1 r2 pth → congPath (toApproxμ tyCtor cB Ds b) (congPath (toExactμ tyCtor cB Ds b) (congPath resp
+        (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth))
+        ∙ toApproxExactResponseD (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) b com) r2))) ▷ (toApproxExactμ tyCtor cB (λ d₁ → Ds d₁) b (resp r2))
 
     -- toApproxExactμ tyCtor cI cB D i b (Wsup (FC (d , com) res)) = WPathP {{æ = _}} (toApproxExactCommandD _ _ _ com) helper
     --   where
