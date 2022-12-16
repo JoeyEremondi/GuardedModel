@@ -244,69 +244,17 @@ posDataGermFVal cB+ tyCtor bFun (GUnk A D) (GUnkCode c+ iso+ isCode) b+ (FC com 
     recVal = posDataGermFVal cB+ tyCtor bFun D isCode b+
       (FC com (Sum.elim (λ r → resp (inl r)) (λ r → resp (inr (Rest r)))))
       (Sum.elim (λ r → φ (inl r)) (λ r → φ (inr (Rest r))))
-    -- → ℂDescEl (posDataGermCode ℓ cB+ bFun D isCode) (λ _ → ℂμ tyCtor (posGermForCtor ℓ tyCtor) Gtt) Gtt (Iso.fun bFun b+)
--- posDataGermFVal cB+ tyCtor bFun GEnd GEndCode b+ b- cs φ = ElEnd tt (tt ⊢ tt ≅ tt)
--- posDataGermFVal {ℓ} {{æ = æ}} cB+ tyCtor bFun (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) resp) φ
---   -- This is all just awful rewriting of equalities and such
---     = ElArg (Iso.fun (Iso (iso+ b+)) a+)
---       (subst
---         (λ x → ℂDescEl (posDataGermCode _ (CΣ cB+ (λ ca+ → c+ (Iso.inv bFun ca+))) theIso D isCode) _ tt x)
---         (( Iso.fun≡
---           (Σ-cong-iso bFun λ b+ → iso+ b+ Approx) (b+ , approx a+))
---             ∙ ΣPathP (refl , caseÆ (λ {reflp → refl}) (λ {reflp → refl})))
---         recVal)
---       where
---         theIso = Σ-cong-iso bFun λ b+ → iso+ b+ Approx
---         recVal : ℂDescEl
---                    (posDataGermCode _ (CΣ cB+ (λ ca+ → c+ (Iso.inv bFun ca+))) theIso D
---                     isCode)
---                    (λ _ →
---                       ℂμ tyCtor
---                       (λ d →
---                          posDataGermCode _ C𝟘 idIso
---                          (preDataGerm ℓ tyCtor (▹⁇ ℓ) d)
---                          (dataGermIsCode ℓ tyCtor d))
---                       tt)
---                    tt (Iso.fun theIso (b+ , approx a+))
---         recVal =
---           posDataGermFVal
---           (CΣ cB+ λ ca+ → c+ (Iso.inv bFun  ca+))
---           tyCtor
---           theIso
---           D
---           isCode
---           (b+ , approx a+)
---           (b- , approx a-)
---           (FC com (Sum.elim (λ r → resp (inl r)) λ r → resp (inr r)))
---           (Sum.elim (λ r → φ (inl r)) (λ r → φ (inr r)))
--- posDataGermFVal cB+ tyCtor bFun (GHRec A D) (GHRecCode c+ c- iso+ iso- isCode) b+ b- (FC com resp) φ =
---   ElHRec (λ x → φ (inl (Rec (inl (Iso.inv (Iso (iso+ b+)) x)))) reflp) (posDataGermFVal cB+ tyCtor bFun D isCode b+ b- (FC com (Sum.elim (λ r → resp (inl (Rest r))) λ r → resp (inr r))) (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
--- posDataGermFVal cB+ tyCtor bFun (GRec D) (GRecCode isCode) b+ b- (FC com resp) φ
---   = ElRec (φ (inl (Rec tt)) reflp) (posDataGermFVal cB+ tyCtor bFun D isCode b+ b- (FC com (Sum.elim (λ r → resp (inl (Rest r))) λ r → resp (inr r))) (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
--- posDataGermFVal {{æ = æ}} cB+ tyCtor bFun (GUnk A D) (GUnkCode c+ c- iso+ iso- isCode) b+ b- (FC com resp) φ
---   = ElArg
---     (caseÆ
---       (λ {reflp → λ x → ⁇FromW {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (Iso ⦃ æ = Approx ⦄ (iso+ b+)) x)))))})
---       (λ {reflp →
---         (λ x → ⁇FromW ⦃ æ = Approx ⦄ {!x!})
---         , {!!}}))
---     -- (withApproxA (λ x → ⁇FromW {{æ = Approx}} (approx {{æ = Approx}} (resp (inr (Rec (inl (Iso.inv (Iso (iso+ b+)) {!x!}))))))) {!!})
---     {!!}
 
-
--- posDataGermVal :
---   (ℓ : ℕ) (tyCtor : CName)
---   → DataGerm ℓ tyCtor
---   → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟙 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d))
--- posDataGermVal ℓ tyCtor germVal = recFun reflp
---   where
---     recFun =
---       DataGermRec'
---         (Maybe.rec Unit (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟙 idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d))))
---         (λ _ _ → tt)
---         (λ {d y φ reflp → Cinit d (posDataGermFVal C𝟙 tyCtor idIso (preDataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) Gtt y φ)})
---         (λ { nothing → tt , tt ; (just x) → (λ _ → Cμ⁇) , λ _ → Cμ⁇})
---         germVal
--- --     -- wRec {X = λ { nothing → Unit ; (just x) → x ≡p tyCtor → ℂμ tyCtor (λ d → posDataGermCode ℓ idIso (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)) true}}
--- --     --   (λ { {nothing} x₁ → tt ; {just _} (FC (d , com) response) reflp → Cinit d (posDataGermFVal tyCtor idIso _ _ {!!} tt {!FC com response!} {!!} )})
--- --     --   (λ { nothing → tt , tt ; (just x) → (λ {reflp → Cμ⁇}) , λ {reflp → Cμ℧}}) x
+posDataGermVal :
+  (ℓ : ℕ) (tyCtor : CName)
+  → DataGerm ℓ tyCtor
+  → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟙 (λ _ → Gtt) (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d))
+posDataGermVal ℓ tyCtor germVal = recFun reflp
+  where
+    recFun =
+      DataGermRec'
+        (Maybe.rec Unit (λ x → tyCtor ≡p x → ℂμ tyCtor (λ d → posDataGermCode ℓ C𝟙 (λ _ → Gtt) (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d))))
+        (λ _ _ → tt)
+        (λ {d y φ reflp → Cinit d (posDataGermFVal C𝟙 tyCtor (λ _ → Gtt) (preDataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) Gtt y φ)})
+        (λ { nothing → tt , tt ; (just x) → (λ _ → Cμ⁇) , λ _ → Cμ⁇})
+        germVal
