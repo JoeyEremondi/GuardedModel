@@ -72,6 +72,26 @@ descSwapIso bIso (CArg c D (CΣ cB1 _) reflp) = CArg (λ x → c (Iso.inv bIso x
 descSwapIso bIso (CRec D) = CRec (descSwapIso bIso D)
 descSwapIso bIso (CHRec c D cB' x) = CHRec (λ x → c (Iso.inv bIso x)) (descSwapIso bIso D) _ reflp
 
+elSwapIso :
+  ∀ {ℓ}  {sig : IndSig} {cB1 cB2 : ℂ ℓ} (bIso : Iso (ApproxEl cB1) (ApproxEl cB2))
+  → (X : Set)
+  →  (D : ℂDesc cB1 sig)
+  → (b+ : ApproxEl cB1)
+  →  ℂDescEl D X b+
+  → ℂDescEl (descSwapIso bIso D) X (Iso.fun bIso b+)
+elSwapIso bIso X CodeModule.CEnd b+ ElEnd = ElEnd
+elSwapIso {cB1 = cB1} {cB2 = cB2} bIso X (CodeModule.CArg c D .(CΣ _ c) .reflp) b+ (ElArg a x) = ElArg (subst (λ x → El (c x)) (sym (Iso.leftInv bIso b+)) a)
+  (subst (λ pr → ℂDescEl' X (CΣ cB2 (λ x₁ → c (Iso.inv bIso x₁)) ) (descSwapIso theIso D) pr)
+    (ΣPathP (reflc , congPath
+                       (transp (λ i → ApproxEl (c (Iso.leftInv bIso b+ (~ i)))) i0) (transportRefl a)))
+    recVal)
+  where
+    theIso = Σ-cong-iso bIso (λ x → substPath (λ y → Iso (El (c x)) (El (c y))) (symPath (Iso.leftInv bIso x)) idIso)
+    recVal : ℂDescEl' X (CΣ cB2 (λ x₁ → c (Iso.inv bIso x₁)) ) (descSwapIso theIso D) (Iso.fun theIso (b+ , a))
+    recVal = elSwapIso theIso X D (b+ , a) x
+elSwapIso bIso X (CodeModule.CRec D) b+ (ElRec x x₁) = ElRec x (elSwapIso bIso X D b+ x₁)
+elSwapIso bIso X (CodeModule.CHRec c D .(CΣ _ c) .reflp) b+ (ElHRec x x₁) = ElHRec (subst (λ b → El (c b) → X) (sym (Iso.leftInv bIso b+)) x) (elSwapIso bIso X D b+ x₁)
+
 descAddDeps : ∀ {ℓ}  {sig : IndSig} {cB : ℂ ℓ} (cUnused)
   →  ℂDesc cB sig
   →  ℂDesc (CΣ cB (λ _ → cUnused)) sig
@@ -102,6 +122,20 @@ descAddFunDeps cB cUnused (CodeModule.CHRec c D cB' x)
     (descAddFunDeps cB cUnused D)
     _
     reflp
+
+
+elAddFunDeps : ∀ {ℓ}  {sig : IndSig} {cB1 : ℂ ℓ} (cB2 : ApproxEl cB1 → ℂ ℓ) (cUnused)
+  → (X : Set)
+  →  (D : ℂDesc cB1 sig)
+  → (b+ : ApproxEl (CΣ cB1 (λ x → CΠ (cB2 x) (λ _ → _))))
+  →  ℂDescEl D X (fst b+)
+  → ℂDescEl (descAddFunDeps cB2 cUnused D) X b+
+elAddFunDeps cB cUnused X CodeModule.CEnd (fst₁ , snd₁) ElEnd = ElEnd
+elAddFunDeps cB cUnused X (CodeModule.CArg c D .(CΣ _ c) .reflp) (fst₁ , snd₁) (ElArg a x) = ElArg a (elSwapIso _ X _ ((fst₁ , approx a) , snd₁) recVal)
+  where
+    recVal = elAddFunDeps (λ y → cB (fst y)) cUnused X D ((fst₁ , approx a) , snd₁ ) x
+elAddFunDeps cB cUnused X (CodeModule.CRec D) (fst₁ , snd₁) (ElRec x x₁) = ElRec x (elAddFunDeps cB cUnused X D (fst₁ , snd₁) x₁)
+elAddFunDeps cB cUnused X (CodeModule.CHRec c D .(CΣ _ c) .reflp) (fst₁ , snd₁) (ElHRec x x₁) = ElHRec x (elAddFunDeps cB cUnused X D (fst₁ , snd₁) x₁)
 
 posDataGermCode :
   ∀ (ℓ : ℕ)  {sig} {B+ : Set} (cB+ : ℂ ℓ)
@@ -135,6 +169,11 @@ posDataGermCode ℓ cB+ bFun (GUnk A D) (GUnkCode c+  iso+  isCode)
   = CArg (λ cb → CΠ (c+ (bFun cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (bFun z)) C⁇ recDesc) _ reflp
     where
       recDesc = posDataGermCode ℓ cB+ bFun D isCode
+-- posDataGermCode ℓ cB+ bFun (GUnk A D) (GUnkCode c+  iso+  isCode)
+--   -- Positive part isn't allowed to depend on values of ⁇
+--   = CArg (λ cb → CΠ (c+ (bFun cb)) (λ _ → C⁇)) (descAddFunDeps (λ z → c+ (bFun z)) C⁇ recDesc) _ reflp
+--     where
+--       recDesc = posDataGermCode ℓ cB+ bFun D isCode
 
 posGermForCtor : ∀ ℓ tyCtor → DCtors {ℓ = ℓ} tyCtor
 posGermForCtor ℓ tyCtor d = posDataGermCode ℓ C𝟙 (λ _ → Gtt) (preDataGerm ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d)
@@ -164,8 +203,9 @@ posDataGermFVal cB+ tyCtor bFun (GArg A D false) (GArgCode c+ iso+ isCode) b+ (F
     (Sum.elim (λ r → φ (inl (substPath
                                (λ (pr : Σ (A (bFun b+)) (λ a → GermCommand D (bFun b+ , a))) →
                                   GermResponse D (bFun b+ , fst pr) (snd pr))
-                               (ΣPathP  (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler (λ i →
-                                                                                                     GermCommand D (bFun b+ , Iso.leftInv (iso+ (bFun b+)) a (~ i))) (snd (maybeIrrefute (a , com)))))) r))) λ b → tt))
+                               (ΣPathP (Iso.leftInv (iso+ (bFun b+)) a ,
+                                 symP (transport-filler _ _))
+                                 ) r))) λ b → tt))
 posDataGermFVal cB+ tyCtor bFun (GArg A D true) (GArgCode c+ iso+ isCode) b+ (FC (a , com) resp) φ =
   ElArg (Iso.fun (iso+ (bFun b+)) a , ⁇FromW (resp (inr (Rec tt))))
     (posDataGermFVal (CΣ cB+ (λ cb → CΣ (c+ (bFun cb)) (λ _ → C⁇))) tyCtor _ D isCode
@@ -176,18 +216,34 @@ posDataGermFVal cB+ tyCtor bFun (GArg A D true) (GArgCode c+ iso+ isCode) b+ (FC
     (Sum.elim (λ r → φ (inl (substPath
                                (λ (pr : Σ (A (bFun b+)) (λ a → GermCommand D (bFun b+ , a))) →
                                   GermResponse D (bFun b+ , fst pr) (snd pr))
-                               (ΣPathP  (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler (λ i →
-                                                                                                     GermCommand D (bFun b+ , Iso.leftInv (iso+ (bFun b+)) a (~ i))) (snd (maybeIrrefute (a , com)))))) r))) λ b → tt))
+                               (ΣPathP (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler _ _))
+                                 -- (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler (λ i →
+                                 --                                                                     GermCommand D (bFun b+ , Iso.leftInv (iso+ (bFun b+)) a (~ i))) (snd (maybeIrrefute (a , com)))))
+                               ) r))) λ b → tt))
 posDataGermFVal cB+ tyCtor bFun (GRec D) (GRecCode isCode) b+ (FC com resp) φ
   = ElRec (φl reflp)
     (posDataGermFVal cB+ tyCtor bFun D isCode b+ (FC com (Sum.elim (λ r → resp (inl (Rest r))) (λ r → resp (inr r))))
     (Sum.elim (λ r → φ (inl (Rest r))) (λ _ → tt)))
     where
       φl = φ (inl (Rec tt))
-posDataGermFVal cB+ tyCtor bFun (GHRec A D) (GHRecCode c+ iso+ isCode) b+ (FC com resp) φ = ElHRec {!!} {!!}
+posDataGermFVal cB+ tyCtor bFun (GHRec A D) (GHRecCode c+ iso+ isCode) b+ (FC com resp) φ =
+  ElHRec theFun (posDataGermFVal cB+ tyCtor bFun D isCode b+
+    (FC com (Sum.elim (λ r → resp (inl (Rest r))) (λ r → resp (inr r))))
+    (Sum.elim (λ r → φ (inl (Rest r))) (λ r → φ (inr r))))
+    where
+      theFun : (cb+ : El (c+ (bFun b+))) → _
+      theFun cb+ = φl reflp
+        where
+          φl = φ (inl (Rec (Iso.inv (iso+ (bFun b+)) cb+)))
 posDataGermFVal cB+ tyCtor bFun (GUnk A D) (GUnkCode c+ iso+ isCode) b+ (FC com resp) φ =
   ElArg (λ x → ⁇FromW (resp (inr (Rec (Iso.inv (iso+ (bFun b+)) x)))))
-    {!!}
+    (elAddFunDeps (λ z → c+ (bFun z)) C⁇ _ _ (b+ ,
+                                                     approx
+                                                     (λ x → ⁇FromW (resp (inr (Rec (Iso.inv (iso+ (bFun b+)) x)))))) recVal)
+  where
+    recVal = posDataGermFVal cB+ tyCtor bFun D isCode b+
+      (FC com (Sum.elim (λ r → resp (inl r)) (λ r → resp (inr (Rest r)))))
+      (Sum.elim (λ r → φ (inl r)) (λ r → φ (inr (Rest r))))
     -- → ℂDescEl (posDataGermCode ℓ cB+ bFun D isCode) (λ _ → ℂμ tyCtor (posGermForCtor ℓ tyCtor) Gtt) Gtt (Iso.fun bFun b+)
 -- posDataGermFVal cB+ tyCtor bFun GEnd GEndCode b+ b- cs φ = ElEnd tt (tt ⊢ tt ≅ tt)
 -- posDataGermFVal {ℓ} {{æ = æ}} cB+ tyCtor bFun (GArg (A+ , A-) D) (GArgCode c+ c- iso+ iso- isCode) b+ b- (FC ((a+ , a-) , com) resp) φ
