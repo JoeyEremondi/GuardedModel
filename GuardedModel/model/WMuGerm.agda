@@ -166,7 +166,18 @@ posDataGermFVal cB+ tyCtor bFun (GArg A D false) (GArgCode c+ iso+ isCode) b+ (F
                                   GermResponse D (bFun b+ , fst pr) (snd pr))
                                (ΣPathP  (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler (λ i →
                                                                                                      GermCommand D (bFun b+ , Iso.leftInv (iso+ (bFun b+)) a (~ i))) (snd (maybeIrrefute (a , com)))))) r))) λ b → tt))
-posDataGermFVal cB+ tyCtor bFun (GArg A D true) (GArgCode c+ iso+ isCode) b+ (FC (a , com) resp) φ = {!!}
+posDataGermFVal cB+ tyCtor bFun (GArg A D true) (GArgCode c+ iso+ isCode) b+ (FC (a , com) resp) φ =
+  ElArg (Iso.fun (iso+ (bFun b+)) a , ⁇FromW (resp (inr (Rec tt))))
+    (posDataGermFVal (CΣ cB+ (λ cb → CΣ (c+ (bFun cb)) (λ _ → C⁇))) tyCtor _ D isCode
+      (b+ ,
+          approx (Iso.fun (iso+ (bFun b+)) a , ⁇FromW (resp (inr (Rec tt)))))
+            (substPath (λ b → DescFunctor _ tyCtor D (bFun b+ , b)) (sym (Iso.leftInv (iso+ _) a))
+              (FC com (Sum.elim (λ r → resp (inl r)) (λ r → resp (inr (Rest r))))))
+    (Sum.elim (λ r → φ (inl (substPath
+                               (λ (pr : Σ (A (bFun b+)) (λ a → GermCommand D (bFun b+ , a))) →
+                                  GermResponse D (bFun b+ , fst pr) (snd pr))
+                               (ΣPathP  (Iso.leftInv (iso+ (bFun b+)) a , symP (transport-filler (λ i →
+                                                                                                     GermCommand D (bFun b+ , Iso.leftInv (iso+ (bFun b+)) a (~ i))) (snd (maybeIrrefute (a , com)))))) r))) λ b → tt))
 posDataGermFVal cB+ tyCtor bFun (GHRec A D) (GHRecCode c+ iso+ isCode) b+ (FC com resp) φ = ElHRec {!!} {!!}
 posDataGermFVal cB+ tyCtor bFun (GRec D) (GRecCode isCode) b+ (FC com resp) φ = ElRec {!!} {!!}
 posDataGermFVal cB+ tyCtor bFun (GUnk A D) (GUnkCode c+ iso+ isCode) b+ (FC com resp) φ = ElArg {!!} {!!}
