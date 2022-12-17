@@ -4,7 +4,6 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
