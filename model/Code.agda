@@ -344,10 +344,10 @@ record CodeModule
       inductive
       field
         ℂCommand : ℂ
-        ℂHOResponse : ℂ
+        ℂHOResponse : ApproxEl ℂCommand → ℂ
     open ℂCtor
 
-    interpCtor tyCtor d ctor = (λ _ → El (ℂCommand ctor)) ◃ (λ c →  Fin (#FO tyCtor d) ⊎ El (ℂHOResponse ctor)) / (λ _ _ → tt)
+    interpCtor tyCtor d ctor = (λ _ → El (ℂCommand ctor)) ◃ (λ c →  Fin (#FO tyCtor d) ⊎ El (ℂHOResponse ctor (approx c))) / (λ _ _ → tt)
 
     data ℂInd tyCtor ctors where
       Ind⁇ Ind℧ : ℂInd tyCtor ctors
@@ -355,7 +355,7 @@ record CodeModule
         (d : DName tyCtor)
         → (com : El (ℂCommand (ctors d)))
         → (foResp : Fin (#FO tyCtor d) → ℂInd tyCtor ctors)
-        → (hoResp : (r : El (ℂHOResponse (ctors d))) → ℂInd tyCtor ctors)
+        → (hoResp : (r : El (ℂHOResponse (ctors d) (approx com))) → ℂInd tyCtor ctors)
         → ℂInd tyCtor ctors
 
     -- WPathP :
@@ -393,13 +393,13 @@ record CodeModule
     toApproxμ _ _ W℧ = W℧
     toApproxμ tyCtor Ds (Wsup (FC (d , com) resp)) = Wsup (FC (d , toApprox (ℂCommand (Ds d)) com)
       (Sum.elim (λ n → toApproxμ tyCtor Ds (resp (inl n)))
-                λ r → toApproxμ tyCtor Ds (resp (inr (toExact (ℂHOResponse (Ds d)) r)))))
+                λ r → toApproxμ tyCtor Ds (resp (inr (toExact (ℂHOResponse (Ds d) (toApprox _ com)) r)))))
 
     toExactμ _ _ W⁇ = W⁇
     toExactμ _ _ W℧ = W℧
     toExactμ tyCtor Ds (Wsup (FC (d , com) resp)) = Wsup (FC (d , toExact (ℂCommand (Ds d)) com)
       (Sum.elim (λ n → toExactμ tyCtor Ds (resp (inl n)))
-                λ r → toExactμ tyCtor Ds (resp (inr (toApprox (ℂHOResponse (Ds d)) r)))))
+                λ r → toExactμ tyCtor Ds (resp (inr (substPath (λ x → El {{æ = Approx}} (ℂHOResponse (Ds d) x)) (toApproxExact _ com) (toApprox _ r))))))
 
     toApproxExactμ _ _ W⁇ = reflc
     toApproxExactμ _ _ W℧ = reflc
@@ -423,8 +423,7 @@ record CodeModule
         --sym (toApproxExactμ tyCtor Ds (resp (inl x)))
         helper (inr x) (inr x₁) pth reflp = toApproxExactμ tyCtor Ds (resp
                                                                        (inr
-                                                                        (toApprox (ℂHOResponse (Ds d)) (toExact (ℂHOResponse (Ds d)) x)))) ∙ congPath (λ x → resp (inr x)) (toApproxExact (ℂHOResponse (Ds d)) x)
-        --sym (toApproxExactμ tyCtor Ds (resp _) ∙ congPath resp (congPath inr (toApproxExact (ℂHOResponse (Ds d)) x)))
+                                                                        (toApprox (ℂHOResponse (Ds d) {!!}) (toExact (ℂHOResponse (Ds d) {!!}) x)))) ∙ congPath (λ x → resp (inr x)) (toApproxExact (ℂHOResponse (Ds d) {!!}) x)
 
 
 -- We can then recursively build the codes for each level
@@ -535,8 +534,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 -- ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
 
 
--- DCtors : ∀ {ℓ} → CName → Set
--- DCtors {ℓ} tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
+DCtors : (ℓ : ℕ) → CName → Set
+DCtors ℓ tyCtor = (d : DName tyCtor) → ℂCtor {ℓ = ℓ}
 
 
 ▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self

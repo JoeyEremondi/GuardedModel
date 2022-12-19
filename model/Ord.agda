@@ -11,7 +11,7 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Sum
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
-open import Inductives
+open import UnkGerm
 open import GuardedAlgebra
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
