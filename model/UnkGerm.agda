@@ -154,7 +154,7 @@ record DataTypes : Set1 where
     #FO : (c : CName) → (DName c) →  ℕ
     -- Index of each First-order reference
     -- Nothing is ⁇, Just tyCtor is an element of the germ of tyCtor
-    iFO : (c : CName) → (d : DName c) → Fin (#FO c d) → Maybe CName
+    iFO : (c : CName) → (d : DName c) → Fin (#FO c d) → CName
 
 open DataTypes {{...}} public
 
@@ -210,7 +210,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       Wsup : ∀ {tyCtor}
         → (d : DName tyCtor)
         → (com : GermCommand (germCtor ℓ tyCtor d) )
-        → (germFO : (n : Fin (#FO tyCtor d)) → ⁇Germ ℓ sc Self (iFO tyCtor d n))
+        → (germFO : (n : Fin (#FO tyCtor d)) → ⁇Germ ℓ sc Self (just (iFO tyCtor d n)))
         → (germHO : (r : GermHOResponse (germCtor ℓ tyCtor d) com) → ⁇Germ ℓ sc Self (just (iGermHO (germCtor ℓ tyCtor d) com r)))
         → (germHOUnk : (r : GermHOUnkResponse (germCtor ℓ tyCtor d) com) → ⁇Germ ℓ sc Self nothing)
         → ⁇Germ ℓ sc Self (just tyCtor)

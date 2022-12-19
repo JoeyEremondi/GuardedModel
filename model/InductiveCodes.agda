@@ -45,8 +45,8 @@ record GermCtorIsCode {{æ : Æ}} (ℓ : ℕ) (ctor : GermCtor) : Type1 where
     germCommandIso : Iso (GermCommand ctor) (El germCommandCode)
     germHOCode : El germCommandCode → ℂ ℓ
     germHOIso : ∀ com → Iso (GermHOResponse ctor com) (El (germHOCode (Iso.fun germCommandIso com)))
-    germHOUnkCode : El germCommandCode → ℂ ℓ
-    germHOUnkIso : ∀ com → Iso (GermHOUnkResponse ctor com) (El (germHOCode (Iso.fun germCommandIso com)))
+    germHOUnkCode : ApproxEl germCommandCode → ℂ ℓ
+    germHOUnkIso : ∀ com → Iso (GermHOUnkResponse ctor com) (El (germHOUnkCode (approx (Iso.fun germCommandIso com))))
 
 -- Inductive representation of W-types, again useful for convincing Agda things terminate
 record ℂFunctor {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) (X : Type) :  Type where
@@ -130,5 +130,24 @@ record CodesForInductives : Set2 where
         toℂFunctor : ∀ (d : DName tyCtor) (X : Type) →
             ⟦ interpCtor tyCtor d  (ctors d) ⟧F (λ _ → X) tt → ℂFunctor ℓ tyCtor ctors X
         toℂFunctor d X (FC com resp) = ℂEl d com (λ r → resp (inl r)) λ r → resp (inr r)
+
+  -- We can also convert germ descriptions to ℂCtor and germs to ℂμ
+  germCtorToCode : ∀ {{æ : Æ}} {ℓ } → (ctor : GermCtor) → GermCtorIsCode ℓ ctor → ℂCtor {ℓ = ℓ}
+  germCtorToCode {ℓ = ℓ} ctor isCode = record
+    { ℂCommand = CΣ (GermCtorIsCode.germCommandCode isCode) λ com → (CΠ (GermCtorIsCode.germHOUnkCode isCode com) (λ _ → C⁇ {ℓ = ℓ}))
+    ; ℂHOResponse = λ com → GermCtorIsCode.germHOCode isCode (exact {c = GermCtorIsCode.germCommandCode isCode} (fst com)) }
+
+  germToℂμ : ∀ {{æ : Æ}} ℓ (tyCtor : CName) → (isCodes : (d : DName tyCtor) → GermCtorIsCode ℓ (germCtor ℓ tyCtor d))
+    → ⁇GermTy ℓ tyCtor
+    → ℂμ ℓ tyCtor (λ d → germCtorToCode (germCtor ℓ tyCtor d) (isCodes d))
+  germToℂμ ℓ tyCtor isCodes DataGerms.⁇℧ = μ℧
+  germToℂμ ℓ tyCtor isCodes DataGerms.⁇⁇ = μ⁇
+  germToℂμ ℓ tyCtor isCodes (DataGerms.Wsup d com germFO germHO germHOUnk) =
+    ℂinit
+      (ℂEl d
+        (Iso.fun (GermCtorIsCode.germCommandIso (isCodes d)) com , λ r → transport (sym ⁇lob) (germHOUnk (Iso.inv (GermCtorIsCode.germHOUnkIso (isCodes d) com) r)))
+        ?
+        {!!})
+
 
 open CodesForInductives {{...}} public
