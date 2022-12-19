@@ -129,7 +129,6 @@ record CodeModule
 
     record ℂCtor : Type
     interpCtor : {{æ : Æ}} → (tyCtor : CName) → DName tyCtor → ℂCtor → Container 𝟙
-    data ℂInd {{æ  : Æ}} (tyCtor : CName) (ctors : ( d : DName tyCtor ) → ℂCtor) : Type
 
 
     toApproxμ :
@@ -349,14 +348,6 @@ record CodeModule
 
     interpCtor tyCtor d ctor = (λ _ → El (ℂCommand ctor)) ◃ (λ c →  Fin (#FO tyCtor d) ⊎ El (ℂHOResponse ctor (approx c))) / (λ _ _ → tt)
 
-    data ℂInd tyCtor ctors where
-      Ind⁇ Ind℧ : ℂInd tyCtor ctors
-      ℂsup :
-        (d : DName tyCtor)
-        → (com : El (ℂCommand (ctors d)))
-        → (foResp : Fin (#FO tyCtor d) → ℂInd tyCtor ctors)
-        → (hoResp : (r : El (ℂHOResponse (ctors d) (approx com))) → ℂInd tyCtor ctors)
-        → ℂInd tyCtor ctors
 
     -- WPathP :
     --       ∀ {{æ : Æ}}  {tyCtor : CName}

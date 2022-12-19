@@ -26,7 +26,7 @@ open import Cubical.Data.Sum
 open import GuardedModality using (later-ext)
 
 open import ApproxExact
-
+open import W
 
 --TODO: don't make ℓ module param
 module InductiveCodes {{_ : DataTypes}} {{_ : DataGerms}} where
@@ -48,8 +48,22 @@ record GermCtorIsCode {{æ : Æ}} (ℓ : ℕ) (ctor : GermCtor) : Type1 where
     germHOUnkCode : El germCommandCode → ℂ ℓ
     germHOUnkIso : ∀ com → Iso (GermHOUnkResponse ctor com) (El (germHOCode (Iso.fun germCommandIso com)))
 
+-- Inductive representation of W-types, again useful for convincing Agda things terminate
+record ℂFunctor {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) (X : Type) :  Type where
+  inductive
+  constructor ℂEl
+  field
+    d : DName tyCtor
+    com : El (ℂCommand (ctors d))
+    foResp : Fin (#FO tyCtor d) → X
+    hoResp : (r : El (ℂHOResponse (ctors d) (approx com))) → X
 
+data ℂμ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) : Type where
+  ℂinit : ℂFunctor ℓ tyCtor ctors (ℂμ ℓ tyCtor ctors) → ℂμ ℓ tyCtor ctors
+  μ⁇ μ℧ : ℂμ ℓ tyCtor ctors
 
+-- The things we need declared for our inductive types to have them
+-- fit into our Universe ala Tarski
 record CodesForInductives : Set2 where
   field
     ℓₚ : (ℓ : ℕ) → CName → ℕ
@@ -59,14 +73,19 @@ record CodesForInductives : Set2 where
       → (pars : ApproxEl (Params ℓ tyCtor))
       → (indices : ApproxEl (Indices ℓ tyCtor pars))
       → (DCtors ℓ tyCtor )
-    --Every data germ can be described by a code, with some parts hidden behind the guarded modality
-    dataGermIsCode : ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
+  DataGermIsCode : Type1
+  DataGermIsCode =  ∀ {{_ : Æ}} (ℓ : ℕ) (tyCtor : CName) (d : DName tyCtor)
       → GermCtorIsCode ℓ (germCtor ℓ tyCtor d)
 
+  field
+    --Every data germ can be described by a code, with some parts hidden behind the guarded modality
+    dataGermIsCode : DataGermIsCode
 
   -- Inductive type for codes that includes the codes for germs as fields
   -- This is awkward, but needed to convince Agda that our size calculation halts
-  data CodeSizer {ℓ} : ℂ ℓ → Type1 where
+  data CodeSizer {ℓ} : ℂ ℓ → Type1
+  data CtorSizer {ℓ} : (ℂCtor {ℓ = ℓ}) → Type1
+  data CodeSizer {ℓ} where
     -- We need to
     CS⁇ : (dgIsCode : ∀ {{æ : Æ}} → _) → (∀ {{æ : Æ}} → dgIsCode ≡c dataGermIsCode) → CodeSizer C⁇
     CS℧ : CodeSizer C℧
@@ -78,11 +97,17 @@ record CodesForInductives : Set2 where
     CSΣ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΣ dom cod)
     CS≡ : ∀ {c x y} → CodeSizer c → CodeSizer (C≡ c x y)
     CSμ : ∀ {tyCtor cI D i}
-      → (∀ d → CodeSizer (ℂCommand (D d)))
-      → (∀ d com → CodeSizer (ℂHOResponse (D d) com))
+      → (∀ d → CtorSizer (D d))
       → CodeSizer (Cμ tyCtor cI D i)
+  data CtorSizer {ℓ} where
+    CElS :
+      ∀ {c r}
+      → CodeSizer c
+      → (∀ x → CodeSizer (r x))
+      → CtorSizer (record { ℂCommand = c ; ℂHOResponse = r })
 
   codeSizer : ∀ {ℓ} (c : ℂ ℓ ) → CodeSizer c
+  ctorSizer : ∀ {ℓ} (c : ℂCtor {ℓ = ℓ}) → CtorSizer c
   codeSizer C⁇ = CS⁇ _ reflc
   codeSizer C℧ = CS℧
   codeSizer C𝟘 = CS𝟘
@@ -92,6 +117,18 @@ record CodesForInductives : Set2 where
   codeSizer (CΠ c cod) = CSΠ (codeSizer c) (λ x → codeSizer _)
   codeSizer (CΣ c cod) = CSΣ (codeSizer c) (λ x → codeSizer _)
   codeSizer (C≡ c x y) = CS≡ (codeSizer _) 
-  codeSizer (Cμ tyCtor c D x) = CSμ (λ d → codeSizer _) λ d c → codeSizer _
+  codeSizer (Cμ tyCtor c D x) = CSμ (λ d → ctorSizer _)
+  ctorSizer D = CElS (codeSizer _) (λ x → codeSizer _)
+
+  -- Every Inductive type can be converted to a ℂμ
+  toℂμ : ∀ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) →
+    W̃ (Arg (λ d → interpCtor tyCtor d (ctors d))) tt → ℂμ ℓ tyCtor ctors
+  toℂμ ℓ tyCtor ctors W℧ = μ℧
+  toℂμ ℓ tyCtor ctors W⁇ = μ⁇
+  toℂμ ℓ tyCtor ctors (Wsup (FC (d , com) resp)) = ℂinit (toℂFunctor d (ℂμ ℓ tyCtor ctors) (FC com λ r → toℂμ ℓ tyCtor ctors (resp r)))
+    where
+        toℂFunctor : ∀ (d : DName tyCtor) (X : Type) →
+            ⟦ interpCtor tyCtor d  (ctors d) ⟧F (λ _ → X) tt → ℂFunctor ℓ tyCtor ctors X
+        toℂFunctor d X (FC com resp) = ℂEl d com (λ r → resp (inl r)) λ r → resp (inr r)
 
 open CodesForInductives {{...}} public
