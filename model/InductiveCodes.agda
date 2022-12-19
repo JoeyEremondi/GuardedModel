@@ -64,7 +64,6 @@ record CodesForInductives : Set2 where
       → GermCtorIsCode ℓ (germCtor ℓ tyCtor d)
 
 
-
   -- Inductive type for codes that includes the codes for germs as fields
   -- This is awkward, but needed to convince Agda that our size calculation halts
   data CodeSizer {ℓ} : ℂ ℓ → Type1 where
@@ -73,12 +72,26 @@ record CodesForInductives : Set2 where
     CS℧ : CodeSizer C℧
     CS𝟘 : CodeSizer C𝟘
     CS𝟙 : CodeSizer C𝟙
+    CSType : ∀ {{inst : 0< ℓ}} → CodeSizer CType
+    CSCumul : ∀ {{inst : 0< ℓ}} {c} → CodeSizer (CCumul c)
     CSΠ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΠ dom cod)
     CSΣ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΣ dom cod)
     CS≡ : ∀ {c x y} → CodeSizer c → CodeSizer (C≡ c x y)
-    Cμ : ∀ {tyCtor cI D i}
-      → (∀ d → {!!})
-      → (∀ d → {!!})
+    CSμ : ∀ {tyCtor cI D i}
+      → (∀ d → CodeSizer (ℂCommand (D d)))
+      → (∀ d com → CodeSizer (ℂHOResponse (D d) com))
       → CodeSizer (Cμ tyCtor cI D i)
+
+  codeSizer : ∀ {ℓ} (c : ℂ ℓ ) → CodeSizer c
+  codeSizer C⁇ = CS⁇ _ reflc
+  codeSizer C℧ = CS℧
+  codeSizer C𝟘 = CS𝟘
+  codeSizer C𝟙 = CS𝟙
+  codeSizer CType = CSType
+  codeSizer (CCumul x) = CSCumul
+  codeSizer (CΠ c cod) = CSΠ (codeSizer c) (λ x → codeSizer _)
+  codeSizer (CΣ c cod) = CSΣ (codeSizer c) (λ x → codeSizer _)
+  codeSizer (C≡ c x y) = CS≡ (codeSizer _) 
+  codeSizer (Cμ tyCtor c D x) = CSμ (λ d → codeSizer _) λ d c → codeSizer _
 
 open CodesForInductives {{...}} public

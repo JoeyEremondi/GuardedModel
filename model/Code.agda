@@ -2,7 +2,7 @@
 -- open import Desc
 -- open import Level hiding (#_)
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
-open import Cubical.Data.Fin hiding (_/_)
+open import Cubical.Data.FinData
 -- open import Cubical.Data.Bool renaming (Bool to 𝟚)
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)
 open import Cubical.Data.Nat.Order
@@ -345,7 +345,7 @@ record CodeModule
       field
         ℂCommand : ℂ
         ℂHOResponse : ApproxEl ℂCommand → ℂ
-    open ℂCtor
+    open ℂCtor public
 
     interpCtor tyCtor d ctor = (λ _ → El (ℂCommand ctor)) ◃ (λ c →  Fin (#FO tyCtor d) ⊎ El (ℂHOResponse ctor (approx c))) / (λ _ _ → tt)
 

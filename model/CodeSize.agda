@@ -17,13 +17,14 @@ open import Cubical.Data.Bool
 -- open import Cubical.Data.Equality
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
-open import Inductives
+open import UnkGerm
 open import GuardedAlgebra
 import GuardedModality as G
 open import Cubical.Induction.WellFounded
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import InductiveCodes
+open import W
 -- open import Cubical.Data.Equality using (ptoc)
 
 open import ApproxExact
@@ -50,7 +51,6 @@ open import SizeOrdMultiMax public
 
 
 open import Code
-open import WMuEq
 open import Head
 open import Util
 
@@ -169,27 +169,24 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
 
 
+  FinLim : ∀ {n} → (Fin n → Size) → Size
+  FinLim {ℕ.zero} f = SZ
+  FinLim {ℕ.suc n} f = SLim (CFin n) (λ x → f (fromCFin x))
 
 
   DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Size) → Size
-  DLim tyCtor f with numCtors tyCtor
-  ... | ℕ.zero = SZ
-  ... | ℕ.suc n = SLim  (CFin n) (λ x → f (fromCFin x))
+  DLim tyCtor f = FinLim f
 
-  DLim-cocone : ∀ (tyCtor : CName) → (f : ( DName tyCtor) → Size) → (d : DName tyCtor) → f d ≤ₛ DLim tyCtor f
-  DLim-cocone tyCtor f d with numCtors tyCtor
-  DLim-cocone tyCtor f () | ℕ.zero
-  ... | ℕ.suc n  = pSubst (λ x → f d ≤ₛ f x) (pSym (fromToCFin d)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone (toCFin d)
+  FinLim-cocone : ∀ {n} → (f : ( Fin n) → Size) → (d : Fin n) → f d ≤ₛ FinLim f
+  FinLim-cocone {ℕ.suc n} f d = pSubst (λ x → f d ≤ₛ f x) (pSym (fromToCFin d)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone (toCFin d)
 
-  extDLim : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Size) → (∀ d → f1 d ≤ₛ f2 d) → (DLim tyCtor f1) ≤ₛ (DLim tyCtor f2)
-  extDLim tyCtor f1 f2 lt with numCtors tyCtor
-  ... | ℕ.zero = ≤ₛ-Z
-  ... | ℕ.suc n = ≤ₛ-extLim ⦃ æ = Approx ⦄ (λ k → lt (fromCFin k))
+  extFinLim : ∀ {n} → (f1 f2 : (d : Fin n) → Size) → (∀ d → f1 d ≤ₛ f2 d) → (FinLim f1) ≤ₛ (FinLim f2)
+  extFinLim {n = ℕ.zero} f1 f2 lt = ≤ₛ-Z
+  extFinLim  {ℕ.suc n} f1 f2 lt = ≤ₛ-extLim ⦃ æ = Approx ⦄ (λ k → lt (fromCFin k))
 
-  smax-DLim2 : ∀ (tyCtor : CName) → (f1 f2 : (d : DName tyCtor) → Size) →  DLim tyCtor (λ d1 → DLim tyCtor (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (DLim tyCtor f1) (DLim tyCtor f2)
-  smax-DLim2 tyCtor f1 f2 with numCtors tyCtor
-  ... | ℕ.zero = ≤ₛ-Z
-  ... | ℕ.suc n = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
+  smax-FinLim2 : ∀ {n} → (f1 f2 : (d : Fin n) → Size) →  FinLim (λ d1 → FinLim (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (FinLim f1) (FinLim f2)
+  smax-FinLim2 {ℕ.zero} f1 f2 = ≤ₛ-Z
+  smax-FinLim2 {ℕ.suc n} f1 f2 = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
 
 
   -- dataGermSize : ∀ {{æ : Æ}} (tyCtor : CName) → DataGerm ℓ tyCtor → Size
@@ -201,7 +198,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   -- dataGermSize tyCtor W℧ = S1
 
   codeSize : ℂ ℓ → Size
-  descSize : ∀  { sig} →  {cB : ℂ ℓ} → ℂDesc cB sig → Size
+  -- descSize : ∀  { sig} →  {cB : ℂ ℓ} → ℂDesc cB sig → Size
 
 
   codeSize C⁇ = S1
@@ -218,26 +215,12 @@ record CodeSizeF (ℓ : ℕ) : Set  where
       ( (codeSize dom))
       (  (SLim dom λ x →  (codeSize (cod x)))))
   codeSize  (C≡ c x y) = S↑ ( (codeSize c))
-  codeSize (Cμ tyCtor c D x) =
-    S↑ (smax
-      ( (codeSize c))
-      ( (DLim tyCtor λ d → descSize (D d))))
+  codeSize (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → smax (codeSize (ℂCommand (D d))) (SLim (ℂCommand (D d)) (λ com → codeSize (ℂHOResponse (D d) com))))
+    -- S↑ (smax
+    --   ( (codeSize c))
+    --   ( (DLim tyCtor λ d → descSize (D d))))
   codeSize (CCumul {{inst = inst}} c) = S↑ (smallerCodeSize c)
 
-  --TODO: need ElSizes here?
-  descSize (CEnd) = S1 -- S↑ (elSize {{Approx}} c i )
-  descSize {cB = cB} (CArg c D cB' _) = S↑
-    (smax* (
-      (codeSize cB')
-      ∷ (SLim cB λ b →  (codeSize (c b)))
-      ∷ (descSize D) ∷ [])
-      )
-  descSize  (CRec D) = S↑  (descSize D)
-  descSize  {cB = cB} (CHRec c D cB' _) =
-    S↑ (smax* (
-      (codeSize cB')
-      ∷ (SLim cB λ b →  (codeSize (c b)))
-      ∷  (descSize D) ∷ [] ))
 
 
 
@@ -250,12 +233,11 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
   -- germUnkSize : (x : WUnk {{æ = Approx}} ℓ) → Size
   ⁇Size : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
-  elSize : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
+  elSize : ∀ {{æ : Æ}} {c : ℂ ℓ} → CodeSizer c → El c → Size
   -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
-  CμSize : ∀   {tyCtor : CName} (D : DCtors {ℓ = ℓ} tyCtor)  → ℂμ tyCtor D → Size
-  CElSize : ∀ {sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors {ℓ = ℓ} tyCtor) {b} → ℂDescEl D (ℂμ tyCtor E) b → Size
+  -- CμSize : ∀   {tyCtor : CName} (D : DCtors {ℓ = ℓ} tyCtor)  → ℂμ tyCtor D → Size
+  -- CElSize : ∀ {sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors {ℓ = ℓ} tyCtor) {b} → ℂDescEl D (ℂμ tyCtor E) b → Size
 
-  open import WMuGerm
 
   -- germUnkSize (Wsup (FC (HΠ , args) f)) = S↑ (germUnkSize (f tt*))
   -- germUnkSize (Wsup (FC (HΣ , args) resp)) = S↑ (smax (germUnkSize (resp true)) (germUnkSize (resp false)))
@@ -269,35 +251,37 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   -- germUnkSize W℧ = S1
 
   --TODO
-  ⁇Size CodeModule.⁇℧ = S1
-  ⁇Size CodeModule.⁇⁇ = S1
-  ⁇Size CodeModule.⁇𝟙 = S1
-  ⁇Size (CodeModule.⁇Type x) = S1
-  ⁇Size (CodeModule.⁇Cumul c x) = S1
-  ⁇Size (CodeModule.⁇Π x) = S1
-  ⁇Size (CodeModule.⁇Σ x) = S1
-  ⁇Size (CodeModule.⁇≡ x) = S1
-  ⁇Size (CodeModule.⁇μ tyCtor x) = S↑ (CμSize _ (posDataGermVal ℓ tyCtor x))
+  ⁇Size ⁇℧ = S1
+  ⁇Size ⁇⁇ = S1
+  ⁇Size ⁇𝟙 = S1
+  ⁇Size (⁇Type x) = S1
+  ⁇Size (⁇Cumul c x) = S1
+  ⁇Size (⁇Π x) = S1
+  ⁇Size (⁇Σ x) = S1
+  ⁇Size (⁇≡ x) = S1
+  ⁇Size (⁇μ tyCtor x) = {!!} --S↑ (CμSize _ (posDataGermVal ℓ tyCtor x))
 
-  elSize {{æ = æ}} C⁇ x = ⁇Size {{æ = æ}} x --germUnkSize (⁇ToW {{æ = Approx}} (approx {c = C⁇ {ℓ = ℓ}} x))
-  elSize C℧ x = S1
-  elSize C𝟘 x = S1
-  elSize C𝟙 x = S1
-  elSize (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
-  elSize {{æ = æ}} (CΠ dom cod) f = S↑ (SLim dom (λ x → elSize {{æ = æ}} (cod x) (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
-  elSize {{æ = æ}} (CΣ dom cod) (x , y) = S↑ (smax (elSize {{æ = æ}} dom x) (elSize {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
-  elSize (C≡ c x₁ y) (x ⊢ .x₁ ≅ .y) = S↑ (elSize {{Approx}} c x)
-  elSize (Cμ tyCtor cI D i) x = S↑ (CμSize D ( Iso.inv CμWiso (approx {ℓ = ℓ} {c = Cμ tyCtor cI D i} x) ))
-  elSize (CCumul {{inst = inst}} c) x = smallerElSize c x --elSize c x
+  elSize {{æ = æ}} (CS⁇ codes pf) x = ⁇Size {{æ = æ}} x --germUnkSize (⁇ToW {{æ = Approx}} (approx {c = CS⁇ {ℓ = ℓ}} x))
+  elSize CS℧ x = S1
+  elSize CS𝟘 x = S1
+  elSize CS𝟙 x = S1
+  elSize (CSType {{inst = inst}}) x = S↑ (smallerCodeSize x)
+  elSize {{æ = æ}} {CΠ dom cod} (CSΠ sdom scod) f = S↑ (SLim dom (λ x → elSize {{æ = æ}} (scod x) (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
+  elSize {{æ = æ}} (CSΣ dom cod) (x , y) = S↑ (smax (elSize {{æ = æ}} dom x) (elSize {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
+  elSize (CS≡ c) (x ⊢ x₁ ≅ y) = S↑ (elSize {{Approx}} c x)
+  elSize {c = Cμ tyCtor cI D i} (CSμ coms ress) (Wsup (FC (d , com) res)) = S↑ (smax* (elSize (coms d) com ∷ (FinLim λ n → elSize {!!} (res (inl n))) ∷ (SLim (ℂCommand (D d)) λ com → SLim (ℂHOResponse (D d) com) λ x → elSize {!CSμ coms ress!} (res (inr (exact _ x)))) ∷ [])) -- S↑ (CSμSize D ( Iso.inv CSμWiso (approx {ℓ = ℓ} {c = CSμ tyCtor cI D i} x) ))
+  elSize {c = Cμ tyCtor cI D i} (CSμ coms ress) W⁇ = S1
+  elSize {c = Cμ tyCtor cI D i} (CSμ coms ress) W℧ = S1
+  elSize (CSCumul {{inst = inst}}) x = smallerElSize _ x --elSize c x
 
-  CμSize D (Cinit d x) = S↑ (CElSize (D d) D x)
-  CμSize D Cμ⁇ = S1
-  CμSize D Cμ℧ = S1
+  -- CμSize D (Cinit d x) = S↑ (CElSize (D d) D x)
+  -- CμSize D Cμ⁇ = S1
+  -- CμSize D Cμ℧ = S1
 
-  CElSize  .CEnd E  (ElEnd) = S1
-  CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
-  CElSize (CRec D) E (ElRec x x₁) = S↑ (smax (CμSize E x) (CElSize D E x₁))
-  CElSize (CHRec c D _ _) E {b = b} (ElHRec f x) = S↑ (SLim (c b) λ a → smax (CμSize E (f a)) (CElSize D E x))
+  -- CElSize  .CEnd E  (ElEnd) = S1
+  -- CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
+  -- CElSize (CRec D) E (ElRec x x₁) = S↑ (smax (CμSize E x) (CElSize D E x₁))
+  -- CElSize (CHRec c D _ _) E {b = b} (ElHRec f x) = S↑ (SLim (c b) λ a → smax (CμSize E (f a)) (CElSize D E x))
 
 
 --TODO uncomment after here
@@ -326,28 +310,28 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 -- codeSuc {ℓ = suc ℓ} (CCumul c) = (codeSuc c) ≤⨟ (≤↑ (codeSize c))
 
 -- codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → smax S1 (codeSize c) ≤ₛ codeSize c
--- codeMaxL CodeModule.C⁇ = smax-oneL
--- codeMaxL CodeModule.C℧ = smax-oneL
--- codeMaxL CodeModule.C𝟘 = smax-oneL
--- codeMaxL CodeModule.C𝟙 = smax-oneL
--- codeMaxL CodeModule.CType = smax-oneL
--- codeMaxL (CodeModule.CΠ c cod) = smax-oneL
--- codeMaxL (CodeModule.CΣ c cod) = smax-oneL
--- codeMaxL (CodeModule.C≡ c x y) = smax-oneL
--- codeMaxL (CodeModule.Cμ tyCtor c D x) = smax-oneL
+-- codeMaxL C⁇ = smax-oneL
+-- codeMaxL C℧ = smax-oneL
+-- codeMaxL C𝟘 = smax-oneL
+-- codeMaxL C𝟙 = smax-oneL
+-- codeMaxL CType = smax-oneL
+-- codeMaxL (CΠ c cod) = smax-oneL
+-- codeMaxL (CΣ c cod) = smax-oneL
+-- codeMaxL (C≡ c x y) = smax-oneL
+-- codeMaxL (Cμ tyCtor c D x) = smax-oneL
 -- codeMaxL {ℓ = suc ℓ} (CCumul c) = smax-oneL
 
 
 -- codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → smax (codeSize c) S1 ≤ₛ codeSize c
--- codeMaxR CodeModule.C⁇ = smax-oneR
--- codeMaxR CodeModule.C℧ = smax-oneR
--- codeMaxR CodeModule.C𝟘 = smax-oneR
--- codeMaxR CodeModule.C𝟙 = smax-oneR
--- codeMaxR CodeModule.CType = smax-oneR
--- codeMaxR (CodeModule.CΠ c cod) = smax-oneR
--- codeMaxR (CodeModule.CΣ c cod) = smax-oneR
--- codeMaxR (CodeModule.C≡ c x y) = smax-oneR
--- codeMaxR (CodeModule.Cμ tyCtor c D x) = smax-oneR
+-- codeMaxR C⁇ = smax-oneR
+-- codeMaxR C℧ = smax-oneR
+-- codeMaxR C𝟘 = smax-oneR
+-- codeMaxR C𝟙 = smax-oneR
+-- codeMaxR CType = smax-oneR
+-- codeMaxR (CΠ c cod) = smax-oneR
+-- codeMaxR (CΣ c cod) = smax-oneR
+-- codeMaxR (C≡ c x y) = smax-oneR
+-- codeMaxR (Cμ tyCtor c D x) = smax-oneR
 -- codeMaxR {ℓ = suc ℓ} (CCumul c) = smax-oneR
 
 -- codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax (codeSize c1) (codeSize c2)

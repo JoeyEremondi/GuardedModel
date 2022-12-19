@@ -13,7 +13,7 @@ open import Cubical.Data.Equality
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
-open import Inductives
+open import UnkGerm
 open import GuardedAlgebra
 open import ApproxExact
 
@@ -32,7 +32,7 @@ unkHead  (⁇Π x) = HStatic HΠ
 unkHead  (⁇Σ x) = HStatic HΣ
 unkHead  (⁇≡ x) = HStatic H≅
 unkHead  (⁇μ tyCtor _) = HStatic (HCtor tyCtor)
-unkHead  (CodeModule.⁇Cumul c x) = HStatic HCumul
+unkHead  (⁇Cumul c x) = HStatic HCumul
 
 -- valueHeadType : TyHead → Set
 -- data ValHead : (h : GHead) → Set

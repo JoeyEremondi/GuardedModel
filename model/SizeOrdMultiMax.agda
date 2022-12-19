@@ -1,5 +1,5 @@
 
-open import Inductives
+open import UnkGerm
 open import InductiveCodes
 module SizeOrdMultiMax {{_ : DataTypes}} {{_ : DataGerms}} where
 
