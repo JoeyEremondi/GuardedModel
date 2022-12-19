@@ -28,7 +28,7 @@ import GuardedModality as G
 
 open import ApproxExact
 open import Util
-module Inductives where
+module UnkGerm where
 
 
 data G𝟙 : Set where
@@ -278,3 +278,5 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       (λ n → toApproxExact⁇ {Self = Self} (fo n) i)
       (λ r → toApproxExact⁇ {Self = Self} (ho r) i)
       (λ r → toApproxExact⁇ {Self = Self} (hoUnk r) i)
+
+open DataGerms {{...}} public
