@@ -406,24 +406,38 @@ record CodeModule
     toApproxExactμ tyCtor Ds (Wsup (FC (d , com) resp)) =
       cong₂
         {A = Command (interpCtor ⦃ æ = Approx ⦄ tyCtor d (Ds d)) tt}
-        {B = λ c → (r : Response (interpCtor {{æ = _}} tyCtor d (Ds d)) com) → W̃ (Arg (λ d → interpCtor {{æ = _}} tyCtor d (Ds d)) ) tt}
+        {B = λ c → (r : Response (interpCtor {{æ = _}} tyCtor d (Ds d)) c) → W̃ (Arg (λ d → interpCtor {{æ = _}} tyCtor d (Ds d)) ) tt}
         {x = toApprox (ℂCommand (Ds d)) (toExact (ℂCommand (Ds d)) com)} {y = com}
         {C = λ com res → W̃ ((λ i →
                                 Σ _
                                 (λ a → El {{æ = _}} (ℂCommand (Ds a))))
                              ◃ Response (Arg (λ d₁ → interpCtor {{æ = _}} tyCtor d₁ (Ds d₁))) /
                              (λ {i} c _ → tt)) tt }
-        (λ com resp → Wsup (FC (d , com) resp))
+        (λ c r → Wsup (FC (d , c) r))
         (toApproxExact (ℂCommand (Ds d)) com)
-        -- {u = resp} {v = Sum.elim (λ n → toApproxμ tyCtor Ds (toExactμ tyCtor Ds (resp (inl n)))) (λ r → toApproxμ tyCtor Ds (toExactμ tyCtor Ds (resp (inr (toApprox (ℂHOResponse (Ds d)) (toExact (ℂHOResponse (Ds d)) r ))))))}
-        (funExtDep (λ { {x0} {x1} pth → helper x0 x1 pth (ptoc pth)}))
+        (funExtDep λ { {x0} {x1} pth → helper x0 x1 pth ∙ sym (respη x1) }) -- (funExtDep (λ { {x0} {x1} pth → helper x0 x1 pth (ptoc pth)}))
       where
-        helper : (x0 : _) → (x1 : _) → _ → _ → _
-        helper (inl x) (inl x₁) pth reflp = toApproxExactμ tyCtor (λ d₁ → Ds d₁) (resp (inl x))
-        --sym (toApproxExactμ tyCtor Ds (resp (inl x)))
-        helper (inr x) (inr x₁) pth reflp = toApproxExactμ tyCtor Ds (resp
-                                                                       (inr
-                                                                        (toApprox (ℂHOResponse (Ds d) {!!}) (toExact (ℂHOResponse (Ds d) {!!}) x)))) ∙ congPath (λ x → resp (inr x)) (toApproxExact (ℂHOResponse (Ds d) {!!}) x)
+        respη : ∀ x → resp x ≡c Sum.elim {C = λ r → W̃ _ tt} (λ r → resp (inl r)) (λ r → resp (inr r)) x
+        respη (inl x) = reflc
+        respη (inr x) = reflc
+        sumPath : ∀ {X Y X' Y' C : Type} {f1 : X → C} {f2 : Y → C} {f1' : X' → C} {f2' : Y' → C} {x : X ⊎ Y} {x' : X' ⊎ Y'}
+          → (px : X ≡c X') → (py : Y ≡c Y')
+          → PathP (λ i → px i → C) f1 f1'
+          → PathP (λ i → py i → C) f2 f2'
+          → PathP (λ i → px i  ⊎ py i) x x'
+          → Sum.elim {A = X} {B = Y} {C = λ _ → C } f1 f2 x ≡c Sum.elim {A = X'} {B = Y'} f1' f2' x'
+        sumPath px py pf1 pf2 parg  i = Sum.elim (pf1 i) (pf2 i) (parg i)
+        helper : (x0 : _) → (x1 : _) → _ → _
+        helper x0 x1 pth = sumPath reflc (congPath (λ x → El {{æ = Approx}} (ℂHOResponse (Ds d) x)) (toApproxExact _ com))
+          (funExt (λ r → toApproxExactμ tyCtor Ds (resp (inl r))))
+          (funExtDep (λ {r0} {r1} rpth → toApproxExactμ tyCtor Ds _ ∙ congPath (λ r → resp (inr r)) (fromPathP {A = λ i → El ⦃ æ = Approx ⦄ (ℂHOResponse (Ds d) (toApproxExact _ com i))}
+          (λ i → toApproxExact _ (rpth i) i))))
+          pth
+        -- helper (inl x) (inl x₁) pth = ? -- toApproxExactμ tyCtor (λ d₁ → Ds d₁) (resp (inl x))
+        -- --sym (toApproxExactμ tyCtor Ds (resp (inl x)))
+        -- helper (inr x) (inr x₁) pth = toApproxExactμ tyCtor Ds (resp
+        --                                                                (inr
+        --                                                                 (toApprox (ℂHOResponse (Ds d) {!!}) (toExact (ℂHOResponse (Ds d) {!!}) x)))) ∙ congPath (λ x → resp (inr x)) (toApproxExact (ℂHOResponse (Ds d) {!!}) x)
 
 
 -- We can then recursively build the codes for each level
