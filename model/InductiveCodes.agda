@@ -72,24 +72,24 @@ data ℂμ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) : Type 
 
 -- open ℂGermCtor
 
-record ℂGermFunctor {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) (X : CName → Type) :  Type where
-  inductive
-  constructor ℂGermEl
-  field
-    d : DName tyCtor
-    com : El (GermCtorIsCode.germCommandCode (isCodes tyCtor d))
-    foResp : (n : Fin (#FO tyCtor d)) → X (iFO tyCtor d n)
-    hoResp : (r : El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx com)))
-      → X
-        (iGermHO (ctors tyCtor d)
-          (Iso.inv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)
-          (Iso.inv (GermCtorIsCode.germHOIso (isCodes tyCtor d) _)
-            (substPath (λ x → El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx x))) (symPath (Iso.rightInv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)) r)))
-    hoUnkResp : (r : El (GermCtorIsCode.germHOUnkCode (isCodes tyCtor d) (approx com))) → ⁇Ty ℓ
+-- record ℂGermFunctor {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) (X : CName → Type) :  Type where
+--   inductive
+--   constructor ℂGermEl
+--   field
+--     d : DName tyCtor
+--     com : El (GermCtorIsCode.germCommandCode (isCodes tyCtor d))
+--     foResp : (n : Fin (#FO tyCtor d)) → X (iFO tyCtor d n)
+--     hoResp : (r : El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx com)))
+--       → X
+--         (iGermHO (ctors tyCtor d)
+--           (Iso.inv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)
+--           (Iso.inv (GermCtorIsCode.germHOIso (isCodes tyCtor d) _)
+--             (substPath (λ x → El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx x))) (symPath (Iso.rightInv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)) r)))
+--     hoUnkResp : (r : El (GermCtorIsCode.germHOUnkCode (isCodes tyCtor d) (approx com))) → ⁇Ty ℓ
 
-data ℂGermμ {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) : Type where
-  ℂGerminit : ℂGermFunctor ℓ ctors isCodes tyCtor (ℂGermμ ℓ ctors isCodes) → ℂGermμ ℓ ctors isCodes tyCtor
-  μG⁇ μG℧ : ℂGermμ ℓ ctors isCodes tyCtor
+-- data ℂGermμ {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) : Type where
+--   ℂGerminit : ℂGermFunctor ℓ ctors isCodes tyCtor (ℂGermμ ℓ ctors isCodes) → ℂGermμ ℓ ctors isCodes tyCtor
+--   μG⁇ μG℧ : ℂGermμ ℓ ctors isCodes tyCtor
 
 -- The things we need declared for our inductive types to have them
 -- fit into our Universe ala Tarski
@@ -160,14 +160,14 @@ record CodesForInductives : Set2 where
             ⟦ interpCtor tyCtor d  (ctors d) ⟧F (λ _ → X) tt → ℂFunctor ℓ tyCtor ctors X
         toℂFunctor d X (FC com resp) = ℂEl d com (λ r → resp (inl r)) λ r → resp (inr r)
 
-  toℂμGerm : ∀ {{æ  : Æ}} ℓ (tyCtor : CName)
-    → ⁇GermTy ℓ tyCtor
-    → ℂGermμ ℓ (germCtor ℓ) (dataGermIsCode ℓ) tyCtor
-  toℂμGerm ℓ tyCtor  DataGerms.⁇℧ = μG℧
-  toℂμGerm ℓ tyCtor  DataGerms.⁇⁇ = μG⁇
-  toℂμGerm ℓ tyCtor  (DataGerms.Wsup d com germFO germHO germHOUnk) = {!!}
-    where
-      toℂGermFunctor
+  -- toℂμGerm : ∀ {{æ  : Æ}} ℓ (tyCtor : CName)
+  --   → ⁇GermTy ℓ tyCtor
+  --   → ℂGermμ ℓ (germCtor ℓ) (dataGermIsCode ℓ) tyCtor
+  -- toℂμGerm ℓ tyCtor  DataGerms.⁇℧ = μG℧
+  -- toℂμGerm ℓ tyCtor  DataGerms.⁇⁇ = μG⁇
+  -- toℂμGerm ℓ tyCtor  (DataGerms.Wsup d com germFO germHO germHOUnk) = {!!}
+  --   where
+  --     toℂGermFunctor
     -- ℂGerminit
     --   (ℂGermEl d
     --     (Iso.fun (GermCtorIsCode.germCommandIso (dataGermIsCode ℓ tyCtor d)) com)
