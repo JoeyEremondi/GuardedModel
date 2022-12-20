@@ -46,6 +46,10 @@ data Polarity : Set where
 data IsNeg : Polarity → Set where
   isNeg : IsNeg Neg
 
+data GNat : Type where
+    Nat⁇ Nat℧ : GNat
+    GZero : GNat
+    GSuc : GNat → GNat
 
 --Readable datatypes for translating codes into W types
 
@@ -159,6 +163,7 @@ record CodeModule
     toApprox C⁇ x = toApprox⁇ x
     toExact C⁇ x = toExact⁇ x
     toApproxExact C⁇ x = toApproxExact⁇ x
+
     -- ▹El C⁇ = G.▹ (⁇ {{Exact}})
 
 
@@ -192,6 +197,16 @@ record CodeModule
     toApprox C𝟙 x = x
     toExact C𝟙 x = x
     toApproxExact C𝟙 x = refl
+
+    -- Natural numbers
+    -- We could have these as inductives, but we really just need them for a hack in our ordinals
+    data _ where
+      Cℕ : ℂ
+    El Cℕ = GNat
+    toApprox Cℕ n = n
+    toExact Cℕ n = n
+    toApproxExact Cℕ n = reflc
+
     -- ▹El C𝟙 = 𝟚
     ----------------------------------------------------------------
     -- Universes
@@ -526,6 +541,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ CodeModule.C℧ = ℧𝟘
 ℧ CodeModule.C𝟘 = tt
 ℧ CodeModule.C𝟙 = ℧𝟙
+℧ Cℕ = Nat℧
 ℧ {suc ℓ} CodeModule.CType = C℧
 ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
 ℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))

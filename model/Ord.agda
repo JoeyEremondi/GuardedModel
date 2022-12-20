@@ -59,12 +59,19 @@ churchIter c z s n = n c s z
 ChurchVecC : ChurchNat → ℂ 0
 ChurchVecC n = churchIter CType C℧ (λ c → C℧ C× c) n
 
-postulate
-  Cℕ : ℂ 0
-  -- Elℕ : ApproxEl Cℕ ≡ ℕ
-  CℕtoNat : ApproxEl Cℕ → ℕ
-  CℕfromNat : ℕ → ApproxEl Cℕ
-  Cℕembed : ∀ x → CℕtoNat (CℕfromNat x) ≡ x
+CℕtoNat : ApproxEl (Cℕ {ℓ = 0}) → ℕ
+CℕtoNat Nat⁇ = 0
+CℕtoNat Nat℧ = 0
+CℕtoNat GZero = 0
+CℕtoNat (GSuc x) = ℕ.suc (CℕtoNat x)
+
+CℕfromNat : ℕ → ApproxEl (Cℕ {ℓ = 0})
+CℕfromNat ℕ.zero = GZero
+CℕfromNat (ℕ.suc x) = GSuc (CℕfromNat x)
+
+Cℕembed : ∀  x → CℕtoNat  (CℕfromNat x) ≡ x
+Cℕembed ℕ.zero = reflc
+Cℕembed (ℕ.suc x) = congPath ℕ.suc (Cℕembed x)
 
 data Ord : Set where
   OZ : Ord
@@ -73,6 +80,9 @@ data Ord : Set where
   -- OBisim : ∀ {ℓ} {c : ℂ ℓ} → (f g : El c → Ord) → {!!} → OLim c f ≡ OLim c g
 
 O1 = O↑ OZ
+
+OℕLim : (ℕ → Ord) → Ord
+OℕLim f = OLim (Cℕ {ℓ = 0}) (λ cn → f (CℕtoNat cn))
 
 -- from Kraus et al https://arxiv.org/pdf/2104.02549.pdf
 data _≤o_ : Ord → Ord → Set where
@@ -418,7 +428,7 @@ abstract
 
 --
   omax∞ : Ord → Ord
-  omax∞ o = OLim  Cℕ (λ x → nmax o (CℕtoNat x))
+  omax∞ o = OℕLim (λ n → nmax o n)
 
   omax-∞lt1 : ∀ o → omax (omax∞ o) o ≤o omax∞ o
   omax-∞lt1 o = ≤o-limiting  _ λ k → helper (CℕtoNat k)

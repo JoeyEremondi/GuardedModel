@@ -24,6 +24,7 @@ data TyHead : Set where
   H≅ : TyHead
   H𝟙 : TyHead
   H𝟘 : TyHead
+  Hℕ : TyHead
   HType : TyHead
   HCumul : TyHead
   HCtor : Fin numCtors → TyHead
