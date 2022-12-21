@@ -90,6 +90,9 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   codeSize (CCumul {{inst = inst}} c) = S↑ (smallerCodeSize c)
 
 
+  GNatSize : GNat → Size
+  GNatSize (GSuc x) = S↑ (GNatSize x)
+  GNatSize x = S1
 
 
   record ElSizeFuel : Type1 where
@@ -98,7 +101,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
     -- germUnkSize' : (x : WUnk {{æ = Approx}} ℓ) → Size
     ⁇Size' : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
-    GermSize' : ∀ {{ æ : Æ}} {tyCtor : CName} → ⁇Germ ℓ _ _ (just tyCtor) → Size
+    GermSize' : ∀ {{ æ : Æ}} {tyCtor : CName} → ⁇GermTy ℓ tyCtor → Size
     elSize' : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
     -- ▹elSize' : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
     CμSize' : ∀  {{æ : Æ}}  {tyCtor : CName} (D : DCtors ℓ tyCtor) →  ℂμ ℓ tyCtor D → Size
@@ -110,6 +113,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
     ⁇Size' ⁇℧ = S1
     ⁇Size' ⁇⁇ = S1
     ⁇Size' ⁇𝟙 = S1
+    ⁇Size' (⁇ℕ n) = GNatSize n
     ⁇Size' (⁇Type x) = S1
     ⁇Size' (⁇Cumul c x) = S1
     ⁇Size' (⁇Π x) = S1
@@ -130,10 +134,6 @@ record CodeSizeF (ℓ : ℕ) : Set  where
     elSize' C𝟘 x = S1
     elSize' C𝟙 x = S1
     elSize' Cℕ x = GNatSize x
-      where
-        GNatSize : GNat → Size
-        GNatSize (GSuc x) = S↑ (GNatSize x)
-        GNatSize x = S1
     elSize' (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
     elSize' {{æ = æ}}  (CΠ dom cod) f = S↑ (SLim dom λ x → elSize' (cod _) (f (exact x))) -- S↑ (SLim dom (λ x → elSize' {{æ = æ}} (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
     elSize' {{æ = æ}} (CΣ dom cod) (x , y) = S↑ (smax (elSize' {{æ = æ}} dom x) (elSize' {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize' dom (exact x)) (elSize' (cod (approx x)) y))

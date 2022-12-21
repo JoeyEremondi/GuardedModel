@@ -495,7 +495,7 @@ open CIMod public
 ⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
 
 ⁇GermTy : ∀ {{_ : Æ}} ℓ (tyCtor : CName) → Set
-⁇GermTy ℓ tyCtor = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇Rec {ℓ = ℓ})) (just tyCtor)
+⁇GermTy ℓ tyCtor = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) (just tyCtor)
 
 ⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇Rec {ℓ = ℓ})) nothing -- F⁇ {ℓ} (A.next (⁇Rec {ℓ = ℓ}))
 ⁇lob {ℓ} = congPath (λ x → ⁇Germ ℓ (SmallerCodeAt ℓ) x nothing) (A.pfix (CodeModule.▹⁇Rec (CodeModuleAt ℓ))) --congPath F⁇ (A.pfix _)
@@ -510,26 +510,6 @@ fold⁇ : ∀ {{_ : Æ}} {ℓ} → ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇R
 fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
--- ℂ-1>0 : ∀ {ℓ} → ℂ-1 {ℓ = ℓ} → 0< ℓ
--- ℂ-1>0 {suc ℓ} x = suc<
-
--- -- The least precise argument to a guarded function from ⁇ to ⁇
--- -- Used for checking if functions are errors
--- -- topArg : ∀ {ℓ} → ▸ map▹ ⁇Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
--- -- topArg {ℓ} = Dep▸ ℧Self (dfix (λ args → selfRec (F⁇ {ℓ} args) ⁇℧))
-
-
-
--- -- Relation for whether a value is an error in type ⁇
--- -- data ℧≡ {ℓ} : ⁇Ty ℓ → Set where
--- --          ℧℧ : ℧≡ ⁇℧
--- --          ⁇Π℧ : ∀ {f} → ⁇℧ ≡ f topArg  → ℧≡ (⁇Π f)
--- --          -- ⁇Π℧ : ∀ {f : ▸ map▹ ⁇Self Self → F⁇ Self  } → ⁇℧ ≡ f (λ tic → ℧Self (Self tic))  → ℧≡ (⁇Π f)
--- --          ⁇Type℧ : {{_ : 0< ℓ}} → ℧≡ (⁇Type ℧-1)
--- --          ⁇Σ℧ : ℧≡ (⁇Σ (⁇℧ , ⁇℧))
--- --          ⁇≡℧ : ℧≡ (⁇≡ ⁇℧)
--- --          ⁇μ℧ : ∀ (tyCtor : CName) (ctor : DName tyCtor)
--- --            → ℧≡ (⁇μ tyCtor ctor μ℧)
 
 
 -- Every type has an error element
@@ -550,9 +530,6 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
 ℧Approx = ℧ {{Approx}}
-
--- ℧Approxed : ∀ {{æ : Æ}} {ℓ} (c : ℂ ℓ) → El c
--- ℧Approxed c = withApprox λ æ → ℧ {{æ = æ}} c
 
 
 DCtors : (ℓ : ℕ) → CName → Set
@@ -591,8 +568,3 @@ apply⁇Fun {ℓ = ℓ} f x =
     foo : ⁇Ty ℓ
     foo = ⁇Π f
   in f (transport (symPath ⁇Wrap≡) (A.next x))
-
-
--- apply▸ : ∀ {{_ : Æ}} {ℓ} (f : (A.▸ (A.dfix (F⁇ {ℓ = ℓ}))) → ⁇Ty ℓ) → (x : A.▹ (⁇Ty ℓ)) →  ⁇Ty ℓ
--- apply▸ f x = f (transport (cong A.▹_ (⁇lob ∙ cong F⁇ (sym ▹⁇≡)) ∙ sym A.hollowEq ) x)
-

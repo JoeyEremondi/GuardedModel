@@ -33,6 +33,7 @@ unkHead  (⁇Σ x) = HStatic HΣ
 unkHead  (⁇≡ x) = HStatic H≅
 unkHead  (⁇μ tyCtor _) = HStatic (HCtor tyCtor)
 unkHead  (⁇Cumul c x) = HStatic HCumul
+unkHead  (⁇ℕ n) = HStatic Hℕ
 
 -- valueHeadType : TyHead → Set
 -- data ValHead : (h : GHead) → Set

@@ -28,6 +28,7 @@ open import Code
 open import Head
 open import Util
 open import Ord
+open import GNat
 -- open Ord ℂ El ℧ C𝟙 refl
 
 
@@ -41,9 +42,10 @@ germ H≅ ℓ = dyn ≅ dyn
     dyn = ⁇⁇
 germ H𝟙 _ = Bool
 germ H𝟘 _ = Unit
+germ Hℕ _ = GNat
 germ HType zero = Unit
 germ HType (suc ℓ) = ℂ ℓ
-germ (HCtor tyCtor) ℓ  = ? -- DataGerm ℓ tyCtor
+germ (HCtor tyCtor) ℓ  = ⁇GermTy ℓ tyCtor -- DataGerm ℓ tyCtor
 germ HCumul ℕ.zero = ⊥
 germ HCumul (ℕ.suc ℓ) = Σ[ c ∈ ℂ ℓ ]( El c )
 
@@ -51,22 +53,25 @@ germTo⁇ : ∀ {{_ : Æ}} {h ℓ} → (germ h ℓ) → LÆ (⁇Ty ℓ)
 germFrom⁇ : ∀ {{_ : Æ}} {ℓ h} → (x : ⁇Ty ℓ) → (unkHead x ≡p HStatic h) → (germ h ℓ)
 
 
-germTo⁇ {h = HΠ} f = ⦇ ⁇Π (liftFun (λ ▹x → θL ⁇⁇ (map▹ Now (transport hollowEq ▹x)))) ⦈
+germTo⁇ {h = HΠ} f =  ⦇ ⁇Π (liftFun (λ ▹x → θL ⁇⁇ (map▹ Now (transport ⁇Wrap≡ ▹x)))) ⦈
 germTo⁇ {h = HΣ} (x , y) = pure (⁇Σ (x , y))
 germTo⁇ {h = H≅} x = pure (⁇≡ x)
 germTo⁇ {h = H𝟙} false = pure ⁇℧
 germTo⁇ {h = H𝟙} true = pure ⁇𝟙
 germTo⁇ {h = H𝟘} tt = pure ⁇℧
+germTo⁇ {h = Hℕ} n = pure (⁇ℕ n)
 germTo⁇ {h = HType} {zero} x = pure ⁇℧
 germTo⁇ {h = HType} {suc ℓ} x = pure (⁇Type x)
+--TODO allow ⁇ as arg to ⁇μ
 germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
 germTo⁇ {h = HCumul} {ℓ = ℕ.suc ℓ} (c , x) = pure (⁇Cumul c x)
 
 
-germFrom⁇ {h = HΠ} (⁇Π f) eq x = f (transport⁻ hollowEq (next x))
-germFrom⁇ {h = H𝟙} ⁇𝟙 eq = true
+germFrom⁇ {h = HΠ} (⁇Π f) pf x = f (transport (sym ⁇Wrap≡) (next x))
+germFrom⁇ {h = H𝟙} ⁇𝟙 eqpf = true
+germFrom⁇ {h = Hℕ} (⁇ℕ n) eqpf = n
 germFrom⁇ {ℕ.suc ℓ} {h = .HType} (⁇Type x) reflp =  x
-germFrom⁇ {h = HΣ} (⁇Σ (x , y)) eq =  (x , y)
-germFrom⁇ {h = H≅} (⁇≡ x) eq =  x
-germFrom⁇ {ℓ} {h = HCtor x₁} (⁇μ tyCtor x) reflp = x --TODO handle err specially?
+germFrom⁇ {h = HΣ} (⁇Σ (x , y)) eqpf =  (x , y)
+germFrom⁇ {h = H≅} (⁇≡ x) eqpf =  x
+germFrom⁇ {ℓ} {h = HCtor x₁} (⁇μ tyCtor x) reflp =  x --TODO handle err properly
 germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (⁇Cumul c x) reflp = c , x
