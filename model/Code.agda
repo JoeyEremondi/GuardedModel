@@ -489,13 +489,13 @@ open CIMod public
 ℂ : ℕ → Set
 ℂ ℓ = CodeModule.ℂ (CodeModuleAt ℓ)
 
-⁇Ty : ∀ {{_ : Æ}} ℓ → Set
+⁇Ty : ∀ {{æ : Æ}} ℓ → Set
 ⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
 
-⁇GermTy : ∀ {{_ : Æ}} ℓ (tyCtor : CName) → Set
+⁇GermTy : ∀ {{æ : Æ}} ℓ (tyCtor : CName) → Set
 ⁇GermTy ℓ tyCtor = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) (just tyCtor)
 
-⁇lob : ∀ {{ _ : Æ }} {ℓ} → ⁇Ty ℓ ≡ ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇Rec {ℓ = ℓ})) nothing -- F⁇ {ℓ} (A.next (⁇Rec {ℓ = ℓ}))
+⁇lob : ∀ {{ æ : Æ }} {ℓ} → ⁇Ty ℓ ≡ ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇Rec {ℓ = ℓ})) nothing -- F⁇ {ℓ} (A.next (⁇Rec {ℓ = ℓ}))
 ⁇lob {ℓ} = congPath (λ x → ⁇Germ ℓ (SmallerCodeAt ℓ) x nothing) (A.pfix (CodeModule.▹⁇Rec (CodeModuleAt ℓ))) --congPath F⁇ (A.pfix _)
 
 

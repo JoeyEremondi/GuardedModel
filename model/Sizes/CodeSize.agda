@@ -45,6 +45,7 @@ open import Code
 
 open import Sizes.MultiMax
 
+open import Sizes.NatLim
 open import InductiveCodes
 open import Head
 open import Util
@@ -55,7 +56,6 @@ module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductiv
     (smallerCodeSize : {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ ) → Size)
     -- (smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size)
   where
-
 
 
 
