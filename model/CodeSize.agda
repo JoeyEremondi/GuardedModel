@@ -64,48 +64,6 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
   -- germSize {ℓ} tyCtor = wInd (λ _ → LargeSize) (germDescFSize tyCtor (GArg (DName tyCtor) (dataGerm ℓ tyCtor (▹⁇ ℓ)))) LO1 LO1
 
-  CFin : ∀ (n : ℕ) → ℂ 0
-  CFin ℕ.zero = C℧
-  CFin (ℕ.suc n) = CΣ C𝟙 (λ {℧𝟙  → C℧ ; Gtt → CFin n})
-
-
-  fromCFin : ∀ {n} → El {{æ = Approx}} (CFin n) → Fin (ℕ.suc n)
-  fromCFin {ℕ.zero} _ = Fin.zero
-  fromCFin {ℕ.suc n} (℧𝟙 , rest) = Fin.zero
-  fromCFin {ℕ.suc n} (Gtt , rest) = Fin.suc (fromCFin rest)
-
-
-  toCFin : ∀ {n} → Fin (ℕ.suc n) → El {{æ = Approx}} (CFin n)
-  toCFin {n = ℕ.zero} x = ℧𝟘
-  toCFin {n = ℕ.suc n} Fin.zero = ℧𝟙 , ℧𝟘
-  toCFin {n = ℕ.suc n} (Fin.suc x) = Gtt , toCFin x
-
-  fromToCFin : ∀ {n} (x : Fin (ℕ.suc n)) → fromCFin (toCFin x) ≡p x
-  fromToCFin {ℕ.zero} Fin.zero = reflp
-  fromToCFin {ℕ.suc n} Fin.zero = reflp
-  fromToCFin {ℕ.suc n} (Fin.suc x) rewrite fromToCFin x = reflp
-
-
-
-
-  FinLim : ∀ {n} → (Fin n → Size) → Size
-  FinLim {ℕ.zero} f = SZ
-  FinLim {ℕ.suc n} f = SLim (CFin n) (λ x → f (fromCFin x))
-
-
-  DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Size) → Size
-  DLim tyCtor f = FinLim f
-
-  FinLim-cocone : ∀ {n} → (f : ( Fin n) → Size) → (d : Fin n) → f d ≤ₛ FinLim f
-  FinLim-cocone {ℕ.suc n} f d = pSubst (λ x → f d ≤ₛ f x) (pSym (fromToCFin d)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone (toCFin d)
-
-  extFinLim : ∀ {n} → (f1 f2 : (d : Fin n) → Size) → (∀ d → f1 d ≤ₛ f2 d) → (FinLim f1) ≤ₛ (FinLim f2)
-  extFinLim {n = ℕ.zero} f1 f2 lt = ≤ₛ-Z
-  extFinLim  {ℕ.suc n} f1 f2 lt = ≤ₛ-extLim ⦃ æ = Approx ⦄ (λ k → lt (fromCFin k))
-
-  smax-FinLim2 : ∀ {n} → (f1 f2 : (d : Fin n) → Size) →  FinLim (λ d1 → FinLim (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (FinLim f1) (FinLim f2)
-  smax-FinLim2 {ℕ.zero} f1 f2 = ≤ₛ-Z
-  smax-FinLim2 {ℕ.suc n} f1 f2 = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
 
 
 
@@ -116,6 +74,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   codeSize C℧ = S1
   codeSize C𝟘 = S1
   codeSize C𝟙 = S1
+  codeSize Cℕ = S1
   codeSize CType = S1
   codeSize (CΠ dom cod) =
     S↑ (smax
@@ -132,58 +91,73 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
 
 
+  record ElSizeFuel (fuel : ℕ) : Type1 where
+    field
+      elSizeConsumeFuel : ∀ {{æ : Æ}} → (c : ℂ ℓ) → El c → Size
+
+    -- germUnkSize : (x : WUnk {{æ = Approx}} ℓ) → Size
+    ⁇Size : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
+    GermSize : ∀ {{ æ : Æ}} {tyCtor : CName} → ⁇Germ ℓ _ _ (just tyCtor) → Size
+    elSize : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
+    -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
+    CμSize : ∀  {{æ : Æ}}  {tyCtor : CName} (D : DCtors ℓ tyCtor) →  ℂμ ℓ tyCtor D → Size
+    CElSize : ∀ {{æ : Æ}} {tyCtor : CName} (D : DCtors ℓ tyCtor )  → (E : DCtors ℓ tyCtor)
+      →  (cf : ℂFunctor ℓ tyCtor D (ℂμ ℓ tyCtor E))
+      → Size
 
 
-  -- germUnkSize : (x : WUnk {{æ = Approx}} ℓ) → Size
-  ⁇Size : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
-  elSize : ∀ {{æ : Æ}} {c : ℂ ℓ} → CodeSizer c → El c → Size
-  -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
-  CμSize : ∀  {{æ : Æ}}  {tyCtor : CName} (D : DCtors ℓ tyCtor) → ((d : DName tyCtor) → CtorSizer (D d))  → ℂμ ℓ tyCtor D → Size
-  CElSize : ∀ {{æ : Æ}} {tyCtor : CName} (D : DCtors ℓ tyCtor )  → (E : DCtors ℓ tyCtor)  → ((d : DName tyCtor) → CtorSizer (E d))
-    →  (cf : ℂFunctor ℓ tyCtor D (ℂμ ℓ tyCtor E))
-    → ( CtorSizer (D (ℂFunctor.d cf)))
-    → Size
+    -- germUnkSize (Wsup (FC (HΠ , args) f)) = S↑ (germUnkSize (f tt*))
+    -- germUnkSize (Wsup (FC (HΣ , args) resp)) = S↑ (smax (germUnkSize (resp true)) (germUnkSize (resp false)))
+    -- germUnkSize (Wsup (FC (H≅ , args) resp)) = S↑ (germUnkSize (resp tt))
+    -- germUnkSize (Wsup (FC (H𝟙 , args) resp)) = S1
+    -- germUnkSize (Wsup (FC (HType , args) resp)) =  S↑ (smallerCodeSize ⦃ ℂ-1>0 args ⦄ args) -- S↑ (smallerCodeSize ⦃ ? ⦄ arg)
+    -- germUnkSize (Wsup (FC (HCumul , (c , x)) resp)) = S↑ (smallerElSize {{æ = Approx}} {{inst = ℂ-1>0 c}} c x)
+    -- --TODO fix this one
+    -- germUnkSize (Wsup (FC (HCtor tyCtor , args) resp)) = S1 --S↑ (CμSize _ (posDataGermVal ℓ tyCtor (resp tt)))
+    -- germUnkSize W⁇ = S1
+    -- germUnkSize W℧ = S1
 
+    --TODO
+    ⁇Size ⁇℧ = S1
+    ⁇Size ⁇⁇ = S1
+    ⁇Size ⁇𝟙 = S1
+    ⁇Size (⁇Type x) = S1
+    ⁇Size (⁇Cumul c x) = S1
+    ⁇Size (⁇Π x) = S1
+    ⁇Size (⁇Σ x) = S1
+    ⁇Size (⁇≡ x) = S1
+    ⁇Size (⁇μ tyCtor x) = S↑ (GermSize x)
 
-  -- germUnkSize (Wsup (FC (HΠ , args) f)) = S↑ (germUnkSize (f tt*))
-  -- germUnkSize (Wsup (FC (HΣ , args) resp)) = S↑ (smax (germUnkSize (resp true)) (germUnkSize (resp false)))
-  -- germUnkSize (Wsup (FC (H≅ , args) resp)) = S↑ (germUnkSize (resp tt))
-  -- germUnkSize (Wsup (FC (H𝟙 , args) resp)) = S1
-  -- germUnkSize (Wsup (FC (HType , args) resp)) =  S↑ (smallerCodeSize ⦃ ℂ-1>0 args ⦄ args) -- S↑ (smallerCodeSize ⦃ ? ⦄ arg)
-  -- germUnkSize (Wsup (FC (HCumul , (c , x)) resp)) = S↑ (smallerElSize {{æ = Approx}} {{inst = ℂ-1>0 c}} c x)
-  -- --TODO fix this one
-  -- germUnkSize (Wsup (FC (HCtor tyCtor , args) resp)) = S1 --S↑ (CμSize _ (posDataGermVal ℓ tyCtor (resp tt)))
-  -- germUnkSize W⁇ = S1
-  -- germUnkSize W℧ = S1
+    GermSize DataGerms.⁇℧ = S1
+    GermSize DataGerms.⁇⁇ = S1
+    GermSize {tyCtor = tyCtor} (DataGerms.Wsup d com germFO germHO germHOUnk)
+      = S↑ (smax* (elSizeConsumeFuel (germCommandCode (dataGermIsCode ℓ tyCtor d )) (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d) ) com)
+                  ∷ FinLim (λ n → GermSize (germFO n))
+                  ∷ SLim (germHOCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → GermSize (germHO (Iso.inv (germHOIso (dataGermIsCode ℓ tyCtor d) _) (exact r))))
+                  ∷ SLim (germHOUnkCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → ⁇Size (germHOUnk (Iso.inv (germHOUnkIso (dataGermIsCode ℓ tyCtor d) _) (exact r)))) ∷ []))
 
-  --TODO
-  ⁇Size ⁇℧ = S1
-  ⁇Size ⁇⁇ = S1
-  ⁇Size ⁇𝟙 = S1
-  ⁇Size (⁇Type x) = S1
-  ⁇Size (⁇Cumul c x) = S1
-  ⁇Size (⁇Π x) = S1
-  ⁇Size (⁇Σ x) = S1
-  ⁇Size (⁇≡ x) = S1
-  ⁇Size (⁇μ tyCtor x) = S1 --TODO -- {!!} --S↑ (CμSize _ (posDataGermVal ℓ tyCtor x))
+    elSize {{æ = æ}} C⁇ x = ⁇Size {{æ = æ}} x --germUnkSize (⁇ToW {{æ = Approx}} (approx {c = C⁇ {ℓ = ℓ}} x))
+    elSize C℧ x = S1
+    elSize C𝟘 x = S1
+    elSize C𝟙 x = S1
+    elSize Cℕ x = GNatSize x
+      where
+        GNatSize : GNat → Size
+        GNatSize (GSuc x) = S↑ (GNatSize x)
+        GNatSize x = S1
+    elSize (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
+    elSize {{æ = æ}}  (CΠ dom cod) f = S↑ (SLim dom λ x → elSize (cod _) (f (exact x))) -- S↑ (SLim dom (λ x → elSize {{æ = æ}} (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
+    elSize {{æ = æ}} (CΣ dom cod) (x , y) = S↑ (smax (elSize {{æ = æ}} dom x) (elSize {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
+    elSize (C≡ c x y ) (w ⊢ _ ≅ _) = S↑ (elSize {{Approx}} c w)
+    elSize (Cμ tyCtor cI D i) x = CμSize D (toℂμ ℓ tyCtor D x)
+    -- S↑ (smax* (elSize (coms d) com ∷ (FinLim λ n → elSize {!!} (res (inl n))) ∷ (SLim (ℂCommand (D d)) λ com → SLim (ℂHOResponse (D d) com) λ x → elSize (Cμ coms ress) (res (inr (exact _ x)))) ∷ [])) -- S↑ (CμSize D ( Iso.inv CμWiso (approx {ℓ = ℓ} {c = Cμ tyCtor cI D i} x) ))
+    elSize (CCumul {{inst = inst}} c) x = smallerElSize _ x --elSize c x
 
-  elSize {{æ = æ}} (CS⁇ codes pf) x = ⁇Size {{æ = æ}} x --germUnkSize (⁇ToW {{æ = Approx}} (approx {c = CS⁇ {ℓ = ℓ}} x))
-  elSize CS℧ x = S1
-  elSize CS𝟘 x = S1
-  elSize CS𝟙 x = S1
-  elSize (CSType {{inst = inst}}) x = S↑ (smallerCodeSize x)
-  elSize {{æ = æ}} {CΠ dom cod} (CSΠ sdom scod) f = S↑ (SLim dom (λ x → elSize {{æ = æ}} (scod x) (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
-  elSize {{æ = æ}} (CSΣ dom cod) (x , y) = S↑ (smax (elSize {{æ = æ}} dom x) (elSize {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
-  elSize (CS≡ c) (x ⊢ x₁ ≅ y) = S↑ (elSize {{Approx}} c x)
-  elSize {c = Cμ tyCtor cI D i} (CSμ sizer) x = CμSize D sizer (toℂμ ℓ tyCtor D x)
-  -- S↑ (smax* (elSize (coms d) com ∷ (FinLim λ n → elSize {!!} (res (inl n))) ∷ (SLim (ℂCommand (D d)) λ com → SLim (ℂHOResponse (D d) com) λ x → elSize (CSμ coms ress) (res (inr (exact _ x)))) ∷ [])) -- S↑ (CSμSize D ( Iso.inv CSμWiso (approx {ℓ = ℓ} {c = CSμ tyCtor cI D i} x) ))
-  elSize (CSCumul {{inst = inst}}) x = smallerElSize _ x --elSize c x
+    CμSize D  (ℂinit x) = S↑ (CElSize D D x) -- S↑ (CElSize (D (ℂFunctor.d x)) D x)
+    CμSize D μ⁇ = S1
+    CμSize D μ℧ = S1
 
-  CμSize D  sizers (ℂinit x) = S↑ (CElSize D D sizers x (sizers (ℂFunctor.d x))) -- S↑ (CElSize (D (ℂFunctor.d x)) D x)
-  CμSize D _ μ⁇ = S1
-  CμSize D _ μ℧ = S1
-
-  CElSize D E Esizer (ℂEl d com rFO rHO) (CElS cs rs) = S↑ (smax* (elSize cs com ∷ (FinLim λ n → CμSize E Esizer (rFO n)) ∷ (SLim (ℂHOResponse (D d) (approx com)) λ r → CμSize E Esizer (rHO (exact r))) ∷ []))
+    CElSize D E (ℂEl d com rFO rHO) = S↑ (smax* (elSize _ com ∷ (FinLim λ n → CμSize E (rFO n)) ∷ (SLim (ℂHOResponse (D d) (approx com)) λ r → CμSize E (rHO (exact r))) ∷ []))
 
   -- CElSize  .CEnd E  (ElEnd) = S1
   -- CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
@@ -268,14 +242,14 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 -- --       d = pSubst Fin (pSym deq) (fromCFin x)
 -- --     in germDescSize (germForCtor ℓ tyCtor d) (dataGermIsCode ℓ tyCtor d) tt tt
 
--- -- germFCSize :  ∀ {{æ : Æ}} {ℓ} {B+ B- sig} {tyCtor : CName}
+-- -- germFCize :  ∀ {{æ : Æ}} {ℓ} {B+ B- sig} {tyCtor : CName}
 -- --       → {D : GermCtor B+ B- sig}
 -- --       → {b+ : B+}
 -- --       → {b- : B- b+}
 -- --       → (isCode : DataGermIsCode ℓ D)
 -- --       → FCGerm ℓ tyCtor D b+ b-
 -- --       → Size
--- -- germFCSize {tyCtor = tyCtor} {D} {b+} {b- } isCode x = germFIndSize tyCtor D isCode b+ b- x λ r → germIndSize tyCtor (FContainer.responseNow x r)
+-- -- germFCize {tyCtor = tyCtor} {D} {b+} {b- } isCode x = germFIndSize tyCtor D isCode b+ b- x λ r → germIndSize tyCtor (FContainer.responseNow x r)
 
 
 --   -- Match on the constructor of an element of the data germ
@@ -285,7 +259,7 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 -- --         (W (germContainer ℓ tyCtor (▹⁇ ℓ)) (⁇Ty ℓ)) (⁇Ty ℓ) tt)
 -- --       → Σ[ d ∈ DName tyCtor ]
 -- --         Σ[ x ∈ FCGerm ℓ tyCtor (germForCtor ℓ tyCtor d) tt tt ]
--- --         germFCSize (dataGermIsCode ℓ tyCtor d) x <ₛ germIndSize {ℓ = ℓ} tyCtor (Wsup dg)
+-- --         germFCize (dataGermIsCode ℓ tyCtor d) x <ₛ germIndSize {ℓ = ℓ} tyCtor (Wsup dg)
 -- -- germMatch (FC (d , com) rn ru) =
 -- --     d
 -- --     , FC com rn ru

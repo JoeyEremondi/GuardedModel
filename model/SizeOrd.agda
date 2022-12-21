@@ -9,6 +9,8 @@ open import DecPEq
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
+open import Cubical.Data.Nat
+open import Cubical.Data.FinData
 -- open import Cubical.Data.Equality
 open import Cubical.Data.Sigma
 open import UnkGerm
@@ -24,7 +26,7 @@ open import Cubical.Foundations.Transport
 
 module SizeOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 
-open import Ord
+open import RawOrd
 open import Code
 
 
@@ -220,3 +222,52 @@ abstract
       helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x1 → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x2 → WFRec _<ₛPair_ (Acc _<ₛPair_) (x1 , x2)
       helper (acc rec₁) acc₂ (y1 , y2) (<ₛPairL lt) = acc (helper (rec₁ y1 lt ) (sizeWFProp y2))
       helper acc₁ (acc rec₂) (y1 , y2) (<ₛPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
+
+
+
+ℕLim : (ℕ → Size) → Size
+ℕLim f = SLim (Cℕ {ℓ = 0}) (λ n → f (CℕtoNat n))
+
+
+CFin : ∀ (n : ℕ) → ℂ 0
+CFin ℕ.zero = C℧
+CFin (ℕ.suc n) = CΣ C𝟙 (λ {℧𝟙  → C℧ ; Gtt → CFin n})
+
+
+fromCFin : ∀ {n} → El {{æ = Approx}} (CFin n) → Fin (ℕ.suc n)
+fromCFin {ℕ.zero} _ = Fin.zero
+fromCFin {ℕ.suc n} (℧𝟙 , rest) = Fin.zero
+fromCFin {ℕ.suc n} (Gtt , rest) = Fin.suc (fromCFin rest)
+
+
+toCFin : ∀ {n} → Fin (ℕ.suc n) → El {{æ = Approx}} (CFin n)
+toCFin {n = ℕ.zero} x = ℧𝟘
+toCFin {n = ℕ.suc n} Fin.zero = ℧𝟙 , ℧𝟘
+toCFin {n = ℕ.suc n} (Fin.suc x) = Gtt , toCFin x
+
+fromToCFin : ∀ {n} (x : Fin (ℕ.suc n)) → fromCFin (toCFin x) ≡p x
+fromToCFin {ℕ.zero} Fin.zero = reflp
+fromToCFin {ℕ.suc n} Fin.zero = reflp
+fromToCFin {ℕ.suc n} (Fin.suc x) rewrite fromToCFin x = reflp
+
+
+
+
+FinLim : ∀ {n} → (Fin n → Size) → Size
+FinLim {ℕ.zero} f = SZ
+FinLim {ℕ.suc n} f = SLim (CFin n) (λ x → f (fromCFin x))
+
+
+DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Size) → Size
+DLim tyCtor f = FinLim f
+
+FinLim-cocone : ∀ {n} → (f : ( Fin n) → Size) → (d : Fin n) → f d ≤ₛ FinLim f
+FinLim-cocone {ℕ.suc n} f d = pSubst (λ x → f d ≤ₛ f x) (pSym (fromToCFin d)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone (toCFin d)
+
+extFinLim : ∀ {n} → (f1 f2 : (d : Fin n) → Size) → (∀ d → f1 d ≤ₛ f2 d) → (FinLim f1) ≤ₛ (FinLim f2)
+extFinLim {n = ℕ.zero} f1 f2 lt = ≤ₛ-Z
+extFinLim  {ℕ.suc n} f1 f2 lt = ≤ₛ-extLim ⦃ æ = Approx ⦄ (λ k → lt (fromCFin k))
+
+smax-FinLim2 : ∀ {n} → (f1 f2 : (d : Fin n) → Size) →  FinLim (λ d1 → FinLim (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (FinLim f1) (FinLim f2)
+smax-FinLim2 {ℕ.zero} f1 f2 = ≤ₛ-Z
+smax-FinLim2 {ℕ.suc n} f1 f2 = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))

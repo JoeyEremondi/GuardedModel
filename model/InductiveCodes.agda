@@ -48,6 +48,8 @@ record GermCtorIsCode {{æ : Æ}} (ℓ : ℕ) (ctor : GermCtor) : Type1 where
     germHOUnkCode : ApproxEl germCommandCode → ℂ ℓ
     germHOUnkIso : ∀ com → Iso (GermHOUnkResponse ctor com) (El (germHOUnkCode (approx (Iso.fun germCommandIso com))))
 
+open GermCtorIsCode public
+
 -- Inductive representation of W-types, again useful for convincing Agda things terminate
 record ℂFunctor {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) (X : Type) :  Type where
   inductive
@@ -110,44 +112,46 @@ record CodesForInductives : Set2 where
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : DataGermIsCode
 
-  -- Inductive type for codes that includes the codes for germs as fields
-  -- This is awkward, but needed to convince Agda that our size calculation halts
-  data CodeSizer {ℓ} : ℂ ℓ → Type1
-  data CtorSizer {ℓ} : (ℂCtor {ℓ = ℓ}) → Type1
-  data CodeSizer {ℓ} where
-    -- We need to
-    CS⁇ : (dgIsCode : ∀ {{æ : Æ}} → _) → (∀ {{æ : Æ}} → dgIsCode ≡c dataGermIsCode) → CodeSizer C⁇
-    CS℧ : CodeSizer C℧
-    CS𝟘 : CodeSizer C𝟘
-    CS𝟙 : CodeSizer C𝟙
-    CSType : ∀ {{inst : 0< ℓ}} → CodeSizer CType
-    CSCumul : ∀ {{inst : 0< ℓ}} {c} → CodeSizer (CCumul c)
-    CSΠ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΠ dom cod)
-    CSΣ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΣ dom cod)
-    CS≡ : ∀ {c x y} → CodeSizer c → CodeSizer (C≡ c x y)
-    CSμ : ∀ {tyCtor cI D i}
-      → (∀ d → CtorSizer (D d))
-      → CodeSizer (Cμ tyCtor cI D i)
-  data CtorSizer {ℓ} where
-    CElS :
-      ∀ {c r}
-      → CodeSizer c
-      → (∀ x → CodeSizer (r x))
-      → CtorSizer (record { ℂCommand = c ; ℂHOResponse = r })
+  -- -- Inductive type for codes that includes the codes for germs as fields
+  -- -- This is awkward, but needed to convince Agda that our size calculation halts
+  -- data CodeSizer {ℓ} : ℂ ℓ → Type1
+  -- data CtorSizer {ℓ} : (ℂCtor {ℓ = ℓ}) → Type1
+  -- data CodeSizer {ℓ} where
+  --   -- We need to
+  --   CS⁇ : (dgIsCode : ∀ {{æ : Æ}} → _) → (∀ {{æ : Æ}} → dgIsCode ≡c dataGermIsCode) → CodeSizer C⁇
+  --   CS℧ : CodeSizer C℧
+  --   CS𝟘 : CodeSizer C𝟘
+  --   CS𝟙 : CodeSizer C𝟙
+  --   CSℕ : CodeSizer Cℕ
+  --   CSType : ∀ {{inst : 0< ℓ}} → CodeSizer CType
+  --   CSCumul : ∀ {{inst : 0< ℓ}} {c} → CodeSizer (CCumul c)
+  --   CSΠ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΠ dom cod)
+  --   CSΣ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΣ dom cod)
+  --   CS≡ : ∀ {c x y} → CodeSizer c → CodeSizer (C≡ c x y)
+  --   CSμ : ∀ {tyCtor cI D i}
+  --     → (∀ d → CtorSizer (D d))
+  --     → CodeSizer (Cμ tyCtor cI D i)
+  -- data CtorSizer {ℓ} where
+  --   CElS :
+  --     ∀ {c r}
+  --     → CodeSizer c
+  --     → (∀ x → CodeSizer (r x))
+  --     → CtorSizer (record { ℂCommand = c ; ℂHOResponse = r })
 
-  codeSizer : ∀ {ℓ} (c : ℂ ℓ ) → CodeSizer c
-  ctorSizer : ∀ {ℓ} (c : ℂCtor {ℓ = ℓ}) → CtorSizer c
-  codeSizer C⁇ = CS⁇ _ reflc
-  codeSizer C℧ = CS℧
-  codeSizer C𝟘 = CS𝟘
-  codeSizer C𝟙 = CS𝟙
-  codeSizer CType = CSType
-  codeSizer (CCumul x) = CSCumul
-  codeSizer (CΠ c cod) = CSΠ (codeSizer c) (λ x → codeSizer _)
-  codeSizer (CΣ c cod) = CSΣ (codeSizer c) (λ x → codeSizer _)
-  codeSizer (C≡ c x y) = CS≡ (codeSizer _)
-  codeSizer (Cμ tyCtor c D x) = CSμ (λ d → ctorSizer _)
-  ctorSizer D = CElS (codeSizer _) (λ x → codeSizer _)
+  -- codeSizer : ∀ {ℓ} (c : ℂ ℓ ) → CodeSizer c
+  -- ctorSizer : ∀ {ℓ} (c : ℂCtor {ℓ = ℓ}) → CtorSizer c
+  -- codeSizer C⁇ = CS⁇ _ reflc
+  -- codeSizer C℧ = CS℧
+  -- codeSizer C𝟘 = CS𝟘
+  -- codeSizer C𝟙 = CS𝟙
+  -- codeSizer Cℕ = CSℕ
+  -- codeSizer CType = CSType
+  -- codeSizer (CCumul x) = CSCumul
+  -- codeSizer (CΠ c cod) = CSΠ (codeSizer c) (λ x → codeSizer _)
+  -- codeSizer (CΣ c cod) = CSΣ (codeSizer c) (λ x → codeSizer _)
+  -- codeSizer (C≡ c x y) = CS≡ (codeSizer _)
+  -- codeSizer (Cμ tyCtor c D x) = CSμ (λ d → ctorSizer _)
+  -- ctorSizer D = CElS (codeSizer _) (λ x → codeSizer _)
 
   -- Every Inductive type can be converted to a ℂμ
   toℂμ : ∀ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) →

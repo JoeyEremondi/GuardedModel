@@ -30,7 +30,7 @@ open import Cubical.Foundations.Transport
 --TODO: don't make ℓ module param
 -- module Ord (ℂ : ℕ → Set) (El : ∀ {ℓ} → ℂ ℓ → Set) (℧ : ∀ {ℓ} → (c : ℂ ℓ ) → El c)
 --   (C𝔹 : ∀ {ℓ} → ℂ ℓ) (C𝔹Eq : El C𝔹 ≡ Bool) where
-module Ord {{_ : DataTypes}} {{_ : DataGerms}} where
+module RawOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Code
 C𝔹 : ℂ 0
 C𝔹 = C𝟙
@@ -44,34 +44,6 @@ private
     approxÆ = Approx
 
 
--- C𝔹Eq : El (C𝔹 ) ≡ Bool
--- C𝔹Eq = refl
-
-ChurchNatC : ℂ 2
-ChurchNatC = CΠ CType (λ a → (CCumul a C→ CCumul a) C→ (CCumul a C→ CCumul a))
-
-ChurchNat : Set
-ChurchNat = ApproxEl (ChurchNatC)
-
-churchIter : ∀ (c : ℂ 1) → ApproxEl c → (ApproxEl c → ApproxEl c) → ChurchNat → ApproxEl c
-churchIter c z s n = n c s z
-
-ChurchVecC : ChurchNat → ℂ 0
-ChurchVecC n = churchIter CType C℧ (λ c → C℧ C× c) n
-
-CℕtoNat : ApproxEl (Cℕ {ℓ = 0}) → ℕ
-CℕtoNat Nat⁇ = 0
-CℕtoNat Nat℧ = 0
-CℕtoNat GZero = 0
-CℕtoNat (GSuc x) = ℕ.suc (CℕtoNat x)
-
-CℕfromNat : ℕ → ApproxEl (Cℕ {ℓ = 0})
-CℕfromNat ℕ.zero = GZero
-CℕfromNat (ℕ.suc x) = GSuc (CℕfromNat x)
-
-Cℕembed : ∀  x → CℕtoNat  (CℕfromNat x) ≡ x
-Cℕembed ℕ.zero = reflc
-Cℕembed (ℕ.suc x) = congPath ℕ.suc (Cℕembed x)
 
 data Ord : Set where
   OZ : Ord
