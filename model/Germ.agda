@@ -28,7 +28,7 @@ open import Code
 open import Head
 open import Util
 open import Ord
-open import GNat
+open import GTypes
 -- open Ord ℂ El ℧ C𝟙 refl
 
 

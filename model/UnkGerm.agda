@@ -26,23 +26,17 @@ open import Cubical.Functions.FunExtEquiv using (funExtDep)
 open import GuardedAlgebra
 import GuardedModality as G
 
-open import GNat
+open import GTypes
 
 open import ApproxExact
 open import Util
 module UnkGerm where
 
 
-data G𝟙 : Set where
-  Gtt ℧𝟙 : G𝟙
 
+data 0<  : ℕ → Set where
+  instance suc< : ∀ {ℓ} → 0< (ℕ.suc ℓ)
 
-is-tt : G𝟙 → Bool
-is-tt Gtt = true
-is-tt ℧𝟙 = false
-
-data G𝟘 : Set where
-  ℧𝟘 : G𝟘
 
 
 ISet : Set → Set1
@@ -195,8 +189,8 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       -- Constructors for ⁇ as a type (i.e index is nothing)
       ⁇𝟙 : ⁇Germ ℓ sc Self nothing
       ⁇ℕ : GNat → ⁇Germ ℓ sc Self nothing
-      ⁇Type :  ℂ-1 sc → ⁇Germ ℓ sc Self nothing
-      ⁇Cumul :  (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self nothing
+      ⁇Type : {{inst : 0< ℓ}}  → ℂ-1 sc → ⁇Germ ℓ sc Self nothing
+      ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self nothing
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
       ⁇Π : (▹⁇Ty Self  →  ⁇Germ ℓ sc Self nothing) → ⁇Germ ℓ sc Self nothing

@@ -2,8 +2,22 @@
 open import Cubical.Data.Nat
 open import Cubical.Foundations.Prelude
 open import DecPEq
+open import Cubical.Data.Bool
 
-module GNat where
+module GTypes where
+
+
+data G𝟙 : Set where
+  Gtt ℧𝟙 : G𝟙
+
+
+is-tt : G𝟙 → Bool
+is-tt Gtt = true
+is-tt ℧𝟙 = false
+
+data G𝟘 : Set where
+  ℧𝟘 : G𝟘
+
 
 data GNat : Type where
     Nat⁇ Nat℧ : GNat

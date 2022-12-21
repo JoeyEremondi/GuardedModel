@@ -20,7 +20,7 @@ open import Cubical.HITs.PropositionalTruncation
 open import ApproxExact
 
 open import Cubical.Foundations.Transport
-open import GNat
+open import GTypes
 
 -- Brouwer Tree ordinals
 -- Based on the presentation by Kraus, Forsburg and Xu
@@ -31,7 +31,7 @@ open import GNat
 --TODO: don't make ℓ module param
 -- module Ord (ℂ : ℕ → Set) (El : ∀ {ℓ} → ℂ ℓ → Set) (℧ : ∀ {ℓ} → (c : ℂ ℓ ) → El c)
 --   (C𝔹 : ∀ {ℓ} → ℂ ℓ) (C𝔹Eq : El C𝔹 ≡ Bool) where
-module RawOrd {{_ : DataTypes}} {{_ : DataGerms}} where
+module Sizes.RawOrd {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Code
 C𝔹 : ℂ 0
 C𝔹 = C𝟙

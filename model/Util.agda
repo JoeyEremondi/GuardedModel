@@ -138,6 +138,8 @@ compPathTransport pxz pzy = toPathP (symPath (transportComposite _ _ _) ∙ from
 data Erase {ℓ} (A : Set ℓ) : Prop ℓ where
   erase : A → Erase A
 
+
+
 -- compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
 --   let
 --     cmp = compPathP pxy pyz

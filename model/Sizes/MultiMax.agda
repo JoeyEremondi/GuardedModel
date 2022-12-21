@@ -1,9 +1,9 @@
 
 open import UnkGerm
 open import InductiveCodes
-module SizeOrdMultiMax {{_ : DataTypes}} {{_ : DataGerms}} where
+module Sizes.MultiMax {{_ : DataTypes}} {{_ : DataGerms}} where
 
-open import SizeOrd public
+open import Sizes.Size
 
 open import Cubical.Data.Vec
 open import Cubical.Data.Sigma

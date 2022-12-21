@@ -27,7 +27,7 @@ open import Cubical.Data.Sum
 
 open import ApproxExact
 
-open import GNat
+open import GTypes
 
 import GuardedAlgebra as A
 import GuardedModality as G
@@ -39,8 +39,6 @@ module Code
 
 open import HeadDefs (numTypes)
 
-data 0<  : ℕ → Set where
-  instance suc< : ∀ {ℓ} → 0< (suc ℓ)
 
 data Polarity : Set where
   Pos Neg : Polarity
