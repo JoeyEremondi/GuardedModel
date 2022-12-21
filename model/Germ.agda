@@ -6,7 +6,6 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
@@ -14,8 +13,7 @@ open import Cubical.Data.Empty
 open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
-open import Cubical.Data.Equality
-open import Inductives
+open import UnkGerm
 open import GuardedAlgebra
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
@@ -23,9 +21,8 @@ open import Cubical.Foundations.Prelude
 open import ApproxExact
 open import InductiveCodes
 open import CodeSize
-open import WMuEq
 
-module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}} where
+module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}} where
 
 open import Code
 open import Head
@@ -46,7 +43,7 @@ germ H𝟙 _ = Bool
 germ H𝟘 _ = Unit
 germ HType zero = Unit
 germ HType (suc ℓ) = ℂ ℓ
-germ (HCtor tyCtor) ℓ  = DataGerm ℓ tyCtor
+germ (HCtor tyCtor) ℓ  = ? -- DataGerm ℓ tyCtor
 germ HCumul ℕ.zero = ⊥
 germ HCumul (ℕ.suc ℓ) = Σ[ c ∈ ℂ ℓ ]( El c )
 
@@ -66,10 +63,10 @@ germTo⁇ {h = HCtor tyCtor} {ℓ} x = pure (⁇μ tyCtor x)
 germTo⁇ {h = HCumul} {ℓ = ℕ.suc ℓ} (c , x) = pure (⁇Cumul c x)
 
 
-germFrom⁇ {h = HΠ} (CodeModule.⁇Π f) eq x = f (transport⁻ hollowEq (next x))
-germFrom⁇ {h = H𝟙} CodeModule.⁇𝟙 eq = true
-germFrom⁇ {ℕ.suc ℓ} {h = .HType} (CodeModule.⁇Type x) reflp =  x
-germFrom⁇ {h = HΣ} (CodeModule.⁇Σ (x , y)) eq =  (x , y)
-germFrom⁇ {h = H≅} (CodeModule.⁇≡ x) eq =  x
-germFrom⁇ {ℓ} {h = HCtor x₁} (CodeModule.⁇μ tyCtor x) reflp = x --TODO handle err specially?
-germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (CodeModule.⁇Cumul c x) reflp = c , x
+germFrom⁇ {h = HΠ} (⁇Π f) eq x = f (transport⁻ hollowEq (next x))
+germFrom⁇ {h = H𝟙} ⁇𝟙 eq = true
+germFrom⁇ {ℕ.suc ℓ} {h = .HType} (⁇Type x) reflp =  x
+germFrom⁇ {h = HΣ} (⁇Σ (x , y)) eq =  (x , y)
+germFrom⁇ {h = H≅} (⁇≡ x) eq =  x
+germFrom⁇ {ℓ} {h = HCtor x₁} (⁇μ tyCtor x) reflp = x --TODO handle err specially?
+germFrom⁇ {ℓ = ℕ.suc ℓ} {h = .HCumul} (⁇Cumul c x) reflp = c , x

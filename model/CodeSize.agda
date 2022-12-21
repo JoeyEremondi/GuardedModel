@@ -28,6 +28,7 @@ open import W
 -- open import Cubical.Data.Equality using (ptoc)
 
 open import ApproxExact
+open import GNat
 
 
 -- open import InductiveCodes
@@ -153,9 +154,24 @@ record CodeSizeF (ℓ : ℕ) : Set  where
   elSizeFuel ℕ.zero = record { elSizeConsumeFuel = λ _ _ → SZ }
   elSizeFuel (ℕ.suc n) = record { elSizeConsumeFuel = elSize' (elSizeFuel n)  }
 
+  -- elSizeMonotone : ∀ {{æ : Æ}} {n} (c : ℂ ℓ) (x : El c)  → elSize' (elSizeFuel n) c x ≤ₛ elSize' (elSizeFuel (ℕ.suc n)) c x
+  -- elSizeMonotone CodeModule.C⁇ x = {!!}
+  -- elSizeMonotone CodeModule.C℧ x = ≤ₛ-refl
+  -- elSizeMonotone CodeModule.C𝟘 x = ≤ₛ-refl
+  -- elSizeMonotone CodeModule.C𝟙 x = ≤ₛ-refl
+  -- elSizeMonotone CodeModule.Cℕ x = {!!}
+  -- elSizeMonotone CodeModule.CType x = ≤ₛ-refl
+  -- elSizeMonotone (CodeModule.CCumul x₁) x = ≤ₛ-refl
+  -- elSizeMonotone (CodeModule.CΠ c cod) x = ≤ₛ-sucMono (≤ₛ-extLim {!!})
+  -- elSizeMonotone (CodeModule.CΣ c cod) x = {!!}
+  -- elSizeMonotone (CodeModule.C≡ c x₁ y) x = {!!}
+  -- elSizeMonotone (CodeModule.Cμ tyCtor c D x₁) x = {!!}
+
   -- Finally, we take the limit of the fueled sizes to get the full size
   elSize : {{æ : Æ}} → (c : ℂ ℓ) → El c → Size
   elSize c x = ℕLim (λ n → elSize' (elSizeFuel n) c x)
+
+
   -- CElSize  .CEnd E  (ElEnd) = S1
   -- CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
   -- CElSize (CRec D) E (ElRec x x₁) = S↑ (smax (CμSize E x) (CElSize D E x₁))

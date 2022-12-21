@@ -2,7 +2,6 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
@@ -10,8 +9,8 @@ import Cubical.Data.Empty as Empty
 -- open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
-open import Cubical.Data.Equality
-open import Inductives
+-- open import Cubical.Data.Equality
+open import UnkGerm
 open import GuardedAlgebra
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
@@ -20,9 +19,8 @@ open import ApproxExact
 open import InductiveCodes
 open import CodeSize
 -- open import CodePair
-open import WMuEq
 
-module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : InductiveCodes}}   where
+module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}}   where
 
 open import Code
 open import Head
@@ -36,7 +34,7 @@ import Cubical.Data.Nat.Order as Nat
 import GuardedModality as ▹Mod
 open import Cubical.Data.Sum
 
-open import Assumption
+-- open import Assumption
 
 mutual
   ⁇Flag : Set
@@ -109,7 +107,7 @@ CastCompMeasure = ℕ × ⁇Flag × Size
 _<CastComp_ : (m1 m2 : CastCompMeasure) → Set
 _<CastComp_ = _<Lex_ {_<a_ = Nat._<_} {_<b_ = _<Lex_ {_<a_ = _<Flag_}  {_<b_ = _<ₛ_}}
 
-CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥)
+CastCompWellFounded : WellFounded (λ x y → ∥ x <CastComp y ∥₁)
 CastCompWellFounded = ∥LexWellFounded∥ Nat.<-wellfounded (LexWellFounded ⁇FlagWellFounded sizeWF)
 
 open import Germ

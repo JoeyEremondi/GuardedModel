@@ -20,6 +20,7 @@ open import Cubical.HITs.PropositionalTruncation
 open import ApproxExact
 
 open import Cubical.Foundations.Transport
+open import GNat
 
 -- Brouwer Tree ordinals
 -- Based on the presentation by Kraus, Forsburg and Xu

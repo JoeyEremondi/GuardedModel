@@ -21,6 +21,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.HITs.PropositionalTruncation as Prop
 
 open import ApproxExact
+open import GNat
 
 open import Cubical.Foundations.Transport
 
@@ -228,6 +229,11 @@ abstract
 ℕLim : (ℕ → Size) → Size
 ℕLim f = SLim (Cℕ {ℓ = 0}) (λ n → f (CℕtoNat n))
 
+ℕLim-extSuc : ∀ {f g : ℕ → Size} → (∀ {n} → f n ≤ₛ g (ℕ.suc n)) → ℕLim f ≤ₛ ℕLim g
+ℕLim-extSuc lt = ≤ₛ-limiting (λ kn → lt ≤⨟ ≤ₛ-cocone (GSuc kn))
+
+ℕLim-ext : ∀ {f g : ℕ → Size} → (∀ {n} → f n ≤ₛ g n) → ℕLim f ≤ₛ ℕLim g
+ℕLim-ext lt = ≤ₛ-limiting (λ kn → lt ≤⨟ ≤ₛ-cocone kn)
 
 CFin : ∀ (n : ℕ) → ℂ 0
 CFin ℕ.zero = C℧

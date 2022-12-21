@@ -13,10 +13,10 @@ open import Cubical.Data.Bool
 
 
 
-∥WellFounded∥ : ∀ {ℓ ℓ'} {A : Type ℓ} {_<_ : A → A → Type ℓ'} → WellFounded _<_ → WellFounded λ x y → ∥ x < y ∥
+∥WellFounded∥ : ∀ {ℓ ℓ'} {A : Type ℓ} {_<_ : A → A → Type ℓ'} → WellFounded _<_ → WellFounded λ x y → ∥ x < y ∥₁
 ∥WellFounded∥ {_<_ = _<_} wf x = accessProp x (wf x)
   where
-    accessProp : ∀ z → Acc _<_ z → Acc (λ x y → ∥ x < y ∥ ) z
+    accessProp : ∀ z → Acc _<_ z → Acc (λ x y → ∥ x < y ∥₁ ) z
     accessProp z (acc zacc) = acc (λ y ∣y<z∣ → rec (isPropAcc y) (λ y<z → accessProp y (zacc y y<z)) ∣y<z∣)
 
 --Lexicographic ordering of pairs is well-founded
@@ -34,7 +34,7 @@ module _ {ℓa ℓ'a} {A : Type ℓa} {_<a_ : A → A → Type ℓ'a}
       helper (acc acca) accb (a' , b') (<LexL a'<a) = acc (helper (acca a' a'<a) (wfb b'))
       helper acca (acc accb) (a' , b') (<LexR a≡a' b'<b) = subst (λ x → Acc _ (x , b')) (sym a≡a') (acc (helper acca (accb b' b'<b)))
 
-  ∥LexWellFounded∥ : WellFounded _<a_ → WellFounded _<b_ → WellFounded (λ x y → ∥ x <Lex y ∥)
+  ∥LexWellFounded∥ : WellFounded _<a_ → WellFounded _<b_ → WellFounded (λ x y → ∥ x <Lex y ∥₁)
   ∥LexWellFounded∥ wfa wfb = ∥WellFounded∥ (LexWellFounded wfa wfb)
 
 
