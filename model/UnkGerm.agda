@@ -26,6 +26,8 @@ open import Cubical.Functions.FunExtEquiv using (funExtDep)
 open import GuardedAlgebra
 import GuardedModality as G
 
+open import GNat
+
 open import ApproxExact
 open import Util
 module UnkGerm where
@@ -192,6 +194,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇⁇ : ∀ {i} → ⁇Germ ℓ sc Self i
       -- Constructors for ⁇ as a type (i.e index is nothing)
       ⁇𝟙 : ⁇Germ ℓ sc Self nothing
+      ⁇ℕ : GNat → ⁇Germ ℓ sc Self nothing
       ⁇Type :  ℂ-1 sc → ⁇Germ ℓ sc Self nothing
       ⁇Cumul :  (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self nothing
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
@@ -222,6 +225,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApprox⁇ ⁇℧ = ⁇℧
   toApprox⁇ ⁇⁇ = ⁇⁇
   toApprox⁇ ⁇𝟙 = ⁇𝟙
+  toApprox⁇ (⁇ℕ n) = ⁇ℕ n
   toApprox⁇ (⁇Type x) = ⁇Type x
   toApprox⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toApprox-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
@@ -242,6 +246,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toExact⁇ ⁇℧ = ⁇℧
   toExact⁇ ⁇⁇ = ⁇⁇
   toExact⁇ ⁇𝟙 = ⁇𝟙
+  toExact⁇ (⁇ℕ n) = ⁇ℕ n
   toExact⁇ (⁇Type x) = ⁇Type x
   toExact⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toExact-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
@@ -262,6 +267,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApproxExact⁇ ⁇℧ = refl
   toApproxExact⁇ ⁇⁇ = refl
   toApproxExact⁇ ⁇𝟙 = refl
+  toApproxExact⁇ (⁇ℕ n) = refl
   toApproxExact⁇ (⁇Type x) = refl
   toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
   toApproxExact⁇ (⁇Π f) = congPath (⁇Π ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt*))
