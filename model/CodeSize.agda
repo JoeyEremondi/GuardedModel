@@ -91,74 +91,71 @@ record CodeSizeF (ℓ : ℕ) : Set  where
 
 
 
-  record ElSizeFuel (fuel : ℕ) : Type1 where
+  record ElSizeFuel : Type1 where
     field
       elSizeConsumeFuel : ∀ {{æ : Æ}} → (c : ℂ ℓ) → El c → Size
 
-    -- germUnkSize : (x : WUnk {{æ = Approx}} ℓ) → Size
-    ⁇Size : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
-    GermSize : ∀ {{ æ : Æ}} {tyCtor : CName} → ⁇Germ ℓ _ _ (just tyCtor) → Size
-    elSize : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
-    -- ▹elSize : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
-    CμSize : ∀  {{æ : Æ}}  {tyCtor : CName} (D : DCtors ℓ tyCtor) →  ℂμ ℓ tyCtor D → Size
-    CElSize : ∀ {{æ : Æ}} {tyCtor : CName} (D : DCtors ℓ tyCtor )  → (E : DCtors ℓ tyCtor)
+    -- germUnkSize' : (x : WUnk {{æ = Approx}} ℓ) → Size
+    ⁇Size' : ∀ {{ æ : Æ}} → ⁇Ty ℓ → Size
+    GermSize' : ∀ {{ æ : Æ}} {tyCtor : CName} → ⁇Germ ℓ _ _ (just tyCtor) → Size
+    elSize' : ∀ {{æ : Æ}} (c : ℂ ℓ) → El c → Size
+    -- ▹elSize' : ∀ {ℓ} (c : ℂ ℓ) → ▹El c → Size
+    CμSize' : ∀  {{æ : Æ}}  {tyCtor : CName} (D : DCtors ℓ tyCtor) →  ℂμ ℓ tyCtor D → Size
+    CElSize' : ∀ {{æ : Æ}} {tyCtor : CName} (D : DCtors ℓ tyCtor )  → (E : DCtors ℓ tyCtor)
       →  (cf : ℂFunctor ℓ tyCtor D (ℂμ ℓ tyCtor E))
       → Size
 
 
-    -- germUnkSize (Wsup (FC (HΠ , args) f)) = S↑ (germUnkSize (f tt*))
-    -- germUnkSize (Wsup (FC (HΣ , args) resp)) = S↑ (smax (germUnkSize (resp true)) (germUnkSize (resp false)))
-    -- germUnkSize (Wsup (FC (H≅ , args) resp)) = S↑ (germUnkSize (resp tt))
-    -- germUnkSize (Wsup (FC (H𝟙 , args) resp)) = S1
-    -- germUnkSize (Wsup (FC (HType , args) resp)) =  S↑ (smallerCodeSize ⦃ ℂ-1>0 args ⦄ args) -- S↑ (smallerCodeSize ⦃ ? ⦄ arg)
-    -- germUnkSize (Wsup (FC (HCumul , (c , x)) resp)) = S↑ (smallerElSize {{æ = Approx}} {{inst = ℂ-1>0 c}} c x)
-    -- --TODO fix this one
-    -- germUnkSize (Wsup (FC (HCtor tyCtor , args) resp)) = S1 --S↑ (CμSize _ (posDataGermVal ℓ tyCtor (resp tt)))
-    -- germUnkSize W⁇ = S1
-    -- germUnkSize W℧ = S1
+    ⁇Size' ⁇℧ = S1
+    ⁇Size' ⁇⁇ = S1
+    ⁇Size' ⁇𝟙 = S1
+    ⁇Size' (⁇Type x) = S1
+    ⁇Size' (⁇Cumul c x) = S1
+    ⁇Size' (⁇Π x) = S1
+    ⁇Size' (⁇Σ x) = S1
+    ⁇Size' (⁇≡ x) = S1
+    ⁇Size' (⁇μ tyCtor x) = S↑ (GermSize' x)
 
-    --TODO
-    ⁇Size ⁇℧ = S1
-    ⁇Size ⁇⁇ = S1
-    ⁇Size ⁇𝟙 = S1
-    ⁇Size (⁇Type x) = S1
-    ⁇Size (⁇Cumul c x) = S1
-    ⁇Size (⁇Π x) = S1
-    ⁇Size (⁇Σ x) = S1
-    ⁇Size (⁇≡ x) = S1
-    ⁇Size (⁇μ tyCtor x) = S↑ (GermSize x)
-
-    GermSize DataGerms.⁇℧ = S1
-    GermSize DataGerms.⁇⁇ = S1
-    GermSize {tyCtor = tyCtor} (DataGerms.Wsup d com germFO germHO germHOUnk)
+    GermSize' DataGerms.⁇℧ = S1
+    GermSize' DataGerms.⁇⁇ = S1
+    GermSize' {tyCtor = tyCtor} (DataGerms.Wsup d com germFO germHO germHOUnk)
       = S↑ (smax* (elSizeConsumeFuel (germCommandCode (dataGermIsCode ℓ tyCtor d )) (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d) ) com)
-                  ∷ FinLim (λ n → GermSize (germFO n))
-                  ∷ SLim (germHOCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → GermSize (germHO (Iso.inv (germHOIso (dataGermIsCode ℓ tyCtor d) _) (exact r))))
-                  ∷ SLim (germHOUnkCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → ⁇Size (germHOUnk (Iso.inv (germHOUnkIso (dataGermIsCode ℓ tyCtor d) _) (exact r)))) ∷ []))
+                  ∷ FinLim (λ n → GermSize' (germFO n))
+                  ∷ SLim (germHOCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → GermSize' (germHO (Iso.inv (germHOIso (dataGermIsCode ℓ tyCtor d) _) (exact r))))
+                  ∷ SLim (germHOUnkCode (dataGermIsCode ℓ tyCtor d) (approx (Iso.fun (germCommandIso (dataGermIsCode ℓ tyCtor d)) com))) (λ r → ⁇Size' (germHOUnk (Iso.inv (germHOUnkIso (dataGermIsCode ℓ tyCtor d) _) (exact r)))) ∷ []))
 
-    elSize {{æ = æ}} C⁇ x = ⁇Size {{æ = æ}} x --germUnkSize (⁇ToW {{æ = Approx}} (approx {c = C⁇ {ℓ = ℓ}} x))
-    elSize C℧ x = S1
-    elSize C𝟘 x = S1
-    elSize C𝟙 x = S1
-    elSize Cℕ x = GNatSize x
+    elSize' {{æ = æ}} C⁇ x = ⁇Size' {{æ = æ}} x --germUnkSize' (⁇ToW {{æ = Approx}} (approx {c = C⁇ {ℓ = ℓ}} x))
+    elSize' C℧ x = S1
+    elSize' C𝟘 x = S1
+    elSize' C𝟙 x = S1
+    elSize' Cℕ x = GNatSize x
       where
         GNatSize : GNat → Size
         GNatSize (GSuc x) = S↑ (GNatSize x)
         GNatSize x = S1
-    elSize (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
-    elSize {{æ = æ}}  (CΠ dom cod) f = S↑ (SLim dom λ x → elSize (cod _) (f (exact x))) -- S↑ (SLim dom (λ x → elSize {{æ = æ}} (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
-    elSize {{æ = æ}} (CΣ dom cod) (x , y) = S↑ (smax (elSize {{æ = æ}} dom x) (elSize {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize dom (exact x)) (elSize (cod (approx x)) y))
-    elSize (C≡ c x y ) (w ⊢ _ ≅ _) = S↑ (elSize {{Approx}} c w)
-    elSize (Cμ tyCtor cI D i) x = CμSize D (toℂμ ℓ tyCtor D x)
-    -- S↑ (smax* (elSize (coms d) com ∷ (FinLim λ n → elSize {!!} (res (inl n))) ∷ (SLim (ℂCommand (D d)) λ com → SLim (ℂHOResponse (D d) com) λ x → elSize (Cμ coms ress) (res (inr (exact _ x)))) ∷ [])) -- S↑ (CμSize D ( Iso.inv CμWiso (approx {ℓ = ℓ} {c = Cμ tyCtor cI D i} x) ))
-    elSize (CCumul {{inst = inst}} c) x = smallerElSize _ x --elSize c x
+    elSize' (CType {{inst = inst}}) x = S↑ (smallerCodeSize x)
+    elSize' {{æ = æ}}  (CΠ dom cod) f = S↑ (SLim dom λ x → elSize' (cod _) (f (exact x))) -- S↑ (SLim dom (λ x → elSize' {{æ = æ}} (substPath (λ x → El (cod x)) (approxExact≡ x) (f (exact x))) ))
+    elSize' {{æ = æ}} (CΣ dom cod) (x , y) = S↑ (smax (elSize' {{æ = æ}} dom x) (elSize' {{æ = æ}} (cod (approx x)) y)) -- S↑ (smax (elSize' dom (exact x)) (elSize' (cod (approx x)) y))
+    elSize' (C≡ c x y ) (w ⊢ _ ≅ _) = S↑ (elSize' {{Approx}} c w)
+    elSize' (Cμ tyCtor cI D i) x = CμSize' D (toℂμ ℓ tyCtor D x)
+    -- S↑ (smax* (elSize' (coms d) com ∷ (FinLim λ n → elSize' {!!} (res (inl n))) ∷ (SLim (ℂCommand (D d)) λ com → SLim (ℂHOResponse (D d) com) λ x → elSize' (Cμ coms ress) (res (inr (exact _ x)))) ∷ [])) -- S↑ (CμSize' D ( Iso.inv CμWiso (approx {ℓ = ℓ} {c = Cμ tyCtor cI D i} x) ))
+    elSize' (CCumul {{inst = inst}} c) x = smallerElSize _ x --elSize' c x
 
-    CμSize D  (ℂinit x) = S↑ (CElSize D D x) -- S↑ (CElSize (D (ℂFunctor.d x)) D x)
-    CμSize D μ⁇ = S1
-    CμSize D μ℧ = S1
+    CμSize' D  (ℂinit x) = S↑ (CElSize' D D x) -- S↑ (CElSize' (D (ℂFunctor.d x)) D x)
+    CμSize' D μ⁇ = S1
+    CμSize' D μ℧ = S1
 
-    CElSize D E (ℂEl d com rFO rHO) = S↑ (smax* (elSize _ com ∷ (FinLim λ n → CμSize E (rFO n)) ∷ (SLim (ℂHOResponse (D d) (approx com)) λ r → CμSize E (rHO (exact r))) ∷ []))
+    CElSize' D E (ℂEl d com rFO rHO) = S↑ (smax* (elSize' _ com ∷ (FinLim λ n → CμSize' E (rFO n)) ∷ (SLim (ℂHOResponse (D d) (approx com)) λ r → CμSize' E (rHO (exact r))) ∷ []))
 
+  open ElSizeFuel public
+
+  elSizeFuel : (n : ℕ) → ElSizeFuel
+  elSizeFuel ℕ.zero = record { elSizeConsumeFuel = λ _ _ → SZ }
+  elSizeFuel (ℕ.suc n) = record { elSizeConsumeFuel = elSize' (elSizeFuel n)  }
+
+  -- Finally, we take the limit of the fueled sizes to get the full size
+  elSize : {{æ : Æ}} → (c : ℂ ℓ) → El c → Size
+  elSize c x = ℕLim (λ n → elSize' (elSizeFuel n) c x)
   -- CElSize  .CEnd E  (ElEnd) = S1
   -- CElSize (CArg c D _ _) E {b = b} (ElArg a x) = S↑ (smax (elSize {{æ = Approx}} (c b) a) (CElSize D E x))
   -- CElSize (CRec D) E (ElRec x x₁) = S↑ (smax (CμSize E x) (CElSize D E x₁))
