@@ -27,7 +27,6 @@ module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}} where
 open import Code
 open import Head
 open import Util
-open import Ord
 open import GTypes
 -- open Ord ℂ El ℧ C𝟙 refl
 
