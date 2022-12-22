@@ -25,7 +25,6 @@ module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForIndu
 open import Code
 open import Head
 open import Util
-open import WellFounded
 -- open Ord ℂ El ℧ C𝟙 refl
 open import Cubical.Data.FinData.Properties as Fin
 import Cubical.Data.Nat.Order as Nat
@@ -163,6 +162,10 @@ reveal : ∀ {a} → Hide a → a
 reveal (hide {arg = x}) = x
 
 
+Decreasing_ : ∀ {a : Set} → a → Hide a
+Decreasing_ x = hide {arg = x}
+
+infixr 99 Decreasing_
 
 --If cSize is a codeSize, then cSize is not zero and we must not be in ⁇pos mode
 -- codeNotZero : ∀ {ℓ} {c : ℂ ℓ} {⁇Allowed} {A : Set}

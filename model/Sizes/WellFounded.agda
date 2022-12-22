@@ -1,7 +1,7 @@
 -- Helpers for Cubical.Induction.WellFounded
 --
 
-module WellFounded where
+module Sizes.WellFounded where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Induction.WellFounded public

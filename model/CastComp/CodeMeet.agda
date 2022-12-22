@@ -4,7 +4,6 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order renaming (≤-refl to ≤ℕ-refl)
@@ -20,15 +19,12 @@ open import Cubical.Foundations.Prelude
 
 open import ApproxExact
 open import InductiveCodes
-open import CodeSize
+open import Sizes
 -- open import CodePair
-open import WMuEq
-open import SizeOrd
-open import WellFounded
 
 open import CastComp.Interface
 
-module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : InductiveCodes}}
+module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : CodesForInductives}}
     (⁇Allowed : ⁇Flag) {ℓ} (size : Size) (scm : SmallerCastMeet ⁇Allowed ℓ size)
 
   where
@@ -39,7 +35,7 @@ open import Util
 
 
 open SmallerCastMeet scm
-open import CastComp.DescMeet {{dt}} {{dg}} {{ic}} ⁇Allowed {ℓ} size scm
+-- open import CastComp.DescMeet {{dt}} {{dg}} {{ic}} ⁇Allowed {ℓ} size scm
 
 open import Assumption
 
@@ -55,6 +51,18 @@ codeMeet : ∀ {h1 h2}
   → (smax (codeSize c1) ( codeSize c2) ≡p size)
   → (ℂ ℓ)
 
+
+ctorMeet :
+  {@(tactic assumption) np : notPos ⁇Allowed}
+  → (ctor1 ctor2 : ℂCtor {ℓ = ℓ})
+  → ℂCtor {ℓ = ℓ}
+
+CodeModule.ℂCommand (ctorMeet ctor1 ctor2) =
+  ℂCommand ctor1 ⊓ ℂCommand ctor2
+    By {!!}
+CodeModule.ℂHOResponse (ctorMeet ctor1 ctor2) = λ x →
+  ℂHOResponse ctor1 x ⊓ ℂHOResponse ctor2 x
+    By {!!}
 
 
 -- Error cases: the meet is ℧ if either argument is ℧
@@ -76,54 +84,66 @@ codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp = CType 
 codeMeet (CΠ dom1 cod1) (CΠ dom2 cod2)  (HEq {h1 = HΠ} reflp) eq1 eq2 reflp
         = let
           dom12 = dom1 ⊓ dom2
-            By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}
+            By Decreasing
+              smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
-            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By hide {arg = smax-sucMono (smax-mono smax-≤L smax-≤L)} )
+            let
+              (x1 , x2) =
+                fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12
+                  By Decreasing
+                    smax-sucMono (smax-mono smax-≤L smax-≤L) )
             in  (cod1 x1 ) ⊓ cod2 x2
-                      By hide {arg =
+                      By Decreasing
                         smax-strictMono
-                          (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R))
-                          (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R)) }
+                          (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R))
+                          (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R))
         in CΠ dom12 cod12
 codeMeet (CΣ dom1 cod1) (CΣ dom2 cod2)  (HEq {h1 = HΣ} reflp) eq1 eq2 reflp
         = let
           dom12 = dom1 ⊓ dom2
-            By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}
+            By Decreasing smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)
           cod12 : (x : ApproxEl dom12) → ℂ ℓ
           cod12 x12 =
-            let (x1 , x2) = fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12 By hide {arg = smax-sucMono (smax-mono smax-≤L smax-≤L)} )
+            let
+              (x1 , x2) =
+                fromL ([ Approx ]⟨ dom1 , dom2 ⇐⊓⟩ x12
+                  By Decreasing
+                    smax-sucMono (smax-mono smax-≤L smax-≤L) )
             in  (cod1 x1 ) ⊓ cod2 x2
-                      By hide {arg =
+                      By Decreasing
                         smax-strictMono
-                          (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R))
-                          (≤ₛ-sucMono (≤ₛ-cocone {{æ = Approx}} _ ≤⨟ smax-≤R)) }
+                          (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R))
+                          (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R))
         in CΣ dom12 cod12
 codeMeet (C≡ c1 x1 y1) (C≡ c2 x2 y2)  (HEq {h1 = H≅} reflp) eq1 eq2 reflp
   = let
       c12 = c1 ⊓ c2
-        By hide {arg = smax-strictMono ≤ₛ-refl ≤ₛ-refl}
-      x12 = fromL ([ Approx ] c1 ,, c2 ∋ x1 ⊓ x2 By hide {arg = smax-strictMono ≤ₛ-refl ≤ₛ-refl})
+        By Decreasing
+          smax-strictMono ≤ₛ-refl ≤ₛ-refl
+      x12 = fromL ([ Approx ] c1 ,, c2 ∋ x1 ⊓ x2 By Decreasing smax-strictMono ≤ₛ-refl ≤ₛ-refl)
 
-      y12 = fromL ([ Approx ] c1 ,, c2 ∋ y1 ⊓ y2 By hide {arg = smax-strictMono ≤ₛ-refl ≤ₛ-refl})
+      y12 = fromL ([ Approx ] c1 ,, c2 ∋ y1 ⊓ y2 By Decreasing smax-strictMono ≤ₛ-refl ≤ₛ-refl)
 
     in C≡ c12 x12 y12 --x12 y12
 codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂} reflp) reflp reflp reflp =
   Cμ tyCtor
     (c1 ⊓ c2
-      By hide  )
-    (λ d → descMeet
-      (D1 d)
-      (D2 d)
-      (smax-strictMono ≤ₛ-refl ≤ₛ-refl)
-      (smax-mono smax-≤L smax-≤L)
-      smax-≤L
-      (smax-mono
-        (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
-        (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
-      )
-    )
-    (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}))
+      By Decreasing {!!} )
+  (λ d → ctorMeet (D1 d) (D2 d))
+  (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By Decreasing {!!}))
+  --   (λ d → descMeet
+  --     (D1 d)
+  --     (D2 d)
+  --     (smax-strictMono ≤ₛ-refl ≤ₛ-refl)
+  --     (smax-mono smax-≤L smax-≤L)
+  --     smax-≤L
+  --     (smax-mono
+  --       (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
+  --       (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
+  --     )
+  --   )
+  --   (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}))
 
 codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (self-1 ⦃ inst = inst ⦄) reflp c1 c2 reflp)
 codeMeet C⁇ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
@@ -135,6 +155,8 @@ codeMeet (CΠ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () ref
 codeMeet (CΣ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (C≡ c1 x y) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (Cμ tyCtor c1 D x) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
+
+codeMeet _ _ _ _ _ _ = {!!}
 
 
 

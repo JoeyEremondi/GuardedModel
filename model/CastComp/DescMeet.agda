@@ -14,16 +14,14 @@ open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
 open import Cubical.Data.Equality
-open import Inductives
+open import UnkGerm
 open import GuardedAlgebra
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
 
 open import ApproxExact
 open import InductiveCodes
-open import CodeSize
 -- open import CodePair
-open import WMuEq
 open import SizeOrd
 
 open import CastComp.Interface

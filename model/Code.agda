@@ -350,6 +350,7 @@ record CodeModule
     -- Codes for descriptions of inductive types
     -- TODO update description
     record ℂCtor where
+      constructor CCtor
       inductive
       field
         ℂCommand : ℂ
