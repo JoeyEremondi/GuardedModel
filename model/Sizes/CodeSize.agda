@@ -54,6 +54,7 @@ open import Sizes.Size -- ℂ El ℧ C𝟙 refl
 module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives }}
     (ℓ : ℕ)
     (smallerCodeSize : {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ ) → Size)
+    (codeSizeConsumeFuel : (c : ℂ ℓ) → Size)
     -- (smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size)
   where
 
@@ -65,8 +66,10 @@ module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductiv
 
 codeSize' : ℂ ℓ → Size
 
-
-codeSize' C⁇ = S1
+-- The unknown type has a size that is larger than all other sizes
+-- We hack this using limits of ordinals
+-- TODO will this actually work?
+codeSize' C⁇ = S↑ (SLim {ℓ = ℕ.suc ℓ} CType codeSizeConsumeFuel)
 codeSize' C℧ = S1
 codeSize' C𝟘 = S1
 codeSize' C𝟙 = S1

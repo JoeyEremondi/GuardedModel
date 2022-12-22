@@ -35,7 +35,6 @@ open import Code
 -- open import Head
 open import Util
 
-open import Ord -- ℂ El ℧ C𝟙 refl
 
 -- Predicate for a Germ Constructor whose types are all given by codes in our universe
 record GermCtorIsCode {{æ : Æ}} (ℓ : ℕ) (ctor : GermCtor) : Type1 where
