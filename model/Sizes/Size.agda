@@ -1,0 +1,246 @@
+{-# OPTIONS --cubical --guarded --lossy-unification #-}
+-- open import Guarded
+open import Cubical.Data.Maybe
+open import Level
+open import Cubical.Relation.Nullary
+-- open import Cubical.Data.Equality using (_≡p_ ; reflp ; cong)
+open import DecPEq
+open import Cubical.Data.Sigma
+open import Cubical.Data.Bool
+open import Cubical.Data.Sum
+open import Cubical.Data.Nat
+open import Cubical.Data.FinData
+-- open import Cubical.Data.Equality
+open import Cubical.Data.Sigma
+open import UnkGerm
+open import GuardedAlgebra
+open import Cubical.Induction.WellFounded
+open import Cubical.Foundations.Prelude
+-- open import Cubical.Data.Equality using (ptoc)
+open import Cubical.HITs.PropositionalTruncation as Prop
+
+open import ApproxExact
+open import GTypes
+
+open import Cubical.Foundations.Transport
+
+module Sizes.Size {{_ : DataTypes}} {{_ : DataGerms}} where
+
+open import Sizes.RawOrd
+open import Code
+
+
+
+-- We only ever attach a size to the approximate part of a computation
+-- and we only need this conversion for making a size
+private
+  instance
+    approxÆ : Æ
+    approxÆ = Approx
+
+-- open import Cubical.HITs.PropositionalTruncation as P
+-- open import Cubical.HITs.SetQuotients as Q
+-- open import Cubical.Foundations.Isomorphism
+
+-- Sizes are like Ords that are well behaved for describing the sizes of terms
+-- This whole module is just a way to give a nice abstract interface over what's in Ord
+
+
+record Size : Set where
+  constructor OS
+  field
+    sOrd : Ord
+    sIdem : omax sOrd sOrd ≤o sOrd
+open Size
+
+
+record _≤ₛ_ (s1 s2 : Size) : Set where
+  constructor mk≤
+  inductive
+  field
+    get≤ : sOrd s1 ≤o sOrd s2
+open _≤ₛ_
+
+abstract
+  smax : Size → Size → Size
+  smax s1 s2 = OS (omax (sOrd s1) (sOrd s2)) (omax-swap4 ≤⨟o omax-mono (sIdem s1) (sIdem s2))
+
+
+  SZ : Size
+  SZ = OS OZ (subst (λ x → x ≤o OZ) (symPath (omax-Z OZ)) ≤o-Z)
+
+
+  S↑ : Size → Size
+  S↑ (OS o pf) = OS (O↑ o) ( subst (λ x → x ≤o O↑ o) (sym omax-↑) (≤o-sucMono pf) )
+
+_<ₛ_ : Size → Size → Set
+_<ₛ_ s1 s2 = (S↑ s1) ≤ₛ s2
+
+
+{-# INJECTIVE _≤ₛ_ #-}
+{-# INJECTIVE _<ₛ_ #-}
+{-# INJECTIVE S↑ #-}
+
+abstract
+  ≤↑ : ∀ s → s ≤ₛ S↑ s
+  ≤↑ s =  mk≤ (≤↑o _)
+
+
+  SLim : ∀  {ℓ} (c : ℂ ℓ) → (f : ApproxEl c → Size) → Size
+  SLim c f = OS (omax∞ (OLim c (λ x → sOrd (f x)))) ( omax∞-idem (OLim c (λ x → sOrd (f x))) )
+
+
+  ≤ₛ-Z : ∀ {s} → SZ ≤ₛ s
+  ≤ₛ-Z =  mk≤ ≤o-Z
+
+  ≤ₛ-sucMono : ∀ {s1 s2} → s1 ≤ₛ s2 → S↑ s1 ≤ₛ S↑ s2
+  ≤ₛ-sucMono (mk≤ lt) = mk≤ (≤o-sucMono lt)
+
+  infixr 10 _≤⨟_
+  _≤⨟_ : ∀ {s1 s2 s3} → s1 ≤ₛ s2 → s2 ≤ₛ s3 → s1 ≤ₛ s3
+  _≤⨟_ (mk≤ lt1) (mk≤ lt2) = mk≤ (≤o-trans lt1 lt2)
+
+
+  ≤ₛ-refl : ∀ {s} → s ≤ₛ s
+  ≤ₛ-refl =  mk≤ (≤o-refl _)
+
+  ≤ₛ-cocone : ∀  {ℓ} {c : ℂ ℓ} → {f : ApproxEl c → Size}
+    → ∀ k → f k ≤ₛ SLim c f
+  ≤ₛ-cocone {c = c} {f = f} k = mk≤ (≤o-cocone (λ x → sOrd (f x)) k (≤o-refl _) ≤⨟o omax∞-self (OLim c (λ x → sOrd (f x))))
+
+  ≤ₛ-limiting : ∀  {ℓ} {c : ℂ ℓ} → {f : ApproxEl c → Size}
+    → {s : Size}
+    → (∀ k → f k ≤ₛ s) → SLim c f ≤ₛ s
+  ≤ₛ-limiting {f = f} {s = OS o idem} lt = mk≤ (≤o-trans (omax∞-mono (≤o-limiting (λ x → sOrd (f x)) λ k → get≤ (lt k)))  (omax∞-≤ idem))
+
+  ≤ₛ-extLim : ∀ {ℓ} {c : ℂ ℓ} → {f1 f2 : ApproxEl c → Size}
+    → (∀ k → f1 k ≤ₛ f2 k)
+    → SLim c f1 ≤ₛ SLim c f2
+  ≤ₛ-extLim {f1 = f1} {f2} lt = mk≤ ( omax∞-mono (extLim (λ x → sOrd (f1 x)) (λ x → sOrd (f2 x)) λ k → get≤ (lt k)))
+
+  ≤ₛ-extExists : ∀ {ℓ} {c : ℂ ℓ} → {f1 f2 : ApproxEl c → Size}
+    → (∀ k1 → Σ[ k2 ∈ ApproxEl c ] f1 k1 ≤ₛ f2 k2)
+    → SLim c f1 ≤ₛ SLim c f2
+  ≤ₛ-extExists {f1 = f1} {f2} lt = ≤ₛ-limiting (λ k1 → snd (lt k1) ≤⨟ ≤ₛ-cocone (fst (lt k1)))
+
+  ¬Z<↑ : ∀  s → ¬ ((S↑ s) ≤ₛ SZ)
+  ¬Z<↑ s pf = ¬Z<↑o (sOrd s) (get≤ pf)
+
+  smax-≤L : ∀ {s1 s2} → s1 ≤ₛ smax s1 s2
+  smax-≤L = mk≤ omax-≤L
+
+  smax-≤R : ∀ {s1 s2} → s2 ≤ₛ smax s1 s2
+  smax-≤R =  mk≤ omax-≤R
+
+  smax-mono : ∀ {s1 s1' s2 s2'} → s1 ≤ₛ s1' → s2 ≤ₛ s2' →
+    smax s1 s2 ≤ₛ smax s1' s2'
+  smax-mono lt1 lt2 = mk≤ (omax-mono (get≤ lt1) (get≤ lt2))
+
+  smax-monoR : ∀ {s1 s2 s2'} → s2 ≤ₛ s2' → smax s1 s2 ≤ₛ smax s1 s2'
+  smax-monoR {s1} {s2} {s2'} lt = smax-mono {s1 = s1} {s1' = s1} {s2 = s2} {s2' = s2'} (≤ₛ-refl {s1}) lt
+
+  smax-monoL : ∀ {s1 s1' s2} → s1 ≤ₛ s1' → smax s1 s2 ≤ₛ smax s1' s2
+  smax-monoL {s1} {s1'} {s2} lt = smax-mono {s1} {s1'} {s2} {s2} lt (≤ₛ-refl {s2})
+
+  smax-idem : ∀ {s} → smax s s ≤ₛ s
+  smax-idem {s = OS o pf} = mk≤ pf
+
+  smax-commut : ∀ s1 s2 → smax s1 s2 ≤ₛ smax s2 s1
+  smax-commut s1 s2 =  mk≤ (omax-commut (sOrd s1) (sOrd s2))
+
+  smax-assocL : ∀ s1 s2 s3 → smax s1 (smax s2 s3) ≤ₛ smax (smax s1 s2) s3
+  smax-assocL s1 s2 s3 = mk≤ (omax-assocL _ _ _)
+
+  smax-assocR : ∀ s1 s2 s3 →  smax (smax s1 s2) s3 ≤ₛ smax s1 (smax s2 s3)
+  smax-assocR s1 s2 s3 = mk≤ (omax-assocR _ _ _)
+
+  smax-swap4 : ∀ {s1 s1' s2 s2'} → smax (smax s1 s1') (smax s2 s2') ≤ₛ smax (smax s1 s2) (smax s1' s2')
+  smax-swap4 =  mk≤ omax-swap4
+
+  smax-strictMono : ∀ {s1 s1' s2 s2'} → s1 <ₛ s1' → s2 <ₛ s2' → smax s1 s2 <ₛ smax s1' s2'
+  smax-strictMono lt1 lt2 = mk≤ (omax-strictMono (get≤ lt1) (get≤ lt2))
+
+  smax-sucMono : ∀ {s1 s2 s1' s2'} → smax s1 s2 ≤ₛ smax s1' s2' → smax s1 s2 <ₛ smax (S↑ s1') (S↑ s2')
+  smax-sucMono lt =  mk≤ (omax-sucMono (get≤ lt))
+
+
+
+{-# INJECTIVE SLim #-}
+
+smax-lub : ∀ {s1 s2 s} → s1 ≤ₛ s → s2 ≤ₛ s → smax s1 s2 ≤ₛ s
+smax-lub lt1 lt2 = smax-mono lt1 lt2 ≤⨟ smax-idem
+
+
+S1 : Size
+S1 = S↑ SZ
+
+abstract
+  smax-oneL : ∀ {s} → smax S1 (S↑ s) ≤ₛ S↑ s
+  smax-oneL {s = OS o _} = mk≤ omax-oneL
+
+  smax-oneR : ∀ {s} → smax (S↑ s) S1 ≤ₛ S↑ s
+  smax-oneR {s = OS o _} = mk≤ omax-oneR
+
+
+-- https://cj-xu.github.io/agda/constructive-ordinals-in-hott/BrouwerTree.Code.Results.html#3168
+-- TODO: proper credit
+≤< : ∀ {x y z} → x ≤ₛ y → y <ₛ z → x <ₛ z
+≤< {x} {y} {z} x≤y y<z =  (≤ₛ-sucMono x≤y) ≤⨟ y<z
+
+
+<≤ : ∀ {x y z} → x <ₛ y → y ≤ₛ z → x <ₛ z
+<≤ x<y y≤z = x<y ≤⨟  y≤z
+
+<-in-≤ : ∀ {s1 s2} → s1 <ₛ s2 → s1 ≤ₛ s2
+<-in-≤ lt = ≤↑ _ ≤⨟ lt
+
+<ₛ-trans : ∀ {s1 s2 s3} → s1 <ₛ s2 → s2 <ₛ s3 → s1 <ₛ s3
+<ₛ-trans lt1 lt2 = <≤ lt1 (<-in-≤ lt2)
+
+
+
+
+smax-lim2L :
+    ∀
+    {ℓ1 ℓ2}
+    {c1 : ℂ ℓ1}
+    (f1 : ApproxEl  c1 → Size)
+    {c2 : ℂ ℓ2}
+    (f2 : ApproxEl  c2 → Size)
+    → SLim  c1 (λ k1 → SLim  c2 (λ k2 → smax (f1 k1) (f2 k2))) ≤ₛ smax (SLim  c1 f1) (SLim  c2 f2)
+smax-lim2L {c1 = c1} f1 {c2 = c2} f2 = ≤ₛ-limiting  (λ k1 → ≤ₛ-limiting  (λ k2 → smax-mono (≤ₛ-cocone  k1) (≤ₛ-cocone  k2)))
+
+
+data _<ₛPair_ : (Size × Size) → (Size × Size) → Set where
+  <ₛPairL : ∀ {o1c o2c o1v o2v} → ∥ o1c <ₛ o2c ∥₁ → (o1c , o1v) <ₛPair (o2c , o2v)
+  <ₛPairR : ∀ {o1c o2c o1v o2v} → o1c ≡p o2c → ∥ o1v <ₛ o2v ∥₁ → (o1c , o1v) <ₛPair (o2c , o2v)
+
+≤suc : ∀ {s1 s2} → s1 ≤ₛ s2 → s1 ≤ₛ S↑ s2
+≤suc {s1 = s1} lt = ≤↑ s1 ≤⨟ ≤ₛ-sucMono lt
+
+abstract
+  sizeWF : WellFounded _<ₛ_
+  sizeWF s = sizeAcc (ordWF (sOrd s))
+    where
+      sizeAcc : ∀ {s} → Acc _<o_ (sOrd s) → Acc _<ₛ_ s
+      sizeAcc {s} (acc x) = acc (λ y lt → sizeAcc (x (sOrd y) (get≤ lt)))
+
+  sizeWFAcc : ∀ x → Acc _<ₛ_ x → Acc (λ x y → ∥ x <ₛ y ∥₁) x
+  sizeWFAcc x (acc f) = acc λ y → Prop.elim (λ _ → isPropAcc _) λ lt' → sizeWFAcc y (f y lt')
+
+  sizeWFProp : WellFounded (λ x y → ∥ x <ₛ y ∥₁)
+  sizeWFProp x = sizeWFAcc x (sizeWF x)
+
+  sizeSquash : ∀ {x y} (p1 p2 : ∥ x <ₛ y ∥₁) → p1 ≡ p2
+  sizeSquash = Prop.squash₁
+
+
+  <ₛPairWF : WellFounded _<ₛPair_
+  <ₛPairWF (x1 , x2) = acc (helper (sizeWFProp x1) (sizeWFProp x2))
+    where
+      helper : ∀ {x1 x2} → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x1 → Acc (λ v v₁ → ∥ v <ₛ v₁ ∥₁) x2 → WFRec _<ₛPair_ (Acc _<ₛPair_) (x1 , x2)
+      helper (acc rec₁) acc₂ (y1 , y2) (<ₛPairL lt) = acc (helper (rec₁ y1 lt ) (sizeWFProp y2))
+      helper acc₁ (acc rec₂) (y1 , y2) (<ₛPairR reflp lt) = acc (helper acc₁ (rec₂ y2 lt))
+
+
+
