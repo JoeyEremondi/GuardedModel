@@ -29,43 +29,31 @@ module Sizes.NatLim {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Sizes.Size
 
-_+ₛ_ : Size → ℕ → Size
-s +ₛ ℕ.zero = s
-s +ₛ (ℕ.suc n) = S↑ (s +ₛ n)
-
-+↑dist : ∀ {s n} → S↑ (s +ₛ n) ≡c (S↑ s) +ₛ n
-+↑dist {n = ℕ.zero} = reflc
-+↑dist {n = ℕ.suc n} = congPath S↑ +↑dist 
-
-+-mono : ∀ {s1 s2 n} → s1 ≤ₛ s2 → (s1 +ₛ n) ≤ₛ (s2 +ₛ n)
-+-mono {n = ℕ.zero} lt = lt
-+-mono {n = ℕ.suc n} lt = ≤ₛ-sucMono (+-mono lt)
 
 abstract
   ℕLim : (ℕ → Size) → Size
-  ℕLim f = SLim (Cℕ {ℓ = 0}) (λ arrows → SLim (Cℕ {ℓ = 0}) λ n → f (CℕtoNat n) +ₛ (CℕtoNat arrows))
+  ℕLim f =  SLim (Cℕ {ℓ = 0}) λ n → f (CℕtoNat n)
 
 
 {-# INJECTIVE ℕLim #-}
 
 abstract
     ℕLim-cocone : ∀ {f : ℕ → Size} n → f n ≤ₛ ℕLim f
-    ℕLim-cocone {f = f} n = substPath (λ x → f n ≤ₛ f x) (sym (Cℕembed n)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone GZero ≤⨟ ≤ₛ-extLim λ k → ≤ₛ-cocone (CℕfromNat n)
+    ℕLim-cocone {f = f} n = substPath (λ x → f n ≤ₛ f x) (sym (Cℕembed n)) ≤ₛ-refl  ≤⨟  ≤ₛ-cocone (CℕfromNat n)
+
+
+    ℕLim-limiting : ∀ {s} {f : ℕ → Size} → (∀ n → f n ≤ₛ s) → ℕLim f ≤ₛ s
+    ℕLim-limiting {f = f} lt = ≤ₛ-limiting (λ k → lt (CℕtoNat k))
 
     ℕLim-wrapL : ∀ {s : Size} → s ≤ₛ ℕLim (λ _ → s)
     ℕLim-wrapL = ℕLim-cocone 0
 
     ℕLim-extSuc : ∀ {f g : ℕ → Size} → (∀ {n} → f n ≤ₛ g (ℕ.suc n)) → ℕLim f ≤ₛ ℕLim g
-    ℕLim-extSuc lt = ≤ₛ-extLim λ _ → ≤ₛ-limiting (λ kn →  +-mono lt ≤⨟ ≤ₛ-cocone (GSuc kn)  )
+    ℕLim-extSuc lt = ℕLim-limiting λ n → lt ≤⨟ ℕLim-cocone (ℕ.suc n)
 
     ℕLim-ext : ∀ {f g : ℕ → Size} → (∀ {n} → f n ≤ₛ g n) → ℕLim f ≤ₛ ℕLim g
-    ℕLim-ext lt = ≤ₛ-extLim λ _ → ≤ₛ-limiting (λ kn →  ≤ₛ-cocone kn ≤⨟ ≤ₛ-extLim λ k → +-mono lt )
+    ℕLim-ext lt = ≤ₛ-extLim λ k → lt
 
-    ℕLim-extExists : {f g : ℕ → Size} → (∀ n → Σ[ n' ∈ ℕ ]( f n ≤ₛ g n' )) → ℕLim f ≤ₛ ℕLim g
-    ℕLim-extExists {g = g} lt = ≤ₛ-extLim (λ fuel →
-      ≤ₛ-limiting λ kn → +-mono (snd (lt (CℕtoNat kn)))
-      ≤⨟  +-mono (substPath (λ x → g x ≤ₛ g (CℕtoNat (CℕfromNat (fst (lt (CℕtoNat kn)))))) (Cℕembed (fst (lt (CℕtoNat kn)))) ≤ₛ-refl)
-      ≤⨟ ≤ₛ-cocone (CℕfromNat (fst (lt (CℕtoNat kn)))))
 
     ℕLim-extR : ∀ {s} {f : ℕ → Size} → (∀ {n} → S↑ s ≤ₛ f n) → S↑ s ≤ₛ ℕLim f
     ℕLim-extR lt = ℕLim-wrapL ≤⨟ ℕLim-ext lt
@@ -80,11 +68,7 @@ abstract
     ℕmaxR : ∀ {s} {f : ℕ → Size} → smax (ℕLim λ n → f n) s ≤ₛ ℕLim λ n → smax (f n) s
     ℕmaxR = smax-lub (ℕLim-ext smax-≤L) (ℕLim-wrapL ≤⨟ ℕLim-ext smax-≤R)
 
-    ℕLim-absorb : ∀ {f : ℕ → Size} → ℕLim (λ n → S↑ (f n)) ≤ₛ ℕLim f
-    ℕLim-absorb {f = f} = ≤ₛ-extExists λ n1 → GSuc n1 , ≤ₛ-extLim λ k → substPath (λ x → x ≤ₛ S↑ (f (CℕtoNat k) +ₛ CℕtoNat n1)) +↑dist ≤ₛ-refl
 
-    -- ℕLim-sucMono : ∀ {f : ℕ → Size} → S↑ (ℕLim f) ≤ₛ ℕLim (λ n → S↑ (f n))
-    -- ℕLim-sucMono = {!!}
 
 
 
