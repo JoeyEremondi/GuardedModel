@@ -17,7 +17,7 @@ open import Cubical.Foundations.Prelude
 
 open import ApproxExact
 open import InductiveCodes
-open import CodeSize
+open import Sizes
 -- open import CodePair
 
 module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}}   where
@@ -25,7 +25,6 @@ module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForIndu
 open import Code
 open import Head
 open import Util
-open import SizeOrd
 open import WellFounded
 -- open Ord ℂ El ℧ C𝟙 refl
 open import Cubical.Data.FinData.Properties as Fin
@@ -34,7 +33,7 @@ import Cubical.Data.Nat.Order as Nat
 import GuardedModality as ▹Mod
 open import Cubical.Data.Sum
 
--- open import Assumption
+open import Assumption
 
 mutual
   ⁇Flag : Set
@@ -129,9 +128,9 @@ record SizedCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wher
       → LÆ (El c)
 
     oDataGermMeet : ∀ {{æ : Æ}} {tyCtor}
-      → (x y : DataGerm ℓ tyCtor)
-      → smax (dataGermSize tyCtor x) (dataGermSize tyCtor y) ≡p size
-      → LÆ (DataGerm ℓ tyCtor)
+      → (x y : ⁇GermTy ℓ tyCtor)
+      → smax (GermSize x) (GermSize y) ≡p size
+      → LÆ (⁇GermTy ℓ tyCtor)
 
 
     oCodeMeet :
@@ -180,11 +179,11 @@ reveal (hide {arg = x}) = x
 record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set where
   constructor smallerCastMeet
   field
-    self : ∀ {allowed ℓ' s} → ∥ ( ℓ' , allowed , s) <CastComp ( ℓ , ⁇Allowed , size) ∥ → SizedCastMeet allowed ℓ' s
+    self : ∀ {allowed ℓ' s} → ∥ ( ℓ' , allowed , s) <CastComp ( ℓ , ⁇Allowed , size) ∥₁ → SizedCastMeet allowed ℓ' s
     ▹self : ∀ {⁇Allowed ℓ' s} → ▹Mod.▹ (SizedCastMeet ⁇Allowed ℓ' s)
   --useful helper
-  <Size : ∀ {s} → (s <ₛ size) → ∥ ( ℓ , ⁇Allowed , s ) <CastComp ( ℓ , ⁇Allowed , size) ∥
-  <Size lt = ∣ <LexR reflc (<LexR reflc lt) ∣
+  <Size : ∀ {s} → (s <ₛ size) → ∥ ( ℓ , ⁇Allowed , s ) <CastComp ( ℓ , ⁇Allowed , size) ∥₁
+  <Size lt = ∣ <LexR reflc (<LexR reflc lt) ∣₁
 
   notPosL' : ∀ (x : ⁇Flag)
         (np : notPos x)
@@ -198,12 +197,12 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
   notPosR' x reflp b = b
 
   notPosIrrefut : ∀
-    {@(tactic assumption) np : notPos ⁇Allowed}
+    { np : notPos ⁇Allowed}
     {A B : Set} → A → (if¬Pos ⁇Allowed A B )
   notPosIrrefut {np = np} a = notPosL' _ np a
 
   isPosIrrefut : ∀
-    {@(tactic assumption) pos : ⁇Allowed ≡p ⁇pos}
+    {pos : ⁇Allowed ≡p ⁇pos}
     {A B : Set} → B → (if¬Pos ⁇Allowed A B )
   isPosIrrefut {pos = pos} b = notPosR' _ pos b
 
@@ -279,7 +278,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
       → (c1 c2 : ℂ ℓ)
       → {lt1 lt2 : Hide (smax (codeSize c1) (codeSize c2) <ₛ size)}
       → ApproxEl (c1 ⊓ c2 By lt1) ≡ ApproxEl (c1 ⊓ c2 By lt2)
-  codeMeetEq {np} c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self lt) np c1 c2 reflp))) (∥_∥.squash (<Size lt1) (<Size lt2))
+  codeMeetEq {np} c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self lt) np c1 c2 reflp))) (squash₁ (<Size lt1) (<Size lt2))
 
   infix 20 _⊓Size_By_
   _⊓Size_By_ :
@@ -435,7 +434,7 @@ record SmallerCastMeet (⁇Allowed : ⁇Flag) (ℓ : ℕ) (size : Size) : Set wh
   ... | inr (inr reflp) = oCast (self (<Size clt)) csource cdest x reflp
 
   self-1 : ∀ {s} {{ inst : 0< ℓ }} → SizedCastMeet ⁇any (predℕ ℓ) s
-  self-1 {s = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣
+  self-1 {s = _} ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
   Lself :  ∀  {æ al ℓ' s} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet al ℓ' s)
   Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 

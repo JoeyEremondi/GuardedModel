@@ -20,7 +20,7 @@ open import Cubical.Foundations.Prelude
 
 open import ApproxExact
 open import InductiveCodes
-open import CodeSize
+open import Sizes
 
 module Germ {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}} where
 

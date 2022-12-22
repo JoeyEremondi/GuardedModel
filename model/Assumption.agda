@@ -12,9 +12,10 @@ open import Level using (Level)
 open import Data.Unit.Base
 open import Function.Base
 open import Reflection as R hiding (_>>=_; _≟_)
-open import Reflection.DeBruijn
-open import Reflection.Term
+open import Reflection.AST.DeBruijn
+open import Reflection.AST.Term
 open import Relation.Nullary
+open import Data.Product hiding (map)
 
 private
   variable
@@ -48,8 +49,8 @@ assumption hole = let open R in do
     goal ← inferType hole
     debugPrint "" 10
       (strErr "Context : "
-       ∷ concatMap (λ where (arg info ty) → strErr "\n  " ∷ termErr ty ∷ []) asss)
-    let res = searchEntry 0 goal (map unArg asss)
+       ∷ concatMap (λ where (_ , arg info ty) → strErr "\n  " ∷ termErr ty ∷ []) asss)
+    let res = searchEntry 0 goal (map (λ x → unArg (proj₂ x)) asss)
     case res of λ where
       nothing → typeError (strErr "Couldn't find an assumption of type: " ∷ termErr goal ∷ [])
       (just idx) → unify hole (var idx [])
