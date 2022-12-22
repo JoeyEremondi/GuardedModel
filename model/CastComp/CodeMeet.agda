@@ -78,6 +78,7 @@ codeMeet c1 _  (H⁇R reflp) eq1 eq2 reflp = c1
 -- First: trivial cases, where both types are identical
 codeMeet C𝟙 C𝟙  (HEq {h1 = H𝟙} reflp) eq1 eq2 reflp = C𝟙
 codeMeet C𝟘 C𝟘  (HEq {h1 = H𝟘} reflp) eq1 eq2 reflp = C𝟘
+codeMeet Cℕ Cℕ  (HEq {h1 = H𝟘} reflp) eq1 eq2 reflp = Cℕ
 codeMeet (CType {{inst}}) CType  (HEq {h1 = HType} reflp) eq1 eq2 reflp = CType {{inst = inst}}
 -- Pi and Sigma types: we take the meet of the domains, then produce a codomain that takes the meet
 -- after casting the argument to the appropriate type
@@ -132,31 +133,19 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
       By Decreasing {!!} )
   (λ d → ctorMeet (D1 d) (D2 d))
   (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By Decreasing {!!}))
-  --   (λ d → descMeet
-  --     (D1 d)
-  --     (D2 d)
-  --     (smax-strictMono ≤ₛ-refl ≤ₛ-refl)
-  --     (smax-mono smax-≤L smax-≤L)
-  --     smax-≤L
-  --     (smax-mono
-  --       (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
-  --       (DLim-cocone {ℓ = ℓ} tyCtor _ d ≤⨟ smax-≤R)
-  --     )
-  --   )
-  --   (fromL ([ Approx ] c1 ,, c2 ∋ ixs1 ⊓ ixs2 By hide {arg = smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)}))
 
 codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp = CCumul {{inst = inst}} (oCodeMeet (self-1 ⦃ inst = inst ⦄) reflp c1 c2 reflp)
 codeMeet C⁇ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet C℧ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet C𝟘 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet C𝟙 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
+codeMeet Cℕ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet CType (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (CΠ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (CΣ c1 cod) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (C≡ c1 x y) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet (Cμ tyCtor c1 D x) (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
-
-codeMeet _ _ _ _ _ _ = {!!}
+codeMeet c1 c2 _ _ _ _ = C℧ --TODO: not sure why we need this for Agda to not loop forever
 
 
 
