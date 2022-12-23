@@ -201,7 +201,7 @@ GermIndexFor tyCtor (GRec A D) x = just (HCtor tyCtor)
 
 record DataGerms {{_ : DataTypes}} : Type1 where
   field
-    germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor (sigFor tyCtor)
+    germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor (indSkeleton tyCtor d)
   -- Functor
   data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type where
       -- An element of the germ for any head can be embedded into ⁇Ty
