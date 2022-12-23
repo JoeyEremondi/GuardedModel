@@ -41,7 +41,7 @@ elSizeFuel {ℓ = ℓ} zero = elSize' ℓ smallerCodeSize smallerElSize (λ _ _ 
 elSizeFuel {ℓ = ℓ} (suc n) = elSize' ℓ smallerCodeSize smallerElSize (elSizeFuel n)
 
 -- We take the limit of the fueled sizes to get the full size
-elSize {ℓ} c x = ℕLim (λ n → elSize' ℓ smallerCodeSize smallerElSize (elSizeFuel n) c x)
+elSize {ℓ} c x = elSize' ℓ smallerCodeSize smallerElSize (λ c x → ℕLim λ n → elSizeFuel n c x) c x
 
 ⁇Size : ∀ {{æ : Æ}} {ℓ} → ⁇Ty ℓ → Size
 ⁇SizeFuel : ∀ {{æ : Æ}} {ℓ} → ℕ → ⁇Ty ℓ → Size
@@ -54,60 +54,60 @@ GermSizeFuel : ∀ {{æ : Æ}} {ℓ tyCtor} → ℕ → ⁇GermTy ℓ tyCtor →
 GermSizeFuel {ℓ = ℓ} n = GermSize' ℓ smallerCodeSize smallerElSize (elSizeFuel n)
 GermSize x = ℕLim λ n → GermSizeFuel n x
 
--- codeSuc : ∀ {ℓ} (c : ℂ ℓ) → SZ <ₛ codeSize c
--- codeSuc C⁇ = ℕsucMono ≤ₛ-Z
--- codeSuc C℧ =  ℕsucMono  ≤ₛ-Z
--- codeSuc C𝟘 = ℕsucMono  ≤ₛ-Z
--- codeSuc C𝟙 = ℕsucMono ≤ₛ-Z
--- codeSuc Cℕ = ℕsucMono ≤ₛ-Z
--- codeSuc CType = ℕsucMono ≤ₛ-Z
--- codeSuc (CΠ c cod) = ℕsucMono ≤ₛ-Z
--- codeSuc (CΣ c cod) = ℕsucMono ≤ₛ-Z
--- codeSuc (C≡ c x y) = ℕsucMono ≤ₛ-Z
--- codeSuc (Cμ tyCtor c D x) = ℕsucMono ≤ₛ-Z
--- codeSuc {ℓ = suc ℓ} (CCumul c) = ℕsucMono ≤ₛ-Z
+codeSuc : ∀ {ℓ} (c : ℂ ℓ) → SZ <ₛ codeSize c
+codeSuc C⁇ = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc C℧ =  ≤ₛ-sucMono  ≤ₛ-Z
+codeSuc C𝟘 = ≤ₛ-sucMono  ≤ₛ-Z
+codeSuc C𝟙 = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc Cℕ = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc CType = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc (CΠ c cod) = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc (CΣ c cod) = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc (C≡ c x y) = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc (Cμ tyCtor c D x) = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc {ℓ = suc ℓ} (CCumul c) = ≤ₛ-sucMono ≤ₛ-Z
 
--- codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → smax S1 (codeSize c) ≤ₛ codeSize c
--- codeMaxL C⁇ = ℕmaxL ≤⨟ ℕLim-ext smax-oneL -- ℕsucMono smax-oneL
--- codeMaxL C℧ = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL C𝟘 = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL C𝟙 = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL Cℕ = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL CType = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL (CΠ c cod) = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL (CΣ c cod) = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL (C≡ c x y) = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL (Cμ tyCtor c D x) = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
--- codeMaxL {ℓ = suc ℓ} (CCumul c) = ℕmaxL ≤⨟ ℕLim-ext smax-oneL
+codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → smax S1 (codeSize c) ≤ₛ codeSize c
+codeMaxL C⁇ = smax-oneL -- ≤ₛ-sucMono smax-oneL
+codeMaxL C℧ = smax-oneL
+codeMaxL C𝟘 = smax-oneL
+codeMaxL C𝟙 = smax-oneL
+codeMaxL Cℕ = smax-oneL
+codeMaxL CType = smax-oneL
+codeMaxL (CΠ c cod) = smax-oneL
+codeMaxL (CΣ c cod) = smax-oneL
+codeMaxL (C≡ c x y) = smax-oneL
+codeMaxL (Cμ tyCtor c D x) = smax-oneL
+codeMaxL {ℓ = suc ℓ} (CCumul c) = smax-oneL
 
 
--- codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → smax (codeSize c) S1 ≤ₛ codeSize c
--- codeMaxR C⁇ = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR C℧ = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR C𝟘 = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR C𝟙 = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR Cℕ = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR CType = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR (CΠ c cod) = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR (CΣ c cod) = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR (C≡ c x y) = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR (Cμ tyCtor c D x) = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
--- codeMaxR {ℓ = suc ℓ} (CCumul c) = ℕmaxR ≤⨟ ℕLim-ext smax-oneR
+codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → smax (codeSize c) S1 ≤ₛ codeSize c
+codeMaxR C⁇ = smax-oneR
+codeMaxR C℧ = smax-oneR
+codeMaxR C𝟘 = smax-oneR
+codeMaxR C𝟙 = smax-oneR
+codeMaxR Cℕ = smax-oneR
+codeMaxR CType = smax-oneR
+codeMaxR (CΠ c cod) = smax-oneR
+codeMaxR (CΣ c cod) = smax-oneR
+codeMaxR (C≡ c x y) = smax-oneR
+codeMaxR (Cμ tyCtor c D x) = smax-oneR
+codeMaxR {ℓ = suc ℓ} (CCumul c) = smax-oneR
 
--- codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax (codeSize c1) (codeSize c2)
--- codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc c1) (codeSuc c2)
+codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax (codeSize c1) (codeSize c2)
+codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc c1) (codeSuc c2)
 
 
 -- ⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → S1 ≤ₛ ⁇Size x
--- ⁇suc ⁇⁇ = ℕsucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
--- ⁇suc ⁇℧ = ℕsucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
--- ⁇suc ⁇𝟙 = ℕsucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
--- ⁇suc (⁇ℕ n) = ℕsucMono ≤ₛ-Z
--- ⁇suc {suc ℓ} (⁇Type x) = ℕsucMono ≤ₛ-Z
--- ⁇suc (⁇Π x) = ℕsucMono ≤ₛ-Z
--- ⁇suc (⁇Σ x) = ℕsucMono ≤ₛ-Z
--- ⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ℕsucMono ≤ₛ-Z
--- ⁇suc (⁇μ tyCtor x) = ℕsucMono ≤ₛ-Z
--- ⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ℕsucMono ≤ₛ-Z
+-- ⁇suc ⁇⁇ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc ⁇℧ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc ⁇𝟙 = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇ℕ n) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc {suc ℓ} (⁇Type x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇Π x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇Σ x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇μ tyCtor x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ≤ₛ-sucMono ≤ₛ-Z
 
--- open import Cubical.Data.Maybe
+open import Cubical.Data.Maybe
