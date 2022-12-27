@@ -1,12 +1,16 @@
-module DataTypesBase where
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Nat
 open import Cubical.Data.FinData
 
-data IndSig : Type where
-  SigA SigR :  ℕ → IndSig → IndSig
+module Constructors where
+
+-- Used to classify the "skeleton" of inductive types before we've defined codes
+data IndSig : Set where
   SigE : IndSig
+  SigA SigR : ℕ → IndSig → IndSig
+
+
+
 
 record DataTypes : Set1 where
   field
@@ -19,6 +23,7 @@ record DataTypes : Set1 where
   DName : CName → Set
   DName tyCtor = Fin (numCtors tyCtor)
   field
+    -- Signature for each datatype
     indSkeleton : (tyCtor : CName) → DName tyCtor → IndSig
 
 open DataTypes {{...}} public

@@ -28,7 +28,7 @@ open import GTypes
 
 import GuardedAlgebra as A
 import GuardedModality as G
-open import DataTypesBase
+open import Constructors
 module Code
   {{ _ : DataTypes }}
   {{ _ : DataGerms }}

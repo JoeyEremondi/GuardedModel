@@ -16,7 +16,7 @@ open import Cubical.Foundations.Prelude
 open import GuardedAlgebra
 open import ApproxExact
 
-open import DataTypesBase
+open import Constructors
 
 module HeadDefs {{_ : DataTypes}}  where
 

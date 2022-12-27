@@ -31,7 +31,7 @@ open import GTypes
 open import ApproxExact
 open import Util
 
-open import DataTypesBase
+open import Constructors
 
 module UnkGerm where
 
