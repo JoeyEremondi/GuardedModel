@@ -53,7 +53,7 @@ open import Constructors
 
 open import Sizes.Size -- ℂ El ℧ C𝟙 refl
 module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives }}
-    (ℓ : ℕ)
+    {ℓ : ℕ}
     (smallerCodeSize : {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ ) → Size)
     -- (smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size)
   where
@@ -64,30 +64,30 @@ module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductiv
 
 
 
-codeSize' : ℂ ℓ → Size
-descSize' : ∀ {cB : ℂ ℓ} { sig} → ℂDesc cB sig → Size
+codeSize : ℂ ℓ → Size
+descSize : ∀ {cB : ℂ ℓ} { sig} → ℂDesc cB sig → Size
 
 -- The unknown type has a size that is larger than all other sizes
 -- We hack this using limits of ordinals
 -- TODO will this actually work?
-codeSize' C⁇ = S1
-codeSize' C℧ = S1
-codeSize' C𝟘 = S1
-codeSize' C𝟙 = S1
-codeSize' Cℕ = S1
-codeSize' CType = S1
-codeSize' (CΠ dom cod) =
+codeSize C⁇ = S1
+codeSize C℧ = S1
+codeSize C𝟘 = S1
+codeSize C𝟙 = S1
+codeSize Cℕ = S1
+codeSize CType = S1
+codeSize (CΠ dom cod) =
   S↑ (smax
-    ( (codeSize' dom))
-    ( (SLim dom λ x →  (codeSize' (cod x)))))
-codeSize' (CΣ dom cod) =
+    ( (codeSize dom))
+    ( (SLim dom λ x →  (codeSize (cod x)))))
+codeSize (CΣ dom cod) =
   S↑ (smax
-    ( (codeSize' dom))
-    (  (SLim dom λ x →  (codeSize' (cod x)))))
-codeSize'  (C≡ c x y) = S↑ ( (codeSize' c))
-codeSize' (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → descSize' (D d))
-codeSize' (CCumul x) = smallerCodeSize x
+    ( (codeSize dom))
+    (  (SLim dom λ x →  (codeSize (cod x)))))
+codeSize  (C≡ c x y) = S↑ ( (codeSize c))
+codeSize (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → descSize (D d))
+codeSize (CCumul x) = smallerCodeSize x
 
-descSize' CEnd = S1
-descSize' (CArg c hasArity D cB' reflp) = S↑ (smax (SLim _ λ b → codeSize' (c b)) (descSize' D))
-descSize' (CRec c hasArity D cB' reflp) = S↑ (smax (SLim _ λ b → codeSize' (c b)) (descSize' D))
+descSize CEnd = S1
+descSize (CArg c hasArity D cB reflp) = S↑ (smax (SLim _ λ b → codeSize (c b)) (descSize D))
+descSize (CRec c hasArity D cB reflp) = S↑ (smax (SLim _ λ b → codeSize (c b)) (descSize D))
