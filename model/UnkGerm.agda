@@ -156,13 +156,13 @@ open SmallerCode public
 -- This is usefl for encoding curried functions of n arguments,
 -- so we can ensure that the code version and germ version line up with the right
 -- number of arguments
-data GermTeleType : ℕ → Type1 where
-  GermNil : GermTeleType 0
-  GermCons : ∀ {n} → (A : Type) → (A → GermTeleType n ) → GermTeleType (ℕ.suc n)
+data GermTele : ℕ → Type1 where
+  GermNil : GermTele 0
+  GermCons : ∀ {n} → (A : Type) → (A → GermTele n ) → GermTele (ℕ.suc n)
 
-GermTele : ∀ {n} → GermTeleType n → Type
-GermTele GermNil = 𝟙
-GermTele (GermCons A teleRest) = Σ[ x ∈ A ](GermTele (teleRest x))
+GermTeleEnv : ∀ {n} → GermTele n → Type
+GermTeleEnv GermNil = 𝟙
+GermTeleEnv (GermCons A teleRest) = Σ[ x ∈ A ](GermTeleEnv (teleRest x))
 
 -- "Flattened" descriptions for data Germs.
 -- In order to make things terminating, the positive parts of a datatype's germ
@@ -179,9 +179,9 @@ data GermCtor {{_ : DataTypes}} : IndSig → Set1 where
   -- in the germ this is encoded as (x1 : A1) → ... → (xn : An) → ⁇Germ h,
   -- where h is the head of type Foo, or nothing if it's unknown.
   -- This reduces how much loss there is for approximating to ⁇
-  GArg : ∀ {sig n} → (A : GermTeleType n ) → (ixFor : GermTele A → Maybe TyHead) (D : GermCtor sig  ) → GermCtor  (SigA n sig)
+  GArg : ∀ {sig n} → (A : GermTele n ) → (ixFor : GermTeleEnv A → Maybe TyHead) (D : GermCtor sig  ) → GermCtor  (SigA n sig)
   -- Like arg, but always has the index type that's the same as the datatype, i.e. represents recursive self-reference
-  GRec : ∀ {sig n} → (A : GermTeleType n ) → (D : GermCtor  sig) → GermCtor  (SigR n sig)
+  GRec : ∀ {sig n} → (A : GermTele n ) → (D : GermCtor  sig) → GermCtor  (SigR n sig)
 
 
 -- W-type style translation for dataGerms
@@ -191,8 +191,8 @@ GermResponse : ∀  {{_ : DataTypes}} {sig} →  GermCtor sig → Type
 -- 0 pieces of data stored at the end
 GermResponse GEnd = 𝟘
 -- For arguments or recursive fields, response is whatever type is given by the telescope
-GermResponse (GArg A ixFor D) = GermTele A
-GermResponse (GRec A D) = GermTele A
+GermResponse (GArg A ixFor D) = GermTeleEnv A
+GermResponse (GRec A D) = GermTeleEnv A
 
 -- Index for each response of a Germ Constructor
 GermIndexFor : ∀ {{_  : DataTypes}} {sig} → (tyCtor : CName) → (D : GermCtor sig) → GermResponse D → Maybe TyHead

@@ -25,6 +25,8 @@ open import Cubical.Foundations.Transport
 open import Cubical.Data.Sum
 open import GuardedModality using (later-ext)
 
+open import Constructors
+
 open import ApproxExact
 open import W
 
@@ -35,62 +37,23 @@ open import Code
 -- open import Head
 open import Util
 
+data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Set2  where
+ GEndCode : GermCtorIsCode ℓ  GEnd
+ GArgCode : ∀ { sig n} {A : GermTele n} {ixFor} {D : GermCtor sig}
+   → (c+ : ℂ ℓ)
+   → (iso+ : Iso (GermTeleEnv A) (El c+))
+   → GermCtorIsCode ℓ D
+   → GermCtorIsCode ℓ (GArg A ixFor D )
+ GRecCode : ∀ {sig n} {A : GermTele n} {D : GermCtor sig}
+   → (c+ :  ℂ ℓ)
+   → (iso+ : Iso (GermTeleEnv A) (El c+))
+   → GermCtorIsCode ℓ D
+   → GermCtorIsCode ℓ (GRec A D)
 
--- Predicate for a Germ Constructor whose types are all given by codes in our universe
-record GermCtorIsCode {{æ : Æ}} (ℓ : ℕ) (ctor : GermCtor) : Type1 where
-  inductive
-  field
-    germCommandCode : ℂ ℓ
-    germCommandIso : Iso (GermCommand ctor) (El germCommandCode)
-    germHOCode : ApproxEl germCommandCode → ℂ ℓ
-    germHOIso : ∀ com → Iso (GermHOResponse ctor com) (El (germHOCode (approx (Iso.fun germCommandIso com))))
-    germHOUnkCode : ApproxEl germCommandCode → ℂ ℓ
-    germHOUnkIso : ∀ com → Iso (GermHOUnkResponse ctor com) (El (germHOUnkCode (approx (Iso.fun germCommandIso com))))
 
-open GermCtorIsCode public
 
--- Inductive representation of W-types, again useful for convincing Agda things terminate
-record ℂFunctor {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) (X : Type) :  Type where
-  inductive
-  constructor ℂEl
-  field
-    d : DName tyCtor
-    com : El (ℂCommand (ctors d))
-    foResp : Fin (#FO tyCtor d) → X
-    hoResp : (r : El (ℂHOResponse (ctors d) (approx com))) → X
+-- open GermCtorIsCode public
 
-data ℂμ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) : Type where
-  ℂinit : ℂFunctor ℓ tyCtor ctors (ℂμ ℓ tyCtor ctors) → ℂμ ℓ tyCtor ctors
-  μ⁇ μ℧ : ℂμ ℓ tyCtor ctors
-
--- record ℂGermCtor ℓ : Type where
---     inductive
---     field
---       ℂGermCommand : ℂ ℓ
---       ℂGermHOResponse : ApproxEl ℂGermCommand → ℂ ℓ
---       ℂiGermHO : (c : ApproxEl ℂGermCommand) → ApproxEl (ℂGermHOResponse c) → CName
---       ℂGermHOUnkResponse : ApproxEl ℂGermCommand → ℂ ℓ
-
--- open ℂGermCtor
-
--- record ℂGermFunctor {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) (X : CName → Type) :  Type where
---   inductive
---   constructor ℂGermEl
---   field
---     d : DName tyCtor
---     com : El (GermCtorIsCode.germCommandCode (isCodes tyCtor d))
---     foResp : (n : Fin (#FO tyCtor d)) → X (iFO tyCtor d n)
---     hoResp : (r : El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx com)))
---       → X
---         (iGermHO (ctors tyCtor d)
---           (Iso.inv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)
---           (Iso.inv (GermCtorIsCode.germHOIso (isCodes tyCtor d) _)
---             (substPath (λ x → El (GermCtorIsCode.germHOCode (isCodes tyCtor d) (approx x))) (symPath (Iso.rightInv (GermCtorIsCode.germCommandIso (isCodes tyCtor d)) com)) r)))
---     hoUnkResp : (r : El (GermCtorIsCode.germHOUnkCode (isCodes tyCtor d) (approx com))) → ⁇Ty ℓ
-
--- data ℂGermμ {{æ  : Æ}} ℓ (ctors : (tyCtor : CName) → (d : DName tyCtor) → GermCtor) (isCodes : (tyCtor : CName) → (d : DName tyCtor) →  GermCtorIsCode ℓ (ctors tyCtor d)) (tyCtor : CName) : Type where
---   ℂGerminit : ℂGermFunctor ℓ ctors isCodes tyCtor (ℂGermμ ℓ ctors isCodes) → ℂGermμ ℓ ctors isCodes tyCtor
---   μG⁇ μG℧ : ℂGermμ ℓ ctors isCodes tyCtor
 
 -- The things we need declared for our inductive types to have them
 -- fit into our Universe ala Tarski
@@ -154,7 +117,8 @@ record CodesForInductives : Set2 where
 
   -- Every Inductive type can be converted to a ℂμ
   toℂμ : ∀ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) →
-    W̃ (Arg (λ d → interpCtor tyCtor d (ctors d))) tt → ℂμ ℓ tyCtor ctors
+    ?
+    -- W̃ (Arg (λ d → interpCtor tyCtor d (ctors d))) tt → ℂμ ℓ tyCtor ctors
   toℂμ ℓ tyCtor ctors W℧ = μ℧
   toℂμ ℓ tyCtor ctors W⁇ = μ⁇
   toℂμ ℓ tyCtor ctors (Wsup (FC (d , com) resp)) = ℂinit (toℂFunctor d (ℂμ ℓ tyCtor ctors) (FC com λ r → toℂμ ℓ tyCtor ctors (resp r)))

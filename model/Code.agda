@@ -92,7 +92,7 @@ record CodeModule
     approxExact≡ {{æ = Exact}} x = toApproxExact _ x
 
 
-    data HasArity : ℕ → ℂ → Type
+    data HasArity : TyHead → ℕ → ℂ → Type
 
 
      -- Code-based Descriptions of inductive data types
@@ -344,11 +344,13 @@ record CodeModule
     -- Codes for descriptions of inductive types
     --
     data HasArity where
-      Arity0 : ∀ {c} → HasArity 0 c
+      Arity0 : ∀ {h c} → HasArity h 0 c
+      ArityΠ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → HasArity HΠ n (cod x)) → HasArity HΠ (ℕ.suc n) (CΠ dom cod)
+      ArityΣ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → HasArity HΣ n (cod x)) → HasArity HΣ (ℕ.suc n) (CΠ dom cod)
 
     data ℂDesc  where
       CEnd : ∀ {cB} → ℂDesc cB SigE
-      CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
+      CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
       CRec : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc cB rest)
         → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
         → ℂDesc cB (SigR n rest)
