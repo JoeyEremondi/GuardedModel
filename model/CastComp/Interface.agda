@@ -100,7 +100,7 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Set 
       → (csource cdest : ℂ ℓ)
       →  (x : El csource)
       → ( pfc1 : (smax (codeSize csource) (codeSize cdest)  ≡p csize))
-      -> LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
+      -> LÆ ( El cdest )
 
 
 open SizedCastMeet public
@@ -200,7 +200,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
        → (Hide (smax (codeSize csource)  (codeSize cdest) <ₛ csize))
       → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {clt})
-    = fst <$> oCast (self (<cSize clt)) csource cdest x reflp
+    = oCast (self (<cSize clt)) csource cdest x reflp
 
 
   infix 20 [_]⟨_⇐_⟩_By_
@@ -313,13 +313,6 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
     → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
   [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
 
-  infix 20 ⟨_⇐_⟩ₛ_By_
-  ⟨_⇐_⟩ₛ_By_ : ∀ {{_ : Æ}}
-      → (cdest csource : ℂ ℓ)
-      → (x : El csource)
-      →  Hide (smax (codeSize csource)  (codeSize cdest) <ₛ csize)
-      → LÆ ( Σ[ xdest ∈ El cdest ]( elSize cdest xdest ≤ₛ elSize csource x ) )
-  ⟨_⇐_⟩ₛ_By_ cdest csource x (hide {clt}) = oCast (self (<cSize clt)) csource cdest x reflp
 
   self-1 : ∀ {allowed cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) allowed cs vs
   self-1 ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
