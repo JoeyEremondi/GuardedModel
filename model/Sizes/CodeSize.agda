@@ -89,5 +89,5 @@ codeSize (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → descSize (D d))
 codeSize (CCumul x) = smallerCodeSize x
 
 descSize CEnd = S1
-descSize (CArg c hasArity D cB reflp) = S↑ (smax (SLim _ λ b → codeSize (c b)) (descSize D))
-descSize (CRec c hasArity D cB reflp) = S↑ (smax (SLim _ λ b → codeSize (c b)) (descSize D))
+descSize (CArg c hasArity D cB reflp) = S↑ (smax* ((SLim _ λ b → codeSize (c b)) ∷ descSize D ∷ codeSize cB ∷ []))
+descSize (CRec c hasArity D cB reflp) = S↑ (smax* ((SLim _ λ b → codeSize (c b)) ∷ descSize D ∷ codeSize cB ∷ []))

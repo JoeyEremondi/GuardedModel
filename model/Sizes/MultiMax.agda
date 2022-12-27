@@ -51,3 +51,7 @@ abstract
 
   smax*-consR :  ∀ {n o} {os : Vec Size n} → smax o (smax* os) ≤ₛ  smax* (o ∷ os)
   smax*-consR = ≤ₛ-refl
+
+FLit : ∀ {m} →  (n : ℕ) → Fin (ℕ.suc n + m)
+FLit zero = Fin.zero
+FLit (suc n) = suc (FLit n)

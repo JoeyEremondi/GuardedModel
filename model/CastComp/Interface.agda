@@ -141,7 +141,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
   [_]⁇_By_ æ  = ⁇_By_ {{æ}}
 
   infix 20 _∋_⊓_By_
-  _∋_⊓_By_ : ∀ {{_ : Æ}}
+  _∋_⊓_By_ : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
       → (Hide (codeSize c <ₛ csize))
@@ -153,13 +153,13 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
   -- ... | inr (inr reflp) = oMeet (self (<Size ltc)) c x y reflp
   --     -- oMeet (self  (<Size lt)) c x y reflp
 
-  infix 20 [_]_∋_⊓_By_
-  [_]_∋_⊓_By_ : ∀ (æ : Æ)
-      → (c : ℂ ℓ)
-      → (x y : El {{æ = æ}} c)
+  infix 20 _∋_⊓_approxBy_
+  _∋_⊓_approxBy_ :
+      (c : ℂ ℓ)
+      → (x y : ApproxEl c)
       →  (Hide( codeSize c <ₛ csize))
-      → LÆ {{æ = æ}} (El {{æ = æ}} c)
-  [_]_∋_⊓_By_ æ = _∋_⊓_By_ {{æ}}
+      → (ApproxEl c)
+  _∋_⊓_approxBy_ c x y lt = fromL (_∋_⊓_By_ {{æ = Approx}} c x y lt)
 
 
   infix 20 _⊓_By_
@@ -194,7 +194,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       oCodeMeetSize (self (<cSize lt)) c1 c2 reflp
 
   infix 20 ⟨_⇐_⟩_By_
-  ⟨_⇐_⟩_By_ : ∀ {{_ : Æ}}
+  ⟨_⇐_⟩_By_ : ∀ {{æ : Æ}}
       → (cdest csource : ℂ ℓ)
       → (x : El csource)
        → (Hide (smax (codeSize csource)  (codeSize cdest) <ₛ csize))
@@ -203,13 +203,13 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
     = oCast (self (<cSize clt)) csource cdest x reflp
 
 
-  infix 20 [_]⟨_⇐_⟩_By_
-  [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
-      → (cdest csource : ℂ ℓ)
-      → (x : El {{æ = æ}} csource)
+  infix 20 ⟨_⇐_⟩_approxBy_
+  ⟨_⇐_⟩_approxBy_ :
+      (cdest csource : ℂ ℓ)
+      → (x : ApproxEl csource)
       →     Hide  (smax (codeSize csource)  (codeSize cdest) <ₛ csize)
-      → LÆ {{æ = æ}} (El {{æ = æ}} cdest)
-  [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ}}
+      → (ApproxEl cdest)
+  ⟨_⇐_⟩_approxBy_ cdest csource x lt = fromL (⟨_⇐_⟩_By_ {{æ = Approx}} cdest csource x lt)
 
 
   -- Helper to manage the common case of having two elements of different codes' types,
@@ -263,15 +263,14 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
      By Decreasing lt12
 
 
-  [_]_,,_∋_⊓_By_ :
-    ∀ (æ : Æ)
-      c1 c2 →
-      (x : El {{æ = æ}} c1) →
-      (y : El {{æ = æ}} c2) →
+  [_⊓_]∋_⊓_approxBy_ :
+    ∀ c1 c2 →
+      (x : ApproxEl c1) →
+      (y : ApproxEl c2) →
       (clt : Hide (smax ( codeSize c1) ( codeSize c2) <ₛ csize)) →
       {lt : _} →
-      LÆ {{æ = æ}} (El {{æ = æ}} (c1 ⊓ c2 By (hide {arg = lt }) ))
-  [_]_,,_∋_⊓_By_ æ = _,,_∋_⊓_By_ {{æ = æ}}
+      (ApproxEl  (c1 ⊓ c2 By (hide {arg = lt }) ))
+  [_⊓_]∋_⊓_approxBy_ c1 c2 x y clt = fromL (_,,_∋_⊓_By_ {{æ = Approx}} c1 c2 x y clt)
 
 
 
@@ -305,13 +304,13 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       By Decreasing lt2
     pure (x1 , x2)
 
-  [_]⟨_,_⇐⊓⟩_By_ : ∀ (æ : Æ) c1 c2
+  ⟨_,_⇐⊓⟩_approxBy_ : ∀ c1 c2
     → {lt : _}
     → let c1⊓c2 = (c1 ⊓ c2 By (hide {arg = lt }) )
-    in (x12 : El {{æ = æ}} c1⊓c2)
+    in (x12 : ApproxEl  c1⊓c2)
     → (clt : Hide (smax (codeSize c1)  (codeSize c2) <ₛ csize))
-    → LÆ {{æ = æ}} (El {{æ = æ}} c1 × El {{æ = æ}} c2)
-  [_]⟨_,_⇐⊓⟩_By_ æ =  ⟨_,_⇐⊓⟩_By_ {{æ = æ}}
+    → (ApproxEl c1 × ApproxEl c2)
+  ⟨_,_⇐⊓⟩_approxBy_ c1 c2 x clt =  fromL (⟨_,_⇐⊓⟩_By_ {{æ = Approx}} c1 c2 x clt)
 
 
   self-1 : ∀ {allowed cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) allowed cs vs
