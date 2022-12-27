@@ -351,7 +351,8 @@ record CodeModule
     data ℂDesc  where
       CEnd : ∀ {cB} → ℂDesc cB SigE
       CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
-      CRec : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (D : ℂDesc cB rest)
+      CRec : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity HΣ n (c b))
+        → (D : ℂDesc cB rest)
         → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
         → ℂDesc cB (SigR n rest)
 
@@ -359,30 +360,30 @@ record CodeModule
 
     CommandD (CEnd) b = 𝟙
     CommandD (CArg c _ D _ _) b = Σ[ a ∈ El (c b) ] CommandD D (b , approx a)
-    CommandD (CRec c D _ _) b = CommandD D b
+    CommandD (CRec c _ D _ _) b = CommandD D b
 --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd) b com = 𝟘
     ResponseD (CArg c _ D _ _) b (a , com) = ResponseD D (b , a) com
-    ResponseD (CRec c D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
+    ResponseD (CRec c _ D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
 
     toApproxCommandD {{æ = Approx}} D b com = com
     toApproxCommandD (CEnd ) b com = com
     toApproxCommandD (CArg c _ D cB' x) b (a , com) = approx  {c = c b}  a , toApproxCommandD D (b , approx {c = c b} a) com
-    toApproxCommandD (CRec c D cB' x) b com = toApproxCommandD D b com
+    toApproxCommandD (CRec c _ D cB' x) b com = toApproxCommandD D b com
 
     toApproxResponseD {{æ = Approx}} D b com r = r
     toApproxResponseD (CArg c _ D cB' x) b com r = toApproxResponseD D (b , (fst com)) (snd com) r
-    toApproxResponseD (CRec c  D cB' x) b com (Rec r) = Rec (approx {c = (c b)} r)
-    toApproxResponseD (CRec c  D cB' x) b com (Rest r) = Rest (toApproxResponseD D b _ r)
+    toApproxResponseD (CRec c _  D cB' x) b com (Rec r) = Rec (approx {c = (c b)} r)
+    toApproxResponseD (CRec c _  D cB' x) b com (Rest r) = Rest (toApproxResponseD D b _ r)
 
     toExactCommandD (CEnd ) b com = com
     toExactCommandD (CArg c _ D cB' x) b (a , com) = toExact (c b) a , toExactCommandD D (b , _) (substPath (λ a → CommandD ⦃ æ = Approx ⦄ D (b , a)) (symPath (toApproxExact (c b) a)) com)
-    toExactCommandD (CRec c  D cB' x) b com = toExactCommandD D b com
+    toExactCommandD (CRec c _  D cB' x) b com = toExactCommandD D b com
 
     toExactResponseD (CArg c _ D cB' x) b com r = toExactResponseD D (b , (fst com)) (snd com) r
-    toExactResponseD (CRec c D cB' x) b com (Rec r) = Rec (toExact (c b) r)
-    toExactResponseD (CRec c D cB' x) b com (Rest r) = Rest (toExactResponseD D b _ r)
+    toExactResponseD (CRec c _ D cB' x) b com (Rec r) = Rec (toExact (c b) r)
+    toExactResponseD (CRec c _ D cB' x) b com (Rest r) = Rest (toExactResponseD D b _ r)
 
     toApproxExactCommandD (CEnd) b com = refl
     toApproxExactCommandD (CArg c _ D cB' x) b (a , com) =
@@ -391,11 +392,11 @@ record CodeModule
         , compPathEq (congP (λ _ x → toApproxCommandD ⦃ æ = Exact ⦄ D _ (toExactCommandD D _ x )) pth) (toApproxExactCommandD D _ com))
       where
         pth = symP (subst-filler (λ v → CommandD {{æ = _}} D (b , v)) (λ i₁ → toApproxExact (c b) a (~ i₁)) com)
-    toApproxExactCommandD (CRec c D cB' x) b com = toApproxExactCommandD D b com
+    toApproxExactCommandD (CRec c _ D cB' x) b com = toApproxExactCommandD D b com
 
     toApproxExactResponseD (CArg c _ D cB' x) b com r = toApproxExactResponseD D _ (snd com) r
-    toApproxExactResponseD (CRec c D cB' x) b com (Rec r) = congPath Rec (toApproxExact (c b) r)
-    toApproxExactResponseD (CRec c D cB' x) b com (Rest r) = congPath Rest (toApproxExactResponseD D b com r)
+    toApproxExactResponseD (CRec c _ D cB' x) b com (Rec r) = congPath Rec (toApproxExact (c b) r)
+    toApproxExactResponseD (CRec c _ D cB' x) b com (Rest r) = congPath Rest (toApproxExactResponseD D b com r)
 
 
     -- transportIndexPathP :
