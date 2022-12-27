@@ -16,24 +16,26 @@ open import Cubical.Foundations.Prelude
 open import UnkGerm
 open import GuardedAlgebra
 open import ApproxExact
+open import Constructors
+
 
 module Head {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 
-open import HeadDefs numTypes public
+open import HeadDefs public
 
-unkHead : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ → GHead
-unkHead  ⁇⁇ = H⁇
-unkHead  ⁇℧ = H℧
-unkHead  ⁇𝟙 = HStatic H𝟙
-unkHead  (⁇Type x) = HStatic HType
-unkHead  (⁇Π x) = HStatic HΠ
-unkHead  (⁇Σ x) = HStatic HΣ
-unkHead  (⁇≡ x) = HStatic H≅
-unkHead  (⁇μ tyCtor _) = HStatic (HCtor tyCtor)
-unkHead  (⁇Cumul c x) = HStatic HCumul
-unkHead  (⁇ℕ n) = HStatic Hℕ
+-- unkHead : ∀ {{_ : Æ}} {ℓ} → ⁇Ty ℓ → GHead
+-- unkHead  ⁇⁇ = H⁇
+-- unkHead  ⁇℧ = H℧
+-- unkHead  ⁇𝟙 = HStatic H𝟙
+-- unkHead  (⁇Type x) = HStatic HType
+-- unkHead  (⁇Π x) = HStatic HΠ
+-- unkHead  (⁇Σ x) = HStatic HΣ
+-- unkHead  (⁇≡ x) = HStatic H≅
+-- unkHead  (⁇μ tyCtor _) = HStatic (HCtor tyCtor)
+-- unkHead  (⁇Cumul c x) = HStatic HCumul
+-- unkHead  (⁇ℕ n) = HStatic Hℕ
 
 -- valueHeadType : TyHead → Set
 -- data ValHead : (h : GHead) → Set

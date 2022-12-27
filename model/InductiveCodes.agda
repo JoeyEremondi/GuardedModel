@@ -36,8 +36,9 @@ module InductiveCodes {{_ : DataTypes}} {{_ : DataGerms}} where
 open import Code
 -- open import Head
 open import Util
+open import WMuConversion
 
-data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Set2  where
+data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Type1  where
  GEndCode : GermCtorIsCode ℓ  GEnd
  GArgCode : ∀ { sig n} {A : GermTele n} {ixFor} {D : GermCtor sig}
    → (c+ : ℂ ℓ)
@@ -57,7 +58,7 @@ data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Se
 
 -- The things we need declared for our inductive types to have them
 -- fit into our Universe ala Tarski
-record CodesForInductives : Set2 where
+record CodesForInductives : Type2 where
   field
     ℓₚ : (ℓ : ℕ) → CName → ℕ
     Params : (ℓ : ℕ) → (tyCtor : CName) → ℂ (ℓₚ ℓ tyCtor)
@@ -74,77 +75,6 @@ record CodesForInductives : Set2 where
     --Every data germ can be described by a code, with some parts hidden behind the guarded modality
     dataGermIsCode : DataGermIsCode
 
-  -- -- Inductive type for codes that includes the codes for germs as fields
-  -- -- This is awkward, but needed to convince Agda that our size calculation halts
-  -- data CodeSizer {ℓ} : ℂ ℓ → Type1
-  -- data CtorSizer {ℓ} : (ℂCtor {ℓ = ℓ}) → Type1
-  -- data CodeSizer {ℓ} where
-  --   -- We need to
-  --   CS⁇ : (dgIsCode : ∀ {{æ : Æ}} → _) → (∀ {{æ : Æ}} → dgIsCode ≡c dataGermIsCode) → CodeSizer C⁇
-  --   CS℧ : CodeSizer C℧
-  --   CS𝟘 : CodeSizer C𝟘
-  --   CS𝟙 : CodeSizer C𝟙
-  --   CSℕ : CodeSizer Cℕ
-  --   CSType : ∀ {{inst : 0< ℓ}} → CodeSizer CType
-  --   CSCumul : ∀ {{inst : 0< ℓ}} {c} → CodeSizer (CCumul c)
-  --   CSΠ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΠ dom cod)
-  --   CSΣ : ∀ {dom cod} → CodeSizer dom → (∀ x → CodeSizer (cod x)) → CodeSizer (CΣ dom cod)
-  --   CS≡ : ∀ {c x y} → CodeSizer c → CodeSizer (C≡ c x y)
-  --   CSμ : ∀ {tyCtor cI D i}
-  --     → (∀ d → CtorSizer (D d))
-  --     → CodeSizer (Cμ tyCtor cI D i)
-  -- data CtorSizer {ℓ} where
-  --   CElS :
-  --     ∀ {c r}
-  --     → CodeSizer c
-  --     → (∀ x → CodeSizer (r x))
-  --     → CtorSizer (record { ℂCommand = c ; ℂHOResponse = r })
-
-  -- codeSizer : ∀ {ℓ} (c : ℂ ℓ ) → CodeSizer c
-  -- ctorSizer : ∀ {ℓ} (c : ℂCtor {ℓ = ℓ}) → CtorSizer c
-  -- codeSizer C⁇ = CS⁇ _ reflc
-  -- codeSizer C℧ = CS℧
-  -- codeSizer C𝟘 = CS𝟘
-  -- codeSizer C𝟙 = CS𝟙
-  -- codeSizer Cℕ = CSℕ
-  -- codeSizer CType = CSType
-  -- codeSizer (CCumul x) = CSCumul
-  -- codeSizer (CΠ c cod) = CSΠ (codeSizer c) (λ x → codeSizer _)
-  -- codeSizer (CΣ c cod) = CSΣ (codeSizer c) (λ x → codeSizer _)
-  -- codeSizer (C≡ c x y) = CS≡ (codeSizer _)
-  -- codeSizer (Cμ tyCtor c D x) = CSμ (λ d → ctorSizer _)
-  -- ctorSizer D = CElS (codeSizer _) (λ x → codeSizer _)
-
-  -- Every Inductive type can be converted to a ℂμ
-  toℂμ : ∀ {{æ  : Æ}} ℓ (tyCtor : CName) (ctors : DCtors ℓ tyCtor) →
-    ?
-    -- W̃ (Arg (λ d → interpCtor tyCtor d (ctors d))) tt → ℂμ ℓ tyCtor ctors
-  toℂμ ℓ tyCtor ctors W℧ = μ℧
-  toℂμ ℓ tyCtor ctors W⁇ = μ⁇
-  toℂμ ℓ tyCtor ctors (Wsup (FC (d , com) resp)) = ℂinit (toℂFunctor d (ℂμ ℓ tyCtor ctors) (FC com λ r → toℂμ ℓ tyCtor ctors (resp r)))
-    where
-        toℂFunctor : ∀ (d : DName tyCtor) (X : Type) →
-            ⟦ interpCtor tyCtor d  (ctors d) ⟧F (λ _ → X) tt → ℂFunctor ℓ tyCtor ctors X
-        toℂFunctor d X (FC com resp) = ℂEl d com (λ r → resp (inl r)) λ r → resp (inr r)
-
-  -- toℂμGerm : ∀ {{æ  : Æ}} ℓ (tyCtor : CName)
-  --   → ⁇GermTy ℓ tyCtor
-  --   → ℂGermμ ℓ (germCtor ℓ) (dataGermIsCode ℓ) tyCtor
-  -- toℂμGerm ℓ tyCtor  DataGerms.⁇℧ = μG℧
-  -- toℂμGerm ℓ tyCtor  DataGerms.⁇⁇ = μG⁇
-  -- toℂμGerm ℓ tyCtor  (DataGerms.Wsup d com germFO germHO germHOUnk) = {!!}
-  --   where
-  --     toℂGermFunctor
-    -- ℂGerminit
-    --   (ℂGermEl d
-    --     (Iso.fun (GermCtorIsCode.germCommandIso (dataGermIsCode ℓ tyCtor d)) com)
-    --     (λ n → toℂμGerm ℓ _ (germFO n))
-    --     (λ r → toℂμGerm ℓ _ (transport (congPath (⁇Germ ℓ sc _)
-    --                           (congPath just (cong₂ (iGermHO (germCtor ℓ tyCtor d))
-    --                           (symPath (Iso.leftInv (GermCtorIsCode.germCommandIso (dataGermIsCode ℓ tyCtor d)) com))
-    --                           (congP (λ i → Iso.inv (GermCtorIsCode.germHOIso (dataGermIsCode ℓ tyCtor d) _)) (subst-filler (λ x → El (GermCtorIsCode.germHOCode (dataGermIsCode ℓ tyCtor d) (approx x))) {!!} r ▷ {!!})))))
-    --                       (germHO (Iso.inv (GermCtorIsCode.germHOIso (dataGermIsCode ℓ tyCtor d) com) r))))
-    --     λ r → transport (sym ⁇lob) (germHOUnk (Iso.inv (GermCtorIsCode.germHOUnkIso (dataGermIsCode ℓ tyCtor d) com) r)))
 
 
 open CodesForInductives {{...}} public

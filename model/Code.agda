@@ -567,8 +567,14 @@ open CIMod public
 ⁇Ty : ∀ {{æ : Æ}} ℓ → Set
 ⁇Ty {{æ}} ℓ = (CodeModule.⁇ (CodeModuleAt ℓ) {{æ}})
 
-⁇GermTy : ∀ {{æ : Æ}} ℓ (tyCtor : CName) → Set
-⁇GermTy ℓ tyCtor = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) (just (HCtor tyCtor))
+⁇CombinedTy : ∀ {{æ : Æ}} ℓ (mi : Maybe TyHead) → Set
+⁇CombinedTy ℓ mi = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) mi
+
+⁇GermTy : ∀ {{æ : Æ}} ℓ (h : TyHead) → Set
+⁇GermTy ℓ h = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) (just h)
+
+⁇DataGermTy : ∀ {{æ : Æ}} ℓ (tyCtor : CName) → Set
+⁇DataGermTy ℓ tyCtor = ⁇Germ ℓ (SmallerCodeAt ℓ) (A.dfix (▹⁇Rec {ℓ = ℓ})) (just (HCtor tyCtor))
 
 ⁇lob : ∀ {{ æ : Æ }} {ℓ} → ⁇Ty ℓ ≡ ⁇Germ ℓ (SmallerCodeAt ℓ) (A.next (⁇Rec {ℓ = ℓ})) nothing -- F⁇ {ℓ} (A.next (⁇Rec {ℓ = ℓ}))
 ⁇lob {ℓ} = congPath (λ x → ⁇Germ ℓ (SmallerCodeAt ℓ) x nothing) (A.pfix (CodeModule.▹⁇Rec (CodeModuleAt ℓ))) --congPath F⁇ (A.pfix _)
@@ -605,8 +611,8 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧Approx = ℧ {{Approx}}
 
 
-DCtors : {ℓ : ℕ} → CName → Set
-DCtors {ℓ = ℓ} tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
+DCtors : ℕ → CName → Set
+DCtors ℓ tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
 
 
 ▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self

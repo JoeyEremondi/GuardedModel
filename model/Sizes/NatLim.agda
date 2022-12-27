@@ -24,6 +24,8 @@ open import GTypes
 open import Code
 open import Cubical.Foundations.Transport
 
+open import Constructors
+
 module Sizes.NatLim {{_ : DataTypes}} {{_ : DataGerms}} where
 
 

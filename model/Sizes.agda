@@ -4,6 +4,8 @@ open import UnkGerm
 open import InductiveCodes
 open import Cubical.Data.Nat
 
+open import Constructors
+
 module Sizes {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives }} where
 
 open import Sizes.Size public

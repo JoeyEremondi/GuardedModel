@@ -65,7 +65,7 @@ data ℂDescEl' {ℓ} (X : Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cB 
   -- We always ensure the first layer of descriptions is data-constructors
   -- Since we use these for comparing things for consistency
 
-data ℂμ {ℓ} (tyCtor : CName) (D : DCtors tyCtor)  : Set where
+data ℂμ {ℓ} (tyCtor : CName) (D : DCtors ℓ tyCtor)  : Set where
     Cinit : (d : DName tyCtor) → ℂDescEl {ℓ = ℓ} (D d) (ℂμ tyCtor D) Gtt → ℂμ  tyCtor D
     Cμ⁇ Cμ℧ :  ℂμ tyCtor D
 
@@ -73,7 +73,7 @@ data ℂμ {ℓ} (tyCtor : CName) (D : DCtors tyCtor)  : Set where
   -- ℂμ1 : ∀ {ℓ} {cI : ℂ ℓ} (tyCtor : CName) (D : DName tyCtor → ℂDesc cI) (i : ApproxEl cI)  → Set
   -- ℂμ1 tyCtor D = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
-WArg : ∀ {ℓ} {tyCtor : CName} (D : DCtors {ℓ = ℓ} tyCtor) →   Set
+WArg : ∀ {ℓ} {tyCtor : CName} (D : DCtors ℓ tyCtor) →   Set
 WArg D  = W̃ (Arg λ d → interpDesc (D d) Gtt) tt
 
 
@@ -117,10 +117,10 @@ fromCElF (CRec c _ D _ _) (ElRec f1 f2) (Rest r) =  fromCElF D f2 r --fromCElF (
 
 
 
-fromCμ : ∀ {ℓ} {tyCtor : CName} {D : DCtors {ℓ = ℓ} tyCtor}
+fromCμ : ∀ {ℓ} {tyCtor : CName} {D : DCtors ℓ tyCtor}
     → ℂμ tyCtor D
     → WArg D
-fromCEl : ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors {ℓ = ℓ} tyCtor) {b : ApproxEl cB}
+fromCEl : ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors ℓ tyCtor) {b : ApproxEl cB}
     → (x : ℂDescEl  D (ℂμ tyCtor E) b)
     → (r : ResponseD D b (fromCElCommand D x))
         → WArg E
@@ -137,7 +137,7 @@ fromCEl (CRec c _ D _ _) E (ElRec f1 f2) (Rest r) = fromCEl D E f2 r
 
 
 toCEl :
-  ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors {ℓ = ℓ} tyCtor ) {b : ApproxEl cB} →
+  ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors ℓ tyCtor ) {b : ApproxEl cB} →
   (com : CommandD D b) →
   (k : (r : ResponseD D b com ) →
                 WArg E)
@@ -148,13 +148,12 @@ toCEl :
   → (ℂDescEl  D (ℂμ tyCtor E) b)
 
 
-toCμ : ∀ {ℓ} {tyCtor : CName} (D : DCtors {ℓ = ℓ} tyCtor)
+toCμ : ∀ {ℓ} {tyCtor : CName} (D : DCtors ℓ tyCtor)
   → (x : WArg D)
   → ℂμ tyCtor D
 toCμ D (Wsup (FC (d , com) resp)) = Cinit d (toCEl (D d) D com resp (λ r → toCμ D (resp r)))
 toCμ D W℧ = Cμ℧
 toCμ D W⁇ = Cμ⁇
--- wInd (λ (i , _) → ℂμ _ D) (λ {i} (FC (d , com) k) φ → Cinit d (toCEl (D d) D com k φ)) Cμ℧ Cμ⁇
 
 
 toCEl (CEnd) E _ k φ = ElEnd
@@ -174,7 +173,7 @@ toCElF (CRec c _ D _ reflp) com k = ElRec (λ a → k (Rec a)) (toCElF D com (λ
 
 
 fromToCElCommand :
-  ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors tyCtor) {b : ApproxEl cB}
+  ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E : DCtors ℓ tyCtor) {b : ApproxEl cB}
   → (com : CommandD D b)
   → (k : (r : ResponseD D b com ) →
                 WArg E)

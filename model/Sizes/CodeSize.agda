@@ -29,6 +29,7 @@ open import W
 
 open import ApproxExact
 open import GTypes
+open import Sizes.NatLim
 
 
 -- open import InductiveCodes
@@ -45,16 +46,15 @@ open import Code
 
 open import Sizes.MultiMax
 
-open import Sizes.NatLim
 open import InductiveCodes
 open import Head
 open import Util
+open import Constructors
 
 open import Sizes.Size -- ℂ El ℧ C𝟙 refl
 module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives }}
     (ℓ : ℕ)
     (smallerCodeSize : {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ ) → Size)
-    (codeSizeConsumeFuel : (c : ℂ ℓ) → Size)
     -- (smallerElSize : {{æ : Æ }} → {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size)
   where
 
@@ -65,11 +65,12 @@ module Sizes.CodeSize {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductiv
 
 
 codeSize' : ℂ ℓ → Size
+descSize' : ∀ {cB : ℂ ℓ} { sig} → ℂDesc cB sig → Size
 
 -- The unknown type has a size that is larger than all other sizes
 -- We hack this using limits of ordinals
 -- TODO will this actually work?
-codeSize' C⁇ = S↑ (SLim {ℓ = ℕ.suc ℓ} CType codeSizeConsumeFuel)
+codeSize' C⁇ = S1
 codeSize' C℧ = S1
 codeSize' C𝟘 = S1
 codeSize' C𝟙 = S1
@@ -84,5 +85,9 @@ codeSize' (CΣ dom cod) =
     ( (codeSize' dom))
     (  (SLim dom λ x →  (codeSize' (cod x)))))
 codeSize'  (C≡ c x y) = S↑ ( (codeSize' c))
-codeSize' (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → smax (codeSize' (ℂCommand (D d))) (SLim (ℂCommand (D d)) (λ com → codeSize' (ℂHOResponse (D d) com))))
-codeSize' (CCumul {{inst = inst}} c) = S↑ (smallerCodeSize c)
+codeSize' (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → descSize' (D d))
+codeSize' (CCumul x) = smallerCodeSize x
+
+descSize' CEnd = S1
+descSize' (CArg c hasArity D cB' reflp) = S↑ (smax (SLim _ λ b → codeSize' (c b)) (descSize' D))
+descSize' (CRec c hasArity D cB' reflp) = S↑ (smax (SLim _ λ b → codeSize' (c b)) (descSize' D))

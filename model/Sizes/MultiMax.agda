@@ -1,6 +1,9 @@
 
 open import UnkGerm
 open import InductiveCodes
+
+open import Constructors
+
 module Sizes.MultiMax {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Sizes.Size
