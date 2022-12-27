@@ -50,10 +50,10 @@ descMeet : ∀ {cB1 cB2 cBTarget : ℂ ℓ} { skel oTop}
       → (lt : smax ( (descSize D1) ) ( (descSize D2)) ≤ₛ  oTop)
       → ℂDesc cBTarget skel
 descMeet  CEnd CEnd  lto ltB lt  = CEnd
-descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 _ D1 _ reflp) (CArg c2 _ D2 _ reflp) lto ltB lt =
+descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 ar1 D1 _ reflp) (CArg c2 ar2 D2 _ reflp) lto ltB lt =
       CArg
         cRet
-        {!!}
+        (λ b → oCodeMeetArity (self _) (c1 (cb1 b)) (c2 (cb2 b)) reflp (ar1 (cb1 b)) (ar2 (cb2 b)))
         (descMeet D1 D2
           lto
           ltcB
@@ -103,7 +103,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 _ D1 _ reflp) 
 descMeet {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (CRec c1 ar1 D1 _ reflp) (CRec c2 ar2 D2 _ reflp) lto ltB lt  =
       CRec
         cRet
-        {!!}
+        (λ b → oCodeMeetArity (self _) (c1 (cb1 b)) (c2 (cb2 b)) reflp (ar1 (cb1 b)) (ar2 (cb2 b)))
         (descMeet D1 D2 lto ltB ltcB) --(descMeet D1 D2 lto ltB ltcB)
         -- (λ cb k → fromL ([ Approx ] I1 ,, I2 ∋ j1 (cb1 cb) (fst (k12 cb k)) ⊓ j2 (cb2 cb) (snd (k12 cb k)) By hide {arg = ≤< ltI lto }))
         _ reflp

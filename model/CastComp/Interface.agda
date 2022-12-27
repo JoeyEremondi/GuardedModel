@@ -96,6 +96,13 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Set 
       → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p csize )
       → codeSize (oCodeMeet c1 c2 pfc1) ≤ₛ smax (codeSize c1) (codeSize c2)
 
+    oCodeMeetArity : ∀ {n h} →
+      (c1 c2 : ℂ ℓ)
+      → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p csize )
+      → HasArity h n c1
+      → HasArity h n c2
+      → HasArity h n (oCodeMeet c1 c2 pfc1)
+
     oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
       →  (x : El csource)
