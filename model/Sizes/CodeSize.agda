@@ -85,7 +85,7 @@ codeSize (CΣ dom cod) =
     ( (codeSize dom))
     (  (SLim dom λ x →  (codeSize (cod x)))))
 codeSize  (C≡ c x y) = S↑ ( (codeSize c))
-codeSize (Cμ tyCtor c D x) = S↑ (DLim tyCtor λ d → descSize (D d))
+codeSize (Cμ tyCtor c D x) = S↑ (smax (codeSize c) (DLim tyCtor λ d → descSize (D d)))
 codeSize (CCumul x) = smallerCodeSize x
 
 descSize CEnd = S1

@@ -72,13 +72,21 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Set 
     o⁇ : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (pfc1 : codeSize c ≡p csize )
+      → (pfv : SZ ≡p vsize )
       → (El c)
 
     oMeet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
       → ( pfc : (codeSize c)  ≡p csize)
+      → (pfv : vsize ≡p smax (elSize c x) (elSize c y) )
       → LÆ (El c)
+
+    o⁇Meet : ∀ {{æ : Æ}} {mi}
+      → (x y : ⁇CombinedTy ℓ mi )
+      → ( pfc : SZ  ≡p csize)
+      → (pfv : vsize ≡p smax (⁇Size x) (⁇Size y) )
+      → LÆ (⁇CombinedTy ℓ mi)
 
     -- oDataGermMeet : ∀ {{æ : Æ}} {tyCtor}
     --   → (x y : ⁇GermTy ℓ tyCtor)
@@ -89,24 +97,42 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Set 
     oCodeMeet :
       (c1 c2 : ℂ ℓ)
       → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p csize )
+      → (pfv : SZ ≡p vsize )
       → (ℂ ℓ)
 
     oCodeMeetSize :
       (c1 c2 : ℂ ℓ)
       → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p csize )
-      → codeSize (oCodeMeet c1 c2 pfc1) ≤ₛ smax (codeSize c1) (codeSize c2)
+      → (pfv : SZ ≡p vsize )
+      → codeSize (oCodeMeet c1 c2 pfc1 pfv) ≤ₛ smax (codeSize c1) (codeSize c2)
 
     oCodeMeetArity : ∀ {n h} →
       (c1 c2 : ℂ ℓ)
       → ( pfc1 : smax (codeSize c1) (codeSize c2)  ≡p csize )
+      → (pfv : SZ ≡p vsize )
       → HasArity h n c1
       → HasArity h n c2
-      → HasArity h n (oCodeMeet c1 c2 pfc1)
+      → HasArity h n (oCodeMeet c1 c2 pfc1 pfv)
 
     oCast : ∀ {{æ : Æ}}
       → (csource cdest : ℂ ℓ)
       →  (x : El csource)
       → ( pfc1 : (smax (codeSize csource) (codeSize cdest)  ≡p csize))
+      → (pfv : elSize csource x ≡p vsize)
+      -> LÆ ( El cdest )
+
+    oTo⁇ : ∀ {{æ : Æ}}
+      → (csource : ℂ ℓ)
+      →  (x : El csource)
+      → ( pfc1 : (codeSize csource) ≡p csize)
+      → (pfv : elSize csource x ≡p vsize)
+      -> LÆ ( ⁇Ty ℓ )
+
+    oFrom⁇ : ∀ {{æ : Æ}} {mi}
+      → (cdest : ℂ ℓ)
+      →  (x : ⁇CombinedTy ℓ mi)
+      → ( pfc1 : codeSize cdest ≡p csize)
+      → (pfv : ⁇Size x ≡p vsize)
       -> LÆ ( El cdest )
 
 
@@ -132,7 +158,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
     self : ∀ {ℓ' allowed cs vs} → ∥ ( ℓ' , allowed , cs , vs) <CastComp ( ℓ , ⁇Allowed , csize , vsize) ∥₁ → SizedCastMeet ℓ' allowed cs vs
     ▹self : ∀ {ℓ' allowed cs vs} → ▹Mod.▹ (SizedCastMeet ℓ' allowed cs vs)
   --useful helper
-  <cSize : ∀ {cs} → (cs <ₛ csize) → ∥ ( ℓ , ⁇Allowed , cs , SZ ) <CastComp ( ℓ , ⁇Allowed , csize , vsize) ∥₁
+  <cSize : ∀ {cs vs} → (cs <ₛ csize) → ∥ ( ℓ , ⁇Allowed , cs , vs ) <CastComp ( ℓ , ⁇Allowed , csize , vsize) ∥₁
   <cSize lt = ∣ <LexR reflc  (<LexR reflc (<LexL lt)) ∣₁
   <vSize : ∀ {vs} → (vs <ₛ vsize) → ∥ ( ℓ , ⁇Allowed , csize , vs ) <CastComp ( ℓ , ⁇Allowed , csize , vsize) ∥₁
   <vSize lt = ∣ <LexR reflc (<LexR reflc (<LexR reflc lt)) ∣₁
@@ -140,7 +166,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
   infix 20 ⁇_By_
   ⁇_By_ : ∀ {{_ : Æ}}
       → (c : ℂ ℓ) → (lt : Hide (codeSize c <ₛ csize)) → (El c)
-  ⁇_By_  c (hide {lt}) = o⁇ (self (<cSize lt)) c reflp
+  ⁇_By_  c (hide {lt}) = o⁇ (self (<cSize lt)) c reflp reflp
 
   infix 20 [_]⁇_By_
   [_]⁇_By_ : ∀ (æ : Æ)
@@ -153,12 +179,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       → (x y : El c)
       → (Hide (codeSize c <ₛ csize))
       → LÆ (El c)
-  _∋_⊓_By_  c x y (hide {ltc}) = oMeet (self (<cSize ltc)) c x y reflp
-  -- with ⁇match ⁇Allowed
-  -- ... | inl reflp = oMeet (self (<Size ltc)) c x y reflp
-  -- ... | inr (inl reflp) = oMeet (self (<Size ltc)) c x y  reflp
-  -- ... | inr (inr reflp) = oMeet (self (<Size ltc)) c x y reflp
-  --     -- oMeet (self  (<Size lt)) c x y reflp
+  _∋_⊓_By_  c x y (hide {ltc}) = oMeet (self (<cSize ltc)) c x y reflp reflp
 
   infix 20 _∋_⊓_approxBy_
   _∋_⊓_approxBy_ :
@@ -175,7 +196,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       → (lt : Hide (smax (codeSize c1) (codeSize c2) <ₛ csize))
       → (ℂ ℓ)
   _⊓_By_  c1 c2 (hide {lt}) =
-      oCodeMeet (self (<cSize lt)) c1 c2 reflp
+      oCodeMeet (self (<cSize lt)) c1 c2 reflp reflp
 
   -- infix 20 _⊓⁇_By_
   -- _⊓⁇_By_ :
@@ -190,7 +211,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       (c1 c2 : ℂ ℓ)
       → {lt1 lt2 : Hide (smax (codeSize c1) (codeSize c2) <ₛ csize)}
       → ApproxEl (c1 ⊓ c2 By lt1) ≡ ApproxEl (c1 ⊓ c2 By lt2)
-  codeMeetEq  c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self lt) c1 c2 reflp))) (squash₁ (<cSize lt1) (<cSize lt2))
+  codeMeetEq  c1 c2 {hide {arg = lt1}} {hide {arg = lt2}} = (cong (λ lt → ApproxEl (oCodeMeet (self lt) c1 c2 reflp reflp))) (squash₁ (<cSize lt1) (<cSize lt2))
 
   infix 20 _⊓Size_By_
   _⊓Size_By_ :
@@ -198,7 +219,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       → (lt : Hide (smax (codeSize c1) (codeSize c2) <ₛ csize))
       →  codeSize (c1 ⊓ c2 By lt ) ≤ₛ smax (codeSize c1) (codeSize c2)
   _⊓Size_By_ c1 c2 (hide {lt}) =
-      oCodeMeetSize (self (<cSize lt)) c1 c2 reflp
+      oCodeMeetSize (self (<cSize lt)) c1 c2 reflp reflp
 
   infix 20 ⟨_⇐_⟩_By_
   ⟨_⇐_⟩_By_ : ∀ {{æ : Æ}}
@@ -207,7 +228,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
        → (Hide (smax (codeSize csource)  (codeSize cdest) <ₛ csize))
       → LÆ (El cdest)
   ⟨_⇐_⟩_By_ cdest csource x (hide {clt})
-    = oCast (self (<cSize clt)) csource cdest x reflp
+    = oCast (self (<cSize clt)) csource cdest x reflp reflp
 
 
   infix 20 ⟨_⇐_⟩_approxBy_
@@ -320,10 +341,10 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
   ⟨_,_⇐⊓⟩_approxBy_ c1 c2 x clt =  fromL (⟨_,_⇐⊓⟩_By_ {{æ = Approx}} c1 c2 x clt)
 
 
-  self-1 : ∀ {allowed cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) allowed cs vs
-  self-1 ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
-  Lself :  ∀  {æ ℓ' allowed cs vs} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' allowed cs vs)
-  Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
+  self-1 : ∀ {cs vs} allowed {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) allowed cs vs
+  self-1 allowed ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
+  Lself :  ∀  {æ ℓ' cs vs} allowed → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' allowed cs vs)
+  Lself allowed reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 
 FixCastMeet :
   (∀ { ℓ ⁇Allowed csize vsize} → SmallerCastMeet ℓ ⁇Allowed csize vsize → SizedCastMeet ℓ ⁇Allowed csize vsize)
