@@ -146,7 +146,7 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
 ------------------------------------------------------------------------------
 -- Impossible cases
 codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp =
-  CCumul {{inst = inst}} (oCodeMeet (self-1 {⁇Allowed = true}) c1 c2 reflp)
+  CCumul {{inst = inst}} (oCodeMeet (self-1 true {{inst = inst}}) c1 c2 reflp reflp)
 codeMeet C⁇ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet C℧ (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
 codeMeet C𝟘 (CCumul ⦃ suc< ⦄ c2) (HEq {h1 = .HCumul} reflp) () reflp reflp
