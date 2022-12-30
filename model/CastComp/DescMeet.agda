@@ -39,7 +39,6 @@ open SmallerCastMeet scm
 
 
 
-open import Assumption
 
 
 descMeet : ∀ {cB1 cB2 cBTarget : ℂ ℓ} { skel oTop}

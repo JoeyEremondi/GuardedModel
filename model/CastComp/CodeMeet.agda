@@ -44,7 +44,6 @@ open import Util
 open SmallerCastMeet scm
 -- open import CastComp.DescMeet {{dt}} {{dg}} {{ic}} ⁇Allowed {ℓ} size scm
 
-open import Assumption
 
 {-# DISPLAY SmallerCastMeet._⊓_By_  = _⊓_By_  #-}
 {-# DISPLAY SmallerCastMeet._∋_⊓_By_  = _∋_⊓_By_  #-}

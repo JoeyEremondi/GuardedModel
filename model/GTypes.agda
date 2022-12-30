@@ -10,6 +10,10 @@ module GTypes where
 data G𝟙 : Set where
   Gtt ℧𝟙 : G𝟙
 
+𝟙meet : G𝟙 → G𝟙 → G𝟙
+𝟙meet Gtt Gtt = Gtt
+𝟙meet _ _ = ℧𝟙
+
 
 is-tt : G𝟙 → Bool
 is-tt Gtt = true
@@ -37,3 +41,12 @@ CℕfromNat (ℕ.suc x) = GSuc (CℕfromNat x)
 Cℕembed : ∀  x → CℕtoNat  (CℕfromNat x) ≡ x
 Cℕembed ℕ.zero = reflc
 Cℕembed (ℕ.suc x) = congPath ℕ.suc (Cℕembed x)
+
+
+
+natMeet : GNat → GNat → GNat
+natMeet Nat⁇ y = y
+natMeet x Nat⁇ = x
+natMeet GZero GZero = GZero
+natMeet (GSuc x) (GSuc y) = GSuc (natMeet x y)
+natMeet _ _ = Nat℧

@@ -193,10 +193,12 @@ record CodeModule
     data _ where
       C𝟘 : ℂ
       -- There is no way to embed a value of the empty type into ⁇, except as error
-    El C𝟘 = 𝟙
-    toApprox C𝟘 x = tt
-    toExact C𝟘 x = tt
-    toApproxExact C𝟘 tt = refl
+      -- However, we give it a different code from C℧, because it has different behavior
+      -- with respect to consistency i.e. a computation that results in C𝟘 has *not* failed
+    El C𝟘 = G𝟘
+    toApprox C𝟘 x = ℧𝟘
+    toExact C𝟘 x = ℧𝟘
+    toApproxExact C𝟘 ℧𝟘 = refl
     -- ▹El C𝟘 = 𝟙
     ----------------------------------------------------------------
     --- Gradual unit type
@@ -595,7 +597,7 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 ℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
 ℧ CodeModule.C⁇ = ⁇℧
 ℧ CodeModule.C℧ = ℧𝟘
-℧ CodeModule.C𝟘 = tt
+℧ CodeModule.C𝟘 = ℧𝟘
 ℧ CodeModule.C𝟙 = ℧𝟙
 ℧ Cℕ = Nat℧
 ℧ {suc ℓ} CodeModule.CType = C℧

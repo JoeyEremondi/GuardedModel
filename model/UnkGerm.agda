@@ -205,7 +205,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   -- Functor
   data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type where
       -- An element of the germ for any head can be embedded into ⁇Ty
-      ⁇fromGerm : ∀ {i} → ⁇Germ ℓ sc Self i → ⁇Germ ℓ sc Self nothing
+      ⁇fromGerm : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
       -- ⁇ and Germ have top and bottom elements
       ⁇℧ : ∀ {i} → ⁇Germ ℓ sc Self i
       ⁇⁇ : ∀ {i} → ⁇Germ ℓ sc Self i

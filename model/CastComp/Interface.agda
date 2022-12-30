@@ -33,7 +33,6 @@ import Cubical.Data.Nat.Order as Nat
 import GuardedModality as ▹Mod
 open import Cubical.Data.Sum
 
-open import Assumption
 
 
 
@@ -341,10 +340,13 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
   ⟨_,_⇐⊓⟩_approxBy_ c1 c2 x clt =  fromL (⟨_,_⇐⊓⟩_By_ {{æ = Approx}} c1 c2 x clt)
 
 
-  self-1 : ∀ {cs vs} allowed {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) allowed cs vs
-  self-1 allowed ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
-  Lself :  ∀  {æ ℓ' cs vs} allowed → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' allowed cs vs)
-  Lself allowed reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
+  -- When we do guarded recursion, or go down a universe level,
+  -- we're no longer bounded by the positivity restriction, so we "reset"
+  -- the flag for whether we're on the LHS of an arrow
+  self-1 : ∀ {cs vs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) true cs vs
+  self-1 ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
+  Lself :  ∀  {æ ℓ' cs vs} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' true cs vs)
+  Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 
 FixCastMeet :
   (∀ { ℓ ⁇Allowed csize vsize} → SmallerCastMeet ℓ ⁇Allowed csize vsize → SizedCastMeet ℓ ⁇Allowed csize vsize)

@@ -28,7 +28,6 @@ open import CodeSize
 -- open import CodePair
 open import WMuEq
 open import SizeOrd
-open import Assumption
 
 open import CastComp.Interface
 
