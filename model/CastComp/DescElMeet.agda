@@ -89,15 +89,17 @@ descElMeet (CodeModule.CArg c x D cB' reflp) E b1 b2 (FC (a1 , com1) resp1) (FC 
   -- We need this because the pattern matching is blocked on the approx/exact tag
   let argEq1 = toApproxCommandArg c x D cB' reflp b1 a1 com1
   let argEq2 = toApproxCommandArg c x D cB' reflp b2 a2 com2
+  let req1 = (cong₂ (ResponseD D) (ΣPathP (reflc , cong fst (sym argEq1))) (cong snd (sym argEq1)))
+  let req2 = (cong₂ (ResponseD D) (ΣPathP (reflc , cong fst (sym argEq2))) (cong snd (sym argEq2)))
   -- Transport the response functions based on the above equalites
-  let resp1' = λ r → resp1 (transport (cong₂ (ResponseD D) (ΣPathP (reflc , cong fst (sym argEq1))) (cong snd (sym argEq1))) r)
-  let resp2' = λ r → resp2 (transport (cong₂ (ResponseD D) (ΣPathP (reflc , cong fst (sym argEq2))) (cong snd (sym argEq2))) r)
+  let resp1' = λ r → resp1 (transport req1 r)
+  let resp2' = λ r → resp2 (transport req2 r)
   -- Recursively take the meet of the "rest" of the data stored in this inductive type
   (FC com12 resp12) ← descElMeet D E _ _ (FC com1 resp1') (FC com2 resp2')
                       -------------------------------------------
                       (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 1))) lto)
                       (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 2) )) lto)
-                      {!!}
+                      λ r1 r2 → φ (transport req1 r1) (transport req2 r2)
   -- Cast to distribute the meet of the resuting b12 and a12
   -- This should be a no-op, but we can't show that yet
   comRet ← castCommand D _ (b12 , approx a12) com12
@@ -131,7 +133,10 @@ descElMeet (CodeModule.CRec c x D cB' reflp) E b1 b2 (FC com1 resp1) (FC com2 re
       By Decreasing <ₛ-trans (≤ₛ-sucMono (smax-lub (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)) (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)))) lto
     pure (φ (Rec r1) (Rec r2))
   -- Compute the meet recursively for the rest of the fields
-  (FC com12 resp12) ← descElMeet D E b1 b2 (FC com1 resp1') (FC com2 resp2') {!!} ltB {!!}
+  (FC com12 resp12) ← descElMeet D E b1 b2 (FC com1 resp1') (FC com2 resp2')
+    (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 1))) lto)
+    ltB
+    λ r1 r2 → φ (Rest (transport (congPath (ResponseD D b1) (sym recEq1)) r1)) (Rest (transport (congPath (ResponseD D b2) (sym recEq2)) r2))
   -- Same equality issue as above, have to convince it that the command type is the same for the rest
   let req = congPath (ResponseD D b12) (toApproxCommandRec c x D (CΣ _ c) reflp b12 com12)
   -- Package it all back up into a member of the container type
