@@ -19,6 +19,7 @@ open import ApproxExact
 open import InductiveCodes
 open import Sizes
 open import Constructors
+open import GTypes
 -- open import CodePair
 
 module CastComp.Interface {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives}}   where
@@ -86,6 +87,8 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Set 
       → ( pfc : SZ  ≡p csize)
       → (pfv : vsize ≡p smax (⁇Size x) (⁇Size y) )
       → LÆ (⁇CombinedTy ℓ mi)
+
+    oMeet𝟙 : ∀ {pfc pfv} → fromL (oMeet {{æ = Approx}} C𝟙  Gtt Gtt pfc pfv) ≡c Gtt
 
     -- oDataGermMeet : ∀ {{æ : Æ}} {tyCtor}
     --   → (x y : ⁇GermTy ℓ tyCtor)
@@ -241,8 +244,8 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
 
   -- Helper to manage the common case of having two elements of different codes' types,
   -- casting them to the meet code, then taking the meet of those two elements
-  infix 20 _,,_∋_⊓_By_
-  _,,_∋_⊓_By_ :
+  infix 20 [_⊓_]∋_⊓_By_
+  [_⊓_]∋_⊓_By_ :
     ∀ {{æ : Æ}} →
     ∀ c1 c2 →
       (x : El c1) →
@@ -251,7 +254,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       -- (vlt : Hide (⁇Allowed ≡p ⁇pos → smax (elSize c1 x) (elSize c2 y) <ₛ vSize)) →
       {lt : _} →
       LÆ (El (c1 ⊓ c2 By (hide {arg = lt }) ))
-  _,,_∋_⊓_By_  c1 c2 x1 x2 clt  {lt = lt} = do
+  [_⊓_]∋_⊓_By_  c1 c2 x1 x2 clt  {lt = lt} = do
    -- let lt = smax<-∞ (reveal lt∞)
    let c12 = (c1 ⊓ c2 By hide {arg = lt})
    let
@@ -297,7 +300,7 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize vsize : Size) : Se
       (clt : Hide (smax ( codeSize c1) ( codeSize c2) <ₛ csize)) →
       {lt : _} →
       (ApproxEl  (c1 ⊓ c2 By (hide {arg = lt }) ))
-  [_⊓_]∋_⊓_approxBy_ c1 c2 x y clt = fromL (_,,_∋_⊓_By_ {{æ = Approx}} c1 c2 x y clt)
+  [_⊓_]∋_⊓_approxBy_ c1 c2 x y clt = fromL ([_⊓_]∋_⊓_By_ {{æ = Approx}} c1 c2 x y clt)
 
 
 

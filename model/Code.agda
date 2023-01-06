@@ -118,6 +118,7 @@ record CodeModule
 
 
 
+
     interpDesc : ∀ {{æ : Æ}} {cB} {sig} →  (ℂDesc cB sig) → ApproxEl cB → Container 𝟙
     --adapted from https://stackoverflow.com/questions/34334773/why-do-we-need-containers
     interpDesc {{æ = æ}} {cB = cB} D b  = (λ i → CommandD {{æ = æ}} D b) ◃ (λ c → ResponseD {{æ = æ}} D b (toApproxCommandD D b c)) / λ _ _ → tt
@@ -511,6 +512,15 @@ record CodeModule
       λ r1 r2 pth → congPath (toApproxμ tyCtor cB Ds b) (congPath (toExactμ tyCtor cB Ds b) (congPath resp
         (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth))
         ∙ toApproxExactResponseD (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) b com) r2))) ▷ (toApproxExactμ tyCtor cB (λ d₁ → Ds d₁) b (resp r2))
+
+
+    toApproxCommandArg : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
+      → (b : ApproxEl cB)
+      → (a : El (c b))
+      → (com : CommandD D (b , approx a))
+      → toApproxCommandD (CArg c arity D cB' eq) b (a , com)  ≡c (approx a , toApproxCommandD D (b , _) com)
+    toApproxCommandArg ⦃ æ = Approx ⦄ c arity D cB' peq b a com = reflc
+    toApproxCommandArg ⦃ æ = Exact ⦄ c arity D cB' peq b a com = reflc
 
 --     ----------------------------------------------------------------------
 
