@@ -372,8 +372,8 @@ record CodeModule
 
     toApproxCommandD {{æ = Approx}} D b com = com
     toApproxCommandD (CEnd ) b com = com
-    toApproxCommandD (CArg c _ D cB' x) b (a , com) = approx  {c = c b}  a , toApproxCommandD D (b , approx {c = c b} a) com
     toApproxCommandD (CRec c _ D cB' x) b com = toApproxCommandD D b com
+    toApproxCommandD (CArg c _ D cB' x) b (a , com) = approx  {c = c b}  a , toApproxCommandD D (b , approx {c = c b} a) com
 
     toApproxResponseD {{æ = Approx}} D b com r = r
     toApproxResponseD (CArg c _ D cB' x) b com r = toApproxResponseD D (b , (fst com)) (snd com) r
@@ -522,6 +522,12 @@ record CodeModule
     toApproxCommandArg ⦃ æ = Approx ⦄ c arity D cB' peq b a com = reflc
     toApproxCommandArg ⦃ æ = Exact ⦄ c arity D cB' peq b a com = reflc
 
+    toApproxCommandRec : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity HΣ n (c b)) → (D : ℂDesc cB rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
+      → (b : ApproxEl cB)
+      → (com : CommandD D b)
+      → toApproxCommandD (CRec c arity D cB' eq) b com  ≡c toApproxCommandD D b com
+    toApproxCommandRec {{æ = Approx}} c arity D cB peq b com = reflc
+    toApproxCommandRec {{æ = Exact}} c arity D cB peq b com = reflc
 --     ----------------------------------------------------------------------
 
 
