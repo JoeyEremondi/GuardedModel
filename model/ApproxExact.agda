@@ -69,7 +69,7 @@ fromNow : ∀ {ℓ} {A : Set ℓ} → LÆ {{Approx}} A → A
 fromNow (Now x) = x
 
 
-untic : ∀ {ℓ} {X : Set ℓ} → G.Tick → LÆ {{Exact}} X → X
+untic : ∀ {ℓ} {X : Set ℓ} → (@tick x : G.Tick) → LÆ {{Exact}} X → X
 untic tic (Now x) = x
 untic tic (Later x) = untic tic (x tic)
 untic tic (Extract x i) = untic tic x
