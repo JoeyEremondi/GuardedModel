@@ -27,7 +27,7 @@ open import Sizes
 open import CastComp.Interface
 
 module CastComp.DescMeetSize {{dt : DataTypes}} {{dg : DataGerms}} {{ic : CodesForInductives}}
-    (⁇Allowed : Bool) {ℓ}  (csize vsize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed csize vsize)
+    (⁇Allowed : Bool) {ℓ}  (csize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed csize)
 
   where
 
@@ -36,7 +36,7 @@ open import Head
 open import Util
 
 
-open import CastComp.DescMeet{{dt = dt}} {{dg}} {{ic}}  (⁇Allowed) {ℓ} csize vsize scm
+open import CastComp.DescMeet{{dt = dt}} {{dg}} {{ic}}  (⁇Allowed) {ℓ} csize scm
 open SmallerCastMeet scm
 
 

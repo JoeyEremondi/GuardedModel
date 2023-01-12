@@ -28,13 +28,13 @@ open import Constructors
 open import CastComp.Interface
 
 module CastComp.CodeMeet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : CodesForInductives}}
-     {ℓ} (⁇Allowed : Bool) (csize vsize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed csize vsize)
+     {ℓ} (⁇Allowed : Bool) (csize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed csize)
 
   where
 
 
-open import CastComp.DescMeet ⁇Allowed csize vsize scm
-open import CastComp.DescMeetSize ⁇Allowed csize vsize scm
+open import CastComp.DescMeet ⁇Allowed csize scm
+open import CastComp.DescMeetSize ⁇Allowed csize scm
 
 open import Code
 open import Head
@@ -195,9 +195,9 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
           ≤⨟ FinLim-cocone _ d) ≤⨟ smax-FinLim2 _ _) ≤⨟ smax-swap4) ≤⨟ smax-sucMono ≤ₛ-refl
 
 codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp =
-  CCumul {{inst = inst}} (oCodeMeet (self-1 true {{inst = inst}}) c1 c2 reflp reflp)
+  CCumul {{inst = inst}} (oCodeMeet (self-1) c1 c2 reflp)
         --------------------------------------------------
-        , oCodeMeetSize (self-1 true) c1 c2 reflp reflp
+        , oCodeMeetSize self-1 c1 c2 reflp
 
 
 ------------------------------------------------------------------------------
