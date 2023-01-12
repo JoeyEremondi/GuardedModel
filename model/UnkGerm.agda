@@ -216,8 +216,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self (just HCumul)
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇ΠA : (æ ≡p Approx) → (𝟙  →  ⁇Germ ℓ sc Self nothing) → ⁇Germ ℓ sc Self (just HΠ)
-      ⁇ΠE : (æ ≡p Exact) → (▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) → ⁇Germ ℓ sc Self nothing →  ⁇Germ ℓ sc Self (just HΠ)
+      ⁇Π :  (𝟙  →  ⁇Germ ℓ sc Self nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (⁇Germ ℓ sc Self nothing  × ⁇Germ ℓ sc Self nothing ) → ⁇Germ ℓ sc Self (just (HΣ))
       -- The germ of an equality type is a witness of equality between two ⁇s
@@ -229,6 +228,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
         → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r))
+        -- → (æ ≡p Exact → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r)))
         → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
 
   -- Approximating/embedding for the unknown type
@@ -244,11 +244,10 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApprox⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toApprox-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toApprox⁇ {Self = Self} (⁇ΠE _ _ f⁇) = ⁇ΠA reflp (λ _ → toApprox⁇ f⁇)
-  toApprox⁇ {Self = Self} (⁇ΠA () f)
+  toApprox⁇ {Self = Self} (⁇Π f⁇ _) = ⁇Π (λ _ → toApprox⁇ (f⁇ tt)) (λ ())
   toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
   toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
-  toApprox⁇ (⁇μ tyCtor f) = ⁇μ tyCtor λ r → toApprox⁇ (f r) --⁇μ tyCtor (toApprox⁇ x)
+  toApprox⁇ (⁇μ tyCtor f ) = ⁇μ tyCtor λ r → toApprox⁇ (f r) --⁇μ tyCtor (toApprox⁇ x)
 
 
   toExact⁇ ⁇℧ = ⁇℧
@@ -260,7 +259,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toExact⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toExact-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toExact⁇ (⁇ΠA _ f) = ⁇ΠE reflp (λ _ → Now (toExact⁇ (f tt))) (toExact⁇ (f tt))
+  toExact⁇ (⁇Π f _) = ⁇Π (λ _ → toExact⁇ (f tt)) (λ _ _ → Now (toExact⁇ (f tt)))
   toExact⁇ (⁇Σ (x , y)) = ⁇Σ (toExact⁇ x , toExact⁇ y)
   toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
   toExact⁇ (⁇μ tyCtor f) = ⁇μ tyCtor λ r → toExact⁇ (f r)
@@ -274,7 +273,10 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApproxExact⁇ (⁇Type x) = refl
   toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
   -- toApproxExact⁇ (⁇ΠA _ f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt)) ?
-  toApproxExact⁇ (⁇ΠA reflp f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄ ) reflc (funExtPath (λ _ → toApproxExact⁇ (f tt)))
+  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) (funExtPath (λ _ → toApproxExact⁇ (f tt))) allEq
+    where
+      allEq : (λ ()) ≡c _
+      allEq i ()
   toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
   toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
                                       (λ x →
