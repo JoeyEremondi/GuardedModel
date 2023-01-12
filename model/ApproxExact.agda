@@ -69,30 +69,30 @@ fromNow : ∀ {ℓ} {A : Set ℓ} → LÆ {{Approx}} A → A
 fromNow (Now x) = x
 
 
-untic : ∀ {ℓ} {X : Set ℓ} → (@tick x : G.Tick) → LÆ {{Exact}} X → X
-untic tic (Now x) = x
-untic tic (Later x) = untic tic (x tic)
-untic tic (Extract x i) = untic tic x
+-- untic : ∀ {ℓ} {X : Set ℓ} → (@tick x : G.Tick) → LÆ {{Exact}} X → X
+-- untic tic (Now x) = x
+-- untic tic (Later x) = untic tic (x tic)
+-- untic tic (Extract x i) = untic tic x
 
-liftFun : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : Set ℓ₂ } → (A → LÆ B) → LÆ (A → B)
-liftFun ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
-liftFun ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
+-- liftFun : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : Set ℓ₂ } → (A → LÆ B) → LÆ (A → B)
+-- liftFun ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
+-- liftFun ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
 
-liftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → ((x : A) → LÆ (B x)) → LÆ ((x : A) → B x)
-liftFunDep ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
-liftFunDep ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
+-- liftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → ((x : A) → LÆ (B x)) → LÆ ((x : A) → B x)
+-- liftFunDep ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
+-- liftFunDep ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
 
-unliftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → LÆ ((x : A) → B x) → (x : A) → LÆ (B x)
-unliftFunDep mf a = do
-  f ← mf
-  pure (f a)
+-- unliftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → LÆ ((x : A) → B x) → (x : A) → LÆ (B x)
+-- unliftFunDep mf a = do
+--   f ← mf
+--   pure (f a)
 
-uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
-uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
+-- uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
+-- uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
 
 
-uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
-uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
+-- uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
+-- uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
 
 
 

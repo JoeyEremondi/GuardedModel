@@ -262,20 +262,13 @@ record CodeModule
       CΠ : (dom :  ℂ) → (cod : (x : ApproxEl dom ) → ℂ) → ℂ
 
 
-    El (CΠ dom cod) = (x : El dom) → (El (cod  (approx x)))
-    toApprox (CΠ dom cod) f = λ x → toApprox (cod (approx ⦃ Approx ⦄ {dom} x)) (subst (λ y → ÆEl (cod y) Exact) (toApproxExact dom x) (f (toExact dom x)))
-    toExact (CΠ dom cod) f = λ x → toExact (cod (approx ⦃ Exact ⦄ {dom} x)) (f (toApprox dom x))
-    toApproxExact (CΠ dom cod) f = funExt λ x →
-      JPath
-        (λ y pf → toApprox _ (substPath (λ z → ÆEl (cod z) Exact) pf (toExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))) ≡c f y)
-        (congPath (toApprox (cod (toApprox dom (toExact dom x)))) (substRefl (toExact (cod (toApprox dom (toExact dom x)))
-                                                                               (f (toApprox dom (toExact dom x))))) ∙ toApproxExact (cod (toApprox dom (toExact dom x))) (f (toApprox dom (toExact dom x))))
-        (toApproxExact dom x)
- -- toApprox (cod x)
- --      (substPath (λ y → ÆEl (cod y) Exact) (toApproxExact dom x)
- --       (toExact (cod (toApprox dom (toExact dom x)))
- --        (f (toApprox dom (toExact dom x)))))
- --      ≡c f x
+    El {{æ = Approx}} (CΠ dom cod) = (x : ApproxEl dom) →  (ApproxEl (cod x))
+    El {{æ = Exact}} (CΠ dom cod) = (x : ÆEl dom Exact) → ( LÆ {{æ = Exact}} (ÆEl (cod (toApprox dom x)) Exact) × ( ApproxEl (cod (toApprox dom x))) )
+    toApprox (CΠ dom cod) f x = (substPath (λ y → ÆEl (cod y) Approx) (toApproxExact dom x) ((snd (f (toExact dom x))) ))
+    toExact (CΠ dom cod) f x = Now (toExact (cod (toApprox dom x)) fx) , fx
+      where
+        fx = (f (toApprox dom x))
+    toApproxExact (CΠ dom cod) f = funExt (λ x → fromPathP (congPath f (toApproxExact dom x)))
 
     -- Notation for non-dep functions
     _C→_ : ℂ → ℂ → ℂ
@@ -609,56 +602,56 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
 
--- Every type has an error element
-℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
-℧ CodeModule.C⁇ = ⁇℧
-℧ CodeModule.C℧ = ℧𝟘
-℧ CodeModule.C𝟘 = ℧𝟘
-℧ CodeModule.C𝟙 = ℧𝟙
-℧ Cℕ = Nat℧
-℧ {suc ℓ} CodeModule.CType = C℧
-℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
-℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
---withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
--- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
-℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
-℧ (CodeModule.Cμ tyCtor c D x) = W℧
-℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
+-- -- Every type has an error element
+-- ℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
+-- ℧ CodeModule.C⁇ = ⁇℧
+-- ℧ CodeModule.C℧ = ℧𝟘
+-- ℧ CodeModule.C𝟘 = ℧𝟘
+-- ℧ CodeModule.C𝟙 = ℧𝟙
+-- ℧ Cℕ = Nat℧
+-- ℧ {suc ℓ} CodeModule.CType = C℧
+-- ℧ (CodeModule.CΠ dom cod) = λ x → (℧ (cod (approx x)))
+-- ℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
+-- --withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
+-- -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
+-- ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
+-- ℧ (CodeModule.Cμ tyCtor c D x) = W℧
+-- ℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
 
-℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
-℧Approx = ℧ {{Approx}}
-
-
-DCtors : ℕ → CName → Set
-DCtors ℓ tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
+-- ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
+-- ℧Approx = ℧ {{Approx}}
 
 
-▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
-▹⁇Self {{æ = æ}} ℓ = A.dfix (▹⁇Rec {ℓ = ℓ})
-
-▹⁇RecE : ∀ ℓ →  G.▹ ⁇Self → ⁇Self
-▹⁇RecE ℓ x = ▹⁇Rec {ℓ = ℓ} {{æ = Exact}} x
+-- DCtors : ℕ → CName → Set
+-- DCtors ℓ tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
 
 
+-- ▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
+-- ▹⁇Self {{æ = æ}} ℓ = A.dfix (▹⁇Rec {ℓ = ℓ})
+
+-- ▹⁇RecE : ∀ ℓ →  G.▹ ⁇Self → ⁇Self
+-- ▹⁇RecE ℓ x = ▹⁇Rec {ℓ = ℓ} {{æ = Exact}} x
 
 
-▹⁇Self≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇Self ℓ ≡ A.next (⁇Rec {ℓ = ℓ})
-▹⁇Self≡ = A.pfix (CodeModule.▹⁇Rec (CodeModuleAt _))
 
-▹⁇ : {{æ : Æ}} →  ℕ → A.▹ Set
-▹⁇ ℓ = A.map▹ ⁇TySelf  (▹⁇Self ℓ)
 
-▹⁇≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
-▹⁇≡ ⦃ æ = Approx ⦄ {ℓ = ℓ} = refl
-▹⁇≡ ⦃ æ = Exact ⦄ {ℓ = ℓ} = congPath (G.map▹ ⁇TySelf) (▹⁇Self≡ {{æ = Exact}}) ∙ G.mapNext ⁇TySelf _
+-- ▹⁇Self≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇Self ℓ ≡ A.next (⁇Rec {ℓ = ℓ})
+-- ▹⁇Self≡ = A.pfix (CodeModule.▹⁇Rec (CodeModuleAt _))
 
-⁇Wrap≡ : ∀ {{æ  : Æ}} {ℓ} → A.▸ (▹⁇ ℓ) ≡c (A.▹ (⁇Ty ℓ))
-⁇Wrap≡ {{æ = Exact}} = G.later-extSwap (λ α → pfixSelf' α)
-  where
-    pfixSelf' : ∀ {ℓ} →  G.▸ \ α → ( ⁇TySelf (G.dfix (▹⁇RecE ℓ) α) ≡ ⁇TySelf (▹⁇RecE ℓ (G.dfix (▹⁇RecE ℓ))))
-    pfixSelf' tic = cong ⁇TySelf (G.pfix' (▹⁇RecE _) tic)
-⁇Wrap≡ {{æ = Approx}} = reflc
+-- ▹⁇ : {{æ : Æ}} →  ℕ → A.▹ Set
+-- ▹⁇ ℓ = A.map▹ ⁇TySelf  (▹⁇Self ℓ)
 
-apply⁇Fun : ∀ {{æ : Æ}} {ℓ} → (▹⁇Ty (▹⁇Self ℓ) → ⁇Ty ℓ) → ⁇Ty ℓ → ⁇Ty ℓ
-apply⁇Fun {ℓ = ℓ} f x =
-  f (transport (symPath ⁇Wrap≡) (A.next x))
+-- ▹⁇≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
+-- ▹⁇≡ ⦃ æ = Approx ⦄ {ℓ = ℓ} = refl
+-- ▹⁇≡ ⦃ æ = Exact ⦄ {ℓ = ℓ} = congPath (G.map▹ ⁇TySelf) (▹⁇Self≡ {{æ = Exact}}) ∙ G.mapNext ⁇TySelf _
+
+-- ⁇Wrap≡ : ∀ {{æ  : Æ}} {ℓ} → A.▸ (▹⁇ ℓ) ≡c (A.▹ (⁇Ty ℓ))
+-- ⁇Wrap≡ {{æ = Exact}} = G.later-extSwap (λ α → pfixSelf' α)
+--   where
+--     pfixSelf' : ∀ {ℓ} →  G.▸ \ α → ( ⁇TySelf (G.dfix (▹⁇RecE ℓ) α) ≡ ⁇TySelf (▹⁇RecE ℓ (G.dfix (▹⁇RecE ℓ))))
+--     pfixSelf' tic = cong ⁇TySelf (G.pfix' (▹⁇RecE _) tic)
+-- ⁇Wrap≡ {{æ = Approx}} = reflc
+
+-- apply⁇Fun : ∀ {{æ : Æ}} {ℓ} → (▹⁇Ty (▹⁇Self ℓ) → ⁇Ty ℓ) → ⁇Ty ℓ → ⁇Ty ℓ
+-- apply⁇Fun {ℓ = ℓ} f x =
+--   f (transport (symPath ⁇Wrap≡) (A.next x))
