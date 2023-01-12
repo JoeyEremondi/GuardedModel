@@ -66,10 +66,20 @@ open import WMuConversion
     x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp
     pure (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
 
+⁇meet (⁇ΠA reflp f1) (⁇ΠE () f2 _)
+⁇meet (⁇ΠE reflp f1 _) (⁇ΠA () f2)
 ⁇meet (⁇ΠA reflp f1) (⁇ΠA _ f2)  =
   do
     let fRet =  λ x → fromL (⁇meet {{æ = Approx}} (f1 x) (f2 x))
     pure {{æ = Approx}}(⁇ΠA {{æ = Approx}} reflp fRet)
+⁇meet (⁇ΠE reflp f1 apr1) (⁇ΠE _ f2 apr2)  =
+  do
+    let fRet =  λ x → do
+      f1x ← f1 x
+      f2x ← f2 x
+      ⁇meet {{æ = Exact}} f1x f2x
+    approxRet ← ⁇meet {{æ = Exact}} apr1 apr2
+    pure {{æ = Exact}}(⁇ΠE {{æ = Exact}} reflp fRet approxRet)
 ⁇meet (⁇Σ (x1 , y1)) (⁇Σ (x2 , y2))  = do
   x12 ← ⁇meet x1 x2
   y12 ← ⁇meet y1 y2

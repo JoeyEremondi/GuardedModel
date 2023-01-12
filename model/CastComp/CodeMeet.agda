@@ -195,7 +195,7 @@ codeMeet (Cμ tyCtor c1 D1 ixs1) (Cμ tyCtor c2 D2 ixs2)  (HEq {h1 = HCtor x₂}
           ≤⨟ FinLim-cocone _ d) ≤⨟ smax-FinLim2 _ _) ≤⨟ smax-swap4) ≤⨟ smax-sucMono ≤ₛ-refl
 
 codeMeet (CCumul ⦃ suc< ⦄ c1) (CCumul {{inst}} c2) (HEq {h1 = .HCumul} reflp) reflp reflp reflp =
-  CCumul {{inst = inst}} (oCodeMeet (self-1) c1 c2 reflp)
+  CCumul {{inst = inst}} (oCodeMeet (self-1 {{inst}}) c1 c2 reflp)
         --------------------------------------------------
         , oCodeMeetSize self-1 c1 c2 reflp
 
