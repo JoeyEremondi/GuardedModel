@@ -28,7 +28,7 @@ open import Sizes
 open import CastComp.Interface
 
 module CastComp.Meet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : CodesForInductives}}
-    (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed cSize vSize)
+    (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed cSize )
 
   where
 
@@ -55,21 +55,21 @@ open import WMuConversion
 ⁇meet ⁇𝟙 ⁇𝟙  = pure ⁇𝟙
 ⁇meet (⁇ℕ x) (⁇ℕ x₁)  = pure (⁇ℕ (natMeet x x₁))
 ⁇meet (⁇Type {{inst = suc<}} c1) (⁇Type {{inst = inst}} c2)
-  = pure (⁇Type {{inst = inst}} (oCodeMeet (self-1 {{inst}}) c1 c2 reflp reflp))
+  = pure (⁇Type {{inst = inst}} (oCodeMeet (self-1 {{inst}}) c1 c2 reflp ))
 -- Since they might not be at the same type, we find the meet of the codes
 -- in the smaller unverse, cast to that type, then find the meet at that type
 ⁇meet (⁇Cumul {{inst = suc<}} c1 x1) (⁇Cumul {{inst = inst}} c2 x2)  =
   do
-    let c1⊓c2 = oCodeMeet (self-1 {{inst}}) c1 c2 reflp reflp
-    x1-12 ← oCast (self-1 {{inst}}) c1 c1⊓c2 x1 reflp reflp
-    x2-12 ← oCast (self-1 {{inst}}) c2 c1⊓c2 x2 reflp reflp
-    x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp reflp
+    let c1⊓c2 = oCodeMeet (self-1 {{inst}}) c1 c2 reflp
+    x1-12 ← oCast (self-1 {{inst}}) c1 c1⊓c2 x1 reflp
+    x2-12 ← oCast (self-1 {{inst}}) c2 c1⊓c2 x2 reflp
+    x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp
     pure (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
 
-⁇meet (⁇Π f1) (⁇Π f2)  =
+⁇meet (⁇ΠA reflp f1) (⁇ΠA _ f2)  =
   do
-    fRet ← liftFun λ x → ⁇meet (f1 x) (f2 x)
-    pure (⁇Π fRet)
+    let fRet =  λ x → fromL (⁇meet {{æ = Approx}} (f1 x) (f2 x))
+    pure {{æ = Approx}}(⁇ΠA {{æ = Approx}} reflp fRet)
 ⁇meet (⁇Σ (x1 , y1)) (⁇Σ (x2 , y2))  = do
   x12 ← ⁇meet x1 x2
   y12 ← ⁇meet y1 y2
@@ -79,13 +79,13 @@ open import WMuConversion
     w12 ← ⁇meet w1 w2
     pure (⁇≡ (w12 ⊢ _ ≅ _))
 ⁇meet (⁇μ d1 resp1) (⁇μ d2 resp2) with decFin d1 d2
-... | no _ = pure ⁇℧
+... | no _ = {!!} --pure ⁇℧
 ... | yes reflp =
   do
     let
       respRet : (r : GermResponse (germCtor ℓ _ d1)) → LÆ _
       respRet r = ⁇meet (resp1 r) (resp2 r)
-    Lret ← liftFunDep respRet
+    Lret ← {!!} --liftFunDep respRet
     pure (⁇μ d1 Lret)
 -- For two elements of ⁇Ty ℓ, we see if they have the same head
 -- If they do, we take the meet at the germ type
@@ -112,31 +112,31 @@ descElMeet CEnd E b ElEnd ElEnd lto ltB lt = pure ElEnd
 descElMeet (CArg c x D .(CΣ _ c) .reflp) E b (ElArg a1 rest1) (ElArg a2 rest2) lto ltB lt = do
   pure (ElArg {!!} {!!})
 descElMeet (CRec c x D .(CΣ _ c) .reflp) E b (ElRec f1 rest1) (ElRec f2 rest2) lto ltB lt = do
-  pure (ElRec ? ?)
+  pure (ElRec {!!} {!!})
 
 
 meet : ∀ {{æ : Æ}}
       → (c : ℂ ℓ)
       → (x y : El c)
       → ( pfc1 : (codeSize c)  ≡p cSize )
-      → ( pfv1 : smax (elSize c x) (elSize c y)  ≡p vSize )
       → LÆ (El c)
-meet C⁇ x y reflp pfv = ⁇meet x y
-meet C℧ x y pfc pfv = pure ℧𝟘
-meet C𝟘 x y pfc pfv = pure ℧𝟘
+meet C⁇ x y reflp = ⁇meet x y
+meet C℧ x y pfc = pure ℧𝟘
+meet C𝟘 x y pfc = pure ℧𝟘
 -- If either is error, then result is error
-meet C𝟙 x y pfc pfv = pure (𝟙meet x y)
+meet C𝟙 x y pfc = pure (𝟙meet x y)
 -- For Nats, if either is ⁇ then return the other
 -- If both are zero, then zero, and if both are suc, compose the smaller numbers
 -- Otherwise, error
-meet Cℕ x y pfc pfv = pure (natMeet x y)
-meet (CType {{suc<}}) c1 c2 pfc pfv = pure (oCodeMeet self-1 c1 c2 reflp reflp)
-meet (CCumul {{suc<}} c) x y pfc pfv = oMeet self-1 c x y reflp reflp
-meet (CΠ dom cod) f g reflp reflp
-  = liftFunDep λ x →
-    cod (approx x) ∋ f x ⊓ g x
-      By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
-meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp reflp =
+meet Cℕ x y pfc = pure (natMeet x y)
+meet (CType {{suc<}}) c1 c2 pfc = pure (oCodeMeet self-1 c1 c2 reflp)
+meet (CCumul {{suc<}} c) x y pfc = oMeet self-1 c x y reflp
+meet (CΠ dom cod) f g reflp
+  = {!!}
+  -- liftFunDep λ x →
+  --   cod (approx x) ∋ f x ⊓ g x
+  --     By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
+meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp =
   do
   -- Awful stuff to deal with the lifting monad
     x⊓yfst ←
@@ -157,10 +157,10 @@ meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp reflp =
       cod (approx x⊓yfst) ∋ xsnd-cast ⊓ ysnd-cast
           By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone  _  ≤⨟ smax-≤R )}
     pure (x⊓yfst , x⊓ysnd)
-meet (C≡ c x y) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) reflp reflp = do
+meet (C≡ c x y) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) reflp = do
   let
     w = c ∋ w1 ⊓ w2
       approxBy hide {arg = ≤ₛ-refl}
   pure (w ⊢ x ≅ y)
 
-meet (Cμ tyCtor c D x₁) x y pfc pfv = {!x y !}
+meet (Cμ tyCtor c D x₁) x y pfc = {!x y !}
