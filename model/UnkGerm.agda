@@ -228,7 +228,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
         → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r))
-        -- → (æ ≡p Exact → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r)))
+        → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r)))
         → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
 
   -- Approximating/embedding for the unknown type
@@ -247,7 +247,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApprox⁇ {Self = Self} (⁇Π f⁇ _) = ⁇Π (λ _ → toApprox⁇ (f⁇ tt)) (λ ())
   toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
   toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
-  toApprox⁇ (⁇μ tyCtor f ) = ⁇μ tyCtor λ r → toApprox⁇ (f r) --⁇μ tyCtor (toApprox⁇ x)
+  toApprox⁇ (⁇μ tyCtor fappr _ ) = ⁇μ tyCtor (λ r → toApprox⁇ (fappr r)) λ () --⁇μ tyCtor (toApprox⁇ x)
 
 
   toExact⁇ ⁇℧ = ⁇℧
@@ -262,7 +262,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toExact⁇ (⁇Π f _) = ⁇Π (λ _ → toExact⁇ (f tt)) (λ _ _ → Now (toExact⁇ (f tt)))
   toExact⁇ (⁇Σ (x , y)) = ⁇Σ (toExact⁇ x , toExact⁇ y)
   toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
-  toExact⁇ (⁇μ tyCtor f) = ⁇μ tyCtor λ r → toExact⁇ (f r)
+  toExact⁇ (⁇μ tyCtor fappr fexact) = ⁇μ tyCtor (λ r → toExact⁇ (fappr r)) λ _ r → Now (toExact⁇ (fappr r))
 
   toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt* i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
   toApproxExact⁇ ⁇℧ = refl
@@ -282,6 +282,9 @@ record DataGerms {{_ : DataTypes}} : Type1 where
                                       (λ x →
                                         ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
                                       (toApproxExact⁇ w)
-  toApproxExact⁇ (⁇μ tyCtor x) =  congPath (⁇μ ⦃ æ = _ ⦄ tyCtor) (funExtPath (λ r → toApproxExact⁇ _))
+  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) (funExtPath (λ r → toApproxExact⁇ _)) allEq
+    where
+      allEq : _
+      allEq i ()
 
 open DataGerms {{...}} public

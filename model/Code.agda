@@ -276,7 +276,6 @@ record CodeModule
         allEq : ∀ {A : Set} → (f g : IsExact Approx → A) → f ≡c g
         allEq f g i ()
 
-    -- funExt (λ x → fromPathP (congPath f (toApproxExact dom x)))
 
     -- Notation for non-dep functions
     _C→_ : ℂ → ℂ → ℂ
