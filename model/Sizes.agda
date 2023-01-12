@@ -20,19 +20,19 @@ open import Sizes.NatLim public
 open import Sizes.WellFounded public
 
 import Sizes.CodeSize
-import Sizes.ElSize
+-- import Sizes.ElSize
 
 smallerCodeSize : ∀ {ℓ} {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ) → Size
 smallerCodeSize {suc ℓ}  = Sizes.CodeSize.codeSize smallerCodeSize
 
 
-smallerElSize :  ∀ {{æ : Æ}} {ℓ} {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size
-smallerElSize {suc ℓ} = Sizes.ElSize.elSize smallerCodeSize smallerElSize
+-- smallerElSize :  ∀ {{æ : Æ}} {ℓ} {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size
+-- smallerElSize {suc ℓ} = Sizes.ElSize.elSize smallerCodeSize smallerElSize
 
 
 module _ {ℓ} where
   open import Sizes.CodeSize {ℓ} smallerCodeSize public
-  open import Sizes.ElSize {ℓ} smallerCodeSize smallerElSize public
+  -- open import Sizes.ElSize {ℓ} smallerCodeSize smallerElSize public
 
 
 
@@ -80,16 +80,15 @@ codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax
 codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc c1) (codeSuc c2)
 
 
-⁇suc : ∀ {{_ : Æ}} {ℓ} {mi} (x : ⁇CombinedTy ℓ mi) → S1 ≤ₛ ⁇Size x
-⁇suc (⁇fromGerm x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc ⁇⁇ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
-⁇suc ⁇℧ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
-⁇suc ⁇𝟙 = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
-⁇suc (⁇ℕ n) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc {suc ℓ} (⁇Type x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc (⁇Π x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc (⁇Σ x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc (⁇μ tyCtor x) = ≤ₛ-sucMono ≤ₛ-Z
-⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ≤ₛ-sucMono ≤ₛ-Z
-
+-- ⁇suc : ∀ {{_ : Æ}} {ℓ} {mi} (x : ⁇CombinedTy ℓ mi) → S1 ≤ₛ ⁇Size x
+-- ⁇suc (⁇fromGerm x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc ⁇⁇ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc ⁇℧ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc ⁇𝟙 = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇ℕ n) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc {suc ℓ} (⁇Type x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇Π x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇Σ x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc (⁇μ tyCtor x) = ≤ₛ-sucMono ≤ₛ-Z
+-- ⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ≤ₛ-sucMono ≤ₛ-Z
