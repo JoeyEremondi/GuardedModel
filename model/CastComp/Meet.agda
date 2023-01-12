@@ -43,19 +43,25 @@ open SmallerCastMeet scm
 open import WMuConversion
 
 
+pureTag : ∀ {{æ : Æ}} {h} → ⁇CombinedTy ℓ  (just h) → LÆ (⁇Ty ℓ)
+pureTag x = pure (⁇Tag x)
 
 ⁇meet : ∀ {{æ : Æ}} {mi}
   → (x y : ⁇CombinedTy ℓ mi)
-  → LÆ (⁇CombinedTy ℓ mi)
+  → LÆ (⁇Ty ℓ)
+-- inline bind for the termination checker
+⁇bindMeet : ∀ {{æ : Æ}} {mi}
+  → (x y : LÆ (⁇CombinedTy ℓ mi))
+  → LÆ (⁇Ty ℓ)
 -- Comparing elements of the same germ type
 ⁇meet ⁇⁇ y  = pure y
 ⁇meet x ⁇⁇  = pure x
 ⁇meet ⁇℧ y  = pure ⁇℧
 ⁇meet x ⁇℧  = pure ⁇℧
-⁇meet ⁇𝟙 ⁇𝟙  = pure ⁇𝟙
-⁇meet (⁇ℕ x) (⁇ℕ x₁)  = pure (⁇ℕ (natMeet x x₁))
+⁇meet ⁇𝟙 ⁇𝟙  = pure (⁇Tag ⁇𝟙)
+⁇meet (⁇ℕ x) (⁇ℕ x₁)  = pureTag (⁇ℕ (natMeet x x₁))
 ⁇meet (⁇Type {{inst = suc<}} c1) (⁇Type {{inst = inst}} c2)
-  = pure (⁇Type {{inst = inst}} (oCodeMeet (self-1 {{inst}}) c1 c2 reflp ))
+  = pureTag (⁇Type {{inst = inst}} (oCodeMeet (self-1 {{inst}}) c1 c2 reflp ))
 -- Since they might not be at the same type, we find the meet of the codes
 -- in the smaller unverse, cast to that type, then find the meet at that type
 ⁇meet (⁇Cumul {{inst = suc<}} c1 x1) (⁇Cumul {{inst = inst}} c2 x2)  =
@@ -64,50 +70,46 @@ open import WMuConversion
     x1-12 ← oCast (self-1 {{inst}}) c1 c1⊓c2 x1 reflp
     x2-12 ← oCast (self-1 {{inst}}) c2 c1⊓c2 x2 reflp
     x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp
-    pure (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
+    pureTag (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
 
 ⁇meet (⁇ΠA reflp f1) (⁇ΠE () f2 _)
 ⁇meet (⁇ΠE reflp f1 _) (⁇ΠA () f2)
 ⁇meet (⁇ΠA reflp f1) (⁇ΠA _ f2)  =
   do
     let fRet =  λ x → fromL (⁇meet {{æ = Approx}} (f1 x) (f2 x))
-    pure {{æ = Approx}}(⁇ΠA {{æ = Approx}} reflp fRet)
+    pureTag {{æ = Approx}}(⁇ΠA {{æ = Approx}} reflp fRet)
 ⁇meet (⁇ΠE reflp f1 apr1) (⁇ΠE _ f2 apr2)  =
   do
-    let fRet =  λ x → do
-      f1x ← f1 x
-      f2x ← f2 x
-      ⁇meet {{æ = Exact}} f1x f2x
+    let fRet =  λ x → ⁇bindMeet {{æ = Exact}} (f1 x) (f2 x)
     approxRet ← ⁇meet {{æ = Exact}} apr1 apr2
-    pure {{æ = Exact}}(⁇ΠE {{æ = Exact}} reflp fRet approxRet)
+    pureTag {{æ = Exact}}(⁇ΠE {{æ = Exact}} reflp fRet approxRet)
 ⁇meet (⁇Σ (x1 , y1)) (⁇Σ (x2 , y2))  = do
   x12 ← ⁇meet x1 x2
   y12 ← ⁇meet y1 y2
-  pure (⁇Σ (x12 , y12))
+  pureTag (⁇Σ (x12 , y12))
 ⁇meet (⁇≡ (w1 ⊢ _ ≅ _)) (⁇≡ (w2 ⊢ _ ≅ _))  =
   do
     w12 ← ⁇meet w1 w2
-    pure (⁇≡ (w12 ⊢ _ ≅ _))
+    pureTag (⁇≡ (w12 ⊢ _ ≅ _))
 ⁇meet (⁇μ d1 resp1) (⁇μ d2 resp2) with decFin d1 d2
-... | no _ = {!!} --pure ⁇℧
+... | no _ = pure ⁇℧
 ... | yes reflp =
   do
     let
       respRet : (r : GermResponse (germCtor ℓ _ d1)) → LÆ _
       respRet r = ⁇meet (resp1 r) (resp2 r)
     Lret ← {!!} --liftFunDep respRet
-    pure (⁇μ d1 Lret)
+    pureTag (⁇μ d1 Lret)
 -- For two elements of ⁇Ty ℓ, we see if they have the same head
 -- If they do, we take the meet at the germ type
 -- otherwise, error
-⁇meet (⁇fromGerm {h = h1} x) (⁇fromGerm {h = h2} y)  with headDecEq h1 h2
-... | yes reflp =
-  do
-    retMeet ← ⁇meet x y
-    pure (⁇fromGerm retMeet)
+⁇meet (⁇Tag{h = h1} x) (⁇Tag {h = h2} y)  with headDecEq h1 h2
+... | yes reflp = ⁇meet x y
 ... | no _ = pure ⁇℧
 
-
+⁇bindMeet (Now x) (Now y) = ⁇meet x y
+⁇bindMeet (Later x) y = Later λ tic → ⁇bindMeet (x tic) y
+⁇bindMeet x (Later y) = Later λ tic → ⁇bindMeet x (y tic)
 
 descElMeet : ∀ {{æ : Æ}} {cB cBTarget : ℂ ℓ} {tyCtor skel oTop}
       → (D : ℂDesc  cB skel)
@@ -141,11 +143,15 @@ meet C𝟙 x y pfc = pure (𝟙meet x y)
 meet Cℕ x y pfc = pure (natMeet x y)
 meet (CType {{suc<}}) c1 c2 pfc = pure (oCodeMeet self-1 c1 c2 reflp)
 meet (CCumul {{suc<}} c) x y pfc = oMeet self-1 c x y reflp
-meet (CΠ dom cod) f g reflp
-  = {!!}
-  -- liftFunDep λ x →
+meet {{æ = Approx}} (CΠ dom cod) f g reflp = do
+  let
+    retFun = λ x → do
+      let fx = f x
+      pure {{æ = Approx}} {!!}
+  pure {{æ = Approx}} {!!}
   --   cod (approx x) ∋ f x ⊓ g x
   --     By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
+meet {{æ = Exact}} (CΠ dom cod) f g reflp = {!!}
 meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp =
   do
   -- Awful stuff to deal with the lifting monad

@@ -205,7 +205,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   -- Functor
   data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type where
       -- An element of the germ for any head can be embedded into ⁇Ty
-      ⁇fromGerm : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
+      ⁇Tag : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
       -- ⁇ and Germ have top and bottom elements
       ⁇℧ : ⁇Germ ℓ sc Self nothing
       ⁇⁇ : ⁇Germ ℓ sc Self nothing
@@ -237,7 +237,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
 
   toApprox⁇ ⁇℧ = ⁇℧
   toApprox⁇ ⁇⁇ = ⁇⁇
-  toApprox⁇ (⁇fromGerm x) = ⁇fromGerm (toApprox⁇ x)
+  toApprox⁇ (⁇Tag x) = ⁇Tag (toApprox⁇ x)
   toApprox⁇ ⁇𝟙 = ⁇𝟙
   toApprox⁇ (⁇ℕ n) = ⁇ℕ n
   toApprox⁇ (⁇Type x) = ⁇Type x
@@ -253,7 +253,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
 
   toExact⁇ ⁇℧ = ⁇℧
   toExact⁇ ⁇⁇ = ⁇⁇
-  toExact⁇ (⁇fromGerm x) = ⁇fromGerm (toExact⁇ x)
+  toExact⁇ (⁇Tag x) = ⁇Tag (toExact⁇ x)
   toExact⁇ ⁇𝟙 = ⁇𝟙
   toExact⁇ (⁇ℕ n) = ⁇ℕ n
   toExact⁇ (⁇Type x) = ⁇Type x
@@ -268,7 +268,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt* i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
   toApproxExact⁇ ⁇℧ = refl
   toApproxExact⁇ ⁇⁇ = refl
-  toApproxExact⁇ (⁇fromGerm x) = cong (⁇fromGerm {{æ = _}}) (toApproxExact⁇ x)
+  toApproxExact⁇ (⁇Tag x) = cong (⁇Tag {{æ = _}}) (toApproxExact⁇ x)
   toApproxExact⁇ ⁇𝟙 = refl
   toApproxExact⁇ (⁇ℕ n) = refl
   toApproxExact⁇ (⁇Type x) = refl

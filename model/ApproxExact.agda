@@ -21,7 +21,7 @@ data IsExact : Æ → Prop where
 data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Now : A → LÆ A
   Later : {{_ : IsExact æ}} → G.▹ (LÆ A) → LÆ A
-  Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
+  -- Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
 
 
 pure : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → A → LÆ A
@@ -43,10 +43,10 @@ _>>=_ :
   → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} B
 Now a >>= f = f a
 Later x >>= f = Later  λ tic → x tic >>= f
-_>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
-  where
-    path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
-    path {a = a} = Extract {{æ = æB}} (a >>= f)
+-- _>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
+--   where
+--     path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
+--     path {a = a} = Extract {{æ = æB}} (a >>= f)
 
 
 _>>_ :
@@ -67,6 +67,7 @@ f <$> mx = do
 
 fromNow : ∀ {ℓ} {A : Set ℓ} → LÆ {{Approx}} A → A
 fromNow (Now x) = x
+
 
 
 -- untic : ∀ {ℓ} {X : Set ℓ} → (@tick x : G.Tick) → LÆ {{Exact}} X → X
