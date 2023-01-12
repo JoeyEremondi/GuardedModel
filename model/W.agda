@@ -58,6 +58,10 @@ record ⟦_⟧F {{æ : Æ}} {I} (C : Container I) (X : I → Set) (i : I) : Set 
     --   → LÆ (X j)
     -- responseUnk : ResponseUnk C command → Unk
 
+
+⟦_⟧F[_] : ∀ {I} (C : Container I) → Æ → (X : I → Set)  → (i : I) → Set
+⟦_⟧F[_] C æ = ⟦_⟧F {{æ = æ}} C
+
 -- Functoral action aka good old map
 FMap : ∀ {{æ : Æ}} {I} {C : Container I} {X Y : I → Set} {i : I} → (∀ {i} → X i → Y i) → ⟦ C ⟧F X i → ⟦ C ⟧F Y i
 FMap f (FC com resp respEx) = FC com (λ r → f (resp r)) retExact
@@ -68,7 +72,7 @@ FMap f (FC com resp respEx) = FC com (λ r → f (resp r)) retExact
       pure (f fr)
 
 -- Can only do properties of the approximate parts
-□ : ∀ {{æ : Æ}} {ℓ I} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (⟦ C ⟧F X)) → Set ℓ
+□ : ∀ {æ : Æ} {ℓ I} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (⟦ C ⟧F[ æ ] X)) → Set ℓ
 □ C P (i , (FC c k kex)) = ∀ r → P (inext C c r , k r)
 
 data W̃ {{æ : Æ}} {I : Set} (C : Container I) (i : I)  :  Set where

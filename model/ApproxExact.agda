@@ -17,6 +17,8 @@ data Æ : Set where
 data IsExact : Æ → Prop where
   instance isExact : IsExact Exact
 
+isExactAllEq : ∀ {ℓ} {A : Set ℓ} → {f g : IsExact Approx → A} → f ≡c g
+isExactAllEq i ()
 
 data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Now : A → LÆ A

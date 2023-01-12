@@ -273,18 +273,12 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApproxExact⁇ (⁇Type x) = refl
   toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
   -- toApproxExact⁇ (⁇ΠA _ f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt)) ?
-  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) (funExtPath (λ _ → toApproxExact⁇ (f tt))) allEq
-    where
-      allEq : (λ ()) ≡c _
-      allEq i ()
+  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) (funExtPath (λ _ → toApproxExact⁇ (f tt))) isExactAllEq
   toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
   toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
                                       (λ x →
                                         ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
                                       (toApproxExact⁇ w)
-  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) (funExtPath (λ r → toApproxExact⁇ _)) allEq
-    where
-      allEq : _
-      allEq i ()
+  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) (funExtPath (λ r → toApproxExact⁇ _)) isExactAllEq
 
 open DataGerms {{...}} public
