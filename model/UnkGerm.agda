@@ -203,7 +203,9 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   field
     germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor (indSkeleton tyCtor d)
   -- Functor
-  data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type where
+  data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type
+  ⁇ApproxGerm : ∀  (ℓ : ℕ)  (sc : SmallerCode) (Self : DecPEq.Lift 𝟙) → Maybe TyHead → Type
+  data ⁇Germ {{æ}} ℓ sc Self where
       -- An element of the germ for any head can be embedded into ⁇Ty
       ⁇Tag : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
       -- ⁇ and Germ have top and bottom elements
@@ -216,7 +218,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self (just HCumul)
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇Π :  (𝟙  →  ⁇Germ ℓ sc Self nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
+      ⁇Π :  (𝟙  →  ⁇ApproxGerm ℓ sc tt* nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (⁇Germ ℓ sc Self nothing  × ⁇Germ ℓ sc Self nothing ) → ⁇Germ ℓ sc Self (just (HΣ))
       -- The germ of an equality type is a witness of equality between two ⁇s
@@ -227,13 +229,19 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       -- and a function producing higher order recursive refs
       ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
-        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r))
+        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt* (GermIndexFor tyCtor _ r))
         → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r)))
         → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
 
+  ⁇ApproxGerm = ⁇Germ {{æ = Approx}}
+
   -- Approximating/embedding for the unknown type
   toApprox⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Exact}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
+  approx⁇ : ∀ {{æ : Æ}} {ℓ sc Self i} → ⁇Germ {{æ = æ}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
   toExact⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Approx}} ℓ sc tt* i → ⁇Germ {{æ = Exact}} ℓ sc Self i
+
+  approx⁇ {{æ = Approx}} x = x
+  approx⁇ {{æ = Exact}} x = toApprox⁇ x
 
   toApprox⁇ ⁇℧ = ⁇℧
   toApprox⁇ ⁇⁇ = ⁇⁇
@@ -244,10 +252,10 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApprox⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toApprox-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toApprox⁇ {Self = Self} (⁇Π f⁇ _) = ⁇Π (λ _ → toApprox⁇ (f⁇ tt)) (λ ())
+  toApprox⁇ {Self = Self} (⁇Π f⁇ _) = ⁇Π (λ _ → f⁇ tt) (λ ())
   toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
   toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
-  toApprox⁇ (⁇μ tyCtor fappr _ ) = ⁇μ tyCtor (λ r → toApprox⁇ (fappr r)) λ () --⁇μ tyCtor (toApprox⁇ x)
+  toApprox⁇ (⁇μ tyCtor fappr _ ) = ⁇μ tyCtor fappr λ () --⁇μ tyCtor (toApprox⁇ x)
 
 
   toExact⁇ ⁇℧ = ⁇℧
@@ -259,10 +267,10 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toExact⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toExact-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toExact⁇ (⁇Π f _) = ⁇Π (λ _ → toExact⁇ (f tt)) (λ _ _ → Now (toExact⁇ (f tt)))
+  toExact⁇ (⁇Π f _) = ⁇Π (λ _ → f tt) (λ _ _ → Now (toExact⁇ (f tt)))
   toExact⁇ (⁇Σ (x , y)) = ⁇Σ (toExact⁇ x , toExact⁇ y)
   toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
-  toExact⁇ (⁇μ tyCtor fappr fexact) = ⁇μ tyCtor (λ r → toExact⁇ (fappr r)) λ _ r → Now (toExact⁇ (fappr r))
+  toExact⁇ (⁇μ tyCtor fappr fexact) = ⁇μ tyCtor fappr λ _ r → Now (toExact⁇ (fappr r))
 
   toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt* i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
   toApproxExact⁇ ⁇℧ = refl
@@ -273,12 +281,12 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toApproxExact⁇ (⁇Type x) = refl
   toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
   -- toApproxExact⁇ (⁇ΠA _ f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt)) ?
-  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) (funExtPath (λ _ → toApproxExact⁇ (f tt))) isExactAllEq
+  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) refl isExactAllEq
   toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
   toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
                                       (λ x →
                                         ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
                                       (toApproxExact⁇ w)
-  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) (funExtPath (λ r → toApproxExact⁇ _)) isExactAllEq
+  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) refl isExactAllEq
 
 open DataGerms {{...}} public

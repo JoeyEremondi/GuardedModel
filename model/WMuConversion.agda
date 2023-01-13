@@ -126,7 +126,7 @@ fromCEl : ∀ {ℓ sig} {cB : ℂ ℓ} {tyCtor : CName} (D : ℂDesc cB sig) (E 
         → WArg E
 
 
-fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D d) D x))
+fromCμ {D = D} (Cinit d x) = Wsup (FC (d , fromCElCommand (D d) x) (fromCEl (D d) D x) (λ ()))
 fromCμ Cμ⁇ = W⁇
 fromCμ Cμ℧ = W℧
 
@@ -141,9 +141,9 @@ toCEl :
   (com : CommandD D b) →
   (k : (r : ResponseD D b com ) →
                 WArg E)
-  → □ {X = λ _ → WArg E} (interpDesc D b)
+  → □ {æ = Approx} {X = λ _ → WArg E} (interpDesc D b)
     (λ (i , x) → ℂμ tyCtor E)
-    (tt , FC com k)
+    (tt , FC com k λ ())
 -- FContainer (interpDesc D) (λ → W (interpDesc E) Unit × ℂμ E i) Unit ix
   → (ℂDescEl  D (ℂμ tyCtor E) b)
 
@@ -151,7 +151,7 @@ toCEl :
 toCμ : ∀ {ℓ} {tyCtor : CName} (D : DCtors ℓ tyCtor)
   → (x : WArg D)
   → ℂμ tyCtor D
-toCμ D (Wsup (FC (d , com) resp)) = Cinit d (toCEl (D d) D com resp (λ r → toCμ D (resp r)))
+toCμ D (Wsup (FC (d , com) resp _)) = Cinit d (toCEl (D d) D com resp (λ r → toCμ D (resp r)))
 toCμ D W℧ = Cμ℧
 toCμ D W⁇ = Cμ⁇
 

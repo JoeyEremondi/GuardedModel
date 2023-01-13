@@ -12,7 +12,6 @@ open import Cubical.Data.Sum
 open import Cubical.Data.Bool
 open import Cubical.Data.FinData
 open import Cubical.Data.Sigma
-open import Cubical.Data.Equality
 open import Constructors
 open import UnkGerm
 open import GuardedAlgebra
@@ -72,17 +71,11 @@ pureTag x = pure (⁇Tag x)
     x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp
     pureTag (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
 
-⁇meet (⁇ΠA reflp f1) (⁇ΠE () f2 _)
-⁇meet (⁇ΠE reflp f1 _) (⁇ΠA () f2)
-⁇meet (⁇ΠA reflp f1) (⁇ΠA _ f2)  =
+⁇meet (⁇Π apr1 f1) (⁇Π apr2 f2)  =
   do
-    let fRet =  λ x → fromL (⁇meet {{æ = Approx}} (f1 x) (f2 x))
-    pureTag {{æ = Approx}}(⁇ΠA {{æ = Approx}} reflp fRet)
-⁇meet (⁇ΠE reflp f1 apr1) (⁇ΠE _ f2 apr2)  =
-  do
-    let fRet =  λ x → ⁇bindMeet {{æ = Exact}} (f1 x) (f2 x)
-    approxRet ← ⁇meet {{æ = Exact}} apr1 apr2
-    pureTag {{æ = Exact}}(⁇ΠE {{æ = Exact}} reflp fRet approxRet)
+    let fRet =  λ pf x → ⁇bindMeet (f1 pf x) (f2 pf x)
+    approxRet ← ⁇meet (apr1 tt) (apr2 tt)
+    pureTag (⁇Π (λ _ → approxRet) fRet)
 ⁇meet (⁇Σ (x1 , y1)) (⁇Σ (x2 , y2))  = do
   x12 ← ⁇meet x1 x2
   y12 ← ⁇meet y1 y2
@@ -91,15 +84,14 @@ pureTag x = pure (⁇Tag x)
   do
     w12 ← ⁇meet w1 w2
     pureTag (⁇≡ (w12 ⊢ _ ≅ _))
-⁇meet (⁇μ d1 resp1) (⁇μ d2 resp2) with decFin d1 d2
+⁇meet (⁇μ d1 resp1 exact1) (⁇μ d2 resp2 exact2) with decFin d1 d2
 ... | no _ = pure ⁇℧
 ... | yes reflp =
   do
     let
       respRet : (r : GermResponse (germCtor ℓ _ d1)) → LÆ _
       respRet r = ⁇meet (resp1 r) (resp2 r)
-    Lret ← {!!} --liftFunDep respRet
-    pureTag (⁇μ d1 Lret)
+    pureTag (⁇μ d1 (λ r → fromL (respRet r)) {!!})
 -- For two elements of ⁇Ty ℓ, we see if they have the same head
 -- If they do, we take the meet at the germ type
 -- otherwise, error
