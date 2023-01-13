@@ -40,11 +40,11 @@ open import WMuConversion
 
 data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Type1  where
  GEndCode : GermCtorIsCode ℓ  GEnd
- GArgCode : ∀ { sig n} {A : GermTele n} {ixFor} {D : GermCtor sig}
+ GArgCode : ∀ { sig n} {A : GermTele n} {D : GermCtor sig}
    → (c+ : ℂ ℓ)
    → (iso+ : Iso (GermTeleEnv A) (El c+))
    → GermCtorIsCode ℓ D
-   → GermCtorIsCode ℓ (GArg A ixFor D )
+   → GermCtorIsCode ℓ (GArg A D )
  GRecCode : ∀ {sig n} {A : GermTele n} {D : GermCtor sig}
    → (c+ :  ℂ ℓ)
    → (iso+ : Iso (GermTeleEnv A) (El c+))

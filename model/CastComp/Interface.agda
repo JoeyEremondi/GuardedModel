@@ -222,6 +222,12 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set wher
   ⟨_⇐_⟩_By_ cdest csource x (hide {clt})
     = oCast (self (<cSize clt)) csource cdest x reflp
 
+  [_]⟨_⇐_⟩_By_ : ∀ (æ : Æ)
+      → (cdest csource : ℂ ℓ)
+      → (x : ÆEl csource æ)
+       → (Hide (smax (codeSize csource)  (codeSize cdest) <ₛ csize))
+      → LÆ {{æ = æ }}(ÆEl cdest æ)
+  [_]⟨_⇐_⟩_By_ æ = ⟨_⇐_⟩_By_ {{æ = æ}}
 
   infix 20 ⟨_⇐_⟩_approxBy_
   ⟨_⇐_⟩_approxBy_ :

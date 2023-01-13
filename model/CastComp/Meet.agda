@@ -27,7 +27,7 @@ open import Sizes
 open import CastComp.Interface
 
 module CastComp.Meet {{dt : DataTypes}} {{dg : DataGerms}} {{ic : CodesForInductives}}
-    (⁇Allowed : Bool) {ℓ} (cSize : Size) (vSize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed cSize )
+    (⁇Allowed : Bool) {ℓ} (cSize : Size) (scm : SmallerCastMeet ℓ ⁇Allowed cSize )
 
   where
 
@@ -40,7 +40,7 @@ open import W
 
 open SmallerCastMeet scm
 open import WMuConversion
-
+open import CastComp.DescElMeet ⁇Allowed cSize  scm
 
 pureTag : ∀ {{æ : Æ}} {h} → ⁇CombinedTy ℓ  (just h) → LÆ (⁇Ty ℓ)
 pureTag x = pure (⁇Tag x)
@@ -71,10 +71,10 @@ pureTag x = pure (⁇Tag x)
     x1⊓x2 ← oMeet (self-1 {{inst}}) c1⊓c2 x1-12 x2-12 reflp
     pureTag (⁇Cumul {{inst = inst}} c1⊓c2 x1⊓x2)
 
-⁇meet (⁇Π apr1 f1) (⁇Π apr2 f2)  =
+⁇meet {{æ = æ}} (⁇Π apr1 f1) (⁇Π apr2 f2)  =
   do
     let fRet =  λ pf x → ⁇bindMeet (f1 pf x) (f2 pf x)
-    approxRet ← ⁇meet (apr1 tt) (apr2 tt)
+    let approxRet = fromL (⁇meet {{æ = Approx}} (apr1 tt) (apr2 tt))
     pureTag (⁇Π (λ _ → approxRet) fRet)
 ⁇meet (⁇Σ (x1 , y1)) (⁇Σ (x2 , y2))  = do
   x12 ← ⁇meet x1 x2
@@ -84,14 +84,16 @@ pureTag x = pure (⁇Tag x)
   do
     w12 ← ⁇meet w1 w2
     pureTag (⁇≡ (w12 ⊢ _ ≅ _))
-⁇meet (⁇μ d1 resp1 exact1) (⁇μ d2 resp2 exact2) with decFin d1 d2
+⁇meet {{æ = æ}} (⁇μ d1 resp1 exact1) (⁇μ d2 resp2 exact2) with decFin d1 d2
 ... | no _ = pure ⁇℧
 ... | yes reflp =
   do
     let
-      respRet : (r : GermResponse (germCtor ℓ _ d1)) → LÆ _
-      respRet r = ⁇meet (resp1 r) (resp2 r)
-    pureTag (⁇μ d1 (λ r → fromL (respRet r)) {!!})
+      respRet : (r : GermResponse (germCtor ℓ _ d1)) →  _
+      respRet r = fromL (⁇meet {{æ = Approx}} (resp1 r) (resp2 r))
+      exactRet : (IsExact æ) → (r : GermResponse (germCtor ℓ _ d1)) →  _
+      exactRet pf r = ⁇bindMeet (exact1 pf r) (exact2 pf r)
+    pureTag (⁇μ d1 respRet exactRet)
 -- For two elements of ⁇Ty ℓ, we see if they have the same head
 -- If they do, we take the meet at the germ type
 -- otherwise, error
@@ -103,20 +105,6 @@ pureTag x = pure (⁇Tag x)
 ⁇bindMeet (Later x) y = Later λ tic → ⁇bindMeet (x tic) y
 ⁇bindMeet x (Later y) = Later λ tic → ⁇bindMeet x (y tic)
 
-descElMeet : ∀ {{æ : Æ}} {cB cBTarget : ℂ ℓ} {tyCtor skel oTop}
-      → (D : ℂDesc  cB skel)
-      → (E : DCtors ℓ tyCtor)
-      → (b : ApproxEl cB)
-      → (x y : ℂDescEl D (ℂμ tyCtor E) b )
-      → (lto : oTop <ₛ cSize )
-      → (ltB : (codeSize cBTarget ≤ₛ (codeSize cB) ))
-      → (lt : descSize D ≤ₛ  oTop)
-      → LÆ (ℂDescEl D (ℂμ tyCtor E) b)
-descElMeet CEnd E b ElEnd ElEnd lto ltB lt = pure ElEnd
-descElMeet (CArg c x D .(CΣ _ c) .reflp) E b (ElArg a1 rest1) (ElArg a2 rest2) lto ltB lt = do
-  pure (ElArg {!!} {!!})
-descElMeet (CRec c x D .(CΣ _ c) .reflp) E b (ElRec f1 rest1) (ElRec f2 rest2) lto ltB lt = do
-  pure (ElRec {!!} {!!})
 
 
 meet : ∀ {{æ : Æ}}

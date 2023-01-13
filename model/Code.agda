@@ -110,6 +110,8 @@ record CodeModule
     toExactCommandD : ∀   {cB sig} → (D : ℂDesc cB sig) →  (b : ApproxEl cB) → CommandD {{æ = Approx}} D b → CommandD {{æ = Exact}} D b
     toExactResponseD : ∀  {cB sig} → (D : ℂDesc cB sig) →  (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D b)
       → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = Exact}} D b com
+    toÆResponseD : ∀  {æ cB sig} → (D : ℂDesc cB sig) →  (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D b)
+      → ResponseD {{æ = Approx}} D b com → ResponseD {{æ = æ}} D b com
     toApproxExactCommandD : ∀   {cB sig} → (D : ℂDesc cB sig) → (b : ApproxEl cB) → (c : CommandD {{æ = Approx}} D b)
       → toApproxCommandD {{æ = Exact}} D b (toExactCommandD D b c) ≡c c
     toApproxExactResponseD : ∀  {cB sig} → (D : ℂDesc cB sig) → (b : ApproxEl cB) → (com : CommandD {{æ = Approx}} D b)
@@ -117,6 +119,8 @@ record CodeModule
       → (toApproxResponseD {{æ = Exact}} D b com (toExactResponseD D b com r) ) ≡c r
 
 
+    toÆResponseD {æ = Exact} = toExactResponseD
+    toÆResponseD {æ = Approx} = λ _ _ _ x → x
 
 
     interpDesc : ∀ {{æ : Æ}} {cB} {sig} →  (ℂDesc cB sig) → ApproxEl cB → Container 𝟙
@@ -362,13 +366,13 @@ record CodeModule
     -- interpDesc D b  = CommandD D b  ◃ ResponseD  D  b  ◃  (λ _ → 𝟘) / inextD D b
 
     CommandD (CEnd) b = 𝟙
-    CommandD (CArg c _ D _ _) b = Σ[ a ∈ El (c b) ] CommandD D (b , approx a)
-    CommandD (CRec c _ D _ _) b = CommandD D b
+    CommandD (CArg carg _ D _ _) b = Σ[ a ∈ El (carg b) ] CommandD D (b , approx a)
+    CommandD (CRec cdom _ D _ _) b = CommandD D b
 --     -- CommandD (CHGuard c D E) i =  ((▹ (El c)) → CommandD D i) × CommandD E i
 
     ResponseD (CEnd) b com = 𝟘
-    ResponseD (CArg c _ D _ _) b (a , com) = ResponseD D (b , a) com
-    ResponseD (CRec c _ D _ _) b com = Rec⇒ (El (c b) )    Rest⇒ (ResponseD D b com)
+    ResponseD (CArg carg _ D _ _) b (a , com) = ResponseD D (b , a) com
+    ResponseD (CRec cdom _ D _ _) b com = Rec⇒ (El (cdom b) )    Rest⇒ (ResponseD D b com)
 
     toApproxCommandD {{æ = Approx}} D b com = com
     toApproxCommandD (CEnd ) b com = com
@@ -461,9 +465,6 @@ record CodeModule
     toApproxExactμ tyCtor cB Ds b W⁇ = reflc
     toApproxExactμ tyCtor cB Ds b (Wsup (FC (d , com) resp respEx)) = WPathP (toApproxExactCommandD (Ds d) b com)
       λ r1 r2 pth → congPath resp (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth)) ∙  toApproxExactResponseD (Ds d) b com r2)
-      -- λ r1 r2 pth → congPath (toApproxμ tyCtor cB Ds b) (congPath (toExactμ tyCtor cB Ds b) (congPath resp
-      --   (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth))
-      --   ∙ toApproxExactResponseD (Ds d) b (toApproxCommandD {{æ = _}} (Ds d) b com) r2))) ▷ (toApproxExactμ tyCtor cB (λ d₁ → Ds d₁) b (resp r2))
 
 
     toApproxCommandArg : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
@@ -561,56 +562,56 @@ fold⁇ {ℓ} x = subst (λ x → x) (sym ⁇lob) x
 
 
 
--- -- Every type has an error element
--- ℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
--- ℧ CodeModule.C⁇ = ⁇℧
--- ℧ CodeModule.C℧ = ℧𝟘
--- ℧ CodeModule.C𝟘 = ℧𝟘
--- ℧ CodeModule.C𝟙 = ℧𝟙
--- ℧ Cℕ = Nat℧
--- ℧ {suc ℓ} CodeModule.CType = C℧
--- ℧ (CodeModule.CΠ dom cod) = λ x → ℧ (cod (CodeModule.approx (CodeModuleAt _) x)) , λ _ → Now (℧ (cod (CodeModule.approx (CodeModuleAt _) x)))
--- ℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
--- --withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
--- -- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
--- ℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
--- ℧ (CodeModule.Cμ tyCtor c D x) = W℧
--- ℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
+-- Every type has an error element
+℧ : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ)  → El c
+℧ CodeModule.C⁇ = ⁇℧
+℧ CodeModule.C℧ = ℧𝟘
+℧ CodeModule.C𝟘 = ℧𝟘
+℧ CodeModule.C𝟙 = ℧𝟙
+℧ Cℕ = Nat℧
+℧ {suc ℓ} CodeModule.CType = C℧
+℧ (CodeModule.CΠ dom cod) = λ x → ℧ (cod (CodeModule.approx (CodeModuleAt _) x)) , λ _ → Now (℧ (cod (CodeModule.approx (CodeModuleAt _) x)))
+℧ (CodeModule.CΣ dom cod)  = ℧ dom , ℧ (cod (CodeModule.approx (CodeModuleAt _) (℧ dom)))
+--withApprox (λ æ₁ → ℧ ⦃ æ₁ ⦄ dom) , ℧ (cod _)
+-- ℧ (CodeModule.CΣ dom cod) ⦃ Exact ⦄ = (℧ dom {{Approx}} , ℧ dom {{Exact}}) , ℧ (cod (℧ dom {{Approx}})) {{Exact}}
+℧ (CodeModule.C≡ c x y) = ℧ {{Approx}} c ⊢ x ≅ y
+℧ (CodeModule.Cμ tyCtor c D x) = W℧
+℧ {ℓ = suc ℓ} (CCumul c) = ℧ c
 
--- ℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
--- ℧Approx = ℧ {{Approx}}
-
-
--- DCtors : ℕ → CName → Set
--- DCtors ℓ tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
+℧Approx : ∀ {ℓ} (c : ℂ ℓ) → ApproxEl c
+℧Approx = ℧ {{Approx}}
 
 
--- ▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
--- ▹⁇Self {{æ = æ}} ℓ = A.dfix (▹⁇Rec {ℓ = ℓ})
-
--- ▹⁇RecE : ∀ ℓ →  G.▹ ⁇Self → ⁇Self
--- ▹⁇RecE ℓ x = ▹⁇Rec {ℓ = ℓ} {{æ = Exact}} x
+DCtors : ℕ → CName → Set
+DCtors ℓ tyCtor = (d : DName tyCtor) → ℂDesc {ℓ = ℓ} C𝟙 (indSkeleton tyCtor d)
 
 
+▹⁇Self : {{æ : Æ}} →  ℕ → A.▹ ⁇Self
+▹⁇Self {{æ = æ}} ℓ = A.dfix (▹⁇Rec {ℓ = ℓ})
+
+▹⁇RecE : ∀ ℓ →  G.▹ ⁇Self → ⁇Self
+▹⁇RecE ℓ x = ▹⁇Rec {ℓ = ℓ} {{æ = Exact}} x
 
 
--- ▹⁇Self≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇Self ℓ ≡ A.next (⁇Rec {ℓ = ℓ})
--- ▹⁇Self≡ = A.pfix (CodeModule.▹⁇Rec (CodeModuleAt _))
 
--- ▹⁇ : {{æ : Æ}} →  ℕ → A.▹ Set
--- ▹⁇ ℓ = A.map▹ ⁇TySelf  (▹⁇Self ℓ)
 
--- ▹⁇≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
--- ▹⁇≡ ⦃ æ = Approx ⦄ {ℓ = ℓ} = refl
--- ▹⁇≡ ⦃ æ = Exact ⦄ {ℓ = ℓ} = congPath (G.map▹ ⁇TySelf) (▹⁇Self≡ {{æ = Exact}}) ∙ G.mapNext ⁇TySelf _
+▹⁇Self≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇Self ℓ ≡ A.next (⁇Rec {ℓ = ℓ})
+▹⁇Self≡ = A.pfix (CodeModule.▹⁇Rec (CodeModuleAt _))
 
--- ⁇Wrap≡ : ∀ {{æ  : Æ}} {ℓ} → A.▸ (▹⁇ ℓ) ≡c (A.▹ (⁇Ty ℓ))
--- ⁇Wrap≡ {{æ = Exact}} = G.later-extSwap (λ α → pfixSelf' α)
---   where
---     pfixSelf' : ∀ {ℓ} →  G.▸ \ α → ( ⁇TySelf (G.dfix (▹⁇RecE ℓ) α) ≡ ⁇TySelf (▹⁇RecE ℓ (G.dfix (▹⁇RecE ℓ))))
---     pfixSelf' tic = cong ⁇TySelf (G.pfix' (▹⁇RecE _) tic)
--- ⁇Wrap≡ {{æ = Approx}} = reflc
+▹⁇ : {{æ : Æ}} →  ℕ → A.▹ Set
+▹⁇ ℓ = A.map▹ ⁇TySelf  (▹⁇Self ℓ)
 
--- apply⁇Fun : ∀ {{æ : Æ}} {ℓ} → (▹⁇Ty (▹⁇Self ℓ) → ⁇Ty ℓ) → ⁇Ty ℓ → ⁇Ty ℓ
--- apply⁇Fun {ℓ = ℓ} f x =
---   f (transport (symPath ⁇Wrap≡) (A.next x))
+▹⁇≡ : ∀ {{æ : Æ}} {ℓ} → ▹⁇ ℓ ≡ A.next (⁇Ty ℓ)
+▹⁇≡ ⦃ æ = Approx ⦄ {ℓ = ℓ} = refl
+▹⁇≡ ⦃ æ = Exact ⦄ {ℓ = ℓ} = congPath (G.map▹ ⁇TySelf) (▹⁇Self≡ {{æ = Exact}}) ∙ G.mapNext ⁇TySelf _
+
+⁇Wrap≡ : ∀ {{æ  : Æ}} {ℓ} → A.▸ (▹⁇ ℓ) ≡c (A.▹ (⁇Ty ℓ))
+⁇Wrap≡ {{æ = Exact}} = G.later-extSwap (λ α → pfixSelf' α)
+  where
+    pfixSelf' : ∀ {ℓ} →  G.▸ \ α → ( ⁇TySelf (G.dfix (▹⁇RecE ℓ) α) ≡ ⁇TySelf (▹⁇RecE ℓ (G.dfix (▹⁇RecE ℓ))))
+    pfixSelf' tic = cong ⁇TySelf (G.pfix' (▹⁇RecE _) tic)
+⁇Wrap≡ {{æ = Approx}} = reflc
+
+apply⁇Fun : ∀ {{æ : Æ}} {ℓ} → (▹⁇Ty (▹⁇Self ℓ) → ⁇Ty ℓ) → ⁇Ty ℓ → ⁇Ty ℓ
+apply⁇Fun {ℓ = ℓ} f x =
+  f (transport (symPath ⁇Wrap≡) (A.next x))

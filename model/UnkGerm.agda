@@ -179,7 +179,7 @@ data GermCtor {{_ : DataTypes}} : IndSig → Set1 where
   -- in the germ this is encoded as (x1 : A1) → ... → (xn : An) → ⁇Germ h,
   -- where h is the head of type Foo, or nothing if it's unknown.
   -- This reduces how much loss there is for approximating to ⁇
-  GArg : ∀ {sig n} → (A : GermTele n ) → (ixFor : GermTeleEnv A → Maybe TyHead) (D : GermCtor sig  ) → GermCtor  (SigA n sig)
+  GArg : ∀ {sig n} → (A : GermTele n ) → (D : GermCtor sig  ) → GermCtor  (SigA n sig)
   -- Like arg, but always has the index type that's the same as the datatype, i.e. represents recursive self-reference
   GRec : ∀ {sig n} → (A : GermTele n ) → (D : GermCtor  sig) → GermCtor  (SigR n sig)
 
@@ -191,13 +191,13 @@ GermResponse : ∀  {{_ : DataTypes}} {sig} →  GermCtor sig → Type
 -- 0 pieces of data stored at the end
 GermResponse GEnd = 𝟘
 -- For arguments or recursive fields, response is whatever type is given by the telescope
-GermResponse (GArg A ixFor D) = GermTeleEnv A
+GermResponse (GArg A D) = GermTeleEnv A
 GermResponse (GRec A D) = GermTeleEnv A
 
 -- Index for each response of a Germ Constructor
-GermIndexFor : ∀ {{_  : DataTypes}} {sig} → (tyCtor : CName) → (D : GermCtor sig) → GermResponse D → Maybe TyHead
-GermIndexFor tyCtor (GArg A ixFor D) x = ixFor x
-GermIndexFor tyCtor (GRec A D) x = just (HCtor tyCtor)
+-- GermIndexFor : ∀ {{_  : DataTypes}} {sig} → (tyCtor : CName) → (D : GermCtor sig) → GermResponse D → Maybe TyHead
+-- GermIndexFor tyCtor (GArg A ixFor D) x = ixFor x
+-- GermIndexFor tyCtor (GRec A D) x = just (HCtor tyCtor)
 
 record DataGerms {{_ : DataTypes}} : Type1 where
   field
@@ -229,8 +229,8 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       -- and a function producing higher order recursive refs
       ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
-        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt* (GermIndexFor tyCtor _ r))
-        → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self (GermIndexFor tyCtor _ r)))
+        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt* nothing)
+        → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self nothing))
         → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
 
   ⁇ApproxGerm = ⁇Germ {{æ = Approx}}

@@ -74,7 +74,7 @@ data ℂμ {ℓ} (tyCtor : CName) (D : DCtors ℓ tyCtor)  : Set where
   -- ℂμ1 tyCtor D = Σ[ d ∈ DName tyCtor ] ℂDescEl (D d) (ℂμ tyCtor D) i
 
 WArg : ∀ {ℓ} {tyCtor : CName} (D : DCtors ℓ tyCtor) →   Set
-WArg D  = W̃ (Arg λ d → interpDesc (D d) Gtt) tt
+WArg D  = W̃ (λ æ → Arg λ d → interpDesc {{æ = æ}} (D d) Gtt) tt
 
 
   -- ℂElFContainer : ∀ {ℓ} {cI : ℂ ℓ} {i : ApproxEl cI} {X :  Set} → {D : ℂDesc cI} → ℂDescEl D X ≡ FContainer (interpDesc D) X Unit i
@@ -141,7 +141,7 @@ toCEl :
   (com : CommandD D b) →
   (k : (r : ResponseD D b com ) →
                 WArg E)
-  → □ {æ = Approx} {X = λ _ → WArg E} (interpDesc D b)
+  → □ {æ = Approx} {X = λ æ _ → WArg E} (interpDesc D b)
     (λ (i , x) → ℂμ tyCtor E)
     (tt , FC com k λ ())
 -- FContainer (interpDesc D) (λ → W (interpDesc E) Unit × ℂμ E i) Unit ix
