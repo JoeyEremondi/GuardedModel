@@ -40,7 +40,7 @@ open import W
 
 open SmallerCastMeet scm
 open import WMuConversion
-open import CastComp.DescElMeet ⁇Allowed cSize  scm
+open import CastComp.DescElMeet ⁇Allowed cSize scm
 
 pureTag : ∀ {{æ : Æ}} {h} → ⁇CombinedTy ℓ  (just h) → LÆ (⁇Ty ℓ)
 pureTag x = pure (⁇Tag x)
@@ -123,15 +123,20 @@ meet C𝟙 x y pfc = pure (𝟙meet x y)
 meet Cℕ x y pfc = pure (natMeet x y)
 meet (CType {{suc<}}) c1 c2 pfc = pure (oCodeMeet self-1 c1 c2 reflp)
 meet (CCumul {{suc<}} c) x y pfc = oMeet self-1 c x y reflp
-meet {{æ = Approx}} (CΠ dom cod) f g reflp = do
+meet {{æ = æ}} (CΠ dom cod) f g reflp = pure λ x →
   let
-    retFun = λ x → do
-      let fx = f x
-      pure {{æ = Approx}} {!!}
-  pure {{æ = Approx}} {!!}
+    fx = fst (f x)
+    gx = fst (f x)
+    fgx = (cod (approx x)) ∋ (approx fx) ⊓ (approx gx)
+      approxBy Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
+    ifExact = λ pf → do
+      fExact ← snd (f x) pf
+      gExact ← snd (g x) pf
+      cod (approx x) ∋ fExact ⊓ gExact
+        By Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
+  in (exact fgx , ifExact)
   --   cod (approx x) ∋ f x ⊓ g x
   --     By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
-meet {{æ = Exact}} (CΠ dom cod) f g reflp = {!!}
 meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp =
   do
   -- Awful stuff to deal with the lifting monad
@@ -159,4 +164,7 @@ meet (C≡ c x y) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) reflp = do
       approxBy hide {arg = ≤ₛ-refl}
   pure (w ⊢ x ≅ y)
 
-meet (Cμ tyCtor c D x₁) x y pfc = {!x y !}
+meet (Cμ tyCtor c D x₁) x y reflp = descMuMeet D x y
+  ------------------------------
+  (≤ₛ-sucMono (FinLim-cocone _ _ ≤⨟ smax-≤R))
+  (≤ₛ-sucMono (codeSuc _ ≤⨟ smax-≤L))
