@@ -50,7 +50,7 @@ record ⟦_⟧F {{æ : Æ}} {I} (C : Container I) (X : Æ → I → Set) (i : I)
     responseExact :
       (IsExact æ)
       → (r : Response C command)
-      → LÆ (X Exact (inext C command r))
+      → LÆ (X æ (inext C command r))
     -- responseLater :
     --   (r : Response C command)
     --   → ∀ j

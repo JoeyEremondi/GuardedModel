@@ -20,6 +20,9 @@ data IsExact : Æ → Prop where
 isExactAllEq : ∀ {ℓ} {A : Set ℓ} → {f g : IsExact Approx → A} → f ≡c g
 isExactAllEq i ()
 
+castExact : ∀ {ℓ} {æ} (P : Æ → Set ℓ) → IsExact æ → P æ → P Exact
+castExact {æ = Exact} P _ x = x
+
 data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Now : A → LÆ A
   Later : {{_ : IsExact æ}} → G.▹ (LÆ A) → LÆ A

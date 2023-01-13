@@ -56,7 +56,7 @@ descElMeet : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
       → (lto : descSize D <ₛ cSize)
       → (ltB : codeSize cB <ₛ cSize)
       → (φ : (r : ResponseD D b1 (toApproxCommandD D b1 (⟦_⟧F.command x)) ) → (r2 : ResponseD D b2 (toApproxCommandD D b2 (⟦_⟧F.command y))) →  (W̃ {{æ = Approx}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt  ))
-      → (φEx : (r : ResponseD D b1 (toApproxCommandD D b1 (⟦_⟧F.command x)) ) → (r2 : ResponseD D b2 (toApproxCommandD D b2 (⟦_⟧F.command y))) → LÆ (W̃ {{æ = Exact}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt  ))
+      → (φEx : (IsExact æ) → (r : ResponseD D b1 (toApproxCommandD D b1 (⟦_⟧F.command x)) ) → (r2 : ResponseD D b2 (toApproxCommandD D b2 (⟦_⟧F.command y))) → LÆ (W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt  ))
       → let b12 = cB ∋ b1 ⊓ b2 approxBy Decreasing ltB
         in  LÆ (⟦ interpDesc D b12 ⟧F (λ æ → W̃ {{æ = æ }} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)))  tt)
 
@@ -103,7 +103,7 @@ descElMeet (CodeModule.CArg c x D cB' reflp) E b1 b2 (FC (a1 , com1) resp1 exact
                       (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 1))) lto)
                       (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 2) )) lto)
                       (λ r1 r2 → φ (transport req1 r1) (transport req2 r2))
-                      λ r1 r2 → φEx (transport req1 r1) (transport req2 r2)
+                      λ pf r1 r2 → φEx pf (transport req1 r1) (transport req2 r2)
   -- Cast to distribute the meet of the resuting b12 and a12
   -- This should be a no-op, but we can't show that yet
   comRet ← castCommand D _ (b12 , approx a12) com12
@@ -149,7 +149,7 @@ descElMeet {{æ = æ}} (CodeModule.CRec cdom x D cB' reflp) E b1 b2 (FC com1 res
     (<ₛ-trans (≤ₛ-sucMono (smax*-≤-n (FLit 1))) lto)
     ltB
     ( λ r1 r2 → φ (Rest (transport (congPath (ResponseD D b1) (sym recEq1)) r1)) (Rest (transport (congPath (ResponseD D b2) (sym recEq2)) r2)) )
-    ( λ r1 r2 → φEx (Rest (transport (congPath (ResponseD D b1) (sym recEq1)) r1)) (Rest (transport (congPath (ResponseD D b2) (sym recEq2)) r2)) )
+    ( λ pf r1 r2 → φEx pf (Rest (transport (congPath (ResponseD D b1) (sym recEq1)) r1)) (Rest (transport (congPath (ResponseD D b2) (sym recEq2)) r2)) )
   let
     recVals : (r : El (cdom b12) ) → _
     recVals =
@@ -160,46 +160,60 @@ descElMeet {{æ = æ}} (CodeModule.CRec cdom x D cB' reflp) E b1 b2 (FC com1 res
           r2 = ⟨ cdom b2 ⇐ cdom b12 ⟩ (approx r)
                  approxBy Decreasing <ₛ-trans (≤ₛ-sucMono (smax-lub (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)) (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)))) lto
         in (φ (Rec (exact r1)) (Rec (exact r2)))
-    exactRecVals : (r : El (cdom b12) ) → _
-    exactRecVals =
-      λ r → do
+    exactRecVals : (IsExact æ) → (r : El (cdom b12) ) → _
+    exactRecVals pf r = do
         r1 ← [ æ ]⟨ cdom b1 ⇐ cdom b12 ⟩ r
                  By Decreasing <ₛ-trans (≤ₛ-sucMono (smax-lub (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)) (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)))) lto
         r2 ← [ æ ]⟨ cdom b2 ⇐ cdom b12 ⟩ r
                  By Decreasing <ₛ-trans (≤ₛ-sucMono (smax-lub (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)) (≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0)))) lto
-        (φEx (Rec r1) (Rec r2))
+        (φEx pf (Rec r1) (Rec r2))
   -- Same equality issue as above, have to convince it that the command type is the same for the rest
   let req = congPath (ResponseD D b12) (toApproxCommandRec cdom x D _ reflp b12 com12)
   -- Package it all back up into a member of the container type
   pure (FC
     com12
     ((λ { (Rec r) → recVals r ; (Rest r) → resp12 (transport req r) }) )
-    (λ pf → λ {(Rec r) → exactRecVals r ; (Rest r) → exact12 pf (transport req r)}))
+    (λ pf → λ {(Rec r) → exactRecVals pf r ; (Rest r) → exact12 pf (transport req r)}))
 
 
--- -- Meets for members of inductive types
--- descMuMeet : ∀ {{æ : Æ}} {tyCtor : CName}
---       → (Ds : DCtors ℓ tyCtor)
---       → (x y : W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt  )
---       → (lto : ∀ {d} → descSize (Ds d) <ₛ cSize)
---       → (lto' : S1 <ₛ cSize)
---       → LÆ (W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt  )
--- descMuMeet Ds W℧ y lto lto' = pure W℧
--- descMuMeet Ds x W℧ lto lto' = pure W℧
--- descMuMeet Ds W⁇ y lto lto' = pure y
--- descMuMeet Ds x W⁇ lto lto' = pure x
--- descMuMeet  Ds (Wsup (FC (d , com1) resp1 exact1)) (Wsup (FC (d2 , com2) resp2 exact2)) lto lto' with decFin d d2
--- ... | no neq = pure W℧
--- ... | yes reflp = do
---   -- We need to convince Agda that unit meet with itself is itself
---   let 𝟙eq = oMeet𝟙 (self (<cSize lto'))
---   -- Compute the helper function that lets us call ourselves recursively in descElMeet
---   let φ = λ r1 r2 → descMuMeet ? ? ? ? ?
---   -- λ r1 r2 → descMuMeet Ds (resp1 r1) (resp2 r2) lto lto'
---   (FC com𝟙𝟙 resp𝟙𝟙 exact𝟙𝟙) ← descElMeet (Ds d) Ds Gtt Gtt (FC com1 {!!} {!!}) (FC com2 {!!} {!!})
---     lto
---     lto'
---     φ
---   let comRet = substPath (CommandD (Ds d)) 𝟙eq com𝟙𝟙
---   let respRet = λ r → {!!} --resp𝟙𝟙 (transport (cong₂ (ResponseD (Ds d)) (sym 𝟙eq) (congP₂ (λ i x y → toApproxCommandD (Ds d) x y) _ (symP (subst-filler _ _ com𝟙𝟙))) ) r)
---   pure (Wsup (FC (d , comRet) respRet {!!} ))
+-- Meets for members of inductive types
+descMuMeet : ∀ {{æ : Æ}} {tyCtor : CName}
+      → (Ds : DCtors ℓ tyCtor)
+      → (x y : W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt  )
+      → (lto : ∀ {d} → descSize (Ds d) <ₛ cSize)
+      → (lto' : S1 <ₛ cSize)
+      → LÆ (W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt  )
+descMuBindMeet : ∀ {{æ : Æ}} {tyCtor : CName}
+      → (Ds : DCtors ℓ tyCtor)
+      → (x y : LÆ (W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt)  )
+      → (lto : ∀ {d} → descSize (Ds d) <ₛ cSize)
+      → (lto' : S1 <ₛ cSize)
+      → LÆ (W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (Ds d) Gtt)) tt  )
+
+descMuMeet Ds W℧ y lto lto' = pure W℧
+descMuMeet Ds x W℧ lto lto' = pure W℧
+descMuMeet Ds W⁇ y lto lto' = pure y
+descMuMeet Ds x W⁇ lto lto' = pure x
+descMuMeet {{æ = æ}} Ds (Wsup (FC (d , com1) resp1 exact1)) (Wsup (FC (d2 , com2) resp2 exact2)) lto lto' with decFin d d2
+... | no neq = pure W℧
+... | yes reflp = do
+  -- We need to convince Agda that unit meet with itself is itself
+  let 𝟙eq = oMeet𝟙 (self (<cSize lto'))
+  -- Compute the helper function that lets us call ourselves recursively in descElMeet
+  let φ = λ r1 r2 → fromL (descMuMeet ⦃ æ = Approx ⦄ Ds (resp1 r1) (resp2 r2) lto lto')
+  let φEx = λ pf r1 r2 → descMuBindMeet Ds (exact1 pf r1) (exact2 pf r2) lto lto'
+
+  -- λ r1 r2 → descMuMeet Ds (resp1 r1) (resp2 r2) lto lto'
+  (FC com𝟙𝟙 resp𝟙𝟙 exact𝟙𝟙) ← descElMeet (Ds d) Ds Gtt Gtt (FC com1 resp1 exact1) (FC com2 resp2 exact2)
+    lto
+    lto'
+    φ
+    φEx
+  let comRet = substPath (CommandD (Ds d)) 𝟙eq com𝟙𝟙
+  let respRet = λ r → resp𝟙𝟙 (transport (cong₂ (ResponseD (Ds d)) (sym 𝟙eq) (congP₂ (λ i x y → toApproxCommandD (Ds d) x y) _ (symP (subst-filler _ _ com𝟙𝟙))) ) r)
+  let exactRet = λ pf r → exact𝟙𝟙 pf (transport (cong₂ (ResponseD (Ds d)) (sym 𝟙eq) (congP₂ (λ i x y → toApproxCommandD (Ds d) x y) _ (symP (subst-filler _ _ com𝟙𝟙))) ) r)
+  pure (Wsup (FC (d , comRet) respRet exactRet ))
+
+descMuBindMeet Ds (Later x) y lto lto' = Later λ tic → descMuBindMeet Ds (x tic) y lto lto'
+descMuBindMeet Ds x (Later y)  lto lto' = Later λ tic → descMuBindMeet Ds x (y tic) lto lto'
+descMuBindMeet Ds (Now x) (Now y)  lto lto' = descMuMeet Ds x y lto lto'
