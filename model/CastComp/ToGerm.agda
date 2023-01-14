@@ -67,5 +67,5 @@ toGerm (CΣ dom cod) (x , y) peq ceq = do
 toGerm (C≡ c x₁ y) (wit ⊢ _ ≅ _) peq ceq =
   let
     retWit = ⟨ C⁇ ⇐ c ⟩ wit approxBy {!!}
-  in pureTag (⁇≡ ((exact retWit) ⊢ ⁇⁇ ≅ ⁇⁇))
+  in pureTag (⁇≡ ((exact {ℓ = ℓ} {c = C⁇} retWit) ⊢ ⁇⁇ ≅ ⁇⁇))
 toGerm (Cμ tyCtor c D x₁) x peq ceq = {!!}

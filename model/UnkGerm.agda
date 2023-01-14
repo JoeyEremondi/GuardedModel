@@ -191,8 +191,8 @@ GermResponse : ∀  {{_ : DataTypes}} {sig} →  GermCtor sig → Type
 -- 0 pieces of data stored at the end
 GermResponse GEnd = 𝟘
 -- For arguments or recursive fields, response is whatever type is given by the telescope
-GermResponse (GArg A D) = GermTeleEnv A
-GermResponse (GRec A D) = GermTeleEnv A
+GermResponse (GArg A D) = GermTeleEnv A ⊎ GermResponse D
+GermResponse (GRec A D) = GermTeleEnv A ⊎ GermResponse D
 
 -- Index for each response of a Germ Constructor
 -- GermIndexFor : ∀ {{_  : DataTypes}} {sig} → (tyCtor : CName) → (D : GermCtor sig) → GermResponse D → Maybe TyHead
