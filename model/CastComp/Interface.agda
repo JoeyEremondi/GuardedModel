@@ -237,6 +237,8 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set wher
       → (ApproxEl cdest)
   ⟨_⇐_⟩_approxBy_ cdest csource x lt = fromL (⟨_⇐_⟩_By_ {{æ = Approx}} cdest csource x lt)
 
+  ⁇∈_By_ : {{æ : Æ}} → (c : ℂ ℓ) → Hide (codeSize c <ₛ csize ) → El c
+  ⁇∈_By_ c (hide {arg = lpf}) = o⁇ (self (<cSize lpf)) c reflp
 
   -- Helper to manage the common case of having two elements of different codes' types,
   -- casting them to the meet code, then taking the meet of those two elements
@@ -355,3 +357,8 @@ FixCastMeet f  =
     λ _ _ _ →
     WFI.induction CastCompWellFounded {P = λ {(ℓ' , allowed , cs ) → SizedCastMeet ℓ' allowed cs }}
       (λ {(ℓ' , allowed , cs ) → λ self → f (smallerCastMeet (self ( _ , _ , _ )) λ {ℓ'} {allowed} {cs}  → λ tic → ▹self tic ℓ' allowed cs )}) _
+
+
+pureTag : ∀ {{æ : Æ}} {ℓ }  {h} → ⁇CombinedTy ℓ  (just h) → LÆ (⁇Ty ℓ)
+pureTag x = pure (⁇Tag x)
+

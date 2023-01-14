@@ -42,8 +42,6 @@ open SmallerCastMeet scm
 open import WMuConversion
 open import CastComp.DescElMeet ⁇Allowed cSize scm
 
-pureTag : ∀ {{æ : Æ}} {h} → ⁇CombinedTy ℓ  (just h) → LÆ (⁇Ty ℓ)
-pureTag x = pure (⁇Tag x)
 
 ⁇meet : ∀ {{æ : Æ}} {mi}
   → (x y : ⁇CombinedTy ℓ mi)

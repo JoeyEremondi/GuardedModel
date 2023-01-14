@@ -40,4 +40,32 @@ open import W
 open SmallerCastMeet scm
 open import WMuConversion
 
-toGerm : ∀ {{æ : Æ}} {h} (c : ℂ ℓ) → (x : El c) → codeHead c ≡p HStatic h → LÆ (⁇GermTy ℓ h)
+toGerm : ∀ {{æ : Æ}} {h} (c : ℂ ℓ) → (x : El c) → codeHead c ≡p HStatic h → codeSize c ≡p cSize → LÆ (⁇Ty ℓ)
+toGerm C𝟘 x peq ceq = pure ⁇℧
+toGerm C𝟙 Gtt peq ceq = pureTag ⁇𝟙
+toGerm C𝟙 ℧𝟙 peq ceq = pure ⁇℧
+toGerm Cℕ x peq ceq = pureTag (⁇ℕ x)
+toGerm CType x peq ceq = pureTag (⁇Type x)
+toGerm (CCumul c) x peq ceq = pureTag (⁇Cumul c x )
+toGerm (CΠ dom cod) f peq ceq =
+  pureTag (⁇Π (λ _ → fAppr) fExact)
+    where
+    fAppr  =
+      let
+        f⁇ = fst (f (⁇∈ dom By {!!}))
+      in ⟨ C⁇ ⇐ cod _ ⟩ (approx f⁇) approxBy Decreasing {!!}
+    fExact : _ → (x : _) → _
+    fExact pf x = do
+      xRaw ← θ pf (transport ⁇Wrap≡ x)
+      xCast ← ⟨ dom ⇐ C⁇ ⟩ xRaw By Decreasing {!!}
+      fx ← snd (f xCast) pf
+      ⟨ C⁇ ⇐ cod (approx xCast) ⟩ fx By Decreasing {!!}
+toGerm (CΣ dom cod) (x , y) peq ceq = do
+  x⁇ ← ⟨ C⁇ ⇐ dom ⟩ x By Decreasing {!!}
+  y⁇ ← ⟨ C⁇ ⇐ cod (approx x) ⟩ y By Decreasing {!!}
+  pureTag (⁇Σ (x⁇ , y⁇))
+toGerm (C≡ c x₁ y) (wit ⊢ _ ≅ _) peq ceq =
+  let
+    retWit = ⟨ C⁇ ⇐ c ⟩ wit approxBy {!!}
+  in pureTag (⁇≡ ((exact retWit) ⊢ ⁇⁇ ≅ ⁇⁇))
+toGerm (Cμ tyCtor c D x₁) x peq ceq = {!!}
