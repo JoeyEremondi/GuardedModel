@@ -261,7 +261,7 @@ codeHead (CΠ c cod) = HStatic HΠ
 codeHead (CΣ c cod) = HStatic HΣ
 codeHead (C≡ c x y) = HStatic H≅
 codeHead (Cμ tyCtor c D x) = HStatic (HCtor tyCtor)
-codeHead {ℓ = suc ℓ} (CCumul x) = HStatic HCumul
+codeHead (CCumul x) = HStatic HCumul
 -- codeHead {suc ℓ} (CCumul t) = codeHead t
 
 -- valueHead : ∀ {{_ : Æ}} {ℓ h} (c : ℂ ℓ) → (codeHead c ≡p h) → El c → ValHead h
