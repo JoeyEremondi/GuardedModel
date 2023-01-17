@@ -102,7 +102,7 @@ descMeet {cB1 = cB1} {cB2} {cBTarget = cB} {oTop = oTop} (CArg c1 ar1 D1 _ reflp
 descMeet {cB1 = cB1} {cB2 = cB2} {cBTarget = cB} {oTop = oTop} (CRec c1 ar1 D1 _ reflp) (CRec c2 ar2 D2 _ reflp) lto ltB lt  =
       CRec
         cRet
-        (λ b → oCodeMeetArity (self _) (c1 (cb1 b)) (c2 (cb2 b)) reflp (ar1 (cb1 b)) (ar2 (cb2 b)))
+        (λ b → oNestedΣArity (self _) (c1 (cb1 b)) (c2 (cb2 b)) reflp (ar1 (cb1 b)) (ar2 (cb2 b)))
         (descMeet D1 D2 lto ltB ltcB) --(descMeet D1 D2 lto ltB ltcB)
         -- (λ cb k → fromL ([ Approx ] I1 ,, I2 ∋ j1 (cb1 cb) (fst (k12 cb k)) ⊓ j2 (cb2 cb) (snd (k12 cb k)) By hide {arg = ≤< ltI lto }))
         _ reflp

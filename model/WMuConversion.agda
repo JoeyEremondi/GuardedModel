@@ -52,8 +52,8 @@ private
 -- Also, Cubical Agda recognizes these as strictly decreasing, which is nice
 data ℂDescEl' {ℓ} (X : Set) : {sig : IndSig} (cB : ℂ ℓ) →  ℂDesc cB sig → ApproxEl cB → Set where
   ElEnd : ∀ {cB b} → ℂDescEl' X cB (CEnd) b
-  ElArg : ∀ {cB n cA sig b} {arity : ∀ b → HasArity HΠ n (cA b)} {D : ℂDesc _ sig} → (a : El (cA b) ) →  ℂDescEl' X (CΣ cB cA)  D (b , approx a) → ℂDescEl' X cB (CArg cA arity D _ reflp) b
-  ElRec : ∀ {cB n b sig} {c : ApproxEl cB → ℂ ℓ} {arity : ∀ b → HasArity HΣ n (c b)} {D : ℂDesc cB sig} →
+  ElArg : ∀ {cB n cA sig b} {arity : ∀ b → HasArity n (cA b)} {D : ℂDesc _ sig} → (a : El (cA b) ) →  ℂDescEl' X (CΣ cB cA)  D (b , approx a) → ℂDescEl' X cB (CArg cA arity D _ reflp) b
+  ElRec : ∀ {cB n b sig} {c : ApproxEl cB → ℂ ℓ} {arity : ∀ b → IsNestedΣ n (c b)} {D : ℂDesc cB sig} →
     ((x : El (c b)) → X ) → ℂDescEl' X cB D b → ℂDescEl' X cB  (CRec c arity D _ reflp) b
 
 

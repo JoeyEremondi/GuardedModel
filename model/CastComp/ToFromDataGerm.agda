@@ -47,8 +47,11 @@ open import Code
 
 open import CastComp.CastCommandResp ⁇Allowed cSize scm
 
+-- castTeleFromGerm :  ∀ {n} ->  (A : GermTele n) →
+
+
 -- Helper function to take the field-by-field meet for a constructor
-descElToGermAppr : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
+descElToGerm : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
       → (D : ℂDesc  cB skel)
       → (DG : GermCtor skel)
       → (isCode : GermCtorIsCode ℓ DG)
@@ -58,15 +61,61 @@ descElToGermAppr : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
       → (lto : descSize D <ₛ cSize)
       → (ltB : codeSize cB <ₛ cSize)
       → (φ : (r : ResponseD D b (toApproxCommandD D b (⟦_⟧F.command x)) ) → ⁇Ty ℓ )
-      → ((r : GermResponse DG) → ⁇Ty ℓ)
-descElToGermAppr (CodeModule.CArg c x₁ D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ (inl r) =
+      → (φex : (IsExact æ) → (r : ResponseD D b (toApproxCommandD D b (⟦_⟧F.command x)) ) → LÆ (⁇Ty ℓ) )
+      → ((r : GermResponse DG) → ⁇Ty ℓ × (IsExact æ → LÆ (⁇Ty ℓ)))
+-- Inl case: Given our response, translate it into a response that is the argument type a takes
+-- since a must be a function (possibly with argument  type 𝟙)
+-- Then generate a value of type ⁇ from the return of a
+descElToGerm (CodeModule.CArg c ar D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ φex (inl r)  =
   let
-    rCast = ⟨ {!!} ⇐ cr ⟩ approx (Iso.fun cIso r) approxBy {!!}
-    respR = resp {!!}
-  in {!!}
-descElToGermAppr (CodeModule.CArg c x₁ D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ (inr r) =
-  descElToGermAppr D DG rest E (b , approx a) (FC com (λ rr → resp {!!}) {!!}) {!!} {!!} {!!} r
-descElToGermAppr (CodeModule.CRec c x₁ D cB' x₂) (GRec A DG) isCode E b x lto ltB φ r = {!!}
+    rCast = ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ approx (Iso.fun cIso r) approxBy {!ar!}
+    aFun = transport (congPath (λ c → ÆEl c _) (HasArity.arEq (ar b))) a
+    aRet  = (fst (aFun (exact rCast)))
+    ⁇Ret = ⟨ C⁇ ⇐ HasArity.arCod (ar b) rCast ⟩ (approx aRet) approxBy {!!}
+    exComp = λ pf → do
+      rCastEx ← ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ (Iso.fun cIso r) By {!ar!}
+      aRetEx ← snd (aFun rCastEx) pf
+      ⟨ C⁇ ⇐ HasArity.arCod (ar b) rCast ⟩ aRet By {!!}
+  in  exact {c = C⁇} ⁇Ret , exComp
+-- Inr case : recur on the rest of the fields
+descElToGerm {{æ = æ}} (CodeModule.CArg c ar D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ φex (inr r) = let
+    transportResp = λ rr → (transport (congPath (λ x → ResponseD D (b , fst x) (snd x)) (sym (toApproxCommandArg c ar D cB' x₂ b a com) )) rr)
+    recResp = λ rr → resp (transportResp rr)
+    recRespEx = λ pf rr → respEx pf (transportResp rr)
+    φrec = λ rr → φ (transportResp rr)
+    φrecEx = λ pf rr → φex pf (transportResp rr)
+  in descElToGerm D DG rest E (b , approx a) (FC com recResp recRespEx) {!!} {!!} φrec φrecEx r
+-- Inl case: generate a value of type ⁇ from the recursive value of the datatype in the input,
+-- by converting the Germ response into a response for the datatype
+descElToGerm (CodeModule.CRec c ar D cB' x₂) (GRec A DG) (GRecCode cr cIso rest) E b x lto ltB φ φex (inl r) =
+  let
+    rCast = ⟨ c b ⇐ cr ⟩ approx (Iso.fun cIso r) approxBy {!ar!}
+    ⁇Ret = φ (Rec (exact rCast))
+    exComp = λ pf → do
+      rCastEx ← ⟨ c b ⇐ cr ⟩ (Iso.fun cIso r) By {!ar!}
+      φex pf (Rec rCastEx)
+  in  ⁇Ret , exComp
+-- Inr case : recur on the rest of the fields
+descElToGerm (CodeModule.CRec c x₁ D cB' x₂) (GRec A DG) (GRecCode cr cIso rest) E b (FC com resp respEx) lto ltB φ φex (inr r) = let
+    transportResp = λ rr → (transport (congPath (λ x → ResponseD D (b , fst x) (snd x)) (sym (toApproxCommandRec c x₁ D cB' x₂ b com) )) rr)
+    recResp = λ rr → resp (transportResp rr)
+    recRespEx = λ pf rr → respEx pf (transportResp rr)
+    φrec = λ rr → φ (transportResp rr)
+    φrecEx = λ pf rr → φex pf (transportResp rr)
+  in descElToGerm D DG rest E b (FC com recResp recRespEx) {!!} {!!} φrec φrecEx r
+
+descμToGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt)
+  → (lto : {!!} ≤ₛ {!!})
+  → (ltb : {!!} ≤ₛ {!!})
+  → (⁇Ty ℓ)
+descμToGerm E (Wsup (FC (d , com) resp respEx)) lto ltb =
+  let
+    recFun = descElToGerm (E d) (germCtor ℓ _ d) (dataGermIsCode ℓ _ d) E Gtt (FC com resp respEx) {!!} {!!}
+      (λ r → descμToGerm E (exact (resp r)) {!!} {!!})
+      ?
+  in ⁇Tag (⁇μ d {!!} {!!})
+descμToGerm E W℧ lto ltb = ⁇℧
+descμToGerm E W⁇ lto ltb = ⁇⁇
 
 -- -- Meets for members of inductive types
 -- descMuMeet : ∀ {{æ : Æ}} {tyCtor : CName}

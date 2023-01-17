@@ -92,7 +92,8 @@ record CodeModule
     approxExact≡ {{æ = Exact}} x = toApproxExact _ x
 
 
-    data HasArity : TyHead → ℕ → ℂ → Type
+    data IsNestedΣ : ℕ → ℂ → Type
+    record HasArity ( b : ℕ) (c : ℂ) : Type
 
 
      -- Code-based Descriptions of inductive data types
@@ -350,15 +351,23 @@ record CodeModule
  ----------------------------------------------------------------------
     -- Codes for descriptions of inductive types
     --
-    data HasArity where
-      Arity0 : ∀ {h c} → HasArity h 0 c
-      ArityΠ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → HasArity HΠ n (cod x)) → HasArity HΠ (ℕ.suc n) (CΠ dom cod)
-      ArityΣ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → HasArity HΣ n (cod x)) → HasArity HΣ (ℕ.suc n) (CΠ dom cod)
+    data IsNestedΣ where
+      Arity0 : ∀ {c} → IsNestedΣ 0 c
+      -- ArityΠ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → IsNestedΣ HΠ n (cod x)) → IsNestedΣ HΠ (ℕ.suc n) (CΠ dom cod)
+      ArityΣ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → IsNestedΣ n (cod x)) → IsNestedΣ (ℕ.suc n) (CΠ dom cod)
+
+    record HasArity n c where
+      inductive
+      field
+        arDom : ℂ
+        arCod : ApproxEl arDom → ℂ
+        arEq : c ≡ CΠ arDom arCod
+        arDomAr : IsNestedΣ n arDom
 
     data ℂDesc  where
       CEnd : ∀ {cB} → ℂDesc cB SigE
-      CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
-      CRec : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity HΣ n (c b))
+      CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
+      CRec : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → IsNestedΣ n (c b))
         → (D : ℂDesc cB rest)
         → (cB' : ℂ) → ((CΣ cB c) ≡p cB')
         → ℂDesc cB (SigR n rest)
@@ -467,7 +476,7 @@ record CodeModule
       λ r1 r2 pth → congPath resp (congPath (toApproxResponseD ⦃ æ = _ ⦄ (Ds d) b com) (fromPathP (cong₂ (toExactResponseD (Ds d) b) (toApproxExactCommandD (Ds d) b com) pth)) ∙  toApproxExactResponseD (Ds d) b com r2)
 
 
-    toApproxCommandArg : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity HΠ n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
+    toApproxCommandArg : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
       → (b : ApproxEl cB)
       → (a : El (c b))
       → (com : CommandD D (b , approx a))
@@ -475,7 +484,8 @@ record CodeModule
     toApproxCommandArg ⦃ æ = Approx ⦄ c arity D cB' peq b a com = reflc
     toApproxCommandArg ⦃ æ = Exact ⦄ c arity D cB' peq b a com = reflc
 
-    toApproxCommandRec : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → HasArity HΣ n (c b)) → (D : ℂDesc cB rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
+
+    toApproxCommandRec : ∀ {{æ : Æ}} {cB n} {rest} → (c : ApproxEl cB → ℂ) → (arity : ∀ b → IsNestedΣ n (c b)) → (D : ℂDesc cB rest) → (cB' : ℂ) → (eq : (CΣ cB c) ≡p cB')
       → (b : ApproxEl cB)
       → (com : CommandD D b)
       → toApproxCommandD (CRec c arity D cB' eq) b com  ≡c toApproxCommandD D b com
