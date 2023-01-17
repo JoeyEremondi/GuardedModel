@@ -51,13 +51,19 @@ fromGerm CType (⁇Type x) peq reflp = pure x
 fromGerm (CCumul {{inst = suc<}} cTo) (⁇Cumul cFrom x) peq reflp =
   oCast (self-1 {{inst = suc<}} ) cFrom cTo x reflp
 fromGerm {{æ = Approx}} (CΠ dom cod) (⁇Π f _) peq reflp =
-  pure {{æ = Approx}} λ x → ⟨ cod x ⇐ C⁇ ⟩ (f tt) approxBy Decreasing {!!}
+  pure {{æ = Approx}} λ x → ⟨ cod x ⇐ C⁇ ⟩ (f tt)
+             ------------------------------------------------------------------
+             approxBy Decreasing ≤ₛ-sucMono (codeMaxL (cod x)  ≤⨟ ≤ₛ-cocone x ≤⨟ smax-≤R)
     , λ ()
 fromGerm {{æ = Exact}} (CΠ dom cod) (⁇Π fAppr fExact) peq reflp =
   Now λ x →
-    toExact _ ( ⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ (fAppr tt) approxBy Decreasing {!!})
+    toExact _ ( ⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ (fAppr tt)
+      ----------------------------------------------------------------------
+      approxBy Decreasing ≤ₛ-sucMono (codeMaxL _  ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R))
     , λ _ →  do
-        xCast ← [ Exact ]⟨ C⁇ ⇐ dom ⟩ x By Decreasing {!!}
+        xCast ← [ Exact ]⟨ C⁇ ⇐ dom ⟩ x
+          -----------------------------------------
+          By Decreasing ≤ₛ-sucMono (codeMaxR _ ≤⨟  smax-≤L)
         let ▹x = G.next xCast
         fx ← fExact isExact (transport (symPath (⁇Wrap≡ {{æ = Exact}})) ▹x)
         [ Exact ]⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ fx By Decreasing {!!}

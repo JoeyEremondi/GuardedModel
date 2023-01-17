@@ -127,12 +127,12 @@ meet {{æ = æ}} (CΠ dom cod) f g reflp = pure λ x →
     gx = fst (f x)
     fgx = (cod (approx x)) ∋ (approx fx) ⊓ (approx gx)
       approxBy Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
-    ifExact = λ pf → do
+    retExact = λ pf → do
       fExact ← snd (f x) pf
       gExact ← snd (g x) pf
       cod (approx x) ∋ fExact ⊓ gExact
         By Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
-  in (exact fgx , ifExact)
+  in (exact fgx , retExact)
   --   cod (approx x) ∋ f x ⊓ g x
   --     By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
 meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp =
