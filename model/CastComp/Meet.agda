@@ -126,12 +126,12 @@ meet {{æ = æ}} (CΠ dom cod) f g reflp = pure λ x →
     fx = fst (f x)
     gx = fst (f x)
     fgx = (cod (approx x)) ∋ (approx fx) ⊓ (approx gx)
-      approxBy Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
+      approxBy StrictDecreasing  (≤ₛ-cocone _ ≤⨟ smax-≤R)
     retExact = λ pf → do
       fExact ← snd (f x) pf
       gExact ← snd (g x) pf
       cod (approx x) ∋ fExact ⊓ gExact
-        By Decreasing ≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)
+        By StrictDecreasing (≤ₛ-cocone _ ≤⨟ smax-≤R)
   in (exact fgx , retExact)
   --   cod (approx x) ∋ f x ⊓ g x
   --     By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone _  ≤⨟ smax-≤R  )}
@@ -140,26 +140,27 @@ meet (CΣ dom cod) (xfst , xsnd) (yfst , ysnd) reflp =
   -- Awful stuff to deal with the lifting monad
     x⊓yfst ←
       dom ∋ xfst ⊓ yfst
-        By Decreasing
-          ≤ₛ-sucMono  smax-≤L
+        By StrictDecreasing smax-≤L
     xsnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx xfst) ⟩ xsnd
-      By hide {arg = ≤ₛ-sucMono (smax-lub
-        (≤ₛ-cocone _)
-        (≤ₛ-cocone  _)
-        ≤⨟ smax-≤R)}
+      By StrictDecreasing
+        (smax-lub
+          (≤ₛ-cocone _)
+          (≤ₛ-cocone  _)
+          ≤⨟ smax-≤R)
     ysnd-cast ← ⟨ cod (approx x⊓yfst) ⇐ cod (approx yfst) ⟩ ysnd
-      By hide {arg = ≤ₛ-sucMono (smax-lub
-        (≤ₛ-cocone   _)
-        (≤ₛ-cocone   _)
-        ≤⨟ smax-≤R)}
+      By StrictDecreasing
+        (smax-lub
+          (≤ₛ-cocone   _)
+          (≤ₛ-cocone   _)
+          ≤⨟ smax-≤R)
     x⊓ysnd ←
       cod (approx x⊓yfst) ∋ xsnd-cast ⊓ ysnd-cast
-          By hide {arg = ≤ₛ-sucMono (≤ₛ-cocone  _  ≤⨟ smax-≤R )}
+          By StrictDecreasing (≤ₛ-cocone  _  ≤⨟ smax-≤R )
     pure (x⊓yfst , x⊓ysnd)
 meet (C≡ c x y) (w1 ⊢ _ ≅ _) (w2 ⊢ _ ≅ _) reflp = do
   let
     w = c ∋ w1 ⊓ w2
-      approxBy hide {arg = ≤ₛ-refl}
+      approxBy Decreasing ≤ₛ-refl
   pure (w ⊢ x ≅ y)
 
 meet (Cμ tyCtor c D x₁) x y reflp = descMuMeet D x y

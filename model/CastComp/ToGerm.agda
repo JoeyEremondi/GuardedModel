@@ -41,31 +41,35 @@ open SmallerCastMeet scm
 open import WMuConversion
 
 toGerm : ∀ {{æ : Æ}} {h} (c : ℂ ℓ) → (x : El c) → codeHead c ≡p HStatic h → codeSize c ≡p cSize → LÆ (⁇Ty ℓ)
-toGerm C𝟘 x peq ceq = pure ⁇℧
-toGerm C𝟙 Gtt peq ceq = pureTag ⁇𝟙
-toGerm C𝟙 ℧𝟙 peq ceq = pure ⁇℧
-toGerm Cℕ x peq ceq = pureTag (⁇ℕ x)
-toGerm CType x peq ceq = pureTag (⁇Type x)
-toGerm (CCumul c) x peq ceq = pureTag (⁇Cumul c x )
-toGerm (CΠ dom cod) f peq ceq =
+toGerm C𝟘 x peq reflp = pure ⁇℧
+toGerm C𝟙 Gtt peq reflp = pureTag ⁇𝟙
+toGerm C𝟙 ℧𝟙 peq reflp = pure ⁇℧
+toGerm Cℕ x peq reflp = pureTag (⁇ℕ x)
+toGerm CType x peq reflp = pureTag (⁇Type x)
+toGerm (CCumul c) x peq reflp = pureTag (⁇Cumul c x )
+toGerm (CΠ dom cod) f peq reflp =
   pureTag (⁇Π (λ _ → fAppr) fExact)
     where
     fAppr  =
       let
-        f⁇ = fst (f (⁇∈ dom By {!!}))
-      in ⟨ C⁇ ⇐ cod _ ⟩ (approx f⁇) approxBy Decreasing {!!}
+        f⁇ = fst (f (⁇∈ dom By StrictDecreasing smax-≤L))
+      in ⟨ C⁇ ⇐ cod _ ⟩ (approx f⁇)
+              approxBy StrictDecreasing (codeMaxR _ ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R )
     fExact : _ → (x : _) → _
     fExact pf x = do
       xRaw ← θ pf (transport ⁇Wrap≡ x)
-      xCast ← ⟨ dom ⇐ C⁇ ⟩ xRaw By Decreasing {!!}
+      xCast ← ⟨ dom ⇐ C⁇ ⟩ xRaw
+              By StrictDecreasing (codeMaxL _ ≤⨟ smax-≤L)
       fx ← snd (f xCast) pf
-      ⟨ C⁇ ⇐ cod (approx xCast) ⟩ fx By Decreasing {!!}
-toGerm (CΣ dom cod) (x , y) peq ceq = do
-  x⁇ ← ⟨ C⁇ ⇐ dom ⟩ x By Decreasing {!!}
-  y⁇ ← ⟨ C⁇ ⇐ cod (approx x) ⟩ y By Decreasing {!!}
+      ⟨ C⁇ ⇐ cod (approx xCast) ⟩ fx
+              By StrictDecreasing (codeMaxR _ ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R)
+toGerm (CΣ dom cod) (x , y) peq reflp = do
+  x⁇ ← ⟨ C⁇ ⇐ dom ⟩ x By StrictDecreasing (codeMaxR _ ≤⨟ smax-≤L)
+  y⁇ ← ⟨ C⁇ ⇐ cod (approx x) ⟩ y
+              By StrictDecreasing (codeMaxR _ ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R)
   pureTag (⁇Σ (x⁇ , y⁇))
-toGerm (C≡ c x₁ y) (wit ⊢ _ ≅ _) peq ceq =
+toGerm (C≡ c x₁ y) (wit ⊢ _ ≅ _) peq reflp =
   let
-    retWit = ⟨ C⁇ ⇐ c ⟩ wit approxBy {!!}
+    retWit = ⟨ C⁇ ⇐ c ⟩ wit approxBy StrictDecreasing codeMaxR _
   in pureTag (⁇≡ ((exact {ℓ = ℓ} {c = C⁇} retWit) ⊢ ⁇⁇ ≅ ⁇⁇))
-toGerm (Cμ tyCtor c D x₁) x peq ceq = {!!}
+toGerm (Cμ tyCtor c D x₁) x peq reflp = {!!}

@@ -141,8 +141,11 @@ Decreasing_ : ∀ {a : Set} → a → Hide a
 Decreasing_ x = hide {arg = x}
 
 infixr 99 Decreasing_
+infixr 99 StrictDecreasing_
 
 
+StrictDecreasing_ : ∀ {o1 o2 : Size} → o1 ≤ₛ o2 → Hide (o1 <ₛ S↑ o2)
+StrictDecreasing_ x = hide {arg = ≤ₛ-sucMono x}
 
 record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set where
   constructor smallerCastMeet

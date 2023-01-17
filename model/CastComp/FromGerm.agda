@@ -53,34 +53,36 @@ fromGerm (CCumul {{inst = suc<}} cTo) (⁇Cumul cFrom x) peq reflp =
 fromGerm {{æ = Approx}} (CΠ dom cod) (⁇Π f _) peq reflp =
   pure {{æ = Approx}} λ x → ⟨ cod x ⇐ C⁇ ⟩ (f tt)
              ------------------------------------------------------------------
-             approxBy Decreasing ≤ₛ-sucMono (codeMaxL (cod x)  ≤⨟ ≤ₛ-cocone x ≤⨟ smax-≤R)
+             approxBy StrictDecreasing (codeMaxL (cod x)  ≤⨟ ≤ₛ-cocone x ≤⨟ smax-≤R)
     , λ ()
 fromGerm {{æ = Exact}} (CΠ dom cod) (⁇Π fAppr fExact) peq reflp =
   Now λ x →
     toExact _ ( ⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ (fAppr tt)
       ----------------------------------------------------------------------
-      approxBy Decreasing ≤ₛ-sucMono (codeMaxL _  ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R))
+      approxBy StrictDecreasing  (codeMaxL _  ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R))
     , λ _ →  do
         xCast ← [ Exact ]⟨ C⁇ ⇐ dom ⟩ x
           -----------------------------------------
-          By Decreasing ≤ₛ-sucMono (codeMaxR _ ≤⨟  smax-≤L)
+          By StrictDecreasing (codeMaxR _ ≤⨟  smax-≤L)
         let ▹x = G.next xCast
         fx ← fExact isExact (transport (symPath (⁇Wrap≡ {{æ = Exact}})) ▹x)
-        [ Exact ]⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ fx By Decreasing {!!}
+        [ Exact ]⟨ cod (toApprox _ x) ⇐ C⁇ ⟩ fx
+          ------------------------------------------------
+          By StrictDecreasing (codeMaxL _  ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R)
 fromGerm (CΣ dom cod) (⁇Σ (x , y)) peq reflp = do
   xRet ← ⟨ dom ⇐ C⁇ ⟩ x
-    By Decreasing {!!}
+    By StrictDecreasing (codeMaxL _  ≤⨟ smax-≤L )
   yRet ← ⟨ cod (approx xRet) ⇐ C⁇ ⟩ y
-    By Decreasing {!!}
+    By StrictDecreasing (codeMaxL _  ≤⨟ ≤ₛ-cocone _ ≤⨟ smax-≤R )
   pure (xRet , yRet)
 fromGerm (C≡ c x y) (⁇≡ (wit ⊢ .⁇⁇ ≅ .⁇⁇)) peq reflp = do
   castWit ← ⟨ c ⇐ C⁇ ⟩ wit
-    By Decreasing {!!}
+    By StrictDecreasing (codeMaxL _  )
   let
     upperBound = c ∋ x ⊓ y
-                 approxBy Decreasing {!!}
+                 approxBy StrictDecreasing ≤ₛ-refl
   let
     retWit = c ∋ approx castWit ⊓ upperBound
-      approxBy Decreasing {!!}
+      approxBy StrictDecreasing ≤ₛ-refl
   pure (retWit ⊢ x ≅ y)
 fromGerm (Cμ tyCtor c D x) (⁇μ d x₁ x₂) peq reflp = {!!}
