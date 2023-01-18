@@ -371,7 +371,7 @@ record CodeModule
     data IsNestedΣ where
       Arity0 : ∀ {c} → IsNestedΣ 0 c
       -- ArityΠ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → IsNestedΣ HΠ n (cod x)) → IsNestedΣ HΠ (ℕ.suc n) (CΠ dom cod)
-      ArityΣ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → IsNestedΣ n (cod x)) → IsNestedΣ (ℕ.suc n) (CΠ dom cod)
+      ArityΣ : ∀ {n} {dom : ℂ} {cod : ApproxEl dom → ℂ} → (∀ x → IsNestedΣ n (cod x)) → IsNestedΣ (ℕ.suc n) (CΣ dom cod)
 
     record HasArity n c where
       inductive

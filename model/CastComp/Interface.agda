@@ -80,11 +80,6 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set where
       → ( pfc : (codeSize c)  ≡p csize)
       → LÆ (El c)
 
-    o⁇Meet : ∀ {{æ : Æ}} {mi}
-      → (x y : ⁇CombinedTy ℓ mi )
-      → ( pfc : SZ  ≡p csize)
-      → LÆ (⁇CombinedTy ℓ mi)
-
     oMeet𝟙 : ∀ {pfc } → fromL (oMeet {{æ = Approx}} C𝟙  Gtt Gtt pfc ) ≡c Gtt
 
     -- oDataGermMeet : ∀ {{æ : Æ}} {tyCtor}
@@ -123,17 +118,6 @@ record SizedCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set where
       → ( pfc1 : (smax (codeSize csource) (codeSize cdest)  ≡p csize))
       -> LÆ ( El cdest )
 
-    oTo⁇ : ∀ {{æ : Æ}}
-      → (csource : ℂ ℓ)
-      →  (x : El csource)
-      → ( pfc1 : (codeSize csource) ≡p csize)
-      -> LÆ ( ⁇Ty ℓ )
-
-    oFrom⁇ : ∀ {{æ : Æ}} {mi}
-      → (cdest : ℂ ℓ)
-      →  (x : ⁇CombinedTy ℓ mi)
-      → ( pfc1 : codeSize cdest ≡p csize)
-      -> LÆ ( El cdest )
 
 
 open SizedCastMeet public

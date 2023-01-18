@@ -41,15 +41,33 @@ open import CastComp.DescMeet {{dt = dt}} {{dg}} {{ic}}  (⁇Allowed) {ℓ} csiz
 open import CastComp.CodeMeet {ℓ} (⁇Allowed) csize scm
 open SmallerCastMeet scm
 
-open import CastComp.CodeMeetSize {ℓ} (⁇Allowed) csize scm
 
 
-codeMeetArity : ∀ {h1 h2 h n}
+codeMeetNested : ∀ {h1 h2 n}
   → (c1 c2 : ℂ ℓ )
   → (view : HeadMatchView h1 h2)
   → (eq1 : h1 ≡p codeHead c1)
   → (eq2 : h2 ≡p codeHead c2)
   → (eq3 : smax (codeSize c1) ( codeSize c2) ≡p csize)
-  → HasArity h n c1
-  → HasArity h n c2
-  → HasArity h n (codeMeet c1 c2 view eq1 eq2 eq3)
+  → IsNestedΣ n c1
+  → IsNestedΣ n c2
+  → IsNestedΣ n (fst (codeMeet c1 c2 view eq1 eq2 eq3))
+codeMeetNested c1 c2 view eq1 eq2 eq3 Arity0 Arity0 = Arity0
+codeMeetNested (CΣ dom1 cod1) (CΣ dom2 cod2) (HEq {h1 = HΣ} reflp) eq1 eq2 reflp (ArityΣ ar1) (ArityΣ ar2)
+  = ArityΣ (λ x → oNestedΣArity (self (<cSize (smax-strictMono (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R)) (≤ₛ-sucMono (≤ₛ-cocone _ ≤⨟ smax-≤R))))) (cod1 _) (cod2 _) reflp (ar1 _) (ar2 _))
+codeMeetNested .(CΣ _ _) .(CΣ _ _) (HNeq npf) eq1 eq2 reflp (ArityΣ x) (ArityΣ x₁) with reflp ← pTrans eq1 (pSym eq2) with () ← npf reflp
+
+
+codeMeetArity : ∀ {h1 h2 n}
+  → (c1 c2 : ℂ ℓ )
+  → (view : HeadMatchView h1 h2)
+  → (eq1 : h1 ≡p codeHead c1)
+  → (eq2 : h2 ≡p codeHead c2)
+  → (eq3 : smax (codeSize c1) ( codeSize c2) ≡p csize)
+  → HasArity n c1
+  → HasArity n c2
+  → HasArity n (fst (codeMeet c1 c2 view eq1 eq2 eq3))
+codeMeetArity c1 c2 v eq1 eq2 eq3 ar1 ar2 with ptoc (HasArity.arEq ar1) | ptoc (HasArity.arEq ar2)
+codeMeetArity (CΠ dom1 cod1) (CΠ dom2 cod2) (HEq {h1 = HΠ} reflp) _ _ reflp ar1 ar2 | reflp | reflp
+  = record { arDom = _ ; arCod = _ ; arEq = reflc ; arDomAr = oNestedΣArity (self (<cSize (smax-strictMono (≤ₛ-sucMono smax-≤L) (≤ₛ-sucMono smax-≤L)))) dom1 dom2 reflp (HasArity.arDomAr ar1) (HasArity.arDomAr ar2) }
+codeMeetArity (CΠ dom1 cod1) (CΠ dom2 cod2) (HNeq npf) eq1 eq2 reflp ar1 ar2 | ae1 | ae2 with reflp ← pTrans eq1 (pSym eq2) with () ← npf reflp
