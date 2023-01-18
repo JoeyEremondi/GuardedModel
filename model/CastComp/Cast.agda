@@ -44,7 +44,7 @@ open import WMuConversion
 
 open import CastComp.ToGerm (⁇Allowed) {ℓ}
 open import CastComp.FromGerm (⁇Allowed) {ℓ}
-open import CastComp.CastCommandResp (⁇Allowed) {ℓ} cSize scm
+open import CastComp.CastDesc (⁇Allowed) {ℓ} cSize scm
 
 cast : ∀ {{æ : Æ}} {h1 h2}
   → (c1 c2 : ℂ ℓ )
@@ -84,7 +84,7 @@ cast {{æ = æ}} (CΠ domS codS) (CΠ domD codD) f (HEq {h1 = HΠ} reflp) eq1 eq
       fAppr xD =
         let
           xS = ⟨ domS ⇐ domD ⟩ (approx xD) approxBy {!!}
-          fxS = fst (f (approx xS))
+          fxS = fst (f (exact {c = domS} xS))
           fxD = ⟨ codD (approx xD) ⇐ codS xS ⟩ (approx fxS) approxBy {!!}
         in exact fxD
       fExact : (x : El domD) → IsExact æ → LÆ (El (codD (approx  x)))
@@ -102,15 +102,9 @@ cast (C≡ cS _ _) (C≡ cD x y) (wS ⊢ _ ≅ _)  (HEq {h1 = H≅} reflp) eq1 e
     x⊓y = cD ∋ x ⊓ y approxBy {!!}
     wBounded = cD ∋ wD ⊓ x⊓y approxBy {!!}
   pure (wBounded ⊢ _ ≅ _)
-cast (Cμ tyCtor c1 D x₁) (Cμ tyCtor2 c2 D2 x₂) W℧ (HEq {h1 = HCtor x₃} reflp) eq1 eq2 reflp = pure W℧
-cast (Cμ tyCtor c1 D x₁) (Cμ tyCtor2 c2 D2 x₂) W⁇ (HEq {h1 = HCtor x₃} reflp) eq1 eq2 reflp with decFin tyCtor tyCtor2
-... | yes _ = pure W⁇
+cast (Cμ tyCtor c1 D x₁) (Cμ tyCtor2 c2 D2 x₂) x (HEq {h1 = HCtor x₃} reflp) eq1 eq2 reflp with decFin tyCtor tyCtor2
 ... | no _ = pure W℧
-cast (Cμ tyCtor c1 D x₁) (Cμ tyCtor2 c2 D2 x₂) (Wsup (FC (d , com) resp respEx)) (HEq {h1 = HCtor x₃} reflp) eq1 eq2 reflp with decFin tyCtor tyCtor2
-... | no _ = pure W℧
-... | yes reflp = do
-  comD ← castCommand (D d) Gtt Gtt {!com!} {!!}
-  pure {!!}
+... | yes reflp = castμ D D2 x λ d →  smax-strictMono (≤ₛ-sucMono (FinLim-cocone _ _ ≤⨟ smax-≤R)) (≤ₛ-sucMono (FinLim-cocone _ _ ≤⨟ smax-≤R))
 
 
 

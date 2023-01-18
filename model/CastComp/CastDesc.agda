@@ -99,3 +99,27 @@ castDesc (CRec cS x₁ DS cB' reflp) (CRec cD x₃ DD cB'' reflp) ES ED b1 b2 (F
     (λ {(Rec r) → recFun r ; (Rest r) → respD (transportResp' r)})
     (λ pf → λ {(Rec r) → recFunEx pf r ; (Rest r) → respExD  pf (transportResp' r)})
     )
+
+
+
+castμ : ∀ {{æ : Æ}} {tyCtor : CName}
+  → (ES ED : DCtors ℓ tyCtor)
+  → (x : (W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (ES d) Gtt))) tt)
+  → (lto : ∀ d → smax (descSize (ES d)) (descSize (ED d)) <ₛ cSize)
+  → LÆ ((W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (ED d) Gtt)) tt ))
+castBindμ : ∀ {{æ : Æ}}  {tyCtor : CName}
+  → (ES ED : DCtors ℓ tyCtor)
+  → (x : LÆ ((W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (ES d) Gtt))) tt))
+  → (lto : ∀ d → smax (descSize (ES d)) (descSize (ED d)) <ₛ cSize)
+  → LÆ ((W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (ED d) Gtt)) tt ))
+castμ ES ED (Wsup (FC (d , com) resp respEx)) lto = do
+  (FC comD respD respExD) ← castDesc (ES d) (ED d) ES ED Gtt Gtt (FC com resp respEx)
+    ( lto d)
+    (λ r → exactμ _ _ _ _ (fromL (castμ ⦃ æ = Approx ⦄ ES ED (resp r) lto)))
+    (λ pf r → castBindμ ES ED (respEx pf r) lto)
+  pure (Wsup (FC (d , comD) respD respExD))
+castμ ES ED W℧ lto = pure W℧
+castμ ES ED W⁇ lto = pure W⁇
+
+castBindμ ES ED (Now x) lto = castμ ES ED x lto
+castBindμ ES ED (Later x) lto = Later (λ tic → castBindμ ES ED (x tic) lto)
