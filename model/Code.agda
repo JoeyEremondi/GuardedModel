@@ -381,6 +381,7 @@ record CodeModule
         arEq : c ≡ CΠ arDom arCod
         arDomAr : IsNestedΣ n arDom
 
+
     data ℂDesc  where
       CEnd : ∀ {cB} → ℂDesc cB SigE
       CArg : ∀ {cB n} {rest} → (c : ApproxEl cB → ℂ) → (∀ b → HasArity n (c b)) → (D : ℂDesc (CΣ cB c) rest) → (cB' : ℂ) → ((CΣ cB c) ≡p cB') → ℂDesc cB (SigA n rest)
