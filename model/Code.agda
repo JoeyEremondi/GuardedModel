@@ -163,9 +163,26 @@ record CodeModule
           → (b : ApproxEl cB)
           → (x : W̃ {{æ = Approx}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (D d) b)) tt )
           → toApproxμ tyCtor cB D  b (toExactμ tyCtor cB D b x) ≡c x
+    approxμ : {{æ : Æ}}
+      (tyCtor : CName)
+        → (cB : ℂ)
+        → (D : (d : DName tyCtor) → ℂDesc cB (indSkeleton tyCtor d))
+        → (b : ApproxEl cB)
+        → W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (D d) b)) tt
+        → W̃ {{æ = Approx}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (D d) b)) tt
+    exactμ : {{æ : Æ}}
+      (tyCtor : CName)
+        → (cB : ℂ)
+        → (D : (d : DName tyCtor) → ℂDesc cB (indSkeleton tyCtor d))
+        → (b : ApproxEl cB)
+        → W̃ {{æ = Approx}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (D d) b)) tt
+        → W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (D d) b)) tt
 
 
-
+    approxμ {{æ = Approx}} t c D b x = x
+    approxμ {{æ = Exact}} t c D b x = toApproxμ t c D b x
+    exactμ {{æ = Approx}} t c D b x = x
+    exactμ {{æ = Exact}} t c D b x = toExactμ t c D b x
 
     ------------------------------- Definitions --------------------
 

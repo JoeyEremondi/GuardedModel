@@ -356,6 +356,8 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set wher
   -- the flag for whether we're on the LHS of an arrow
   self-1 : ∀ {cs} {{ inst : 0< ℓ }} → SizedCastMeet (predℕ ℓ) true cs
   self-1 ⦃ suc< ⦄ = self ∣ <LexL Nat.≤-refl ∣₁
+  selfGermNeg : ∀ {cs} → (⁇Allowed ≡p true) → SizedCastMeet ℓ false cs
+  selfGermNeg reflp = self ∣ <LexR reflc (<LexL false<true) ∣₁
   Lself :  ∀  {æ ℓ' cs} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' true cs)
   Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
 

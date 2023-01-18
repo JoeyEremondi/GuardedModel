@@ -7,6 +7,7 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
+open import Cubical.Relation.Nullary.Base
 open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
@@ -47,6 +48,11 @@ open import Code
 
 open import CastComp.CastCommandResp ⁇Allowed cSize scm
 
+-- Taken from Agda cubical library, it's in the newest version but I need to update
+decRec : ∀ {ℓ ℓ'} {P : Type ℓ} {A : Type ℓ'} → (P → A) → (¬ P → A) → (Dec P) → A
+decRec ifyes ifno (yes p) = ifyes p
+decRec ifyes ifno (no ¬p) = ifno ¬p
+
 -- castTeleFromGerm :  ∀ {n} ->  (A : GermTele n) →
 
 
@@ -66,19 +72,33 @@ descElToGerm : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
 -- Inl case: Given our response, translate it into a response that is the argument type a takes
 -- since a must be a function (possibly with argument  type 𝟙)
 -- Then generate a value of type ⁇ from the return of a
-descElToGerm (CodeModule.CArg c ar D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ φex (inl r)  =
+descElToGerm {{æ = æ}} (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ φex (inl r)  =
   let
-    rCast = ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ approx (Iso.fun cIso r) approxBy {!ar!}
+    -- Two cases: either this is our first time traversing  into the LHS of part of the germ, it's not.
+    -- If it is, call ourselves recursively with but set the flag
+    -- Otherwise, this case is impossible (violates strict positivity)
+    -- but we need to return something, so we return an error
+    rCast = decRec
+      (λ pf → fromL (oCast (selfGermNeg (ptoc pf)) {{æ = Approx}} cr (HasArity.arDom (ar b)) (approx (Iso.fun cIso r)) reflp) )
+      (λ _ → ℧Approx (HasArity.arDom (ar b)))
+      (⁇Allowed ≟ true)
+    -- if ⁇Allowed
+    --   then fromL (oCast {!!} {{æ = Approx}} {!!} {!!} {!!} {!!})
+    --   else ℧Approx (HasArity.arDom (ar b))
+    -- ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ approx (Iso.fun cIso r)
+    --   approxBy Decreasing <≤ (≤ₛ-sucMono (smax-lub {!!} {!!})) lto
     aFun = transport (congPath (λ c → ÆEl c _) (HasArity.arEq (ar b))) a
     aRet  = (fst (aFun (exact rCast)))
-    ⁇Ret = ⟨ C⁇ ⇐ HasArity.arCod (ar b) rCast ⟩ (approx aRet) approxBy {!!}
+    ⁇Ret = ⟨ C⁇ ⇐ HasArity.arCod (ar b) _ ⟩ approx aRet approxBy Decreasing {!!}
     exComp = λ pf → do
-      rCastEx ← ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ (Iso.fun cIso r) By {!ar!}
-      aRetEx ← snd (aFun rCastEx) pf
-      ⟨ C⁇ ⇐ HasArity.arCod (ar b) rCast ⟩ aRet By {!!}
+      pure {!!}
+      -- rCastEx ← ⟨ HasArity.arDom (ar b) ⇐ cr ⟩ (Iso.fun cIso r) By {!ar!}
+      -- aRetEx ← snd (aFun rCastEx) pf
+      -- ⟨ C⁇ ⇐ HasArity.arCod (ar b) rCast ⟩ aRet By {!!}
   in  exact {c = C⁇} ⁇Ret , exComp
 -- Inr case : recur on the rest of the fields
 descElToGerm {{æ = æ}} (CodeModule.CArg c ar D cB' x₂) (GArg A DG) (GArgCode cr cIso rest) E b (FC (a , com) resp respEx) lto ltB φ φex (inr r) = let
+    transportResp : (rr : _) → _
     transportResp = λ rr → (transport (congPath (λ x → ResponseD D (b , fst x) (snd x)) (sym (toApproxCommandArg c ar D cB' x₂ b a com) )) rr)
     recResp = λ rr → resp (transportResp rr)
     recRespEx = λ pf rr → respEx pf (transportResp rr)
@@ -97,7 +117,8 @@ descElToGerm (CodeModule.CRec c ar D cB' x₂) (GRec A DG) (GRecCode cr cIso res
   in  ⁇Ret , exComp
 -- Inr case : recur on the rest of the fields
 descElToGerm (CodeModule.CRec c x₁ D cB' x₂) (GRec A DG) (GRecCode cr cIso rest) E b (FC com resp respEx) lto ltB φ φex (inr r) = let
-    transportResp = λ rr → (transport (congPath (λ x → ResponseD D (b , fst x) (snd x)) (sym (toApproxCommandRec c x₁ D cB' x₂ b com) )) rr)
+    transportResp : (rr : _) → _
+    transportResp = λ rr → {!!} --(transport (congPath (λ x → ResponseD D b (snd x)) (sym (toApproxCommandRec c x₁ D cB' x₂ b com) )) rr)
     recResp = λ rr → resp (transportResp rr)
     recRespEx = λ pf rr → respEx pf (transportResp rr)
     φrec = λ rr → φ (transportResp rr)
@@ -111,8 +132,8 @@ descμToGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → ( W̃ (λ æ
 descμToGerm E (Wsup (FC (d , com) resp respEx)) lto ltb =
   let
     recFun = descElToGerm (E d) (germCtor ℓ _ d) (dataGermIsCode ℓ _ d) E Gtt (FC com resp respEx) {!!} {!!}
-      (λ r → descμToGerm E (exact (resp r)) {!!} {!!})
-      ?
+      (λ r → descμToGerm E (exactμ _ C𝟙 E Gtt (resp r)) {!!} {!!})
+      {!!}
   in ⁇Tag (⁇μ d {!!} {!!})
 descμToGerm E W℧ lto ltb = ⁇℧
 descμToGerm E W⁇ lto ltb = ⁇⁇
