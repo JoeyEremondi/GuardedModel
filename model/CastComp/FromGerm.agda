@@ -41,6 +41,8 @@ open import W
 open SmallerCastMeet scm
 open import WMuConversion
 
+open import CastComp.ToFromDataGerm (⁇Allowed) {ℓ} cSize scm
+
 fromGerm : ∀ {{æ : Æ}} {h} (c : ℂ ℓ) → (x : ⁇GermTy ℓ h)
   → codeHead c ≡p HStatic h
   → codeSize c ≡p cSize
@@ -85,4 +87,6 @@ fromGerm (C≡ c x y) (⁇≡ (wit ⊢ .⁇⁇ ≅ .⁇⁇)) peq reflp = do
     retWit = c ∋ approx castWit ⊓ upperBound
       approxBy StrictDecreasing ≤ₛ-refl
   pure (retWit ⊢ x ≅ y)
-fromGerm (Cμ tyCtor c D x) (⁇μ d x₁ x₂) peq reflp = {!!}
+fromGerm (Cμ tyCtor c D x) (⁇μ d x₁ x₂) peq reflp =
+  pure (descμFromGerm D (⁇Tag (⁇μ d x₁ x₂))
+    (λ d → ≤ₛ-sucMono (FinLim-cocone _ d ≤⨟ smax-≤R)))

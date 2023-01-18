@@ -40,6 +40,9 @@ open import W
 open SmallerCastMeet scm
 open import WMuConversion
 
+
+open import CastComp.ToFromDataGerm (⁇Allowed) {ℓ} cSize scm
+
 toGerm : ∀ {{æ : Æ}} {h} (c : ℂ ℓ) → (x : El c) → codeHead c ≡p HStatic h → codeSize c ≡p cSize → LÆ (⁇Ty ℓ)
 toGerm C𝟘 x peq reflp = pure ⁇℧
 toGerm C𝟙 Gtt peq reflp = pureTag ⁇𝟙
@@ -72,4 +75,4 @@ toGerm (C≡ c x₁ y) (wit ⊢ _ ≅ _) peq reflp =
   let
     retWit = ⟨ C⁇ ⇐ c ⟩ wit approxBy StrictDecreasing codeMaxR _
   in pureTag (⁇≡ ((exact {ℓ = ℓ} {c = C⁇} retWit) ⊢ ⁇⁇ ≅ ⁇⁇))
-toGerm (Cμ tyCtor c D x₁) x peq reflp = {!!}
+toGerm (Cμ tyCtor c D x₁) x peq reflp = pure (descμToGerm D x (λ d → ≤ₛ-sucMono (FinLim-cocone _ d ≤⨟ smax-≤R)))

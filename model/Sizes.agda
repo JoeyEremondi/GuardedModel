@@ -62,6 +62,9 @@ codeMaxL (C≡ c x y) = smax-oneL
 codeMaxL (Cμ tyCtor c D x) = smax-oneL
 codeMaxL {ℓ = suc ℓ} (CCumul c) = codeMaxL c -- smax-oneL
 
+open import DecPEq
+
+
 
 codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → smax (codeSize c) S1 ≤ₛ codeSize c
 codeMaxR C⁇ = smax-oneR

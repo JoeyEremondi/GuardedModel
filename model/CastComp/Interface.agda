@@ -14,6 +14,7 @@ open import UnkGerm
 open import GuardedAlgebra
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
+open import Cubical.HITs.PropositionalTruncation.Properties as Prop
 
 open import ApproxExact
 open import InductiveCodes
@@ -360,6 +361,16 @@ record SmallerCastMeet (ℓ : ℕ) (⁇Allowed : Bool) (csize : Size) : Set wher
   selfGermNeg reflp = self ∣ <LexR reflc (<LexL false<true) ∣₁
   Lself :  ∀  {æ ℓ' cs} → (æ ≡p Exact) → LÆ {{æ = æ}} (SizedCastMeet ℓ' true cs)
   Lself reflp = Later {{Exact}} λ tic → pure ⦃ Exact ⦄ (▹self  tic)
+
+lowerCastMeet : ∀ {ℓ s1 s2 ⁇Allowed} → SmallerCastMeet ℓ ⁇Allowed s2 → s1 ≤ₛ s2 → SmallerCastMeet ℓ ⁇Allowed s1
+lowerCastMeet {ℓ = ℓ} {s1 = s1} {s2 = s2} {⁇Allowed = ⁇Allowed} (smallerCastMeet self ▹self) sizeLt = smallerCastMeet (λ lt' → self (recPropTruncPath squash₁ helper lt')) ▹self
+  where
+    helper : {ℓ' : ℕ} {allowed : Bool} {cs : Size} →
+       (ℓ' , allowed , cs) <CastComp (ℓ , ⁇Allowed , s1)  →
+      ∥ (ℓ' , allowed , cs) <CastComp (ℓ , ⁇Allowed , s2) ∥₁
+    helper (<LexL x) = ∣ <LexL x ∣₁
+    helper (<LexR x (<LexL x₁)) = ∣ <LexR x (<LexL x₁) ∣₁
+    helper (<LexR x (<LexR x₁ x₂)) = ∣ <LexR x (<LexR x₁ (<≤ x₂ sizeLt)) ∣₁
 
 FixCastMeet :
   (∀ { ℓ ⁇Allowed csize} → SmallerCastMeet ℓ ⁇Allowed csize → SizedCastMeet ℓ ⁇Allowed csize )
