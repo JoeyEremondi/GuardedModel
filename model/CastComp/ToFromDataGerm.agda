@@ -184,8 +184,8 @@ descElFromGerm : ∀ {{æ : Æ}} {cB : ℂ ℓ} {tyCtor : CName} { skel}
       → (xAppr : (r : GermResponse DG) → ⁇Ty ℓ)
       → (xExact : IsExact æ → (r : GermResponse DG) → LÆ (⁇Ty ℓ))
       → (lto : descSize D <ₛ cSize)
-      → (φ : ∀ {com} → (r : ResponseD D b com) → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt) )
-      → (φex : IsExact æ → ∀ {com} → (r : ResponseD D b com) → LÆ ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt) )
+      → (φ : (r : GermResponse DG) → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt) )
+      → (φex : IsExact æ → (r : GermResponse DG) → LÆ ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt) )
       → (⟦ interpDesc D b ⟧F  (λ æ → W̃ {{æ = æ}} (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt))) tt )
 descElFromGerm CodeModule.CEnd GEnd GEndCode E b resp respEx lto φ φex = FC tt (λ ()) (λ _ ())
 descElFromGerm (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso isCode) E b resp respEx lto φ φex = let
@@ -217,45 +217,67 @@ descElFromGerm (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso 
       (λ r → resp (inr r))
       (λ pf r → respEx pf (inr r))
       {!!}
-      φ
-      λ pf r → φex pf r
+      (λ r → φ (inr r))
+      λ pf r → φex pf (inr r)
   in
     FC
       (aRet , com)
       (λ r → retAppr (subst (λ x → ResponseD D (b , fst x) (snd x)) (toApproxCommandArg c ar D cB' reflp _ _ _ ) r))
       (λ pf r → retEx pf (subst (λ x → ResponseD D (b , fst x) (snd x)) (toApproxCommandArg c ar D cB' reflp _ _ _ ) r))
-descElFromGerm (CodeModule.CRec c x D cB' reflp) (GRec A DG) (GRecCode c+ iso+ isCode) E b resp respEx lto φ φex  = let
+descElFromGerm (CodeModule.CRec c x D cB' reflp) (GRec A DG) (GRecCode cr cIso isCode) E b resp respEx lto φ φex  = let
   -- The function returning the datatype itself
   indGetterFun : (r : _) → _
-  indGetterFun = λ r → approxμ _ _ _ _ (φ {!!})
+  indGetterFun = λ x → let
+      rCast = decRec
+        (λ pf → fromL (oCast (selfGermNeg (ptoc pf)) {{æ = Approx}} (c b) cr (approx x) reflp) )
+        (λ _ → ℧Approx cr)
+        (⁇Allowed ≟ true)
+    in approxμ _ _ _ _ (φ (inl (Iso.inv cIso (exact rCast))))
+  indGetterFunEx : (IsExact _) → (r : _) → _
+  indGetterFunEx = λ pf x → do
+      rCastEx ← decRec
+        (λ pf → (oCast (selfGermNeg (ptoc pf)) (c b) cr x reflp) )
+        (λ _ → pure (℧ cr))
+        (⁇Allowed ≟ true)
+      φex pf (inl (Iso.inv cIso rCastEx))
+
   (FC com retAppr retEx) = descElFromGerm D DG isCode E _
       (λ r → resp (inr r))
       (λ pf r → respEx pf (inr r))
       {!!}
-      (λ r → φ (Rest r))
-      (λ pf r → φex pf (Rest r))
+      (λ r → φ (inr r))
+      (λ pf r → φex pf (inr r))
   in
     FC
       com
       (λ {(Rec r) → indGetterFun r ; (Rest r) → retAppr (subst (ResponseD D b) (toApproxCommandRec c x D cB' reflp _ _ ) r)})
-      (λ pf → λ {(Rec r) → {!!} ; (Rest r) → retEx pf (subst (ResponseD D b) (toApproxCommandRec c x D cB' reflp _ _ ) r)})
+      (λ pf → λ {(Rec r) → indGetterFunEx pf r ; (Rest r) → retEx pf (subst (ResponseD D b) (toApproxCommandRec c x D cB' reflp _ _ ) r)})
 
 
--- descμFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt)
---   → (lto : ∀ d → descSize (E d) <ₛ cSize)
---   → (⁇Ty ℓ)
--- descμBindFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → ( LÆ (W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt))
---   → (lto : ∀ d → descSize (E d) <ₛ cSize)
---   → LÆ (⁇Ty ℓ)
--- descμFromGerm E (Wsup (FC (d , com) resp respEx)) lto =
---   let
---     recFun = descElFromGerm (E d) (germCtor ℓ _ d) (dataGermIsCode ℓ _ d) E Gtt (FC com resp respEx) (lto d)
---       (λ r → exact {c = C⁇} (descμFromGerm {{æ = Approx}} E (resp r) lto))
---       λ pf r → descμBindFromGerm E (respEx pf r) lto
---   in ⁇Tag (⁇μ d (λ r → approx {c = C⁇} (fst (recFun r))) λ pf r → snd (recFun r) pf)
--- descμFromGerm E W℧ lto = ⁇℧
--- descμFromGerm E W⁇ lto = ⁇⁇
+descμFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) →  ⁇Ty ℓ
+  → (lto : ∀ d → descSize (E d) <ₛ cSize)
+  → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt)
+descμBindFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → LÆ (⁇Ty ℓ)
+  → (lto : ∀ d → descSize (E d) <ₛ cSize)
+  → {!!}
 
--- --Inlining to help the termination checker
--- descμBindFromGerm E (Now x) lto = pure (descμFromGerm E x lto)
--- descμBindFromGerm E (Later x) lto = Later λ tic → descμBindFromGerm E (x tic) lto
+-- Take an element of ⁇ and check if it's an embedded member of the right inductive type
+-- If it is, traverse it to convert all its fields
+-- otherwise, error
+descμFromGerm {tyCtor = tyCtor} E (⁇Tag {h = HCtor tyCtor'} (⁇μ d resp respEx)) lto with decFin tyCtor tyCtor'
+... | no _ = W℧
+... | yes reflp = let
+    (FC com retResp retEx) = descElFromGerm (E d) (germCtor ℓ _ d) (dataGermIsCode ℓ _ d) E Gtt
+      (λ r → exact {c = C⁇} (resp r))
+      (λ r → (respEx r))
+      {!!}
+      (λ r → exactμ tyCtor C𝟙 E Gtt (descμFromGerm {{æ = Approx}} E (resp r) lto))
+      (λ pf r → descμBindFromGerm  E (respEx pf r) lto)
+  in Wsup (FC {!!} {!!} {!!})
+-- ⁇ At the unknown type becomes ⁇ in the inductive type
+descμFromGerm E ⁇⁇ lto = W⁇
+descμFromGerm E _ lto = W℧
+
+--Inlining to help the termination checker
+descμBindFromGerm E (Now x) lto = pure (descμFromGerm E x lto)
+descμBindFromGerm E (Later x) lto = Later λ tic → descμBindFromGerm E (x tic) lto
