@@ -198,7 +198,7 @@ descElFromGerm (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso 
         (⁇Allowed ≟ true)
       rGerm = Iso.inv cIso (exact rCast)
       approxRet = ⟨ HasArity.arCod (ar b) (approx x) ⇐ C⁇ ⟩ (approx {c = C⁇} (resp (inl rGerm)))
-        approxBy  Decreasing {!!}
+        approxBy  Decreasing ≤< (codeMaxL _ ≤⨟ <-in-≤ (arityCod≤ (ar b)) ≤⨟ ≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0) ≤⨟ ≤↑ _) lto
       --Same thing but in exact mode
       exComp = λ pf → do
         rCastEx ← decRec
@@ -208,7 +208,7 @@ descElFromGerm (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso 
         let rGermEx = Iso.inv cIso rCastEx
         funResult ← respEx pf (inl rGermEx)
         ⟨ HasArity.arCod (ar b) (approx x) ⇐ C⁇ ⟩ funResult
-          By Decreasing {!!}
+          By Decreasing ≤< (codeMaxL _ ≤⨟ <-in-≤ (arityCod≤ (ar b)) ≤⨟ ≤ₛ-cocone _ ≤⨟ smax*-≤-n (FLit 0) ≤⨟ ≤↑ _) lto
       in (exact approxRet) , exComp
     -- Transport the function to our code type with the stored equality in the arity
     aRet = transport⁻ (congPath (λ c → ÆEl c _) (HasArity.arEq (ar b))) aFun
@@ -216,7 +216,7 @@ descElFromGerm (CodeModule.CArg c ar D cB' reflp) (GArg A DG) (GArgCode cr cIso 
     (FC com retAppr retEx) = descElFromGerm D DG isCode E _
       (λ r → resp (inr r))
       (λ pf r → respEx pf (inr r))
-      {!!}
+      (≤< (smax*-≤-n (FLit 1) ≤⨟ ≤↑ _) lto)
       (λ r → φ (inr r))
       λ pf r → φex pf (inr r)
   in
@@ -244,7 +244,7 @@ descElFromGerm (CodeModule.CRec c x D cB' reflp) (GRec A DG) (GRecCode cr cIso i
   (FC com retAppr retEx) = descElFromGerm D DG isCode E _
       (λ r → resp (inr r))
       (λ pf r → respEx pf (inr r))
-      {!!}
+      (≤< (smax*-≤-n (FLit 1) ≤⨟ ≤↑ _) lto)
       (λ r → φ (inr r))
       (λ pf r → φex pf (inr r))
   in
@@ -259,7 +259,7 @@ descμFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) →  ⁇Ty ℓ
   → ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt)
 descμBindFromGerm : ∀ {tyCtor} {{æ : Æ}} (E : DCtors ℓ tyCtor) → LÆ (⁇Ty ℓ)
   → (lto : ∀ d → descSize (E d) <ₛ cSize)
-  → {!!}
+  → LÆ ( W̃ (λ æ → Arg (λ d → interpDesc {{æ = æ}} (E d) Gtt)) tt)
 
 -- Take an element of ⁇ and check if it's an embedded member of the right inductive type
 -- If it is, traverse it to convert all its fields
@@ -270,10 +270,10 @@ descμFromGerm {tyCtor = tyCtor} E (⁇Tag {h = HCtor tyCtor'} (⁇μ d resp res
     (FC com retResp retEx) = descElFromGerm (E d) (germCtor ℓ _ d) (dataGermIsCode ℓ _ d) E Gtt
       (λ r → exact {c = C⁇} (resp r))
       (λ r → (respEx r))
-      {!!}
+      (lto d)
       (λ r → exactμ tyCtor C𝟙 E Gtt (descμFromGerm {{æ = Approx}} E (resp r) lto))
       (λ pf r → descμBindFromGerm  E (respEx pf r) lto)
-  in Wsup (FC {!!} {!!} {!!})
+  in Wsup (FC (d , com) retResp retEx)
 -- ⁇ At the unknown type becomes ⁇ in the inductive type
 descμFromGerm E ⁇⁇ lto = W⁇
 descμFromGerm E _ lto = W℧
