@@ -4,55 +4,37 @@ open import UnkGerm
 open import InductiveCodes
 open import Cubical.Data.Nat
 
+open import Constructors
+
 module Sizes {{_ : DataTypes}} {{_ : DataGerms}} {{_ : CodesForInductives }} where
 
-open import Sizes.Size public
-open import Sizes.MultiMax public
-open import Sizes.CodeSize public
-open import Sizes.ElSize public
-open import Sizes.NatLim public
-open import Sizes.WellFounded public
 
 open import Code
 open import ApproxExact
 
+
+
+open import Sizes.Size public
+open import Sizes.MultiMax public
+open import Sizes.NatLim public
+open import Sizes.WellFounded public
+
+import Sizes.CodeSize
+-- import Sizes.ElSize
+
 smallerCodeSize : ∀ {ℓ} {{inst : 0< ℓ}} → ℂ-1 (SmallerCodeAt ℓ) → Size
-codeSizeFuel : ∀ {ℓ} → ℕ → (c : ℂ ℓ) → Size
-codeSize : ∀ {ℓ} → ℂ ℓ → Size
-
--- Calculates the code size for codes from lower (universe) levels
-smallerCodeSize {suc ℓ}  = codeSize
--- We have a function, codeSizeFuel, that with fuel suc n, sets the size of ⁇ to be
--- the greater than the limit of all code sizes calculated with fuel n
-codeSizeFuel zero = λ _ → SZ
-codeSizeFuel {ℓ = ℓ} (suc n) = codeSize' ℓ smallerCodeSize (codeSizeFuel n)
--- Then, the actual code size is the limit over all fuel values
-codeSize {ℓ = ℓ} c = codeSize' ℓ smallerCodeSize (λ c → ℕLim λ n → codeSizeFuel n c) c
+smallerCodeSize {suc ℓ}  = Sizes.CodeSize.codeSize smallerCodeSize
 
 
+-- smallerElSize :  ∀ {{æ : Æ}} {ℓ} {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size
+-- smallerElSize {suc ℓ} = Sizes.ElSize.elSize smallerCodeSize smallerElSize
 
-elSizeFuel : ∀ {{æ : Æ}} {ℓ} → ℕ → (c : ℂ ℓ) → El c → Size
-smallerElSize :  ∀ {{æ : Æ}} {ℓ} {{inst : 0< ℓ}} → (c : ℂ-1 (SmallerCodeAt ℓ)) → El-1 (SmallerCodeAt ℓ) c → Size
-elSize : ∀ {{æ : Æ}} {ℓ} → (c : ℂ ℓ) → El c → Size
 
-smallerElSize {ℓ = suc ℓ} = elSize
+module _ {ℓ} where
+  open import Sizes.CodeSize {ℓ} smallerCodeSize public
+  -- open import Sizes.ElSize {ℓ} smallerCodeSize smallerElSize public
 
-elSizeFuel {ℓ = ℓ} zero = elSize' ℓ smallerCodeSize smallerElSize (λ _ _ → SZ)
-elSizeFuel {ℓ = ℓ} (suc n) = elSize' ℓ smallerCodeSize smallerElSize (elSizeFuel n)
 
--- We take the limit of the fueled sizes to get the full size
-elSize {ℓ} c x = elSize' ℓ smallerCodeSize smallerElSize (λ c x → ℕLim λ n → elSizeFuel n c x) c x
-
-⁇Size : ∀ {{æ : Æ}} {ℓ} → ⁇Ty ℓ → Size
-⁇SizeFuel : ∀ {{æ : Æ}} {ℓ} → ℕ → ⁇Ty ℓ → Size
-
-⁇SizeFuel {ℓ = ℓ} n = ⁇Size' ℓ smallerCodeSize smallerElSize (elSizeFuel n)
-⁇Size x = ℕLim λ n → ⁇SizeFuel n x
-
-GermSize : ∀ {{æ : Æ}} {ℓ tyCtor} → ⁇GermTy ℓ tyCtor → Size
-GermSizeFuel : ∀ {{æ : Æ}} {ℓ tyCtor} → ℕ → ⁇GermTy ℓ tyCtor → Size
-GermSizeFuel {ℓ = ℓ} n = GermSize' ℓ smallerCodeSize smallerElSize (elSizeFuel n)
-GermSize x = ℕLim λ n → GermSizeFuel n x
 
 codeSuc : ∀ {ℓ} (c : ℂ ℓ) → SZ <ₛ codeSize c
 codeSuc C⁇ = ≤ₛ-sucMono ≤ₛ-Z
@@ -65,7 +47,7 @@ codeSuc (CΠ c cod) = ≤ₛ-sucMono ≤ₛ-Z
 codeSuc (CΣ c cod) = ≤ₛ-sucMono ≤ₛ-Z
 codeSuc (C≡ c x y) = ≤ₛ-sucMono ≤ₛ-Z
 codeSuc (Cμ tyCtor c D x) = ≤ₛ-sucMono ≤ₛ-Z
-codeSuc {ℓ = suc ℓ} (CCumul c) = ≤ₛ-sucMono ≤ₛ-Z
+codeSuc {ℓ = suc ℓ} (CCumul c) = codeSuc {ℓ = ℓ} c
 
 codeMaxL : ∀ {ℓ} (c : ℂ ℓ) → smax S1 (codeSize c) ≤ₛ codeSize c
 codeMaxL C⁇ = smax-oneL -- ≤ₛ-sucMono smax-oneL
@@ -78,7 +60,10 @@ codeMaxL (CΠ c cod) = smax-oneL
 codeMaxL (CΣ c cod) = smax-oneL
 codeMaxL (C≡ c x y) = smax-oneL
 codeMaxL (Cμ tyCtor c D x) = smax-oneL
-codeMaxL {ℓ = suc ℓ} (CCumul c) = smax-oneL
+codeMaxL {ℓ = suc ℓ} (CCumul c) = codeMaxL c -- smax-oneL
+
+open import DecPEq
+
 
 
 codeMaxR : ∀ {ℓ} (c : ℂ ℓ) → smax (codeSize c) S1 ≤ₛ codeSize c
@@ -92,13 +77,14 @@ codeMaxR (CΠ c cod) = smax-oneR
 codeMaxR (CΣ c cod) = smax-oneR
 codeMaxR (C≡ c x y) = smax-oneR
 codeMaxR (Cμ tyCtor c D x) = smax-oneR
-codeMaxR {ℓ = suc ℓ} (CCumul c) = smax-oneR
+codeMaxR {ℓ = suc ℓ} (CCumul c) = codeMaxR c
 
 codeMaxSuc : ∀ {ℓ1 ℓ2} {c1 : ℂ ℓ1 } {c2 : ℂ ℓ2} → S1 ≤ₛ smax (codeSize c1) (codeSize c2)
 codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono (codeSuc c1) (codeSuc c2)
 
 
--- ⁇suc : ∀ {{_ : Æ}} {ℓ} (x : ⁇Ty ℓ) → S1 ≤ₛ ⁇Size x
+-- ⁇suc : ∀ {{_ : Æ}} {ℓ} {mi} (x : ⁇CombinedTy ℓ mi) → S1 ≤ₛ ⁇Size x
+-- ⁇suc (⁇fromGerm x) = ≤ₛ-sucMono ≤ₛ-Z
 -- ⁇suc ⁇⁇ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
 -- ⁇suc ⁇℧ = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
 -- ⁇suc ⁇𝟙 = ≤ₛ-sucMono ≤ₛ-refl -- ≤ₛ-sucMono ≤ₛ-Z
@@ -109,5 +95,3 @@ codeMaxSuc {c1 = c1} {c2 = c2} = ≤ₛ-sucMono ≤ₛ-Z ≤⨟ smax-strictMono 
 -- ⁇suc (⁇≡ (x ⊢ .⁇⁇ ≅ .⁇⁇)) = ≤ₛ-sucMono ≤ₛ-Z
 -- ⁇suc (⁇μ tyCtor x) = ≤ₛ-sucMono ≤ₛ-Z
 -- ⁇suc {ℓ = suc ℓ} (⁇Cumul c x) = ≤ₛ-sucMono ≤ₛ-Z
-
-open import Cubical.Data.Maybe

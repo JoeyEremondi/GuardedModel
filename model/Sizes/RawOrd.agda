@@ -21,6 +21,7 @@ open import ApproxExact
 
 open import Cubical.Foundations.Transport
 open import GTypes
+open import Constructors
 
 -- Brouwer Tree ordinals
 -- Based on the presentation by Kraus, Forsburg and Xu

@@ -40,13 +40,17 @@ record Container (I : Set)  : Set1 where
 open Container public
 
 
-record ⟦_⟧F {I} (C : Container I) (X : I → Set) (i : I) : Set where
+record ⟦_⟧F {{æ : Æ}} {I} (C : Container I) (X : Æ → I → Set) (i : I) : Set where
   constructor FC
   field
     command : Command C i
     response :
       (r : Response C command)
-      → X (inext C command r)
+      → X Approx (inext C command r)
+    responseExact :
+      (IsExact æ)
+      → (r : Response C command)
+      → LÆ (X æ (inext C command r))
     -- responseLater :
     --   (r : Response C command)
     --   → ∀ j
@@ -54,16 +58,25 @@ record ⟦_⟧F {I} (C : Container I) (X : I → Set) (i : I) : Set where
     --   → LÆ (X j)
     -- responseUnk : ResponseUnk C command → Unk
 
+
+⟦_⟧F[_] : ∀ {I} (C : Container I) → Æ → (X : ( æ : Æ ) → I → Set)  → (i : I) → Set
+⟦_⟧F[_] C æ = ⟦_⟧F {{æ = æ}} C
+
 -- Functoral action aka good old map
-FMap : ∀ {I} {C : Container I} {X Y : I → Set} {i : I} → (∀ {i} → X i → Y i) → ⟦ C ⟧F X i → ⟦ C ⟧F Y i
-FMap f (FC com resp) = FC com (λ r → f (resp r))
+FMap : ∀ {{æ : Æ}} {I} {C : Container I} {X Y : Æ → I → Set} {i : I} → (∀ {æ i} → X æ i → Y æ i) → ⟦ C ⟧F X i → ⟦ C ⟧F Y i
+FMap f (FC com resp respEx) = FC com (λ r → f (resp r)) retExact
+  where
+    retExact : _ → (r : _) → _
+    retExact pf r = do
+      fr ← respEx pf r
+      pure (f fr)
 
--- TODO : can't implement the full traversals until we have meet for indices
-□ : ∀ {ℓ I} {X : I → Set} (C : Container I) →  ((Σ I X) → Set ℓ) → (Σ I (⟦ C ⟧F X)) → Set ℓ
-□ C P (i , (FC c k)) = ∀ r → P (inext C c r , k r)
+-- Can only do properties of the approximate parts
+□ : ∀ {æ : Æ} {ℓ I} {X : Æ → I → Set} (C : Container I) →  (∀ {æ} → (Σ I (X æ)) → Set ℓ) → (Σ I (⟦ C ⟧F[ æ ] X)) → Set ℓ
+□ C P (i , (FC c k kex)) = ∀ r → P (inext C c r , k r)
 
-data W̃ {I : Set} (C : Container I) (i : I)  :  Set where
-  Wsup : ⟦ C ⟧F  (W̃ C) i → W̃ C i
+data W̃ {{æ : Æ}} {I : Set} (C : Æ → Container I) (i : I)  :  Set where
+  Wsup : ⟦ C æ ⟧F  (λ æ' → W̃ {{æ = æ'}} C) i → W̃ C i
   W℧ W⁇ : W̃ C i
   -- Projections.
 

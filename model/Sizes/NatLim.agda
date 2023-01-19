@@ -24,6 +24,8 @@ open import GTypes
 open import Code
 open import Cubical.Foundations.Transport
 
+open import Constructors
+
 module Sizes.NatLim {{_ : DataTypes}} {{_ : DataGerms}} where
 
 
@@ -102,8 +104,6 @@ abstract
     FinLim {ℕ.suc n} f = SLim (CFin n) (λ x → f (fromCFin x))
 
 
-    DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Size) → Size
-    DLim tyCtor f = FinLim f
 
     FinLim-cocone : ∀ {n} → (f : ( Fin n) → Size) → (d : Fin n) → f d ≤ₛ FinLim f
     FinLim-cocone {ℕ.suc n} f d = pSubst (λ x → f d ≤ₛ f x) (pSym (fromToCFin d)) ≤ₛ-refl ≤⨟ ≤ₛ-cocone (toCFin d)
@@ -115,3 +115,6 @@ abstract
     smax-FinLim2 : ∀ {n} → (f1 f2 : (d : Fin n) → Size) →  FinLim (λ d1 → FinLim (λ d2 → smax (f1 d1) (f2 d2))) ≤ₛ smax (FinLim f1) (FinLim f2)
     smax-FinLim2 {ℕ.zero} f1 f2 = ≤ₛ-Z
     smax-FinLim2 {ℕ.suc n} f1 f2 = smax-lim2L (λ z → f1 (fromCFin z)) (λ z → f2 (fromCFin z))
+
+DLim : ∀ (tyCtor : CName) → ((d : DName tyCtor) → Size) → Size
+DLim tyCtor f = FinLim f

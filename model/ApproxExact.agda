@@ -17,11 +17,16 @@ data Æ : Set where
 data IsExact : Æ → Prop where
   instance isExact : IsExact Exact
 
+isExactAllEq : ∀ {ℓ} {A : Set ℓ} → {f g : IsExact Approx → A} → f ≡c g
+isExactAllEq i ()
+
+castExact : ∀ {ℓ} {æ} (P : Æ → Set ℓ) → IsExact æ → P æ → P Exact
+castExact {æ = Exact} P _ x = x
 
 data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Now : A → LÆ A
   Later : {{_ : IsExact æ}} → G.▹ (LÆ A) → LÆ A
-  Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
+  -- Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
 
 
 pure : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → A → LÆ A
@@ -43,10 +48,10 @@ _>>=_ :
   → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} B
 Now a >>= f = f a
 Later x >>= f = Later  λ tic → x tic >>= f
-_>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
-  where
-    path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
-    path {a = a} = Extract {{æ = æB}} (a >>= f)
+-- _>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
+--   where
+--     path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
+--     path {a = a} = Extract {{æ = æB}} (a >>= f)
 
 
 _>>_ :
@@ -69,30 +74,31 @@ fromNow : ∀ {ℓ} {A : Set ℓ} → LÆ {{Approx}} A → A
 fromNow (Now x) = x
 
 
-untic : ∀ {ℓ} {X : Set ℓ} → G.Tick → LÆ {{Exact}} X → X
-untic tic (Now x) = x
-untic tic (Later x) = untic tic (x tic)
-untic tic (Extract x i) = untic tic x
 
-liftFun : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : Set ℓ₂ } → (A → LÆ B) → LÆ (A → B)
-liftFun ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
-liftFun ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
+-- untic : ∀ {ℓ} {X : Set ℓ} → (@tick x : G.Tick) → LÆ {{Exact}} X → X
+-- untic tic (Now x) = x
+-- untic tic (Later x) = untic tic (x tic)
+-- untic tic (Extract x i) = untic tic x
 
-liftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → ((x : A) → LÆ (B x)) → LÆ ((x : A) → B x)
-liftFunDep ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
-liftFunDep ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
+-- liftFun : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : Set ℓ₂ } → (A → LÆ B) → LÆ (A → B)
+-- liftFun ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
+-- liftFun ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
 
-unliftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → LÆ ((x : A) → B x) → (x : A) → LÆ (B x)
-unliftFunDep mf a = do
-  f ← mf
-  pure (f a)
+-- liftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → ((x : A) → LÆ (B x)) → LÆ ((x : A) → B x)
+-- liftFunDep ⦃ Approx ⦄ f = Now (λ x → fromNow (f x))
+-- liftFunDep ⦃ Exact ⦄ {A = A} {B}  f = Later λ tic → Now λ x → untic tic (f x)
 
-uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
-uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
+-- unliftFunDep : ∀ {{æ : Æ}} {ℓ₁} {ℓ₂} {A : Set ℓ₁} { B : A → Set ℓ₂ } → LÆ ((x : A) → B x) → (x : A) → LÆ (B x)
+-- unliftFunDep mf a = do
+--   f ← mf
+--   pure (f a)
+
+-- uptoTermination : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → Set ℓ) → LÆ {{æ}} A → Set ℓ
+-- uptoTermination {A = A} P x = Σ[ y ∈ A ]((x ≡ Now y) × P y)
 
 
-uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
-uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
+-- uptoTermination2 : ∀ {{æ : Æ}} {ℓ}  {A : Set ℓ} → (P : A → A → Set ℓ) → (x y : LÆ {{æ}} A) → Set ℓ
+-- uptoTermination2 {A = A} P x y = Σ[ x' ∈ A ] Σ[ y' ∈ A ] ((x ≡ Now x') × (y ≡ Now y') × P x' y')
 
 
 
@@ -248,8 +254,8 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 --     (LFix {{_}} {{record { default = λ a → Approxable.default appr  }}}
 --     λ self → liftFunDep (λ a → f (unliftFunDep self) a))
 
-θ : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡p Exact) → ▹  A → LÆ {{æ}} A
-θ reflp x = Later (λ tic → Now (x tic))
+θ : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} (_ : IsExact æ)  → ▹  A → LÆ {{æ}} A
+θ {{æ = Exact}} _ x = Later (λ tic → Now (x tic))
 
 ▹Default : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡p Approx) → ▹ A
 ▹Default reflp = tt*
