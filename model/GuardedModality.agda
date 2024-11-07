@@ -79,8 +79,8 @@ later-ext eq = \ i α → eq α i
 later-ext' : ∀ {l} {A : ▹ Set l} → {f g : ▸ A} → (▸ \ α → f α ≡ g α) → f ≡ g
 later-ext' eq = \ i α → eq α i
 
-later-extSwap : ∀ {l} {A : ▹ Set l} {B : Set l} → (▸ \ α → A α ≡ B) → ▸ A ≡ ▹ B
-later-extSwap eq i = (x : Tick) → eq x i
+-- later-extSwap : ∀ {l} {A : ▹ Set l} {B : Set l} → (▸ \ α → A α ≡ B) → ▸ A ≡ ▹ B
+-- later-extSwap eq i = (x : Tick) → eq x i
 
 postulate
   dfix : ∀ {l} {A : Set l} → (▹ A → A) → ▹ A

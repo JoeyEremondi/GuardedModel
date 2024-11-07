@@ -139,6 +139,13 @@ data Erase {ℓ} (A : Set ℓ) : Prop ℓ where
   erase : A → Erase A
 
 
+cong₃ : ∀ {ℓ} {A : Set ℓ} {B : A → Set ℓ} {B' : (a : A) → Set ℓ} {C : (a : A) → (b : B a) → (bb : B' a) → Set ℓ} {x y : A} →
+        (f : (a : A) → (b : B a) → (bb : B' a) → C a b bb) →
+        (p : x ≡ y) →
+        {u : B x} {v : B y} (q : PathP (λ i → B (p i)) u v) →
+        {u' : B' x} {v' : B' y} (q' : PathP (λ i → B' (p i)) u' v') →
+        PathP (λ i → C (p i) (q i) (q' i)) (f x u u') (f y v v')
+cong₃ f p q q' i = f (p i) (q i) (q' i)
 
 -- compPathPGoal {P = P} {x = x} {z = z} {Y = Y} {y} eqxy eqyz pxy pyz =
 --   let

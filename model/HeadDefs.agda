@@ -16,7 +16,9 @@ open import Cubical.Foundations.Prelude
 open import GuardedAlgebra
 open import ApproxExact
 
-module HeadDefs (numCtors : ℕ) where
+open import Constructors
+
+module HeadDefs {{_ : DataTypes}}  where
 
 data TyHead : Set where
   HΠ : TyHead
@@ -27,7 +29,7 @@ data TyHead : Set where
   Hℕ : TyHead
   HType : TyHead
   HCumul : TyHead
-  HCtor : Fin numCtors → TyHead
+  HCtor : Fin numTypes → TyHead
 
 data GHead : Set where
   H⁇ : GHead

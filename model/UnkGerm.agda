@@ -30,6 +30,9 @@ open import GTypes
 
 open import ApproxExact
 open import Util
+
+open import Constructors
+
 module UnkGerm where
 
 
@@ -133,26 +136,7 @@ Maybe-elim B n j (just a) = j a
 
 
 
-open import GuardedAlgebra
 
-record DataTypes : Set1 where
-  field
-    numTypes : ℕ
-  CName : Set
-  CName = Fin numTypes
-  field
-    numCtors : CName → ℕ
-    -- indSig : CName → IndSig
-  DName : CName → Set
-  DName tyCtor = Fin (numCtors tyCtor)
-  field
-    -- How many first-order recursive references a given constructor has
-    #FO : (c : CName) → (DName c) →  ℕ
-    -- Index of each First-order reference
-    -- Nothing is ⁇, Just tyCtor is an element of the germ of tyCtor
-    iFO : (c : CName) → (d : DName c) → Fin (#FO c d) → CName
-
-open DataTypes {{...}} public
 
 open import HeadDefs
 
@@ -168,115 +152,141 @@ record SmallerCode : Set1 where
 
 open SmallerCode public
 
+-- Telescopes of fixed length
+-- This is usefl for encoding curried functions of n arguments,
+-- so we can ensure that the code version and germ version line up with the right
+-- number of arguments
+data GermTele : ℕ → Type1 where
+  GermNil : GermTele 0
+  GermCons : ∀ {n} → (A : Type) → (A → GermTele n ) → GermTele (ℕ.suc n)
 
-record GermCtor {{_ : DataTypes}} : Type1 where
-    field
-      GermCommand : Type
-      GermHOResponse : GermCommand → Type
-      iGermHO : (c : GermCommand) → GermHOResponse c → CName
-      GermHOUnkResponse : GermCommand → Type
+GermTeleEnv : ∀ {n} → GermTele n → Type
+GermTeleEnv GermNil = 𝟙
+GermTeleEnv (GermCons A teleRest) = Σ[ x ∈ A ](GermTeleEnv (teleRest x))
 
-open GermCtor public
+-- "Flattened" descriptions for data Germs.
+-- In order to make things terminating, the positive parts of a datatype's germ
+-- must all be encoded using the same inductive type.
+-- For the negative parts, we have a telescope of domain types,
+-- so the types end up working as if constructors had the type (x : Domain) → ⁇Germ i.
+-- So we don't have any "commands" like in W types, or indexing:
+-- that's erased and/or added back by casts
+data GermCtor {{_ : DataTypes}} : IndSig → Set1 where
+  -- Terminate a chain of descriptions
+  GEnd : GermCtor SigE
+  -- Represents non-recursive fields of a constructor.
+  -- If we have a field of type (x1 : A1) → ... → (xn : An) → Foo x1 ⋯ xn,
+  -- in the germ this is encoded as (x1 : A1) → ... → (xn : An) → ⁇Germ h,
+  -- where h is the head of type Foo, or nothing if it's unknown.
+  -- This reduces how much loss there is for approximating to ⁇
+  GArg : ∀ {sig n} → (A : GermTele n ) → (D : GermCtor sig  ) → GermCtor  (SigA n sig)
+  -- Like arg, but always has the index type that's the same as the datatype, i.e. represents recursive self-reference
+  GRec : ∀ {sig n} → (A : GermTele n ) → (D : GermCtor  sig) → GermCtor  (SigR n sig)
+
+
+-- W-type style translation for dataGerms
+-- We don't have any commands, since all fields are shoved into the massive Germ inductive type
+-- So we just have a Response
+GermResponse : ∀  {{_ : DataTypes}} {sig} →  GermCtor sig → Type
+-- 0 pieces of data stored at the end
+GermResponse GEnd = 𝟘
+-- For arguments or recursive fields, response is whatever type is given by the telescope
+GermResponse (GArg A D) = GermTeleEnv A ⊎ GermResponse D
+GermResponse (GRec A D) = GermTeleEnv A ⊎ GermResponse D
+
+-- Index for each response of a Germ Constructor
+-- GermIndexFor : ∀ {{_  : DataTypes}} {sig} → (tyCtor : CName) → (D : GermCtor sig) → GermResponse D → Maybe TyHead
+-- GermIndexFor tyCtor (GArg A ixFor D) x = ixFor x
+-- GermIndexFor tyCtor (GRec A D) x = just (HCtor tyCtor)
 
 record DataGerms {{_ : DataTypes}} : Type1 where
   field
-    germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor
+    germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor (indSkeleton tyCtor d)
   -- Functor
-  data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe CName → Type where
+  data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type
+  ⁇ApproxGerm : ∀  (ℓ : ℕ)  (sc : SmallerCode) (Self : DecPEq.Lift 𝟙) → Maybe TyHead → Type
+  data ⁇Germ {{æ}} ℓ sc Self where
+      -- An element of the germ for any head can be embedded into ⁇Ty
+      ⁇Tag : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
       -- ⁇ and Germ have top and bottom elements
-      ⁇℧ : ∀ {i} → ⁇Germ ℓ sc Self i
-      ⁇⁇ : ∀ {i} → ⁇Germ ℓ sc Self i
+      ⁇℧ : ⁇Germ ℓ sc Self nothing
+      ⁇⁇ : ⁇Germ ℓ sc Self nothing
       -- Constructors for ⁇ as a type (i.e index is nothing)
-      ⁇𝟙 : ⁇Germ ℓ sc Self nothing
-      ⁇ℕ : GNat → ⁇Germ ℓ sc Self nothing
-      ⁇Type : {{inst : 0< ℓ}}  → ℂ-1 sc → ⁇Germ ℓ sc Self nothing
-      ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self nothing
+      ⁇𝟙 : ⁇Germ ℓ sc Self (just H𝟙)
+      ⁇ℕ : GNat → ⁇Germ ℓ sc Self (just Hℕ)
+      ⁇Type : {{inst : 0< ℓ}}  → ℂ-1 sc → ⁇Germ ℓ sc Self (just HType)
+      ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self (just HCumul)
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇Π : (▹⁇Ty Self  →  ⁇Germ ℓ sc Self nothing) → ⁇Germ ℓ sc Self nothing
+      ⁇Π :  (𝟙  →  ⁇ApproxGerm ℓ sc tt* nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
       -- The germ of pairs is a pair of ⁇s
-      ⁇Σ : (⁇Germ ℓ sc Self nothing  × ⁇Germ ℓ sc Self nothing ) → ⁇Germ ℓ sc Self nothing
+      ⁇Σ : (⁇Germ ℓ sc Self nothing  × ⁇Germ ℓ sc Self nothing ) → ⁇Germ ℓ sc Self (just (HΣ))
       -- The germ of an equality type is a witness of equality between two ⁇s
       -- TODO: is there a way to make the witness approx?
-      ⁇≡ : _≅_ {A = ⁇Germ ℓ sc Self nothing} ⁇⁇ ⁇⁇ → ⁇Germ ℓ sc Self nothing
-      -- We can embed an element of the germ of any datatype in ⁇
-      ⁇μ : (tyCtor : CName) → (x : ⁇Germ ℓ sc Self (just tyCtor)) →  ⁇Germ ℓ sc Self nothing
+      ⁇≡ : _≅_ {A = ⁇Germ ℓ sc Self nothing} ⁇⁇ ⁇⁇ → ⁇Germ ℓ sc Self (just (H≅))
       -- A member of an inductive type is a constructor, a command for that constructor,
       -- the right number of first-order recursive refs
       -- and a function producing higher order recursive refs
-      Wsup : ∀ {tyCtor}
+      ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
-        → (com : GermCommand (germCtor ℓ tyCtor d) )
-        → (germFO : (n : Fin (#FO tyCtor d)) → ⁇Germ ℓ sc Self (just (iFO tyCtor d n)))
-        → (germHO : (r : GermHOResponse (germCtor ℓ tyCtor d) com) → ⁇Germ ℓ sc Self (just (iGermHO (germCtor ℓ tyCtor d) com r)))
-        → (germHOUnk : (r : GermHOUnkResponse (germCtor ℓ tyCtor d) com) → ⁇Germ ℓ sc Self nothing)
-        → ⁇Germ ℓ sc Self (just tyCtor)
+        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt* nothing)
+        → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self nothing))
+        → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
+
+  ⁇ApproxGerm = ⁇Germ {{æ = Approx}}
 
   -- Approximating/embedding for the unknown type
   toApprox⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Exact}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
+  approx⁇ : ∀ {{æ : Æ}} {ℓ sc Self i} → ⁇Germ {{æ = æ}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
   toExact⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Approx}} ℓ sc tt* i → ⁇Germ {{æ = Exact}} ℓ sc Self i
+
+  approx⁇ {{æ = Approx}} x = x
+  approx⁇ {{æ = Exact}} x = toApprox⁇ x
 
   toApprox⁇ ⁇℧ = ⁇℧
   toApprox⁇ ⁇⁇ = ⁇⁇
+  toApprox⁇ (⁇Tag x) = ⁇Tag (toApprox⁇ x)
   toApprox⁇ ⁇𝟙 = ⁇𝟙
   toApprox⁇ (⁇ℕ n) = ⁇ℕ n
   toApprox⁇ (⁇Type x) = ⁇Type x
   toApprox⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toApprox-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toApprox⁇ {Self = Self} (⁇Π f) = ⁇Π (λ _ → toApprox⁇ (f (▹⁇⁇ {{æ = Exact}} Self)))
+  toApprox⁇ {Self = Self} (⁇Π f⁇ _) = ⁇Π (λ _ → f⁇ tt) (λ ())
   toApprox⁇ (⁇Σ (x , y)) = ⁇Σ (toApprox⁇ x , toApprox⁇ y)
   toApprox⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toApprox⁇ w ⊢ toApprox⁇ x ≅ toApprox⁇ y)
-  toApprox⁇ (⁇μ tyCtor x) = ⁇μ tyCtor (toApprox⁇ x)
+  toApprox⁇ (⁇μ tyCtor fappr _ ) = ⁇μ tyCtor fappr λ () --⁇μ tyCtor (toApprox⁇ x)
 
-  toApprox⁇ (Wsup d com fo ho hoUnk) =
-    Wsup
-      d
-      com
-      (λ n → toApprox⁇ (fo n))
-      (λ r → toApprox⁇ (ho r))
-      (λ r → toApprox⁇ (hoUnk r))
 
   toExact⁇ ⁇℧ = ⁇℧
   toExact⁇ ⁇⁇ = ⁇⁇
+  toExact⁇ (⁇Tag x) = ⁇Tag (toExact⁇ x)
   toExact⁇ ⁇𝟙 = ⁇𝟙
   toExact⁇ (⁇ℕ n) = ⁇ℕ n
   toExact⁇ (⁇Type x) = ⁇Type x
   toExact⁇ {sc = sc} (⁇Cumul c x) = ⁇Cumul c (toExact-1 sc c x)
   -- This is where we really need to approx: we have a guarded function,
   -- so we take its upper limit by giving it ⁇ as an argument
-  toExact⁇ (⁇Π f) = ⁇Π (λ _ → toExact⁇ (f tt*))
+  toExact⁇ (⁇Π f _) = ⁇Π (λ _ → f tt) (λ _ _ → Now (toExact⁇ (f tt)))
   toExact⁇ (⁇Σ (x , y)) = ⁇Σ (toExact⁇ x , toExact⁇ y)
   toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
-  toExact⁇ (⁇μ tyCtor x) = ⁇μ tyCtor (toExact⁇ x)
-  toExact⁇ (Wsup d com fo ho hoUnk) =
-    Wsup
-      d
-      com
-      (λ n → toExact⁇ (fo n))
-      (λ r → toExact⁇ (ho r))
-      (λ r → toExact⁇ (hoUnk r))
+  toExact⁇ (⁇μ tyCtor fappr fexact) = ⁇μ tyCtor fappr λ _ r → Now (toExact⁇ (fappr r))
 
   toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt* i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
   toApproxExact⁇ ⁇℧ = refl
   toApproxExact⁇ ⁇⁇ = refl
+  toApproxExact⁇ (⁇Tag x) = cong (⁇Tag {{æ = _}}) (toApproxExact⁇ x)
   toApproxExact⁇ ⁇𝟙 = refl
   toApproxExact⁇ (⁇ℕ n) = refl
   toApproxExact⁇ (⁇Type x) = refl
   toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
-  toApproxExact⁇ (⁇Π f) = congPath (⁇Π ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt*))
+  -- toApproxExact⁇ (⁇ΠA _ f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt)) ?
+  toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) refl isExactAllEq
   toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
   toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
                                       (λ x →
                                         ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
                                       (toApproxExact⁇ w)
-  toApproxExact⁇ (⁇μ tyCtor x) = congS (⁇μ ⦃ æ = Approx ⦄ tyCtor) (toApproxExact⁇ x)
-  toApproxExact⁇ {Self = Self} (Wsup d com fo ho hoUnk) i =
-    Wsup
-      d
-      com
-      (λ n → toApproxExact⁇ {Self = Self} (fo n) i)
-      (λ r → toApproxExact⁇ {Self = Self} (ho r) i)
-      (λ r → toApproxExact⁇ {Self = Self} (hoUnk r) i)
+  toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) refl isExactAllEq
 
 open DataGerms {{...}} public
