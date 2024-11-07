@@ -1,15 +1,16 @@
-{-# OPTIONS --cubical --guarded #-}
 module GuardedModality where
 
 import GuardedAlgebra as Alg
 open import Agda.Primitive
-open import Agda.Primitive.Cubical renaming (itIsOne to 1=1)
-open import Agda.Builtin.Cubical.Path
-open import Agda.Builtin.Cubical.Sub renaming (Sub to _[_↦_]; primSubOut to outS)
-open import Cubical.Foundations.Prelude using (cong ; transport ; sym ; _∙_)
-open import Cubical.Foundations.Transport
-open import Cubical.Foundations.Univalence
-open import Cubical.Foundations.Isomorphism
+open import ErasedCompatiblePath
+open import Relation.Binary.PropositionalEquality
+-- open import Agda.Primitive.Cubical renaming (itIsOne to 1=1)
+-- open import Agda.Builtin.Cubical.Path
+-- open import Agda.Builtin.Cubical.Sub renaming (Sub to _[_↦_]; primSubOut to outS)
+-- open import Cubical.Foundations.Prelude using (cong ; transport ; sym ; _∙_)
+-- open import Cubical.Foundations.Transport
+-- open import Cubical.Foundations.Univalence
+-- open import Cubical.Foundations.Isomorphism
 
 module Prims where
   primitive
@@ -44,65 +45,73 @@ _⊛_ f x a = f a (x a)
 map▹ : (f : A → B) → ▹ A → ▹ B
 map▹ f x α = f (x α)
 
-mapNext : (f : A → B) → (a : A) → (map▹ f (next a)) ≡ next (f a)
-mapNext f a α i = f a
+mapNextC : (f : A → B) → (a : A) → (map▹ f (next a)) ≡c next (f a)
+mapNextC f a α i = f a
 
 transpLater : ∀ (A : I → ▹ Set) → ▸ (A i0) → ▸ (A i1)
-transpLater A u0 a = primTransp (\ i → A i a) i0 (u0 a)
+transpLater A u0 a = transp (\ i → A i a) i0 (u0 a)
 
 transpLater-prim : (A : I → ▹ Set) → (x : ▸ (A i0)) → ▸ (A i1)
-transpLater-prim A x = primTransp (\ i → ▸ (A i)) i0 x
+transpLater-prim A x = transp (\ i → ▸ (A i)) i0 x
 
-transpLater-test : ∀ (A : I → ▹ Set) → (x : ▸ (A i0)) → transpLater-prim A x ≡ transpLater A x
+transpLater-test : ∀ (A : I → ▹ Set) → (x : ▸ (A i0)) → transpLater-prim A x ≡c transpLater A x
 transpLater-test A x = \ _ → transpLater-prim A x
 
 
-hcompLater-prim : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → ▸ A
-hcompLater-prim A φ u u0 a = primHComp (\ { i (φ = i1) → u i 1=1 a }) (outS u0 a)
+-- hcompLater-prim : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → ▸ A
+-- hcompLater-prim A φ u u0 a = primHComp (\ { i (φ = i1) → u i 1=1 a }) (outS u0 a)
 
 
-hcompLater : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → ▸ A
-hcompLater A φ u u0 = primHComp (\ { i (φ = i1) → u i 1=1 }) (outS u0)
+-- hcompLater : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → ▸ A
+-- hcompLater A φ u u0 = primHComp (\ { i (φ = i1) → u i 1=1 }) (outS u0)
 
-hcompLater-test : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → hcompLater A φ u u0 ≡ hcompLater-prim A φ u u0
-hcompLater-test A φ u x = \ _ → hcompLater-prim A φ u x
+-- hcompLater-test : ∀ (A : ▹ Set) φ (u : I → Partial φ (▸ A)) → (u0 : (▸ A) [ φ ↦ u i0 ]) → hcompLater A φ u u0 ≡ hcompLater-prim A φ u u0
+-- hcompLater-test A φ u x = \ _ → hcompLater-prim A φ u x
 
 ap : ∀ {A B : Set} (f : A → B) → ∀ {x y} → x ≡ y → f x ≡ f y
-ap f eq = \ i → f (eq i)
+ap f eq = ctop (\ i → f ((ptoc eq) i))
 
 _$>_ : ∀ {A B : Set} {f g : A → B} → f ≡ g → ∀ x → f x ≡ g x
-eq $> x = \ i → eq i x
+eq $> x = ctop \ i → (ptoc eq) i x
 
 later-ext : ∀ {l} {A : Set l} → {f g : ▹ A} → (▸ \ α → f α ≡ g α) → f ≡ g
-later-ext eq = \ i α → eq α i
+later-ext eq = ctop \ i α → ptoc (eq α) i
 
 later-ext' : ∀ {l} {A : ▹ Set l} → {f g : ▸ A} → (▸ \ α → f α ≡ g α) → f ≡ g
-later-ext' eq = \ i α → eq α i
+later-ext' eq = ctop \ i α → (ptoc (eq α)) i
 
 later-extSwap : ∀ {l} {A : ▹ Set l} {B : Set l} → (▸ \ α → A α ≡ B) → ▸ A ≡ ▹ B
-later-extSwap eq i = (@tick x : Tick) → eq x i
+later-extSwap eq = ctop λ i → (@tick x : Tick) → ptoc (eq x) i
 
 postulate
   dfix : ∀ {l} {A : Set l} → (▹ A → A) → ▹ A
-  pfix : ∀ {l} {A : Set l} (f : ▹ A → A) → dfix f ≡ (\ _ → f (dfix f))
+  pfixc : ∀ {l} {A : Set l} (f : ▹ A → A) → dfix f ≡c (\ _ → f (dfix f))
+
+pfix : ∀ {l} {A : Set l} (f : ▹ A → A) → dfix f ≡ (\ _ → f (dfix f))
+pfix f = ctop (pfixc f)
+
 
 pfix' : ∀ {l} {A : Set l} (f : ▹ A → A) → ▸ \ α → dfix f α ≡ f (dfix f)
-pfix' f α i = pfix f i α
+pfix' f α = ctop λ i → ptoc (pfix f) i α
 
 fix : ∀ {l} {A : Set l} → (▹ A → A) → A
 fix f = f (dfix f)
 
 lob : ∀ {l} {A : Set l} → (f : ▹  A → A) → fix f ≡ f (next (fix f))
-lob f = cong f (pfix f)
+lob f = cong f (ctop (pfixc f)) -- cong f (pfixc f)
 
 unhollow : ∀ {l}  {f : ▹ Set l → Set l} → ▹ (fix f) → ▸ dfix f
-unhollow {f = f} x tic = transport⁻ (pfix' f tic) (x tic)
+unhollow {f = f} x tic = transportc⁻ (ptoc (pfix' f tic)) (x tic)
 
 hollow : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f → ▹ fix f
-hollow  {f = f} x tic = transport (pfix' f tic) (x tic)
+hollow  {f = f} x tic = transportc  (ptoc (pfix' f tic)) (x tic)
+
+hollowEq' : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f ≡c ▹ fix f
+hollowEq' {f = f} i = (@tick tic : Tick) → (ptoc (pfix' f tic)) i
+
 
 hollowEq : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f ≡ ▹ fix f
-hollowEq {f = f} i = (@tick tic : Tick) → pfix' f tic i
+hollowEq {f = f} = ctop hollowEq'
 
 tyfix : ∀ {l} → (Set l → Set l) → Set l
 tyfix F = fix λ x → F (▸ x)
@@ -137,7 +146,7 @@ tylob F = cong F hollowEq
 --   Alg.GuardedAlgebra.next guardedModality = next
 --   Alg.GuardedAlgebra._⊛_ guardedModality = _⊛_
 --   Alg.GuardedAlgebra.dfix guardedModality = dfix
---   Alg.GuardedAlgebra.pfix guardedModality = pfix
+--   Alg.GuardedAlgebra.pfixc guardedModality = pfixc
 --   Alg.GuardedAlgebra.Dep▸ guardedModality = λ f x tic → f (x tic)
 --   Alg.GuardedAlgebra.hollowEq guardedModality = hollowEq
 --   Alg.GuardedAlgebra.L guardedModality = LiftM

@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded #-}
 
 module ApproxExact where
 
@@ -6,7 +5,7 @@ open import GuardedAlgebra using (GuardedAlgebra)
 import GuardedModality as G
 open import Agda.Primitive renaming (Set to Type ; Setω to Typeω)
 
-open import EqUtil
+open import FunExt
 
 open import Relation.Binary.PropositionalEquality
 open import Data.Unit.Polymorphic renaming (⊤ to Unit)
@@ -137,8 +136,8 @@ instance
   GuardedAlgebra.next (approxExact ⦃ Exact ⦄) = G.next
   GuardedAlgebra._⊛_ (approxExact ⦃ Exact ⦄) = G._⊛_
   GuardedAlgebra.dfix (approxExact ⦃ Exact ⦄) = G.dfix
-  GuardedAlgebra.pfix (approxExact ⦃ Exact ⦄) f = ctop (G.pfix f)
-  GuardedAlgebra.hollowEq (approxExact ⦃ Exact ⦄) = ctop G.hollowEq
+  GuardedAlgebra.pfix (approxExact ⦃ Exact ⦄) f = (G.pfix f)
+  GuardedAlgebra.hollowEq (approxExact ⦃ Exact ⦄) = G.hollowEq
   GuardedAlgebra.Dep▸ (approxExact ⦃ Exact ⦄) = λ f x tic → f (x tic)
   GuardedAlgebra.L (approxExact ⦃ æ ⦄) A = LÆ {{æ}} A
   GuardedAlgebra.θL (approxExact ⦃ Approx ⦄) a x = Now a

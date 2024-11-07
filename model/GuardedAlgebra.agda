@@ -3,7 +3,6 @@ module GuardedAlgebra where
 
 open import Agda.Primitive renaming (Set to Type ; Setω to Typeω)
 open import Relation.Binary.PropositionalEquality
-open import EqUtil
 
 -- record Approxable {ℓ} (A : Set ℓ) : Set ℓ where
 --   field
