@@ -40,7 +40,7 @@ CℕfromNat (ℕ.suc x) = GSuc (CℕfromNat x)
 
 Cℕembed : ∀  x → CℕtoNat  (CℕfromNat x) ≡ x
 Cℕembed ℕ.zero = reflc
-Cℕembed (ℕ.suc x) = congPath ℕ.suc (Cℕembed x)
+Cℕembed (ℕ.suc x) = cong ℕ.suc (Cℕembed x)
 
 
 

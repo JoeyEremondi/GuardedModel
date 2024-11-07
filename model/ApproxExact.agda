@@ -4,28 +4,31 @@ module ApproxExact where
 
 open import GuardedAlgebra using (GuardedAlgebra)
 import GuardedModality as G
-open import Cubical.Data.Sigma
-open import Cubical.Data.Unit
-open import Cubical.Foundations.Prelude
-open import Cubical.Data.Empty renaming (⊥ to 𝟘)
-open import DecPEq
-open import Agda.Primitive
+open import Agda.Primitive renaming (Set to Type ; Setω to Typeω)
+
+open import EqUtil
+
+open import Relation.Binary.PropositionalEquality
+open import Data.Unit.Polymorphic renaming (⊤ to Unit)
+open import Data.Product hiding (_<*>_)
 
 data Æ : Set where
   Approx Exact : Æ
 
-data IsExact : Æ → Prop where
+data IsExact : Æ → Type where
   instance isExact : IsExact Exact
 
-isExactAllEq : ∀ {ℓ} {A : Set ℓ} → {f g : IsExact Approx → A} → f ≡c g
-isExactAllEq i ()
+
+
+isExactAllEq : ∀ {ℓ} {A : Set ℓ} → {f g : IsExact Approx → A} → f ≡ g
+isExactAllEq {f = f} {g = g} = funExt λ ()
 
 castExact : ∀ {ℓ} {æ} (P : Æ → Set ℓ) → IsExact æ → P æ → P Exact
 castExact {æ = Exact} P _ x = x
 
 data LÆ {ℓ} {{æ : Æ}} (A : Set ℓ) : Set ℓ where
   Now : A → LÆ A
-  Later : {{_ : IsExact æ}} → G.▹ (LÆ A) → LÆ A
+  Later : {{ie : IsExact æ}} → G.▹ (LÆ A) → LÆ A
   -- Extract : ∀ {{_ : IsExact æ}} x → Later (G.next x) ≡ x
 
 
@@ -44,10 +47,13 @@ exactRefl {Approx} = ≤æBot
 exactRefl {Exact} = ≤æRefl
 
 _>>=_ :
-  ∀ {æA} {æB} {{_ : æA ≤Æ æB}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
+  ∀ {æA} {æB} {{lt : æA ≤Æ æB}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
   → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} B
 Now a >>= f = f a
-Later x >>= f = Later  λ tic → x tic >>= f
+_>>=_ {æA = Exact} {æB = Exact} ⦃ lt = ≤æRefl ⦄ (Later x) f =
+  Later {{æ = Exact}} {{ie = isExact}} λ tic → _>>=_ {æA = Exact} {æB = Exact} {{lt = ≤æRefl}} (x tic) f
+-- Later {{ie = isExact}} (λ tic → x tic >>= f)
+-- Later {{æ = Exact}}  λ tic → x tic >>= f
 -- _>>=_ {æA = æA} {æB} {A = A} (Extract x i) f = path {a = x} i
 --   where
 --     path : {a : LÆ {{_}} A} → Later {{æ = æB}} (G.next (a >>= f)) ≡ a >>= f
@@ -56,7 +62,7 @@ Later x >>= f = Later  λ tic → x tic >>= f
 
 _>>_ :
   ∀ {æA} {æB} {{_ : æA ≤Æ æB}} {ℓ₁ ℓ₂} {A : Set ℓ₁} {B : Set ℓ₂}
-  → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {{æ = æB}} Unit
+  → LÆ {{æ = æA}} A → (A → LÆ {{æ = æB}} B) → LÆ {ℓ = ℓ₁} {{æ = æB}} Unit
 _>>_ {æB = æB} ma f = ma >>= λ a → f a >>= λ _ → pure {{æB}} tt
 
 _<*>_ : ∀ {{_ : Æ}} {ℓ₁ ℓ₂} { A : Set ℓ₁ } {B : Set ℓ₂} → LÆ (A → B) → LÆ A → LÆ B
@@ -118,25 +124,25 @@ data GUnit {ℓ} : Set ℓ where
 
 instance
   approxExact : {{æ : Æ}} → GuardedAlgebra
-  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → Unit*
-  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → Unit*
-  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ x → tt*
-  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
-  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ x → tt*
-  GuardedAlgebra.pfix (approxExact ⦃ Approx ⦄) = λ x → refl
+  GuardedAlgebra.▹ approxExact ⦃ Approx ⦄ = λ _ → Unit
+  GuardedAlgebra.▸ approxExact ⦃ Approx ⦄ = λ _ → Unit
+  GuardedAlgebra.next (approxExact ⦃ Approx ⦄) = λ x → tt
+  GuardedAlgebra._⊛_ (approxExact ⦃ Approx ⦄) = λ _ _ → tt
+  GuardedAlgebra.dfix (approxExact ⦃ Approx ⦄) = λ x → tt
+  GuardedAlgebra.pfix (approxExact ⦃ Approx ⦄) _ = refl
   GuardedAlgebra.hollowEq (approxExact ⦃ Approx ⦄) = refl
-  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ _ _ → tt*
+  GuardedAlgebra.Dep▸ (approxExact ⦃ Approx ⦄) = λ _ _ → tt
   GuardedAlgebra.▹ approxExact ⦃ Exact ⦄ = λ A → G.▹ A
   GuardedAlgebra.▸ approxExact ⦃ Exact ⦄ = λ ▹A → G.▸ ▹A
   GuardedAlgebra.next (approxExact ⦃ Exact ⦄) = G.next
   GuardedAlgebra._⊛_ (approxExact ⦃ Exact ⦄) = G._⊛_
   GuardedAlgebra.dfix (approxExact ⦃ Exact ⦄) = G.dfix
-  GuardedAlgebra.pfix (approxExact ⦃ Exact ⦄) = G.pfix
-  GuardedAlgebra.hollowEq (approxExact ⦃ Exact ⦄) = G.hollowEq
+  GuardedAlgebra.pfix (approxExact ⦃ Exact ⦄) f = ctop (G.pfix f)
+  GuardedAlgebra.hollowEq (approxExact ⦃ Exact ⦄) = ctop G.hollowEq
   GuardedAlgebra.Dep▸ (approxExact ⦃ Exact ⦄) = λ f x tic → f (x tic)
   GuardedAlgebra.L (approxExact ⦃ æ ⦄) A = LÆ {{æ}} A
   GuardedAlgebra.θL (approxExact ⦃ Approx ⦄) a x = Now a
-  GuardedAlgebra.θL (approxExact ⦃ Exact ⦄) a x = Later x
+  GuardedAlgebra.θL (approxExact ⦃ Exact ⦄) a x = Later {{æ = Exact}} {{ie = isExact}} x
 
 open import GuardedAlgebra
 
@@ -149,7 +155,7 @@ fromL (Now a) = a
 ÆSet : (ℓ : Level) → Set (lsuc ℓ)
 ÆSet ℓ = Æ → Set ℓ
 
-ÆSet0 : Type (ℓ-suc ℓ-zero)
+ÆSet0 : Type (lsuc lzero)
 ÆSet0 = ÆSet lzero
 
 -- If we're in approximate mode, this is just an approximate version of a T
@@ -200,12 +206,12 @@ fromL (Now a) = a
 -- approxedFun' ⦃ æ = Approx ⦄ f = f
 -- approxedFun' ⦃ æ = Exact ⦄ f = (λ x → fst (f {!!})) , λ x → snd (f {!!})
 
-caseÆ : ∀ {{æ : Æ}} {ℓ } {A : Set ℓ} → (æ ≡p Approx → A) → (æ ≡p Exact → A) → A
-caseÆ ⦃ Approx ⦄ fa fe = fa reflp
-caseÆ ⦃ Exact ⦄ fa fe = fe reflp
+caseÆ : ∀ {{æ : Æ}} {ℓ } {A : Set ℓ} → (æ ≡ Approx → A) → (æ ≡ Exact → A) → A
+caseÆ ⦃ Approx ⦄ fa fe = fa refl
+caseÆ ⦃ Exact ⦄ fa fe = fe refl
 
 
--- withApproxA : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → (a : T Approx) → (e : æ ≡p Exact →  T Exact )  → Approxed {{æ}} T
+-- withApproxA : ∀ {ℓ} {{æ : Æ}} {T : ÆSet ℓ} → (a : T Approx) → (e : æ ≡ Exact →  T Exact )  → Approxed {{æ}} T
 -- withApproxA a e = caseÆ (λ {reflp → a}) λ {reflp → a , e reflp}
 
 --Termination and divergence for LÆ
@@ -214,11 +220,11 @@ Terminates {A = A} xL = Σ[ x ∈ A ](xL ≡ Now x)
 
 
 fromGuarded▹ : ∀ {{æ : Æ}} {ℓ} {A : Set ℓ} → G.▹ A → LÆ (▹ A)
-fromGuarded▹ ⦃ Approx ⦄ x = pure ⦃ Approx ⦄ tt*
-fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
+fromGuarded▹ ⦃ Approx ⦄ x = pure ⦃ Approx ⦄ tt
+fromGuarded▹ ⦃ Exact ⦄ x = Later  {{æ = Exact}} {{ie = isExact}} (λ tic → pure ⦃ Exact ⦄ x)
 
-▹ApproxUnique : ∀ {ℓ} {A : Set ℓ} → (x y : ▹_ {{approxExact {{æ = Approx}}}} A) → x ≡p y
-▹ApproxUnique tt* tt* = reflp
+▹ApproxUnique : ∀ {ℓ} {A : Set ℓ} → (x y : ▹_ {{approxExact {{æ = Approx}}}} A) → x ≡ y
+▹ApproxUnique tt tt = refl
 
 -- unguardType∞ : ∀ {{æ : Æ}} → LÆ Set → Set
 -- unguardType∞ (Now x) =  ▹ x
@@ -230,7 +236,7 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 -- pairWithApprox ⦃ æ = Exact ⦄ a e = a , e
 
 -- approxPairEq : ∀ {T : {{_ : Æ }} → Set} → {{æ : Æ}} → (a : T {{Approx}}) → (e : T {{æ}}) →
---   approx (pairWithApprox {T} a e) ≡p a
+--   approx (pairWithApprox {T} a e) ≡ a
 -- approxPairEq ⦃ æ = Approx ⦄ _ _ = reflp
 -- approxPairEq ⦃ æ = Exact ⦄ _ _ = reflp
 
@@ -255,10 +261,10 @@ fromGuarded▹ ⦃ Exact ⦄ x = Later (λ tic → pure ⦃ Exact ⦄ x)
 --     λ self → liftFunDep (λ a → f (unliftFunDep self) a))
 
 θ : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} (_ : IsExact æ)  → ▹  A → LÆ {{æ}} A
-θ {{æ = Exact}} _ x = Later (λ tic → Now (x tic))
+θ {{æ = Exact}} _ x = Later  {{æ = Exact}} {{ie = isExact}} (λ tic → Now (x tic))
 
-▹Default : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡p Approx) → ▹ A
-▹Default reflp = tt*
+▹Default : ∀ {ℓ} {A : Set ℓ} {{æ : Æ}} → (æ ≡ Approx) → ▹ A
+▹Default refl = tt
 
 
 
@@ -285,7 +291,7 @@ RecFix : {{æ : Æ}} → (▹ ⁇Self → ⁇Self) → ⁇Self
 RecFix fRec = fix fRec
 
 toRecFix : {{æ : Æ}} → (f : ▹ ⁇Self → ⁇Self) → ⁇TySelf (f (next (RecFix f))) → ⁇TySelf (RecFix f)
-toRecFix f = substPath ⁇TySelf (sym (löb f))
+toRecFix f = subst ⁇TySelf (sym (löb f))
 
 fromRecFix : {{æ : Æ}} → (f : ▹ ⁇Self → ⁇Self) → ⁇TySelf (RecFix f) → ⁇TySelf (f (next (RecFix f)))
-fromRecFix f = substPath ⁇TySelf (löb f)
+fromRecFix f = subst ⁇TySelf (löb f)

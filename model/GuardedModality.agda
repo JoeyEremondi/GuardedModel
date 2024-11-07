@@ -79,8 +79,8 @@ later-ext eq = \ i α → eq α i
 later-ext' : ∀ {l} {A : ▹ Set l} → {f g : ▸ A} → (▸ \ α → f α ≡ g α) → f ≡ g
 later-ext' eq = \ i α → eq α i
 
--- later-extSwap : ∀ {l} {A : ▹ Set l} {B : Set l} → (▸ \ α → A α ≡ B) → ▸ A ≡ ▹ B
--- later-extSwap eq i = (x : Tick) → eq x i
+later-extSwap : ∀ {l} {A : ▹ Set l} {B : Set l} → (▸ \ α → A α ≡ B) → ▸ A ≡ ▹ B
+later-extSwap eq i = (@tick x : Tick) → eq x i
 
 postulate
   dfix : ∀ {l} {A : Set l} → (▹ A → A) → ▹ A
@@ -102,7 +102,7 @@ hollow : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f → ▹ fix f
 hollow  {f = f} x tic = transport (pfix' f tic) (x tic)
 
 hollowEq : ∀ {l}  {f : ▹ Set l → Set l} → ▸ dfix f ≡ ▹ fix f
-hollowEq {f = f} i = (tic : Tick) → pfix' f tic i
+hollowEq {f = f} i = (@tick tic : Tick) → pfix' f tic i
 
 tyfix : ∀ {l} → (Set l → Set l) → Set l
 tyfix F = fix λ x → F (▸ x)
