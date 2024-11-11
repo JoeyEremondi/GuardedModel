@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded  #-}
 open import Source.SyntaxParams
 
 open import GuardedAlgebra

@@ -1,18 +1,11 @@
-{-# OPTIONS --cubical --guarded #-}
 
 -- open import Guarded
-open import Cubical.Data.Maybe
 open import Level
-open import Cubical.Relation.Nullary
-open import DecPEq
-open import Cubical.Data.Nat
-open import Cubical.Data.Bool
-open import Cubical.Data.Empty
-open import Cubical.Data.FinData
-open import Cubical.Data.Equality
-open import Cubical.Data.Sigma
-open import Cubical.Foundations.Transport
-open import Cubical.Foundations.Prelude
+
+open import Data.Nat
+open import Data.Fin
+open import Relation.Binary.PropositionalEquality
+
 open import GuardedAlgebra
 open import ApproxExact
 
@@ -36,5 +29,5 @@ data GHead : Set where
   H℧ : GHead
   HStatic : TyHead → GHead
 
-HStatic-inj : ∀ {h1 h2} → HStatic h1 ≡p HStatic h2 → h1 ≡p h2
-HStatic-inj reflp = reflp
+HStatic-inj : ∀ {h1 h2} → HStatic h1 ≡ HStatic h2 → h1 ≡ h2
+HStatic-inj refl = refl

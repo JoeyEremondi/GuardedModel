@@ -1,6 +1,5 @@
 
 
-{-# OPTIONS --cubical --guarded  #-}
 
 
 

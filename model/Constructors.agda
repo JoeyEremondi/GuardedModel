@@ -1,6 +1,8 @@
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Nat
-open import Cubical.Data.FinData
+-- open import Cubical.Data.Nat
+-- open import Cubical.Data.FinData
+open import Data.Nat
+open import Data.Fin
 
 module Constructors where
 

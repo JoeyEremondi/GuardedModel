@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded --prop #-}
 module Source.SyntaxParams where
 
 open import Cubical.Data.Bool

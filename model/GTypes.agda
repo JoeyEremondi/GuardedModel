@@ -1,8 +1,6 @@
-{-# OPTIONS --cubical --guarded #-}
-open import Cubical.Data.Nat
-open import Cubical.Foundations.Prelude
-open import DecPEq
-open import Cubical.Data.Bool
+open import Data.Nat
+open import Data.Bool
+open import FunExt
 
 module GTypes where
 
@@ -39,7 +37,7 @@ CℕfromNat ℕ.zero = GZero
 CℕfromNat (ℕ.suc x) = GSuc (CℕfromNat x)
 
 Cℕembed : ∀  x → CℕtoNat  (CℕfromNat x) ≡ x
-Cℕembed ℕ.zero = reflc
+Cℕembed ℕ.zero = refl
 Cℕembed (ℕ.suc x) = cong ℕ.suc (Cℕembed x)
 
 

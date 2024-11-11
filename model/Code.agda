@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded #-}
 open import Cubical.Data.Nat renaming (Unit to 𝟙)
 open import Cubical.Data.FinData
 open import Cubical.Data.Empty renaming (⊥ to 𝟘)

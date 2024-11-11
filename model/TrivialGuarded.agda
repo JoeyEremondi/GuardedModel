@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded #-}
 module TrivialGuarded where
 
 open import GuardedAlgebra

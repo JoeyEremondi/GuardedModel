@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded --prop --rewriting #-}
 
 
 open import Source.SyntaxParams

@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded #-}
 
 
 
@@ -35,7 +34,7 @@ module InductiveCodes {{_ : DataTypes}} {{_ : DataGerms}} where
 
 open import Code
 -- open import Head
-open import Util
+-- open import Util
 open import WMuConversion
 
 data GermCtorIsCode (ℓ : ℕ) {{æ : Æ}}  : ∀ {sig} → GermCtor sig → Type1  where

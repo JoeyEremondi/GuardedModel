@@ -1,26 +1,35 @@
-{-# OPTIONS --cubical --guarded --lossy-unification #-}
 
 -- Inductive Descriptions for Gradual Datatypes
 
 open import Level
-open import Cubical.Data.Nat renaming (Unit to 𝟙)
-open import Cubical.Data.Unit
-open import Cubical.Data.Empty as Empty renaming (⊥ to 𝟘)
-open import Cubical.Relation.Nullary
-open import Cubical.Data.Sigma
-open import Cubical.Data.Bool
-open import Cubical.Data.Bool renaming (Bool to 𝟚)
-open import Cubical.Data.Maybe as Maybe
-open import Cubical.Data.Sum as Sum
-open import Cubical.Data.FinData
+open import Data.Nat
+open import Data.Bool
+open import Data.Maybe
+open import Data.Empty as Empty renaming (⊥ to 𝟘)
+open import Data.Unit.Polymorphic renaming (⊤ to 𝟙)
+open import Data.Product
+open import Data.Sum
+
+open import ErasedCompatiblePath
+
+open import FunExt
+-- open import Cubical.Data.Nat renaming (Unit to 𝟙)
+-- open import Cubical.Data.Unit
+-- open import Cubical.Relation.Nullary
+-- open import Cubical.Data.Sigma
+-- open import Cubical.Data.Bool
+-- open import Cubical.Data.Bool renaming (Bool to 𝟚)
+-- open import Cubical.Data.Maybe as Maybe
+-- open import Cubical.Data.Sum as Sum
+-- open import Cubical.Data.FinData
 -- Bool is the gradual unit type, true is tt and false is ℧
 
-open import Cubical.Data.Sum
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Univalence using (ua)
-open import DecPEq
-open import Cubical.Functions.FunExtEquiv using (funExtDep)
+-- open import Cubical.Data.Sum
+-- open import Cubical.Foundations.Prelude
+-- open import Cubical.Foundations.Isomorphism
+-- open import Cubical.Foundations.Univalence using (ua)
+-- open import DecPEq
+-- open import Cubical.Functions.FunExtEquiv using (funExtDep)
 
 -- open import Cubical.Data.Bool
 open import GuardedAlgebra
@@ -115,6 +124,10 @@ data GuardedArg⇒_Rest⇒_ (A B : Set) : Set where
   GuardedArg : A → GuardedArg⇒ A Rest⇒ B
   GRest : B → GuardedArg⇒ A Rest⇒ B
 
+--Copied from cubical, really useful for coverting Maybe into a type
+caseMaybe : ∀ {ℓ ℓ'} {A : Set ℓ} {B : Set ℓ'} (n j : B) → Maybe A → B
+caseMaybe n _ nothing  = n
+caseMaybe _ j (just _) = j
 
 
 ⁇Ref SelfRef : Bool
@@ -148,7 +161,7 @@ record SmallerCode : Set1 where
     El-1 : {{æ : Æ}} → ℂ-1 -> Set
     toApprox-1 : (c : ℂ-1) -> El-1 {{æ = Exact}} c → El-1 {{æ = Approx}} c
     toExact-1 : (c : ℂ-1) -> El-1 {{æ = Approx}} c → El-1 {{æ = Exact}} c
-    toApproxExact-1 : ∀ c (x : El-1 {{æ = Approx }} c) → toApprox-1 c (toExact-1 c x) ≡c x
+    toApproxExact-1 : ∀ c (x : El-1 {{æ = Approx }} c) → toApprox-1 c (toExact-1 c x) ≡ x
 
 open SmallerCode public
 
@@ -204,7 +217,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
     germCtor : (ℓ : ℕ) → (tyCtor : CName) → (d : DName tyCtor) → GermCtor (indSkeleton tyCtor d)
   -- Functor
   data ⁇Germ {{æ : Æ}} (ℓ : ℕ)  (sc : SmallerCode) (Self : ▹ ⁇Self) : Maybe TyHead → Type
-  ⁇ApproxGerm : ∀  (ℓ : ℕ)  (sc : SmallerCode) (Self : DecPEq.Lift 𝟙) → Maybe TyHead → Type
+  ⁇ApproxGerm : ∀  (ℓ : ℕ)  (sc : SmallerCode) (Self : 𝟙) → Maybe TyHead → Type
   data ⁇Germ {{æ}} ℓ sc Self where
       -- An element of the germ for any head can be embedded into ⁇Ty
       ⁇Tag : ∀ {h} → ⁇Germ ℓ sc Self (just h) → ⁇Germ ℓ sc Self nothing
@@ -218,7 +231,7 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       ⁇Cumul : {{inst : 0< ℓ}} → (c : ℂ-1 sc) → El-1 sc c → ⁇Germ ℓ sc Self (just HCumul)
       -- This is where ⁇ is a non-positive type: The germ of Π is ⁇ → ⁇
       -- So we need to guard the use of ⁇ in the domain
-      ⁇Π :  (𝟙  →  ⁇ApproxGerm ℓ sc tt* nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
+      ⁇Π :  (𝟙  →  ⁇ApproxGerm ℓ sc tt nothing) → (IsExact æ → ▹⁇Ty Self  → LÆ (⁇Germ ℓ sc Self nothing)) →  ⁇Germ ℓ sc Self (just HΠ)
       -- The germ of pairs is a pair of ⁇s
       ⁇Σ : (⁇Germ ℓ sc Self nothing  × ⁇Germ ℓ sc Self nothing ) → ⁇Germ ℓ sc Self (just (HΣ))
       -- The germ of an equality type is a witness of equality between two ⁇s
@@ -229,16 +242,16 @@ record DataGerms {{_ : DataTypes}} : Type1 where
       -- and a function producing higher order recursive refs
       ⁇μ : ∀ {tyCtor}
         → (d : DName tyCtor)
-        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt* nothing)
+        → ((r : GermResponse (germCtor ℓ tyCtor d)) → ⁇ApproxGerm ℓ sc tt nothing)
         → (IsExact æ → (r : GermResponse (germCtor ℓ tyCtor d)) → LÆ (⁇Germ ℓ sc Self nothing))
         → ⁇Germ ℓ sc Self (just (HCtor tyCtor))
 
   ⁇ApproxGerm = ⁇Germ {{æ = Approx}}
 
   -- Approximating/embedding for the unknown type
-  toApprox⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Exact}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
-  approx⁇ : ∀ {{æ : Æ}} {ℓ sc Self i} → ⁇Germ {{æ = æ}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt* i
-  toExact⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Approx}} ℓ sc tt* i → ⁇Germ {{æ = Exact}} ℓ sc Self i
+  toApprox⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Exact}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt i
+  approx⁇ : ∀ {{æ : Æ}} {ℓ sc Self i} → ⁇Germ {{æ = æ}} ℓ sc Self i → ⁇Germ {{æ = Approx}} ℓ sc tt i
+  toExact⁇ : ∀ {ℓ sc Self i} → ⁇Germ {{æ = Approx}} ℓ sc tt i → ⁇Germ {{æ = Exact}} ℓ sc Self i
 
   approx⁇ {{æ = Approx}} x = x
   approx⁇ {{æ = Exact}} x = toApprox⁇ x
@@ -272,21 +285,22 @@ record DataGerms {{_ : DataTypes}} : Type1 where
   toExact⁇ (⁇≡ (w ⊢ x ≅ y )) = ⁇≡ (toExact⁇ w ⊢ toExact⁇ x ≅ toExact⁇ y)
   toExact⁇ (⁇μ tyCtor fappr fexact) = ⁇μ tyCtor fappr λ _ r → Now (toExact⁇ (fappr r))
 
-  toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt* i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡c x
+  toApproxExact⁇ :  ∀ {ℓ sc Self i} → ( x : ⁇Germ {{æ = Approx}} ℓ sc tt i) → toApprox⁇ {Self = Self} (toExact⁇ {Self = Self} x) ≡ x
   toApproxExact⁇ ⁇℧ = refl
   toApproxExact⁇ ⁇⁇ = refl
   toApproxExact⁇ (⁇Tag x) = cong (⁇Tag {{æ = _}}) (toApproxExact⁇ x)
   toApproxExact⁇ ⁇𝟙 = refl
   toApproxExact⁇ (⁇ℕ n) = refl
   toApproxExact⁇ (⁇Type x) = refl
-  toApproxExact⁇ {sc = sc} (⁇Cumul c x) i = ⁇Cumul c (toApproxExact-1 sc c x i)
-  -- toApproxExact⁇ (⁇ΠA _ f) = cong₂ (⁇ΠA ⦃ æ = Approx ⦄) (funExtPath λ tt → toApproxExact⁇ (f tt)) ?
+  toApproxExact⁇ {sc = sc} (⁇Cumul c x) rewrite (toApproxExact-1 sc c x) = refl
   toApproxExact⁇ (⁇Π f _) = cong₂ (⁇Π ⦃ æ = Approx ⦄ ) refl isExactAllEq
-  toApproxExact⁇ (⁇Σ (x , y )) = congPath (⁇Σ {{æ = Approx}}) (ΣPathP (toApproxExact⁇ x , toApproxExact⁇ y))
-  toApproxExact⁇ (⁇≡ (w ⊢ x ≅ y)) = congPath
-                                      (λ x →
-                                        ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
-                                      (toApproxExact⁇ w)
+  toApproxExact⁇ (⁇Σ (x , y ))  = cong (⁇Σ {{æ = Approx}})
+    (ctop (ΣPathP' (ptoc (toApproxExact⁇ x))  (ptoc (toApproxExact⁇ y))))
+  toApproxExact⁇  (⁇≡ (w ⊢ x ≅ y))  = cong ( ⁇≡ ⦃ æ = Approx ⦄) (cong (λ w → w ⊢ (⁇⁇ ⦃ æ = Approx ⦄)≅ ⁇⁇) (toApproxExact⁇ w))
+  -- congPath
+  --                                     (λ x →
+  --                                       ⁇≡ ⦃ æ = Approx ⦄ (x ⊢ ⁇⁇ ⦃ æ = Approx ⦄ ≅ ⁇⁇ ⦃ æ = Approx ⦄))
+  --                                     (toApproxExact⁇ w)
   toApproxExact⁇ (⁇μ tyCtor fappr fexact) =  cong₂ (⁇μ ⦃ æ = _ ⦄ tyCtor) refl isExactAllEq
 
 open DataGerms {{...}} public

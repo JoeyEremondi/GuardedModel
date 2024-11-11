@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded #-}
 
 open import GuardedAlgebra
 open import Cubical.Data.Maybe

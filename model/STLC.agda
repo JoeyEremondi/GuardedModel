@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --guarded --rewriting #-}
 
 open import GuardedModality
 open import Util

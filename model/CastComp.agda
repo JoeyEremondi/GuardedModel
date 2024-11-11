@@ -2,7 +2,7 @@
 open import Cubical.Data.Maybe
 open import Level
 open import Cubical.Relation.Nullary
-open import DecPEq
+-- open import DecPEq
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum
 import Cubical.Data.Empty as Empty
@@ -12,9 +12,9 @@ open import Cubical.Data.Sigma
 -- open import Cubical.Data.Equality
 open import UnkGerm
 open import GuardedAlgebra
-open import Cubical.Foundations.Transport
-open import Cubical.Foundations.Prelude
-open import Cubical.HITs.PropositionalTruncation.Properties as Prop
+-- open import Cubical.Foundations.Transport
+-- open import Cubical.Foundations.Prelude
+-- open import Cubical.HITs.PropositionalTruncation.Properties as Prop
 
 open import ApproxExact
 open import InductiveCodes
