@@ -1,26 +1,7 @@
 -- Inductive Descriptions for Gradual Datatypes
 
 open import Level
-open import Cubical.Data.Nat renaming (Unit to 𝟙)
-open import Cubical.Data.Unit
-open import Cubical.Data.Empty as Empty renaming (⊥ to 𝟘)
-open import Cubical.Relation.Nullary
-open import Cubical.Data.Sigma
-open import Cubical.Data.Bool
-open import Cubical.Data.Bool renaming (Bool to 𝟚)
-open import Cubical.Data.Maybe as Maybe
-open import Cubical.Data.Sum as Sum
-open import Cubical.Data.FinData
--- Bool is the gradual unit type, true is tt and false is ℧
-
-open import Cubical.Data.Sum
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Univalence using (ua)
-open import DecPEq
-open import Cubical.Functions.FunExtEquiv using (funExtDep)
-
--- open import Cubical.Data.Bool
+open import Data.Product
 open import GuardedAlgebra
 import GuardedModality as G
 
